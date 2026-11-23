@@ -336,3 +336,23 @@ describe('friendlyError', () => {
     }
   });
 });
+
+describe('tutor review fixes', () => {
+  it('turns an in-stream error into a TutorError instead of an empty reply', async () => {
+    const { streamChat, TutorError } = await import('@/lib/tutor');
+    const body = new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode('data: {"error":{"message":"Rate limit exceeded"}}\n\n')); c.close(); } });
+    const fetchImpl = async () => new Response(body, { status: 200 });
+    const run = async () => { for await (const _ of streamChat({ baseURL: 'x', model: 'm', messages: [], fetchImpl: fetchImpl as any })) {} };
+    await expect(run()).rejects.toBeInstanceOf(TutorError);
+  });
+  it('maps 404 to a model-not-found hint, with ollama pull for Ollama', async () => {
+    const { friendlyError, TutorError } = await import('@/lib/tutor');
+    expect(friendlyError(new TutorError('not-found', 'HTTP 404'), 'ollama', 'qwen3:4b')).toMatch(/ollama pull qwen3:4b/);
+    expect(friendlyError(new TutorError('not-found', 'HTTP 404'), 'openrouter')).toMatch(/model name/i);
+  });
+  it('caps question and error inside the prompt', async () => {
+    const { buildSystemPrompt } = await import('@/lib/tutor');
+    const p = buildSystemPrompt({ lessonTitle: 'T', objectives: [], question: 'q'.repeat(50_000), error: 'e'.repeat(50_000) });
+    expect(p.length).toBeLessThan(12_000);
+  });
+});
