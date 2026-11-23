@@ -46,7 +46,7 @@ export default function Dashboard({ modules, lessons, itemIds }: { modules: Site
       </div>
 
       {needsBackup && (
-        <p className="air-callout air-callout-warn" data-backup-reminder>
+        <p className="air-callout air-callout-info" data-backup-reminder>
           Your progress lives only in this browser. {last ? `Last backup ${new Date(last).toLocaleDateString()}.` : 'You have not backed it up yet.'}{' '}
           <a href="/settings/">Export a backup</a>.
         </p>

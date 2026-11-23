@@ -427,6 +427,7 @@ starlight-toc a[aria-current='true'] {
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
 .air-btn {
+  text-decoration: none;
   display: inline-flex; align-items: center; gap: 0.5em;
   padding: 10px 18px; min-height: 44px;
   border: 1px solid var(--air-border-strong); border-radius: var(--air-radius);
@@ -655,10 +656,10 @@ textarea.air-text { max-width: none; font-family: var(--sl-font-mono); font-size
 .air-band { margin-bottom: var(--air-space-6); }
 .air-band > h2 { margin: 0 0 4px; font-size: var(--sl-text-xl); }
 .air-band-entry { margin: 0 0 var(--air-space-3); font-size: var(--sl-text-sm); color: var(--sl-color-gray-3); }
-.air-band-cols { list-style: none; margin: 0; padding: 4px 2px 12px; display: flex; gap: 14px; overflow-x: auto; }
-.air-band-col > ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.air-band-col { flex: none; position: relative; }
-.air-band-col + .air-band-col::before { content: '→'; position: absolute; left: -12px; top: 30px; color: var(--sl-color-gray-4); font-size: 0.8rem; }
+.air-band-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px 26px; }
+.air-band-step { position: relative; }
+.air-band-step > ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.air-band-step + .air-band-step::before { content: '→'; position: absolute; left: -19px; top: 2.3rem; color: var(--sl-color-gray-4); font-size: 0.8rem; }
 .air-node {
   display: grid; gap: 2px; width: 11.5rem; min-height: 5.5rem; padding: 12px 14px; text-decoration: none;
   border: 1px solid var(--air-border); border-radius: var(--air-radius); background: var(--air-surface);

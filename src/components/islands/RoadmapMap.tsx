@@ -29,9 +29,9 @@ export default function RoadmapMap({ modules, lessons }: { modules: SiteModule[]
           <section key={course} className="air-band" aria-labelledby={`band-${course}`}>
             <h2 id={`band-${course}`}>{name}</h2>
             {entry.length > 0 && <p className="air-band-entry">Starts after {entry.map((p) => p.toUpperCase()).join(', ')}</p>}
-            <ol className="air-band-cols">
+            <ol className="air-band-steps">
               {[...cols.entries()].sort(([a], [b]) => a - b).map(([c, ms]) => (
-                <li key={c} className="air-band-col">
+                <li key={c} className="air-band-step">
                   <ul>
                     {ms.map((m) => {
                       const ls = lessons.filter((l) => l.module === m.id);
