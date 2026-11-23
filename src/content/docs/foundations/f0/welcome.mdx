@@ -10,6 +10,7 @@ goDeeper: missing-semester
 ---
 import Term from '@/components/Term.astro';
 import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
 import courseMap from '@/assets/diagrams/course-map.svg';
 
 This course takes you from zero to mastery in AI. Each lesson is short, ends with
@@ -31,3 +32,16 @@ $$
 
 That update rule is gradient descent: it steps against the <Term id="gradient" text="gradient" /> of the loss.
 You will derive it in F6.
+
+## Try it: code in the browser
+
+Lessons include small Python exercises that run right here in your browser, with no setup.
+Edit the code, press **Run**, and hidden tests check your answer. Stuck? **Hint** reveals one clue at a time.
+
+Start by turning the mean formula above into code:
+
+<CodeExercise id="f0-welcome-ex1" />
+
+Exercises can draw plots too. The runner shows any matplotlib figure your code creates:
+
+<CodeExercise id="f0-welcome-plot" />

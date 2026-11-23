@@ -1,0 +1,31 @@
+id: f0-welcome-plot
+lesson: foundations/f0/welcome
+title: Plot a parabola
+prompt: |
+  Use matplotlib to plot $y = x^2$ for the integers $x = -3, \dots, 3$.
+  Build the two lists, then call `plt.plot(xs, ys)`. Your figure appears below the output when you run it.
+starter: |
+  import matplotlib.pyplot as plt
+
+  xs = list(range(-3, 4))
+  ys = []  # fill in x squared for each x
+
+  # plt.plot(xs, ys)
+solution: |
+  import matplotlib.pyplot as plt
+
+  xs = list(range(-3, 4))
+  ys = [x ** 2 for x in xs]
+
+  plt.plot(xs, ys, marker="o")
+  plt.title("y = x²")
+tests: |
+  import matplotlib.pyplot as plt
+  assert ys == [x ** 2 for x in range(-3, 4)], "ys should hold x squared for x = -3 … 3"
+  fig = plt.gcf()
+  assert fig.axes and fig.axes[0].lines, "Draw the curve with plt.plot(xs, ys)"
+  line = fig.axes[0].lines[0]
+  assert list(line.get_ydata()) == ys, "Plot ys against xs"
+hints:
+  - "A list comprehension builds ys in one line: `[x ** 2 for x in xs]`."
+  - "Then call `plt.plot(xs, ys)`; the runner shows the figure for you, no `plt.show()` needed."

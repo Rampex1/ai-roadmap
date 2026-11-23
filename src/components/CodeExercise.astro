@@ -1,0 +1,27 @@
+---
+// <CodeExercise id="..." />: a Python exercise from src/content/exercises/<id>.yaml.
+// Title and prompt render at build time (visible and searchable without JS); the editor is an island.
+import { getEntry } from 'astro:content';
+import { md } from '@/lib/markdown';
+import CodeExerciseIsland from '@/components/islands/CodeExerciseIsland';
+
+interface Props { id: string }
+const { id } = Astro.props;
+const entry = await getEntry('exercises', id);
+if (!entry) throw new Error(`<CodeExercise id="${id}">: no exercise "${id}"`);
+const { title, prompt, starter, tests, hints } = entry.data;
+const promptHtml = await md(prompt);
+const hintsHtml = await Promise.all(hints.map(md));
+const headingId = `ex-${id}`;
+---
+
+<section class="air-ex not-content" data-exercise-id={id} aria-labelledby={headingId}>
+  <div class="air-ex-head">
+    <span class="air-eyebrow">Exercise</span>
+    <h3 id={headingId}>{title}</h3>
+  </div>
+  <div class="air-ex-prompt" set:html={promptHtml} />
+  <CodeExerciseIsland client:only="react" id={id} title={title} starter={starter} tests={tests} hintsHtml={hintsHtml}>
+    <p slot="fallback" class="air-ex-fallback">Loading the code editor…</p>
+  </CodeExerciseIsland>
+</section>

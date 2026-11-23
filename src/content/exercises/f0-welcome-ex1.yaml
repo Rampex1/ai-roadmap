@@ -1,0 +1,20 @@
+id: f0-welcome-ex1
+lesson: foundations/f0/welcome
+title: Compute a mean
+prompt: |
+  Complete `mean(xs)` so it returns the average of a non-empty list of numbers,
+  $\bar{x} = \frac{1}{n}\sum_{i=1}^{n} x_i$. For example, `mean([2, 4, 9])` is `5.0`.
+starter: |
+  def mean(xs):
+      # Replace this line with your solution.
+      return 0
+solution: |
+  def mean(xs):
+      return sum(xs) / len(xs)
+tests: |
+  assert mean([2, 4, 9]) == 5, f"mean([2, 4, 9]) should be 5, got {mean([2, 4, 9])!r}"
+  assert mean([1]) == 1, f"mean([1]) should be 1, got {mean([1])!r}"
+  assert abs(mean([0.1, 0.2]) - 0.15) < 1e-9, "mean([0.1, 0.2]) should be 0.15"
+hints:
+  - "The built-in `sum(xs)` adds up every number in the list."
+  - "Divide the total by `len(xs)`, the number of items."
