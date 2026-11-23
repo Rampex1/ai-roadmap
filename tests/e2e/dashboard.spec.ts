@@ -53,7 +53,8 @@ async function makeOneCardDue(page: Page) {
   await page.evaluate(
     ({ k, id, due }) => {
       const s = JSON.parse(localStorage.getItem(k)!);
-      s.cards[id] = { ...s.cards[id], dueAt: due };
+      // Simulate time passing: the review happened days ago, and the card is now due.
+      s.cards[id] = { ...s.cards[id], dueAt: due, lastReviewAt: new Date(Date.parse(due) - 3 * 86_400_000).toISOString() };
       localStorage.setItem(k, JSON.stringify(s));
     },
     { k: KEY, id, due: new Date(Date.now() - 2 * DAY).toISOString() },

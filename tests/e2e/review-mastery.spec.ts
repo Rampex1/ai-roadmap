@@ -115,7 +115,8 @@ async function makeDue(page: Page, id: string) {
   await page.evaluate(
     ({ k, id }) => {
       const s = JSON.parse(localStorage.getItem(k)!);
-      s.cards[id] = { ...s.cards[id], dueAt: new Date(Date.now() - 2 * 86_400_000).toISOString() };
+      // Simulate time passing: the review happened days ago, and the card is now due.
+      s.cards[id] = { ...s.cards[id], dueAt: new Date(Date.now() - 2 * 86_400_000).toISOString(), lastReviewAt: new Date(Date.now() - 5 * 86_400_000).toISOString() };
       localStorage.setItem(k, JSON.stringify(s));
     },
     { k: KEY, id },

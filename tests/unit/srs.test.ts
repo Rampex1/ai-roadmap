@@ -150,3 +150,22 @@ describe('retrievability', () => {
     expect(later).toBeLessThan(soon);
   });
 });
+
+describe('dueItems review fixes', () => {
+  it('skips a card already reviewed today even when its learning step is due', async () => {
+    const { getScheduler, applyAnswer, dueItems } = await import('@/lib/srs');
+    const { emptyState } = await import('@/lib/progress');
+    const s = await getScheduler();
+    const morning = new Date(2026, 5, 1, 9, 0);
+    const st = applyAnswer(s, emptyState(), 'q', false, morning);
+    expect(dueItems(st, new Date(2026, 5, 1, 18, 0))).toEqual([]);
+    expect(dueItems(st, new Date(2026, 5, 2, 9, 0))).toEqual(['q']);
+  });
+  it('ignores cards whose item is not in the known set', async () => {
+    const { getScheduler, applyAnswer, dueItems } = await import('@/lib/srs');
+    const { emptyState } = await import('@/lib/progress');
+    const s = await getScheduler();
+    const st = applyAnswer(s, emptyState(), 'gone', false, new Date(2026, 5, 1, 9, 0));
+    expect(dueItems(st, new Date(2026, 5, 3), new Set(['other']))).toEqual([]);
+  });
+});
