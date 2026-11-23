@@ -1,0 +1,109 @@
+items:
+  - id: f4-derivative-rules-01
+    type: mcq
+    prompt: "What is the derivative of $f(x) = 4x^3 - 5x + 7$?"
+    explanation: "Power rule term by term: 4 × 3x² = 12x², -5x gives -5, and the constant 7 gives 0."
+    options:
+      - text: 12x² - 5
+        correct: true
+        why: Power rule on each term, and the constant disappears.
+      - text: 12x² - 5 + 7
+        why: The derivative of a constant is 0, so the 7 must go.
+      - text: 4x² - 5
+        why: The power 3 must also come down as a factor, giving 12x².
+      - text: 12x³ - 5
+        why: The power must drop by one, from 3 to 2.
+  - id: f4-derivative-rules-02
+    type: numeric
+    prompt: "If $f(x) = 2x^5$, what is $f'(1)$?"
+    answer: 10
+    tol: 0.001
+    explanation: "f'(x) = 2 × 5x⁴ = 10x⁴, so f'(1) = 10."
+  - id: f4-derivative-rules-03
+    type: mcq
+    prompt: "Using the power rule, what is the derivative of $\\frac{1}{x} = x^{-1}$?"
+    explanation: "Bring the -1 down and reduce the power by one: -1 × x^(-2) = -1/x²."
+    options:
+      - text: -1/x²
+        correct: true
+        why: n = -1, so n x^(n-1) = -x^(-2).
+      - text: 1/x²
+        why: The sign is lost; the power -1 brings down a factor of -1.
+      - text: ln x
+        why: ln x is the function whose derivative is 1/x, not the other way round.
+      - text: "0"
+        why: 1/x changes with x, so its derivative is not 0.
+  - id: f4-derivative-rules-04
+    type: mcq
+    prompt: "What is the derivative of $x^2 e^x$?"
+    explanation: "Product rule: (x²)' e^x + x² (e^x)' = 2x e^x + x² e^x."
+    options:
+      - text: 2x eˣ + x² eˣ
+        correct: true
+        why: f'g + fg' with f = x² and g = eˣ.
+      - text: 2x eˣ
+        why: That is the product of the derivatives, which is not the product rule.
+      - text: x² eˣ
+        why: This misses the f'g term.
+      - text: 2x · x eˣ⁻¹
+        why: The power rule does not apply to eˣ, where the variable is the exponent.
+  - id: f4-derivative-rules-05
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import math
+      print(math.log(math.exp(3)))
+    answer: "3.0"
+    explanation: "ln undoes e to the power: ln(e³) = 3. The result is a float."
+  - id: f4-derivative-rules-06
+    type: multi
+    prompt: "Which statements about $e^x$ and $\\ln x$ are true?"
+    explanation: "e^x is its own derivative and always positive; ln x has derivative 1/x, is defined only for x > 0, and turns products into sums."
+    options:
+      - text: The derivative of eˣ is eˣ
+        correct: true
+        why: That property is what makes e special.
+      - text: The derivative of ln x is 1/x
+        correct: true
+        why: This is the standard result for the natural log.
+      - text: ln(ab) = ln a + ln b
+        correct: true
+        why: Logs turn products into sums.
+      - text: eˣ can be negative for large negative x
+        why: eˣ is always positive; it only gets close to 0.
+      - text: ln x is defined for every real x
+        why: ln x is only defined for x > 0.
+  - id: f4-derivative-rules-07
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      p = np.full(500, 1e-3)
+      print(np.prod(p), round(np.sum(np.log(p))))
+    answer: "0.0 -3454"
+    explanation: "The true product, 10 to the -1500, is far too small for a float, so it underflows to 0.0. The sum of logs is 500 × ln(0.001) ≈ -3453.88, which rounds to -3454."
+  - id: f4-derivative-rules-08
+    type: mcq
+    prompt: "Why do ML losses for probabilities usually work with $\\ln p$ rather than $p$ itself?"
+    explanation: "Multiplying many probabilities underflows to 0.0 in floating point; summing their logs stays in a normal range. Since ln is increasing, maximising the log maximises the probability too."
+    options:
+      - text: Summing logs avoids the underflow you get from multiplying many small probabilities
+        correct: true
+        why: Products of many small numbers round to 0.0; sums of logs do not.
+      - text: Logs make every probability positive
+        why: Probabilities are already non-negative; logs of them are actually negative or zero.
+      - text: The log of a probability is always between 0 and 1
+        why: ln p is at most 0 for probabilities and can be very negative.
+      - text: Logs are faster to compute than multiplication
+        why: Speed is not the reason; numerical stability and simpler derivatives are.
+  - id: f4-derivative-rules-09
+    type: numeric
+    prompt: "Using the quotient rule, $\\frac{d}{dx}\\frac{x}{1 + x^2} = \\frac{1 - x^2}{(1 + x^2)^2}$. What is its value at $x = 0$?"
+    answer: 1
+    tol: 0.0001
+    explanation: "(1 - 0) / (1 + 0)² = 1."
+  - id: f4-derivative-rules-10
+    type: cloze
+    prompt: "The rule $(fg)' = f'g + fg'$ is called the ____ rule."
+    accept: ["product", "product rule"]
+    explanation: "The product rule handles two functions multiplied together."

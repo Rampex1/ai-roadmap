@@ -1,0 +1,69 @@
+id: f4-the-derivative-01
+lesson: foundations/f4/the-derivative
+title: Plot a function and its tangent line
+prompt: |
+  1. Write `tangent(f, df, a, x)` that returns the value of the tangent line to `f` at the point `a`,
+     evaluated at `x`: `f(a) + df(a) * (x - a)`. Here `df` is the derivative of `f`. It should work
+     when `x` is a NumPy array.
+  2. Plot `f(x) = x**3 - 2*x` (its derivative is `3*x**2 - 2`) and its tangent line at `a = 1` on the
+     same axes, for `x = np.linspace(-2, 2, 200)`. Add a legend.
+
+  The tangent at `a = 1` is the line `y = x - 2`.
+starter: |
+  import numpy as np
+  import matplotlib.pyplot as plt
+
+  def f(x):
+      return x ** 3 - 2 * x
+
+  def df(x):
+      return 3 * x ** 2 - 2
+
+  def tangent(f, df, a, x):
+      """Return the tangent line of f at a, evaluated at x."""
+      pass
+
+  x = np.linspace(-2, 2, 200)
+  # plot f and its tangent at a = 1 here
+solution: |
+  import numpy as np
+  import matplotlib.pyplot as plt
+
+  def f(x):
+      return x ** 3 - 2 * x
+
+  def df(x):
+      return 3 * x ** 2 - 2
+
+  def tangent(f, df, a, x):
+      """Return the tangent line of f at a, evaluated at x."""
+      return f(a) + df(a) * (x - a)
+
+  x = np.linspace(-2, 2, 200)
+  plt.plot(x, f(x), label="f(x)")
+  plt.plot(x, tangent(f, df, 1.0, x), "--", label="tangent at x = 1")
+  plt.legend()
+tests: |
+  import numpy as np
+  import matplotlib.pyplot as plt
+  _r = tangent(lambda t: t ** 2, lambda t: 2 * t, 3.0, 3.1)
+  assert _r is not None, "tangent returned None: did you forget the return statement?"
+  assert abs(_r - 9.6) < 1e-9, f"The tangent to x**2 at 3, evaluated at 3.1, is 9 + 6 * 0.1 = 9.6, got {_r!r}"
+  _xs = np.array([0.0, 1.0, 2.0])
+  _r = np.asarray(tangent(np.exp, np.exp, 0.0, _xs), dtype=float)
+  np.testing.assert_allclose(_r, [1.0, 2.0, 3.0], err_msg="The tangent to e**x at 0 is 1 + x; tangent should work on arrays")
+  _ax = plt.gca()
+  _lines = [(l.get_xdata(), l.get_ydata()) for l in _ax.get_lines()]
+  assert len(_lines) >= 2, f"Plot at least two lines (the function and its tangent), found {len(_lines)}"
+  def _has(fn, msg):
+      for _lx, _ly in _lines:
+          _lx = np.asarray(_lx, dtype=float); _ly = np.asarray(_ly, dtype=float)
+          if len(_lx) > 10 and np.allclose(_ly, fn(_lx), atol=1e-6):
+              return
+      raise AssertionError(msg)
+  _has(lambda t: t ** 3 - 2 * t, "No plotted line matches f(x) = x**3 - 2x over the x values")
+  _has(lambda t: t - 2, "No plotted line matches the tangent at a = 1, which is y = x - 2")
+  assert _ax.get_legend() is not None, "Add a legend with plt.legend()"
+hints:
+  - "The tangent line passes through (a, f(a)) with slope df(a)."
+  - "Call plt.plot twice: once with f(x) and once with tangent(f, df, 1.0, x), each with a label."

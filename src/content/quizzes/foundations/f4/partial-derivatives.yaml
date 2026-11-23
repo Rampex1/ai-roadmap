@@ -1,0 +1,99 @@
+items:
+  - id: f4-partial-derivatives-01
+    type: mcq
+    prompt: "For $f(x, y) = x^3 y^2$, what is $\\frac{\\partial f}{\\partial x}$?"
+    explanation: "Treat y as a constant: y² is a constant factor, and x³ differentiates to 3x². So ∂f/∂x = 3x²y²."
+    options:
+      - text: 3x²y²
+        correct: true
+        why: y² rides along as a constant factor.
+      - text: 3x²
+        why: The constant factor y² must stay.
+      - text: 2x³y
+        why: That is the partial with respect to y.
+      - text: 6x²y
+        why: That differentiates in both variables at once.
+  - id: f4-partial-derivatives-02
+    type: numeric
+    prompt: "For $f(x, y) = x^2 y + 3y$, what is $\\frac{\\partial f}{\\partial y}$ at the point $(3, 5)$?"
+    answer: 12
+    tol: 0.001
+    explanation: "∂f/∂y = x² + 3 (x is a constant), which is 9 + 3 = 12 at x = 3. It does not depend on y."
+  - id: f4-partial-derivatives-03
+    type: numeric
+    prompt: "For $f(x, y) = 4x + 7y^2$, what is $\\frac{\\partial f}{\\partial x}$ at $(10, -2)$?"
+    answer: 4
+    tol: 0.001
+    explanation: "Holding y fixed, 7y² is a constant whose partial is 0, and 4x gives 4, everywhere."
+  - id: f4-partial-derivatives-04
+    type: output
+    prompt: "What does this print?"
+    code: |
+      def f(x, y):
+          return x * y + y ** 2
+
+      x, y, h = 2.0, 3.0, 1e-5
+      print(round((f(x, y + h) - f(x, y - h)) / (2 * h), 4))
+    answer: "8.0"
+    explanation: "This nudges only y, so it estimates ∂f/∂y = x + 2y = 2 + 6 = 8."
+  - id: f4-partial-derivatives-05
+    type: mcq
+    prompt: "What does $\\frac{\\partial f}{\\partial x}$ mean geometrically for a surface $z = f(x, y)$?"
+    explanation: "A partial derivative is the slope of the surface when you move in the x direction only, with y held fixed."
+    options:
+      - text: The slope of the surface walking in the x direction with y held fixed
+        correct: true
+        why: Freezing y turns the surface into a curve along x; this is its slope.
+      - text: The steepest slope of the surface at that point
+        why: That is the length of the gradient, which combines all directions.
+      - text: The height of the surface
+        why: That is f itself, not a slope.
+      - text: The slope in the y direction
+        why: That is the partial with respect to y.
+  - id: f4-partial-derivatives-06
+    type: numeric
+    prompt: "At a point where $f = 10$, $\\frac{\\partial f}{\\partial x} = 2$ and $\\frac{\\partial f}{\\partial y} = -3$, use the linear approximation to estimate $f$ after the step $\\Delta x = 0.1$, $\\Delta y = 0.2$."
+    answer: 9.6
+    tol: 0.0001
+    explanation: "10 + 2(0.1) + (-3)(0.2) = 10 + 0.2 - 0.6 = 9.6."
+  - id: f4-partial-derivatives-07
+    type: mcq
+    prompt: "On a contour map, the contour lines are packed very close together in one region. What does that tell you?"
+    explanation: "Contours join equal heights. Close spacing means the height changes a lot over a short distance: steep ground."
+    options:
+      - text: The function changes quickly there; the surface is steep
+        correct: true
+        why: Many levels over a short distance means a steep slope.
+      - text: The function is nearly flat there
+        why: Flat regions have widely spaced contours.
+      - text: The function is at its minimum there
+        why: Near a smooth minimum the ground is flat, so contours are widely spaced.
+      - text: The function is undefined there
+        why: Contour spacing says nothing about whether the function is defined.
+  - id: f4-partial-derivatives-08
+    type: numeric
+    prompt: "Let $z = uv$ with $u = x^2$ and $v = 3x$. Using the multivariable chain rule, what is $\\frac{dz}{dx}$ at $x = 1$?"
+    answer: 9
+    tol: 0.001
+    explanation: "dz/dx = v · 2x + u · 3 = 3 · 2 + 1 · 3 = 9. Check: z = 3x³, so dz/dx = 9x² = 9 at x = 1."
+  - id: f4-partial-derivatives-09
+    type: multi
+    prompt: "Which statements about partial derivatives are true?"
+    explanation: "Partials treat the other variables as constants; a function of n variables has n of them; a term that does not contain the variable contributes 0; and with several paths the contributions add."
+    options:
+      - text: To compute ∂f/∂x, treat every other variable as a constant
+        correct: true
+        why: That is the definition.
+      - text: A function of 3 variables has 3 first partial derivatives
+        correct: true
+        why: One per input variable.
+      - text: When a variable affects the output through two paths, the chain-rule terms for the paths add
+        correct: true
+        why: This is the multivariable chain rule.
+      - text: "The partial of x²y with respect to x is 2x"
+        why: The constant factor y must stay, giving 2xy.
+  - id: f4-partial-derivatives-10
+    type: cloze
+    prompt: "In NumPy, the function that turns two 1-D coordinate arrays into 2-D grids of every $(x, y)$ pair is `np.____`."
+    accept: ["meshgrid", "np.meshgrid"]
+    explanation: "np.meshgrid builds the grid used to evaluate and contour-plot a function of two variables."

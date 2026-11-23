@@ -1,0 +1,8 @@
+term: "Derivative"
+short: "The instantaneous rate of change of a function: the slope of its tangent line at a point."
+body: |
+  The derivative of $f$ at $a$ is the limit of slopes of ever-shorter secant lines,
+  $f'(a) = \lim_{h \to 0} \frac{f(a + h) - f(a)}{h}$. Near $a$ the function behaves like the line
+  $f(a) + f'(a)(x - a)$, so the derivative tells you how much the output changes per small change
+  in the input. In ML, derivatives of the loss tell each parameter which way to move.
+related: ["partial-derivative", "chain-rule", "gradient", "finite-difference"]

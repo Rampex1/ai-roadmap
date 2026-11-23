@@ -1,0 +1,7 @@
+term: "Sigmoid"
+short: "The S-shaped function σ(z) = 1 / (1 + e^(−z)) that squashes any number into the range 0 to 1."
+body: |
+  $\sigma(z) = \frac{1}{1 + e^{-z}}$ turns a score into something that behaves like a probability, which
+  is why logistic regression and many classifiers use it. Its derivative has the neat form
+  $\sigma'(z) = \sigma(z)\,(1 - \sigma(z))$, which is at most $0.25$ (at $z = 0$) and tiny for large $|z|$.
+related: ["derivative", "chain-rule"]

@@ -1,0 +1,43 @@
+id: f4-gradient-01
+lesson: foundations/f4/gradient
+title: Gradient by finite differences
+prompt: |
+  Write `numerical_gradient(f, p, h=1e-5)` that returns a NumPy array of the same shape as `p` holding
+  the central-difference estimate of every partial derivative of `f` at `p`, that is, the gradient
+  $\nabla f(p)$.
+
+  For $f(x, y) = x^2 + 3y^2$ at `p = np.array([1.0, 1.0])` the answer is about `[2., 6.]`.
+  Do not change the caller's array `p`.
+starter: |
+  import numpy as np
+
+  def numerical_gradient(f, p, h=1e-5):
+      grad = np.zeros_like(p)
+      return grad
+solution: |
+  import numpy as np
+
+  def numerical_gradient(f, p, h=1e-5):
+      grad = np.zeros_like(p)
+      for i in range(len(p)):
+          step = np.zeros_like(p)
+          step[i] = h
+          grad[i] = (f(p + step) - f(p - step)) / (2 * h)
+      return grad
+tests: |
+  import numpy as np
+  _f = lambda q: q[0] ** 2 + 3 * q[1] ** 2
+  _p = np.array([1.0, 1.0])
+  _g = numerical_gradient(_f, _p)
+  assert _g is not None, "numerical_gradient returned None: did you forget the return statement?"
+  _g = np.asarray(_g)
+  assert _g.shape == (2,), f"The gradient should have one entry per input, shape (2,), got {_g.shape}"
+  np.testing.assert_allclose(_g, [2.0, 6.0], atol=1e-6, err_msg="Gradient of x**2 + 3y**2 at (1, 1) should be (2, 6)")
+  np.testing.assert_array_equal(_p, [1.0, 1.0], err_msg="numerical_gradient changed the input array p")
+  _f3 = lambda q: q[0] * q[1] + np.sin(q[2]) - q[0] ** 3
+  _q = np.array([0.5, -2.0, 1.2])
+  np.testing.assert_allclose(numerical_gradient(_f3, _q), [-2.0 - 0.75, 0.5, np.cos(1.2)], atol=1e-6,
+      err_msg="Wrong gradient for a function of three inputs")
+hints:
+  - "Loop over each index i. Build a step vector of zeros with h at position i."
+  - "Entry i of the gradient is (f(p + step) - f(p - step)) / (2 * h)."

@@ -1,0 +1,7 @@
+term: "Partial derivative"
+short: "The derivative of a function of several variables with respect to one of them, holding the others fixed."
+body: |
+  For $f(x, y)$, the partial derivative $\frac{\partial f}{\partial x}$ is the ordinary derivative in $x$
+  while $y$ is treated as a constant. It is the slope of the surface in the $x$ direction. Collecting
+  every partial derivative into a vector gives the gradient $\nabla f$.
+related: ["derivative", "gradient"]

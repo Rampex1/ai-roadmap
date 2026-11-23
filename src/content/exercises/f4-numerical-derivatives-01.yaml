@@ -1,0 +1,47 @@
+id: f4-numerical-derivatives-01
+lesson: foundations/f4/numerical-derivatives
+title: Forward and central differences
+prompt: |
+  Write two numerical derivative functions. Both should work when `x` is a single number or a
+  NumPy array.
+
+  - `forward_diff(f, x, h)` returns $\dfrac{f(x + h) - f(x)}{h}$.
+  - `central_diff(f, x, h=1e-5)` returns $\dfrac{f(x + h) - f(x - h)}{2h}$, with a default step of `1e-5`.
+
+  Check: for `f(x) = x**2` at `x = 3` with `h = 0.1`, the forward difference is `6.1` and the central
+  difference is `6.0`.
+starter: |
+  import numpy as np
+
+  def forward_diff(f, x, h):
+      pass
+
+  def central_diff(f, x, h=1e-5):
+      pass
+solution: |
+  import numpy as np
+
+  def forward_diff(f, x, h):
+      return (f(x + h) - f(x)) / h
+
+  def central_diff(f, x, h=1e-5):
+      return (f(x + h) - f(x - h)) / (2 * h)
+tests: |
+  import numpy as np
+  _sq = lambda t: t ** 2
+  _r = forward_diff(_sq, 3.0, 0.1)
+  assert _r is not None, "forward_diff returned None: did you forget the return statement?"
+  assert abs(_r - 6.1) < 1e-9, f"forward_diff(x**2, 3, 0.1) should be 6.1, got {_r!r}"
+  _r = central_diff(_sq, 3.0, 0.1)
+  assert _r is not None, "central_diff returned None: did you forget the return statement?"
+  assert abs(_r - 6.0) < 1e-9, f"central_diff(x**2, 3, 0.1) should be 6.0, got {_r!r}"
+  _x = np.linspace(-3, 3, 13)
+  np.testing.assert_allclose(central_diff(np.sin, _x), np.cos(_x), atol=1e-9,
+      err_msg="central_diff(np.sin, x) with the default h should match cos(x) to about 1e-9 on arrays")
+  np.testing.assert_allclose(forward_diff(np.exp, _x, 1e-3), (np.exp(_x + 1e-3) - np.exp(_x)) / 1e-3, rtol=1e-9,
+      err_msg="forward_diff should compute (f(x + h) - f(x)) / h, also on arrays")
+  _c = central_diff(lambda t: t ** 3, 2.0)
+  assert abs(_c - 12.0) < 1e-6, f"central_diff(x**3, 2) with the default h should be about 12, got {_c!r}"
+hints:
+  - "Translate each formula directly: f(x + h), f(x) and f(x - h) are just function calls."
+  - "Put brackets around 2 * h in the central difference."

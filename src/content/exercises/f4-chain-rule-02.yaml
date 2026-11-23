@@ -1,0 +1,55 @@
+id: f4-chain-rule-02
+lesson: foundations/f4/chain-rule
+title: Forward and backward pass by hand
+prompt: |
+  The function $y = \ln(1 + e^{3x})$ is a chain of simple steps:
+
+  | Step | Value | Local derivative |
+  |---|---|---|
+  | 1 | $a = 3x$ | $\frac{da}{dx} = 3$ |
+  | 2 | $b = e^a$ | $\frac{db}{da} = e^a$ |
+  | 3 | $c = 1 + b$ | $\frac{dc}{db} = 1$ |
+  | 4 | $y = \ln c$ | $\frac{dy}{dc} = 1/c$ |
+
+  Write `forward_backward(x)` that does a forward pass (compute `a`, `b`, `c`, `y` in order) and a
+  backward pass (multiply the local derivatives), and returns the pair `(y, dy_dx)`.
+  Use the `math` module; `x` is a single number.
+starter: |
+  import math
+
+  def forward_backward(x):
+      # forward pass
+      a = 3 * x
+      # ... compute b, c and y
+      # backward pass
+      dy_dx = 0.0
+      return y, dy_dx
+solution: |
+  import math
+
+  def forward_backward(x):
+      # forward pass
+      a = 3 * x
+      b = math.exp(a)
+      c = 1 + b
+      y = math.log(c)
+      # backward pass
+      dy_dc = 1 / c
+      dc_db = 1.0
+      db_da = math.exp(a)
+      da_dx = 3.0
+      dy_dx = dy_dc * dc_db * db_da * da_dx
+      return y, dy_dx
+tests: |
+  import math
+  _f = lambda t: math.log(1 + math.exp(3 * t))
+  for _x in [-2.0, -0.5, 0.0, 0.3, 1.5]:
+      _r = forward_backward(_x)
+      assert isinstance(_r, tuple) and len(_r) == 2, "Return a pair: return y, dy_dx"
+      _y, _d = _r
+      assert math.isclose(_y, _f(_x), rel_tol=1e-9), f"At x = {_x}, y should be {_f(_x):.6f}, got {_y!r}"
+      _num = (_f(_x + 1e-6) - _f(_x - 1e-6)) / 2e-6
+      assert math.isclose(_d, _num, rel_tol=1e-5, abs_tol=1e-8), f"At x = {_x}, dy/dx should be about {_num:.6f}, got {_d!r}"
+hints:
+  - "Forward: b = math.exp(a), c = 1 + b, y = math.log(c)."
+  - "Backward: dy_dx is the product (1 / c) * 1 * math.exp(a) * 3."

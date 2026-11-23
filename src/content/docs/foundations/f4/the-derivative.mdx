@@ -1,0 +1,177 @@
+---
+title: "The derivative: limits and local linear approximation"
+module: f4
+order: 2
+estMinutes: 12
+objectives:
+  - "State the limit definition of the derivative and use it to find the derivative of x squared"
+  - "Write the tangent line at a point and use it as a local linear approximation"
+  - "Read the sign and size of a derivative: rising, falling, flat, steep"
+  - "Plot a function together with its tangent line"
+goDeeper: 3b1b-essence-calculus
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+In [the previous lesson](/foundations/f4/rates-of-change/) the secant slopes of $x^2$ at $x = 1$ crept
+towards 2 as the interval shrank. That limiting slope is the <Term id="derivative" />. This lesson
+gives it a definition, a notation and, most usefully for ML, a second meaning: the best straight-line
+approximation to a function near a point.
+
+## The definition
+
+The derivative of $f$ at the point $a$ is
+
+$$
+f'(a) = \lim_{h \to 0} \frac{f(a + h) - f(a)}{h}
+$$
+
+Read $\lim_{h \to 0}$ as "the value this expression approaches as $h$ gets closer and closer to 0".
+The fraction is the secant slope from the last lesson; the limit is what it settles to.
+
+The derivative at every point gives a new function, $f'(x)$. There are several notations for it, all
+meaning the same thing:
+
+| Notation | Read as | Common where |
+|---|---|---|
+| $f'(x)$ | "f prime of x" | short and handy |
+| $\frac{df}{dx}$ | "d f by d x" | makes the variable explicit; used for the chain rule |
+| $\frac{d}{dx} x^2$ | "the derivative of x squared" | when the function has no name |
+
+$\frac{df}{dx}$ is not really a fraction, but it behaves like a tiny change in $f$ divided by a tiny
+change in $x$, and that intuition is a good one.
+
+## Worked example: the derivative of $x^2$ everywhere
+
+Repeat last lesson's algebra at a general point $x$ instead of at 1. Expand
+$(x + h)^2 = x^2 + 2xh + h^2$:
+
+$$
+\frac{(x + h)^2 - x^2}{h} = \frac{2xh + h^2}{h} = 2x + h \;\longrightarrow\; 2x \quad\text{as } h \to 0
+$$
+
+So $\frac{d}{dx}x^2 = 2x$. At $x = 1$ the slope is 2 (as we found), at $x = 3$ it is 6, at $x = 0$ it
+is 0 (the bottom of the bowl), and at $x = -2$ it is $-4$ (the curve falls as you move right).
+
+You will rarely need the limit again. The next lesson gives rules that produce derivatives in one
+line. But the definition is what those rules are built on, and it is also exactly what numerical
+differentiation computes (lesson 5).
+
+## Reading a derivative
+
+The sign and size of $f'(x)$ tell you the shape of the function near $x$:
+
+- $f'(x) > 0$: the function is **rising** there.
+- $f'(x) < 0$: it is **falling**.
+- $f'(x) = 0$: it is **flat** for an instant. Minimums and maximums of smooth functions happen at
+  such points, which is why "find where the derivative is zero" is a classic way to find the best
+  value of something.
+- $|f'(x)|$ large: the function is **steep** and very sensitive to its input there.
+
+## Zoom in: every smooth curve looks like a line
+
+Here is the idea that matters most for ML. Zoom in far enough on a smooth curve and it looks straight.
+The straight line it looks like is the tangent line, which passes through $(a, f(a))$ with slope
+$f'(a)$:
+
+$$
+\text{tangent}(x) = f(a) + f'(a)\,(x - a)
+$$
+
+Near $a$ the function and its tangent line almost agree. Write the step as $\Delta x = x - a$:
+
+$$
+f(a + \Delta x) \approx f(a) + f'(a)\,\Delta x
+$$
+
+This is the **local linear approximation**. In words: *change in output ≈ derivative × change in
+input*. Watch how good it is for $f(x) = x^2$ at $a = 3$, where $f'(3) = 6$:
+
+```python
+def f(x):
+    return x ** 2
+
+def tangent(x, a):
+    return f(a) + 2 * a * (x - a)   # f'(a) = 2a
+
+a = 3.0
+for dx in [1.0, 0.1, 0.01]:
+    x = a + dx
+    print(f"dx = {dx:<5} f = {f(x):.4f}  tangent = {tangent(x, a):.4f}  gap = {f(x) - tangent(x, a):.4f}")
+```
+
+```text title="Output"
+dx = 1.0   f = 16.0000  tangent = 15.0000  gap = 1.0000
+dx = 0.1   f = 9.6100  tangent = 9.6000  gap = 0.0100
+dx = 0.01  f = 9.0601  tangent = 9.0600  gap = 0.0001
+```
+
+Each time the step shrinks 10 times, the gap shrinks 100 times (here the gap is exactly
+$\Delta x^2$). So for small steps the line is an excellent stand-in for the curve.
+
+A second example: what is $\sqrt{4.1}$? The derivative of $\sqrt{x}$ is $\frac{1}{2\sqrt{x}}$ (you can
+take this on trust for now), which is $\frac{1}{4}$ at $x = 4$. So
+$\sqrt{4.1} \approx 2 + \frac{1}{4}(0.1) = 2.025$.
+
+```python
+import math
+
+a, dx = 4.0, 0.1
+approx = math.sqrt(a) + (1 / (2 * math.sqrt(a))) * dx
+print(f"linear approximation {approx:.5f}")
+print(f"true value           {math.sqrt(a + dx):.5f}")
+```
+
+```text title="Output"
+linear approximation 2.02500
+true value           2.02485
+```
+
+:::tip[Why ML cares]
+A neural network's loss is a hugely complicated function of millions of parameters. Nobody can
+picture it. But near the current parameters it behaves like a straight line (a flat plane, in many
+dimensions), and the derivative tells you that line's slope. Gradient descent trusts that line for one
+small step, then recomputes. That is why the steps must be small: the approximation only holds nearby.
+:::
+
+## Plotting a function and its tangent line
+
+`np.linspace` and `plt.plot` from F2 are all you need. The tangent formula works on whole arrays at
+once:
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+f = lambda x: x ** 2
+df = lambda x: 2 * x
+a = 1.0
+
+x = np.linspace(-1, 3, 200)
+plt.plot(x, f(x), label="f(x) = x²")
+plt.plot(x, f(a) + df(a) * (x - a), "--", label="tangent at x = 1")
+plt.scatter([a], [f(a)])
+plt.legend()
+plt.show()
+```
+
+The dashed line touches the curve at $x = 1$ and hugs it nearby, then drifts away further out.
+
+## When there is no derivative
+
+The limit has to exist and give the same answer from both sides. $f(x) = |x|$ has slope $-1$ to the
+left of 0 and $+1$ to the right, so at the sharp corner $x = 0$ there is no single tangent line and no
+derivative. ML uses such functions anyway (the ReLU, $\max(0, x)$, has a corner at 0) and simply picks
+a value at the corner. Corners are rare points; almost everywhere the derivative exists.
+
+## Try it
+
+<CodeExercise id="f4-the-derivative-01" />
+
+## Summary
+
+- $f'(a) = \lim_{h \to 0} \frac{f(a + h) - f(a)}{h}$: the slope of the tangent line at $a$.
+- From the definition, $\frac{d}{dx}x^2 = 2x$.
+- Sign tells rising or falling; zero means flat (a candidate minimum or maximum); size tells steepness.
+- Local linear approximation: $f(a + \Delta x) \approx f(a) + f'(a)\,\Delta x$, very accurate for
+  small $\Delta x$. This is the idea gradient descent relies on.

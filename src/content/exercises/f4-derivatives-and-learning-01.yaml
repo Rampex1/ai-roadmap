@@ -1,0 +1,48 @@
+id: f4-derivatives-and-learning-01
+lesson: foundations/f4/derivatives-and-learning
+title: Loss and gradient for a line fit
+prompt: |
+  Write `loss_and_grad(w, b, x, y)` for the mean squared error loss
+  $L(w, b) = \frac{1}{n}\sum_i (w x_i + b - y_i)^2$. Return the triple `(loss, dw, db)` where `dw` and
+  `db` are the partial derivatives $\frac{\partial L}{\partial w}$ and $\frac{\partial L}{\partial b}$.
+  `x` and `y` are NumPy arrays of the same length.
+
+  Check: with `x = [0, 1, 2, 3]`, `y = [1, 3, 5, 7]` and `w = b = 0`, the answer is `(21.0, -17.0, -8.0)`.
+starter: |
+  import numpy as np
+
+  def loss_and_grad(w, b, x, y):
+      r = w * x + b - y
+      loss = np.mean(r ** 2)
+      dw = 0.0
+      db = 0.0
+      return loss, dw, db
+solution: |
+  import numpy as np
+
+  def loss_and_grad(w, b, x, y):
+      r = w * x + b - y
+      loss = np.mean(r ** 2)
+      dw = np.mean(2 * r * x)
+      db = np.mean(2 * r)
+      return loss, dw, db
+tests: |
+  import numpy as np
+  _x = np.array([0.0, 1.0, 2.0, 3.0]); _y = np.array([1.0, 3.0, 5.0, 7.0])
+  _r = loss_and_grad(0.0, 0.0, _x, _y)
+  assert _r is not None and len(_r) == 3, "Return a triple: return loss, dw, db"
+  np.testing.assert_allclose(_r, [21.0, -17.0, -8.0], err_msg="At w = b = 0 on the lesson data, expected (21, -17, -8)")
+  _rng = np.random.default_rng(4)
+  _x = _rng.normal(size=20); _y = 3 * _x - 2 + _rng.normal(size=20)
+  _L = lambda w, b: np.mean((w * _x + b - _y) ** 2)
+  _h = 1e-6
+  for _w, _b in [(0.5, 1.0), (-2.0, 0.3), (3.0, -2.0)]:
+      _loss, _dw, _db = loss_and_grad(_w, _b, _x, _y)
+      assert abs(_loss - _L(_w, _b)) < 1e-9, f"Wrong loss at w={_w}, b={_b}"
+      _nw = (_L(_w + _h, _b) - _L(_w - _h, _b)) / (2 * _h)
+      _nb = (_L(_w, _b + _h) - _L(_w, _b - _h)) / (2 * _h)
+      assert abs(_dw - _nw) < 1e-5, f"dw at w={_w}, b={_b} should be about {_nw:.5f}, got {_dw!r}"
+      assert abs(_db - _nb) < 1e-5, f"db at w={_w}, b={_b} should be about {_nb:.5f}, got {_db!r}"
+hints:
+  - "Chain rule: the derivative of r**2 is 2r, and r changes by x per unit of w and by 1 per unit of b."
+  - "dw = np.mean(2 * r * x) and db = np.mean(2 * r)."

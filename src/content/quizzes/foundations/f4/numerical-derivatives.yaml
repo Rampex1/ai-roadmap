@@ -1,0 +1,109 @@
+items:
+  - id: f4-numerical-derivatives-01
+    type: mcq
+    prompt: "Which formula is the central difference approximation to $f'(x)$?"
+    explanation: "The central difference samples one step on each side and divides by the total distance, 2h."
+    options:
+      - text: (f(x + h) - f(x - h)) / (2h)
+        correct: true
+        why: Symmetric samples, divided by the distance between them.
+      - text: (f(x + h) - f(x)) / h
+        why: That is the forward difference.
+      - text: (f(x + h) - f(x - h)) / h
+        why: The two samples are 2h apart, so dividing by h doubles the answer.
+      - text: (f(x + h) + f(x - h)) / (2h)
+        why: The values must be subtracted to measure change.
+  - id: f4-numerical-derivatives-02
+    type: numeric
+    prompt: "Compute the forward difference for $f(x) = x^2$ at $x = 3$ with $h = 0.1$."
+    answer: 6.1
+    tol: 0.0001
+    explanation: "(3.1² - 3²) / 0.1 = (9.61 - 9) / 0.1 = 6.1. The true derivative is 6; the error is h = 0.1."
+  - id: f4-numerical-derivatives-03
+    type: numeric
+    prompt: "Compute the central difference for $f(x) = x^2$ at $x = 3$ with $h = 0.1$."
+    answer: 6
+    tol: 0.0001
+    explanation: "(3.1² - 2.9²) / 0.2 = (9.61 - 8.41) / 0.2 = 6. For a parabola the central difference is exact."
+  - id: f4-numerical-derivatives-04
+    type: mcq
+    prompt: "For a smooth function, how does the error of the central difference change when $h$ is made 10 times smaller (while $h$ is still large enough that rounding does not matter)?"
+    explanation: "The central difference's truncation error is roughly proportional to h², so 10 times smaller h gives about 100 times smaller error."
+    options:
+      - text: About 100 times smaller
+        correct: true
+        why: The error is roughly proportional to h squared.
+      - text: About 10 times smaller
+        why: That is the behaviour of the forward difference.
+      - text: It does not change
+        why: Shrinking h does reduce the truncation error.
+      - text: About 10 times larger
+        why: Error grows only once h is so small that rounding dominates.
+  - id: f4-numerical-derivatives-05
+    type: mcq
+    prompt: "Why does a step like $h = 10^{-13}$ give a *worse* numerical derivative than $h = 10^{-5}$?"
+    explanation: "Floats keep about 16 significant digits. With a tiny h, f(x + h) and f(x - h) agree in almost all digits, so their difference is mostly rounding noise, which is then divided by a tiny number."
+    options:
+      - text: Subtracting two nearly equal floats leaves mostly rounding error, which dividing by a tiny h amplifies
+        correct: true
+        why: This is rounding (cancellation) error taking over from truncation error.
+      - text: The limit definition only works for h larger than 1e-10
+        why: Mathematically smaller h is always better; the problem is floating-point arithmetic.
+      - text: NumPy refuses to compute with numbers that small
+        why: NumPy computes happily; the result is just inaccurate.
+      - text: Smaller h always gives a smaller error
+        why: The table in the lesson shows the error growing again for very small h.
+  - id: f4-numerical-derivatives-06
+    type: output
+    prompt: "What does this print?"
+    code: |
+      def f(x):
+          return x ** 3
+
+      h = 0.1
+      print(round((f(1 + h) - f(1 - h)) / (2 * h), 4))
+    answer: "3.01"
+    explanation: "(1.331 - 0.729) / 0.2 = 3.01. The true derivative 3x² is 3 at x = 1; for x³ the central difference error is exactly h² = 0.01."
+  - id: f4-numerical-derivatives-07
+    type: mcq
+    prompt: "You derived a gradient by hand and want to check it numerically. Which plan is best?"
+    explanation: "Check at several random points with a central difference and a relative error. A single point, especially a special one like x = 0 or x = 1, can hide bugs."
+    options:
+      - text: Compare with a central difference at several random points, using relative error
+        correct: true
+        why: Several points catch bugs that vanish at special values.
+      - text: Compare at x = 1 only
+        why: A missing factor of x, for example, is invisible at x = 1.
+      - text: Compare with a forward difference using h = 1e-15
+        why: That h is far too small; rounding error would swamp the result.
+      - text: Skip the check if the training loss goes down
+        why: Slightly wrong gradients can still reduce the loss, just badly.
+  - id: f4-numerical-derivatives-08
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      x = np.array([0.0, 1.0, 2.0, 3.0])
+      print(np.gradient(x ** 2, x))
+    answer: "[1. 2. 4. 5.]"
+    explanation: "Inside, np.gradient uses central differences, which are exact for x²: 2 at x = 1 and 4 at x = 2. At the ends it can only look one way: (1 - 0) / 1 = 1 and (9 - 4) / 1 = 5."
+  - id: f4-numerical-derivatives-09
+    type: multi
+    prompt: "Which statements about numerical derivatives are true?"
+    explanation: "Numerical derivatives are for checking, cost two evaluations per input with central differences, and are accurate to roughly 6 to 10 digits at best."
+    options:
+      - text: They are mainly used to check analytic or coded derivatives
+        correct: true
+        why: Training uses exact gradients from backpropagation; finite differences check them.
+      - text: A central difference costs two function evaluations per input variable
+        correct: true
+        why: One at x + h and one at x - h for each input.
+      - text: They agree with the true derivative to all 16 significant digits
+        why: Truncation and rounding error limit them to roughly 6 to 10 digits.
+      - text: They are the usual way to train large neural networks
+        why: With millions of parameters they would be far too slow.
+  - id: f4-numerical-derivatives-10
+    type: cloze
+    prompt: "Approximating a derivative from function values at nearby points is called a finite ____ approximation."
+    accept: ["difference", "differences"]
+    explanation: "Finite differences: forward, backward and central."

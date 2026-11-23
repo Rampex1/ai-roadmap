@@ -1,0 +1,5 @@
+title: "Mathematics for Machine Learning (Deisenroth, Faisal and Ong)"
+url: https://mml-book.github.io/
+kind: book
+free: true
+modules: [f3, f4]

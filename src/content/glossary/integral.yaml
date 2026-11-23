@@ -1,0 +1,7 @@
+term: "Integral"
+short: "The accumulated total of a function over an interval, pictured as the signed area under its curve."
+body: |
+  $\int_a^b f(x)\,dx$ is the limit of sums of thin strips $f(x_i)\,\Delta x$ as the strips get thinner.
+  Integration and differentiation undo each other (the fundamental theorem of calculus). In ML,
+  integrals appear as probabilities (area under a density) and expected values $\int x\,p(x)\,dx$.
+related: ["derivative"]

@@ -1,0 +1,112 @@
+items:
+  - id: f4-chain-rule-01
+    type: mcq
+    prompt: "What is $\\frac{d}{dx}(5x + 2)^3$?"
+    explanation: "Outer: 3u² with u = 5x + 2. Inner: du/dx = 5. Multiply: 15(5x + 2)²."
+    options:
+      - text: 15(5x + 2)²
+        correct: true
+        why: Outer derivative 3(5x + 2)² times inner derivative 5.
+      - text: 3(5x + 2)²
+        why: This forgets to multiply by the inner derivative, 5.
+      - text: 15x²
+        why: That differentiates as if the function were 5x cubed.
+      - text: (5x + 2)² · 5
+        why: The power 3 must come down as a factor too.
+  - id: f4-chain-rule-02
+    type: numeric
+    prompt: "Let $y = u^2$ and $u = 3x + 1$. What is $\\frac{dy}{dx}$ at $x = 1$?"
+    answer: 24
+    tol: 0.001
+    explanation: "dy/du = 2u = 2 × 4 = 8 at x = 1, and du/dx = 3, so dy/dx = 24. Check: 6(3x + 1) = 24."
+  - id: f4-chain-rule-03
+    type: mcq
+    prompt: "What is $\\frac{d}{dx}e^{-2x}$?"
+    explanation: "Outer derivative e^u, inner derivative of -2x is -2, so the result is -2e^(-2x)."
+    options:
+      - text: -2e^(-2x)
+        correct: true
+        why: The inner function -2x contributes a factor of -2.
+      - text: e^(-2x)
+        why: This forgets the inner derivative.
+      - text: -2x e^(-2x - 1)
+        why: The power rule does not apply when the variable is in the exponent.
+      - text: 2e^(-2x)
+        why: The sign of the inner derivative matters.
+  - id: f4-chain-rule-04
+    type: order
+    prompt: "Put the steps of computing $\\frac{dy}{dx}$ for $y = e^{\\sin(x^2)}$ by backpropagation in order."
+    explanation: "First the forward pass computes and stores the intermediate values in order. Then the backward pass multiplies local derivatives from the output back to the input."
+    items:
+      - Compute a = x² and store it
+      - Compute b = sin a and store it
+      - Compute y = eᵇ
+      - Multiply dy/db = eᵇ by db/da = cos a
+      - Multiply that result by da/dx = 2x
+  - id: f4-chain-rule-05
+    type: output
+    prompt: "What does this print?"
+    code: |
+      x = 2.0
+      a = 3 * x       # step 1
+      y = a ** 2      # step 2
+      dy_da = 2 * a
+      da_dx = 3
+      print(dy_da * da_dx)
+    answer: "36.0"
+    explanation: "a = 6, so dy/da = 12, and da/dx = 3. The chain rule gives 12 × 3 = 36. Check: y = 9x² has derivative 18x = 36 at x = 2."
+  - id: f4-chain-rule-06
+    type: numeric
+    prompt: "The sigmoid is $\\sigma(z) = \\frac{1}{1 + e^{-z}}$ and $\\sigma'(z) = \\sigma(z)(1 - \\sigma(z))$. If $\\sigma(z) = 0.8$, what is $\\sigma'(z)$?"
+    answer: 0.16
+    tol: 0.0001
+    explanation: "0.8 × (1 - 0.8) = 0.8 × 0.2 = 0.16. Once the forward pass knows σ(z), the derivative is one multiplication."
+  - id: f4-chain-rule-07
+    type: mcq
+    prompt: "What is the largest value the sigmoid's derivative $\\sigma'(z)$ can take?"
+    explanation: "σ(1 - σ) is largest when σ = 0.5, which happens at z = 0, giving 0.25."
+    options:
+      - text: "0.25"
+        correct: true
+        why: At z = 0, σ = 0.5 and 0.5 × 0.5 = 0.25.
+      - text: "1"
+        why: σ(1 - σ) with σ between 0 and 1 can never reach 1.
+      - text: "0.5"
+        why: 0.5 is σ(0), the value of the sigmoid, not its slope.
+      - text: It has no maximum
+        why: σ(1 - σ) is a downward parabola in σ with a peak at σ = 0.5.
+  - id: f4-chain-rule-08
+    type: mcq
+    prompt: "Why is the backward pass in backpropagation efficient for training a model with a million weights?"
+    explanation: "Going from the output back, one pass shares the products of local derivatives and delivers the loss's derivative with respect to every weight at once."
+    options:
+      - text: One backward pass gives the derivative of the loss with respect to every weight at once
+        correct: true
+        why: Shared products along the chain mean one sweep covers all weights.
+      - text: It skips the forward pass
+        why: The backward pass needs the values stored by the forward pass.
+      - text: It approximates derivatives with finite differences
+        why: Backprop computes exact derivatives with the chain rule; finite differences would need two passes per weight.
+      - text: It only updates the last layer
+        why: It computes derivatives for all layers.
+  - id: f4-chain-rule-09
+    type: multi
+    prompt: "Which statements about the chain rule are true?"
+    explanation: "Rates multiply along a chain; each local derivative is taken with respect to its own input; and a long chain of small factors gives a tiny product (vanishing gradients)."
+    options:
+      - text: For y = f(u) and u = g(x), dy/dx = dy/du times du/dx
+        correct: true
+        why: This is the chain rule.
+      - text: In a longer chain you multiply all the local derivatives
+        correct: true
+        why: Each link in the chain contributes one factor.
+      - text: Multiplying many sigmoid derivatives, each at most 0.25, can make the product very small
+        correct: true
+        why: This is the vanishing gradient problem.
+      - text: For a composition, you add the outer and inner derivatives
+        why: Rates along a chain multiply, they do not add.
+  - id: f4-chain-rule-10
+    type: cloze
+    prompt: "Running the chain rule from the loss back to every weight of a neural network is called ____."
+    accept: ["backpropagation", "backprop", "back propagation", "back-propagation"]
+    explanation: "Backpropagation is the chain rule applied efficiently, from the output backwards."

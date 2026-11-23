@@ -1,0 +1,8 @@
+term: "Finite difference"
+short: "Approximating a derivative from function values at nearby points, such as (f(x + h) − f(x − h)) / 2h."
+body: |
+  The forward difference $\frac{f(x + h) - f(x)}{h}$ has error roughly proportional to $h$; the central
+  difference $\frac{f(x + h) - f(x - h)}{2h}$ has error roughly proportional to $h^2$. A step that is
+  too small loses accuracy to floating-point rounding, so $h \approx 10^{-5}$ is a common choice for the
+  central difference. Used to check hand-derived gradients ("gradient checking").
+related: ["derivative", "gradient", "floating-point"]

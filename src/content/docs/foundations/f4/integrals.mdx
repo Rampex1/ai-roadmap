@@ -1,0 +1,154 @@
+---
+title: "Integrals as accumulated area"
+module: f4
+order: 8
+estMinutes: 12
+objectives:
+  - "Interpret a definite integral as accumulated area and estimate it with a Riemann sum"
+  - "State the fundamental theorem of calculus in words"
+  - "Use numerical integration to find a probability and an expected value from a density"
+goDeeper: 3b1b-essence-calculus
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Derivatives break change into instants. Integrals do the reverse: they add up many small pieces into
+a total. ML needs much less integration than differentiation, and you will almost never integrate by
+hand. But integrals are the language of probability: probabilities and averages of continuous
+quantities are integrals (F5). This lesson gives you the picture and a way to compute them with NumPy.
+
+## Accumulation
+
+If a car drives at a steady 60 km/h for 2 hours, it covers $60 \times 2 = 120$ km: on a plot of speed
+against time, that is the area of a rectangle. If the speed changes, chop the time into short slices,
+treat the speed as constant within each slice, and add up the little rectangles. The thinner the
+slices, the better the answer. In the limit, the total is the **area under the speed curve**.
+
+That limit is the definite <Term id="integral" />:
+
+$$
+\int_a^b f(x)\,dx = \lim_{n \to \infty} \sum_{i=1}^{n} f(x_i)\,\Delta x
+$$
+
+Here $\Delta x = \frac{b - a}{n}$ is the width of each of the $n$ strips, $x_i$ is a point in strip $i$,
+and $\sum$ means "add up". The elongated S, $\int$, is a stretched "sum", and $dx$ plays the role of a
+vanishingly thin $\Delta x$. Area below the horizontal axis counts as negative.
+
+## Riemann sums in NumPy
+
+A finite version of that sum is a **Riemann sum**. Using the midpoint of each strip works well:
+
+```python
+import numpy as np
+
+def midpoint_area(f, a, b, n):
+    width = (b - a) / n
+    mids = a + width * (np.arange(n) + 0.5)   # centre of each strip
+    return np.sum(f(mids) * width)
+
+for n in [10, 100, 1000]:
+    print(n, midpoint_area(lambda x: x ** 2, 0, 1, n))
+```
+
+```text title="Output"
+10 0.3325000000000001
+100 0.33332500000000004
+1000 0.33333325
+```
+
+The sums approach $\frac{1}{3}$, the exact area under $x^2$ from 0 to 1. (The long tails of digits are
+ordinary floating-point rounding.)
+
+## Integrals undo derivatives
+
+Why exactly $\frac{1}{3}$? The **fundamental theorem of calculus** says: if $F$ is a function whose
+derivative is $f$ (that is, $F' = f$), then
+
+$$
+\int_a^b f(x)\,dx = F(b) - F(a)
+$$
+
+In words: the total accumulated change equals the end value minus the start value. For $f(x) = x^2$,
+the function $F(x) = \frac{x^3}{3}$ has derivative $x^2$ (power rule), so the area is
+$\frac{1}{3} - 0 = \frac{1}{3}$. Speed is the derivative of distance, and adding up speed × time gives
+back the distance travelled: same idea.
+
+## What ML needs: probabilities and expectations
+
+A continuous random quantity, such as a person's height, is described by a **probability density**
+$p(x)$: a curve that is never negative and has **total area 1**. The probability of landing between
+$a$ and $b$ is the area under the density over that interval:
+
+$$
+P(a < X < b) = \int_a^b p(x)\,dx
+$$
+
+The famous bell curve, the standard normal density, is
+$p(x) = \frac{1}{\sqrt{2\pi}}e^{-x^2/2}$. It has no simple $F$, so we integrate numerically.
+`np.trapezoid` adds up trapezoids under sampled points:
+
+```python
+import numpy as np
+
+def normal_pdf(x):
+    return np.exp(-x ** 2 / 2) / np.sqrt(2 * np.pi)
+
+x = np.linspace(-1, 1, 2001)
+print(round(np.trapezoid(normal_pdf(x), x), 4))     # P(-1 < X < 1)
+x = np.linspace(-10, 10, 20001)
+print(round(np.trapezoid(normal_pdf(x), x), 4))     # total area
+```
+
+```text title="Output"
+0.6827
+1.0
+```
+
+About 68% of the probability lies within one unit of the centre, and the total is 1, as a density
+must have.
+
+The **expected value** (the long-run average) of $X$ weights each value by its density:
+
+$$
+\mathbb{E}[X] = \int x\,p(x)\,dx
+$$
+
+For the density $p(x) = 2x$ on $[0, 1]$ (more weight on larger values), the exact answer is
+$\int_0^1 2x^2\,dx = \frac{2}{3}$:
+
+```python
+import numpy as np
+
+x = np.linspace(0, 1, 100001)
+p = 2 * x                                   # a density on [0, 1]
+print(round(np.trapezoid(p, x), 4))          # total probability
+print(round(np.trapezoid(x * p, x), 4))      # expected value
+```
+
+```text title="Output"
+1.0
+0.6667
+```
+
+:::note[Where this goes next]
+In F5 these integrals define the mean, variance, entropy and cross-entropy of continuous
+distributions. A training loss is often an *expected* loss over the data distribution, which we
+estimate by averaging over the samples we have. That is why `np.mean` keeps appearing in losses.
+:::
+
+`np.trapezoid` is the current name; older NumPy versions (before 2.0) called it `np.trapz`.
+
+## Try it
+
+<CodeExercise id="f4-integrals-01" />
+
+<CodeExercise id="f4-integrals-02" />
+
+## Summary
+
+- $\int_a^b f(x)\,dx$ is the accumulated (signed) area under $f$ between $a$ and $b$, the limit of sums
+  of thin strips.
+- A midpoint Riemann sum or `np.trapezoid` estimates it numerically.
+- Fundamental theorem: if $F' = f$, then $\int_a^b f\,dx = F(b) - F(a)$. Integration undoes
+  differentiation.
+- Probabilities are areas under a density (total area 1); expected values are $\int x\,p(x)\,dx$.

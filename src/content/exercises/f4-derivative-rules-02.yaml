@@ -1,0 +1,56 @@
+id: f4-derivative-rules-02
+lesson: foundations/f4/derivative-rules
+title: Product, quotient and log rules
+prompt: |
+  Write the derivatives of these three functions using the rules from this lesson. Use NumPy
+  (`np.exp`, `np.log`) so your functions also work on arrays.
+
+  1. `d1(x)`: derivative of $x^3 e^x$ (product rule).
+  2. `d2(x)`: derivative of $\dfrac{x}{x^2 + 4}$ (quotient rule).
+  3. `d3(x)`: derivative of $x \ln x$, for $x > 0$ (product rule).
+
+  The tests compare your answers with a numerical estimate at many points.
+starter: |
+  import numpy as np
+
+  def d1(x):
+      """Derivative of x**3 * e**x."""
+      return 3 * x ** 2 * np.exp(x)
+
+  def d2(x):
+      """Derivative of x / (x**2 + 4)."""
+      return 1 / (2 * x)
+
+  def d3(x):
+      """Derivative of x * ln(x)."""
+      return 1 / x
+solution: |
+  import numpy as np
+
+  def d1(x):
+      """Derivative of x**3 * e**x."""
+      return 3 * x ** 2 * np.exp(x) + x ** 3 * np.exp(x)
+
+  def d2(x):
+      """Derivative of x / (x**2 + 4)."""
+      return (4 - x ** 2) / (x ** 2 + 4) ** 2
+
+  def d3(x):
+      """Derivative of x * ln(x)."""
+      return np.log(x) + 1
+tests: |
+  import numpy as np
+  def _num(f, x, h=1e-6):
+      return (f(x + h) - f(x - h)) / (2 * h)
+  _x = np.linspace(-2, 2, 9)
+  np.testing.assert_allclose(d1(_x), _num(lambda t: t ** 3 * np.exp(t), _x), rtol=1e-5, atol=1e-7,
+      err_msg="d1 does not match the derivative of x**3 * e**x: product rule is f'g + fg'")
+  np.testing.assert_allclose(d2(_x), _num(lambda t: t / (t ** 2 + 4), _x), rtol=1e-5, atol=1e-7,
+      err_msg="d2 does not match the derivative of x / (x**2 + 4): quotient rule is (f'g - fg') / g**2")
+  _xp = np.linspace(0.2, 5, 9)
+  np.testing.assert_allclose(d3(_xp), _num(lambda t: t * np.log(t), _xp), rtol=1e-5, atol=1e-7,
+      err_msg="d3 does not match the derivative of x * ln(x): use the product rule with (ln x)' = 1/x")
+hints:
+  - "Product rule: the derivative of f times g is (derivative of f) times g plus f times (derivative of g). For d1, f = x**3 and g = e**x."
+  - "For d2, the top is x with derivative 1, and the bottom is x**2 + 4 with derivative 2x."
+  - "For d3, the derivative of ln x is 1/x, and x times 1/x is 1."

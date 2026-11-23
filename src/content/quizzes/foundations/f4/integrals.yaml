@@ -1,0 +1,100 @@
+items:
+  - id: f4-integrals-01
+    type: mcq
+    prompt: "What does $\\int_a^b f(x)\\,dx$ represent for a function $f$ that is positive on $[a, b]$?"
+    explanation: "A definite integral is the accumulated total, pictured as the area under the curve between a and b."
+    options:
+      - text: The area under the curve of f between a and b
+        correct: true
+        why: The integral is the limit of sums of thin strips f(x) Δx.
+      - text: The slope of f between a and b
+        why: That is the average rate of change, a derivative idea.
+      - text: The value of f at b minus its value at a
+        why: That is F(b) - F(a) for an antiderivative F, not for f itself.
+      - text: The largest value of f on the interval
+        why: The integral adds up values; it does not pick the largest.
+  - id: f4-integrals-02
+    type: numeric
+    prompt: "A car drives at a constant 80 km/h for 1.5 hours. What is the area under its speed-versus-time graph over that time, in km?"
+    answer: 120
+    tol: 0.001
+    explanation: "A rectangle of height 80 and width 1.5 has area 120: the distance travelled."
+  - id: f4-integrals-03
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      width = 0.5
+      mids = np.array([0.25, 0.75])
+      print(np.sum(2 * mids * width))
+    answer: "1.0"
+    explanation: "This is a midpoint sum for f(x) = 2x on [0, 1] with 2 strips: (0.5 + 1.5) × 0.5 = 1.0, the exact area of that triangle."
+  - id: f4-integrals-04
+    type: numeric
+    prompt: "Using the fundamental theorem of calculus with $F(x) = \\frac{x^3}{3}$ (whose derivative is $x^2$), what is $\\int_0^3 x^2\\,dx$?"
+    answer: 9
+    tol: 0.001
+    explanation: "F(3) - F(0) = 27/3 - 0 = 9."
+  - id: f4-integrals-05
+    type: mcq
+    prompt: "Which statement is the fundamental theorem of calculus, in words?"
+    explanation: "Integration and differentiation undo each other: integrating a rate of change over an interval gives the total change of the original quantity."
+    options:
+      - text: Adding up a rate of change over an interval gives the total change, F(b) - F(a)
+        correct: true
+        why: If F' = f, the integral of f from a to b is F(b) - F(a).
+      - text: Every function has a derivative
+        why: Not true, and not what the theorem says.
+      - text: The integral of a function is always positive
+        why: Area below the axis counts as negative.
+      - text: The derivative of a function is its area
+        why: The derivative is a slope, not an area.
+  - id: f4-integrals-06
+    type: multi
+    prompt: "Which properties must a probability density $p(x)$ have?"
+    explanation: "A density is never negative and has total area 1. Its value at a point can exceed 1; only areas are probabilities."
+    options:
+      - text: p(x) is never negative
+        correct: true
+        why: Negative areas would mean negative probabilities.
+      - text: The total area under p is 1
+        correct: true
+        why: The total probability of all outcomes is 1.
+      - text: p(x) is at most 1 everywhere
+        why: A density can exceed 1 at a point; for example 2x on [0, 1] reaches 2.
+      - text: p(x) is the probability that X equals exactly x
+        why: For a continuous quantity, probabilities come from areas over intervals.
+  - id: f4-integrals-07
+    type: numeric
+    prompt: "For the uniform density $p(x) = 0.25$ on $[0, 4]$ (and 0 elsewhere), what is $P(1 < X < 2.5)$?"
+    answer: 0.375
+    tol: 0.0001
+    explanation: "The area of a rectangle of height 0.25 and width 1.5 is 0.375."
+  - id: f4-integrals-08
+    type: mcq
+    prompt: "Which integral gives the expected value of $X$ with density $p(x)$?"
+    explanation: "The expected value weights each value x by its density: the integral of x p(x)."
+    options:
+      - text: The integral of x p(x) dx
+        correct: true
+        why: Each value is weighted by how likely it is.
+      - text: The integral of p(x) dx
+        why: That is the total probability, which is 1.
+      - text: The integral of p(x) / x dx
+        why: Dividing by x has no meaning here.
+      - text: The largest x where p(x) is positive
+        why: That is the top of the range, not the average.
+  - id: f4-integrals-09
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      x = np.linspace(0, 2, 3)
+      print(np.trapezoid(x, x))
+    answer: "2.0"
+    explanation: "Trapezoids under y = x at 0, 1, 2: (0 + 1)/2 + (1 + 2)/2 = 2.0. That is the exact area of the triangle under y = x from 0 to 2."
+  - id: f4-integrals-10
+    type: cloze
+    prompt: "A finite sum of thin strips, $\\sum f(x_i)\\,\\Delta x$, used to estimate an integral is called a ____ sum."
+    accept: ["Riemann", "riemann", "Riemann sum"]
+    explanation: "A Riemann sum. Choosing the midpoint of each strip gives the midpoint rule used in the lesson."

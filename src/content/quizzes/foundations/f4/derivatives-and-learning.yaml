@@ -1,0 +1,114 @@
+items:
+  - id: f4-derivatives-and-learning-01
+    type: mcq
+    prompt: "For $L(w, b) = \\frac{1}{n}\\sum_i (w x_i + b - y_i)^2$, what is $\\frac{\\partial L}{\\partial b}$?"
+    explanation: "With residual r_i = w x_i + b - y_i, the derivative of r_i² is 2 r_i, and ∂r_i/∂b = 1. The mean passes through."
+    options:
+      - text: (1/n) Σ 2(w xᵢ + b - yᵢ)
+        correct: true
+        why: Outer derivative 2rᵢ times inner derivative 1, averaged.
+      - text: (1/n) Σ 2(w xᵢ + b - yᵢ) xᵢ
+        why: That is ∂L/∂w, which picks up the factor xᵢ.
+      - text: (1/n) Σ (w xᵢ + b - yᵢ)²
+        why: That is the loss itself.
+      - text: "2b"
+        why: b sits inside the square together with the data; the chain rule is needed.
+  - id: f4-derivatives-and-learning-02
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      x = np.array([1.0, 2.0])
+      y = np.array([2.0, 4.0])
+      w, b = 1.0, 0.0
+      r = w * x + b - y
+      print(np.mean(r ** 2), np.mean(2 * r * x), np.mean(2 * r))
+    answer: "2.5 -5.0 -3.0"
+    explanation: "Residuals are -1 and -2. Loss = (1 + 4)/2 = 2.5. ∂L/∂w = mean(2 × [-1, -4]) = -5. ∂L/∂b = mean(2 × [-1, -2]) = -3."
+  - id: f4-derivatives-and-learning-03
+    type: mcq
+    prompt: "At the current $(w, b)$, $\\frac{\\partial L}{\\partial w} = -5$. To lower the loss with a small step, what should happen to $w$?"
+    explanation: "A negative partial means increasing w lowers L. Gradient descent does w ← w - η(-5) = w + 5η."
+    options:
+      - text: Increase it
+        correct: true
+        why: Stepping against a negative derivative means moving w up.
+      - text: Decrease it
+        why: Decreasing w would increase the loss, since the slope is negative.
+      - text: Leave it unchanged
+        why: The derivative is not zero, so changing w helps.
+      - text: Set it to -5
+        why: The derivative is a slope, not the best value of w.
+  - id: f4-derivatives-and-learning-04
+    type: numeric
+    prompt: "With $w = 1$, $\\frac{\\partial L}{\\partial w} = -5$ and learning rate $\\eta = 0.1$, what is $w$ after one gradient descent step?"
+    answer: 1.5
+    tol: 0.0001
+    explanation: "w ← w - η ∂L/∂w = 1 - 0.1 × (-5) = 1.5."
+  - id: f4-derivatives-and-learning-05
+    type: mcq
+    prompt: "Why does a small step $\\Delta\\boldsymbol{\\theta} = -\\eta\\nabla L$ lower the loss?"
+    explanation: "The linear approximation gives ΔL ≈ ∇L · Δθ = -η‖∇L‖², which is never positive."
+    options:
+      - text: The linear approximation gives a change of about -η times the squared length of the gradient, which is never positive
+        correct: true
+        why: ∇L · (-η∇L) = -η‖∇L‖² ≤ 0.
+      - text: Because the gradient always points at the minimum
+        why: It points steepest uphill locally; it need not point at the minimum.
+      - text: Because η is negative
+        why: η is a small positive number; the minus sign is in the update rule.
+      - text: Any step at all lowers the loss
+        why: A step along +∇L, or a step that is too large, can raise it.
+  - id: f4-derivatives-and-learning-06
+    type: mcq
+    prompt: "You set the learning rate far too large and the loss grows from step to step. What is the best explanation?"
+    explanation: "Large steps leave the region where the linear approximation holds, so they overshoot the valley."
+    options:
+      - text: The steps go so far that the linear approximation no longer holds and they overshoot the valley
+        correct: true
+        why: The derivative only predicts the loss well near the current point.
+      - text: The gradient has the wrong sign
+        why: The gradient can be correct; the step size is the problem.
+      - text: Gradient descent only works with a learning rate of exactly 1
+        why: Learning rates are usually much smaller than 1, and there is no single right value.
+      - text: The data must be wrong
+        why: The same data trains fine with a smaller learning rate.
+  - id: f4-derivatives-and-learning-07
+    type: order
+    prompt: "Put one step of gradient descent on $L(w, b)$ in order."
+    explanation: "Predict, measure the residuals, compute the partial derivatives from them, then update both parameters against the gradient."
+    items:
+      - Compute predictions w xᵢ + b for all inputs
+      - Compute the residuals by subtracting the targets
+      - Compute ∂L/∂w and ∂L/∂b from the residuals
+      - Update w and b by subtracting the learning rate times the partials
+  - id: f4-derivatives-and-learning-08
+    type: multi
+    prompt: "Which tools from this module are used in training a model by gradient descent?"
+    explanation: "All but the last appear: partials and the gradient give the step direction, the chain rule computes them through the model, and finite differences check them. Integrals come in later through expected losses and probability, but are not needed to take a step."
+    options:
+      - text: Partial derivatives of the loss for each parameter
+        correct: true
+        why: Each parameter's update uses its own partial.
+      - text: The chain rule, to differentiate through the model
+        correct: true
+        why: The loss is a composition of model and error; backprop is the chain rule.
+      - text: The gradient as the direction of steepest ascent, stepped against
+        correct: true
+        why: Gradient descent moves along minus the gradient.
+      - text: Finite differences, to check the gradient code
+        correct: true
+        why: A gradient check catches bugs before training.
+      - text: An integral of the loss, computed at every update step
+        why: Each step needs only the gradient. Integrals appear in the theory of expected loss, not in the update itself.
+  - id: f4-derivatives-and-learning-09
+    type: numeric
+    prompt: "For data $x = [0, 1, 2, 3]$, $y = [1, 3, 5, 7]$ and parameters $w = 2$, $b = 1$, what is the mean squared error loss?"
+    answer: 0
+    tol: 0.000001
+    explanation: "The data lie exactly on y = 2x + 1, so every residual is 0 and the loss is 0. Its gradient is also 0, so gradient descent stops here."
+  - id: f4-derivatives-and-learning-10
+    type: cloze
+    prompt: "Repeatedly updating parameters by $\\boldsymbol{\\theta} \\leftarrow \\boldsymbol{\\theta} - \\eta\\nabla L$ is called gradient ____."
+    accept: ["descent"]
+    explanation: "Gradient descent: walk downhill on the loss surface, one small step at a time."

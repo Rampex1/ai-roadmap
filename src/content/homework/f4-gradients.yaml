@@ -1,0 +1,33 @@
+id: f4-gradients
+module: f4
+kind: homework
+title: "Derive and verify gradients, then map a loss surface"
+brief: |
+  Work out derivatives and gradients by hand, then prove each one right with finite differences: the
+  habit that catches gradient bugs before they ruin a training run. Download the notebook and open it
+  in local Jupyter (as set up in F0) or [Google Colab](https://colab.research.google.com/)
+  (File > Upload notebook). Only NumPy and matplotlib are needed.
+
+  Each task has a `TODO` cell and a check cell that prints `OK` when your code is right:
+
+  1. **`central_diff(f, x, h)`**: a central-difference derivative that works on arrays.
+  2. **Five analytic derivatives**: $x^3 - 2x$, $x e^{-x}$, $\sin(x^2)$, the sigmoid and
+     $\ln(1 + x^2)$. Derive each on paper with the power, product and chain rules, code it, and check
+     it against `central_diff` at 61 points.
+  3. **Gradients in two variables**: write `numerical_gradient(f, p)`, derive
+     $\nabla g$ for $g(x, y) = x^2 y + \sin y$, and pass a gradient check at random points.
+  4. **A tiny loss**: code $L(w, b) = \frac{1}{n}\sum_i (w x_i + b - y_i)^2$ and its analytic gradient,
+     explain your chain-rule derivation in a sentence or two, and verify it numerically.
+  5. **The loss surface**: evaluate $L$ on a grid with `np.meshgrid`, draw its contours, mark the
+     least-squares minimum from `np.polyfit`, confirm the gradient there is zero, and draw
+     minus-gradient arrows with `plt.quiver`.
+
+  A stretch task runs 60 steps of gradient descent and plots the path across the contours.
+notebook: /homework/f4-gradients.ipynb
+rubric:
+  - "Every check cell for Tasks 1 to 5 prints OK after restarting and running all cells"
+  - "Each of the five derivatives in Task 2 was derived on paper first, not found with a computer algebra tool"
+  - "The Task 4 markdown cell explains where the factor 2, the factor x and the 1/n in the gradient come from"
+  - "The contour plot has labelled axes, marks the minimum, and shows minus-gradient arrows that point downhill and cross the contours at right angles"
+  - "numerical_gradient does not modify its input array and works for any number of inputs"
+compute: "Any laptop or free Colab (CPU), under 15 minutes including reading; every cell runs in seconds"

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 380" width="520" height="380" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Contour lines of f(x, y) = x squared plus 3 y squared, which are ellipses around the minimum at the origin. At the point (1, 1) the gradient (2, 6) points uphill, perpendicular to the contour, and the negative gradient points downhill</title>
+  <defs><marker id="f4gc-u" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#0f766e"/></marker>
+  <marker id="f4gc-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#d97706"/></marker></defs>
+  <g stroke="#8b93b8" stroke-width="1"><line x1="20" y1="190" x2="500" y2="190"/><line x1="260" y1="15" x2="260" y2="365"/></g>
+  <ellipse cx="260" cy="190" rx="70.0" ry="40.4" fill="none" stroke="#4f46e5" stroke-width="2"/>
+  <text x="260" y="245.4" font-size="13" fill="#4f46e5" text-anchor="middle">f = 1</text>
+  <ellipse cx="260" cy="190" rx="140.0" ry="80.8" fill="none" stroke="#4f46e5" stroke-width="2"/>
+  <text x="260" y="285.8" font-size="13" fill="#4f46e5" text-anchor="middle">f = 4</text>
+  <ellipse cx="260" cy="190" rx="210.0" ry="121.2" fill="none" stroke="#4f46e5" stroke-width="2"/>
+  <text x="260" y="326.2" font-size="13" fill="#4f46e5" text-anchor="middle">f = 9</text>
+  <line x1="330" y1="120" x2="355.3" y2="44.1" stroke="#0f766e" stroke-width="3" marker-end="url(#f4gc-u)"/>
+  <line x1="330" y1="120" x2="304.7" y2="195.9" stroke="#d97706" stroke-width="3" stroke-dasharray="7 4" marker-end="url(#f4gc-d)"/>
+  <circle cx="330" cy="120" r="6" fill="#0f766e"/>
+  <circle cx="260" cy="190" r="4" fill="#8b93b8"/>
+  <g font-size="14" font-weight="700">
+    <text x="363.3" y="56.1" fill="#0f766e">∇f = (2, 6): uphill</text>
+    <text x="294.7" y="217.9" fill="#d97706" text-anchor="end">−∇f: downhill</text>
+    <text x="340" y="124" fill="#8b93b8">(1, 1)</text>
+    <text x="252" y="182" fill="#8b93b8" text-anchor="end">minimum</text>
+  </g>
+</svg>

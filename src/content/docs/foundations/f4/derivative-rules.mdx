@@ -1,0 +1,176 @@
+---
+title: "Derivative rules, exponentials and logarithms"
+module: f4
+order: 3
+estMinutes: 14
+objectives:
+  - "Differentiate polynomials with the power, constant multiple and sum rules"
+  - "Apply the product and quotient rules to simple functions"
+  - "State the derivatives of e^x and ln x, and explain why these functions appear throughout ML"
+goDeeper: 3b1b-essence-calculus
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Working out every <Term id="derivative" /> from the limit definition would be slow. Instead, a
+handful of rules, each proved once from the definition, cover almost every function you will meet.
+This lesson keeps the rules light: you need to recognise them and use them on small examples, because
+in practice libraries like PyTorch apply them for you.
+
+## The basic rules
+
+| Rule | Function | Derivative |
+|---|---|---|
+| Constant | $c$ | $0$ |
+| Power | $x^n$ | $n\,x^{n-1}$ |
+| Constant multiple | $c\,f(x)$ | $c\,f'(x)$ |
+| Sum | $f(x) + g(x)$ | $f'(x) + g'(x)$ |
+
+Here $c$ and $n$ stand for fixed numbers. In words:
+
+- A constant does not change, so its rate of change is 0.
+- **Power rule:** bring the power down in front, then reduce the power by one. $x^2 \to 2x$ (matching
+  the last lesson), $x^3 \to 3x^2$, and $x = x^1 \to 1$. It works for any power, including negative
+  and fractional ones: $\sqrt{x} = x^{1/2} \to \frac{1}{2}x^{-1/2} = \frac{1}{2\sqrt{x}}$, and
+  $\frac{1}{x} = x^{-1} \to -x^{-2}$.
+- Constant factors ride along, and a sum is differentiated term by term.
+
+**Worked example.** $f(x) = 3x^4 - 2x + 5$.
+
+$$
+f'(x) = 3 \cdot 4x^3 - 2 \cdot 1 + 0 = 12x^3 - 2
+$$
+
+At $x = 1$ the slope is $12 - 2 = 10$.
+
+## Product and quotient rules
+
+When two functions are multiplied, the derivative is *not* the product of the derivatives. The
+**product rule** is
+
+$$
+\big(f(x)\,g(x)\big)' = f'(x)\,g(x) + f(x)\,g'(x)
+$$
+
+Intuition: picture a rectangle with sides $f$ and $g$. If both sides grow a little, the area grows by
+(change in $f$) × $g$ plus $f$ × (change in $g$), plus a tiny corner piece that vanishes in the limit.
+
+The **quotient rule**, for one function divided by another, is
+
+$$
+\left(\frac{f(x)}{g(x)}\right)' = \frac{f'(x)\,g(x) - f(x)\,g'(x)}{g(x)^2}
+$$
+
+**Worked example.** $\frac{x}{1 + x^2}$: here $f = x$, $f' = 1$, $g = 1 + x^2$, $g' = 2x$:
+
+$$
+\frac{1 \cdot (1 + x^2) - x \cdot 2x}{(1 + x^2)^2} = \frac{1 - x^2}{(1 + x^2)^2}
+$$
+
+You will use the quotient rule rarely. It is listed so you recognise it.
+
+## The exponential function $e^x$
+
+The number $e \approx 2.71828$ is chosen to make one thing true: the function $e^x$ is its own
+derivative.
+
+$$
+\frac{d}{dx} e^x = e^x
+$$
+
+At every point, the slope of $e^x$ equals its height. It grows in proportion to its size, which is
+the definition of exponential growth. In NumPy it is `np.exp`, and it is always positive:
+
+```python
+import numpy as np
+print(np.exp([-2.0, 0.0, 2.0]))
+print(np.log([0.5, 1.0, np.e, 100.0]))
+```
+
+```text title="Output"
+[0.13533528 1.         7.3890561 ]
+[-0.69314718  0.          1.          4.60517019]
+```
+
+**Product rule with $e^x$.** For $x^2 e^x$: $f = x^2$, $f' = 2x$, $g = e^x$, $g' = e^x$, so the
+derivative is $2x\,e^x + x^2 e^x$. You can check a result like this numerically by computing a secant
+slope over a tiny interval on both sides (lesson 5 explains why this works so well):
+
+```python
+import math
+
+def f(x):
+    return x ** 2 * math.exp(x)
+
+def df(x):
+    return 2 * x * math.exp(x) + x ** 2 * math.exp(x)
+
+x, h = 1.0, 1e-6
+print(f"rule:    {df(x):.6f}")
+print(f"numeric: {(f(x + h) - f(x - h)) / (2 * h):.6f}")
+```
+
+```text title="Output"
+rule:    8.154845
+numeric: 8.154845
+```
+
+## The natural logarithm $\ln x$
+
+$\ln x$ (`np.log` in NumPy) undoes $e^x$: $\ln(e^x) = x$ and $e^{\ln x} = x$. It is defined only for
+$x > 0$. Its derivative is
+
+$$
+\frac{d}{dx}\ln x = \frac{1}{x}
+$$
+
+Two properties of logs do a lot of work in ML:
+
+- $\ln(ab) = \ln a + \ln b$: logs turn **products into sums**.
+- $\ln$ is increasing, so making $\ln p$ bigger is the same as making $p$ bigger.
+
+## Why exponentials and logs are everywhere in ML
+
+- **Turning scores into probabilities.** $e^z$ is positive for every $z$, so it can turn any score
+  into a positive number. The sigmoid $\frac{1}{1 + e^{-z}}$ (next lesson) and softmax (F9) are built
+  this way.
+- **Products of probabilities underflow.** The probability of a whole dataset is a product of many
+  small numbers, which quickly becomes 0.0 in floating point. Adding logs instead is stable:
+
+```python
+import numpy as np
+
+p = np.full(1000, 0.01)     # 1000 independent events, each with probability 0.01
+print(np.prod(p))           # multiply the probabilities
+print(np.sum(np.log(p)))    # add their logs instead
+```
+
+```text title="Output"
+0.0
+-4605.17018598809
+```
+
+The true product is $10^{-2000}$, far smaller than the smallest positive float (about $5 \times 10^{-324}$), so it
+rounds to 0.0 and every comparison is lost. The sum of logs is a perfectly ordinary number. This is
+why ML losses such as cross-entropy (F5) are written with logs.
+
+- **Simple derivatives.** Because $\frac{d}{dx}\ln x = \frac{1}{x}$ and $e^x$ is its own derivative,
+  the gradients of log-based losses come out short and cheap to compute.
+
+:::caution[Common slip]
+$\frac{d}{dx}e^x$ is $e^x$, **not** $x\,e^{x-1}$. The power rule is for $x^n$ with a fixed power; in
+$e^x$ the variable *is* the power.
+:::
+
+## Try it
+
+<CodeExercise id="f4-derivative-rules-01" />
+
+<CodeExercise id="f4-derivative-rules-02" />
+
+## Summary
+
+- Power rule $x^n \to n x^{n-1}$; constants vanish; constant factors and sums pass straight through.
+- Product rule: $(fg)' = f'g + fg'$. Quotient rule: $(f/g)' = (f'g - fg')/g^2$.
+- $\frac{d}{dx}e^x = e^x$ and $\frac{d}{dx}\ln x = \frac{1}{x}$.
+- $e^x$ makes scores positive; $\ln$ turns products into sums and keeps tiny probabilities usable.

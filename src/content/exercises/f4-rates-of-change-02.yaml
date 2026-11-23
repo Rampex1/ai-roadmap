@@ -1,0 +1,35 @@
+id: f4-rates-of-change-02
+lesson: foundations/f4/rates-of-change
+title: Secant slopes closing in
+prompt: |
+  Write `secant_slopes(f, a, hs)` that returns a **list** with one secant slope for each step size
+  `h` in `hs`: the slope from `(a, f(a))` to `(a + h, f(a + h))`.
+
+  For `f(x) = x ** 3` at `a = 2` with `hs = [1, 0.1, 0.01]` the slopes are about
+  `[19.0, 12.61, 12.0601]`, closing in on 12.
+starter: |
+  def secant_slopes(f, a, hs):
+      """Return a list of secant slopes of f at a, one per step size in hs."""
+      slopes = []
+      return slopes
+solution: |
+  def secant_slopes(f, a, hs):
+      """Return a list of secant slopes of f at a, one per step size in hs."""
+      slopes = []
+      for h in hs:
+          slopes.append((f(a + h) - f(a)) / h)
+      return slopes
+tests: |
+  import math
+  _r = secant_slopes(lambda x: x ** 3, 2, [1, 0.1, 0.01])
+  assert _r is not None, "secant_slopes returned None: did you forget the return statement?"
+  _r = list(_r)
+  assert len(_r) == 3, f"Expected one slope per step size (3), got {len(_r)}"
+  for _got, _want in zip(_r, [19.0, 12.61, 12.0601]):
+      assert math.isclose(_got, _want, rel_tol=1e-9), f"For x**3 at a=2 expected slopes [19.0, 12.61, 12.0601], got {_r}"
+  _r = list(secant_slopes(lambda x: x ** 2, -1, [0.5, 0.001]))
+  assert len(_r) == 2 and math.isclose(_r[0], -1.5) and math.isclose(_r[1], -1.999, rel_tol=1e-6), f"For x**2 at a=-1 expected about [-1.5, -1.999], got {_r}"
+  assert list(secant_slopes(lambda x: x, 0, [])) == [], "An empty list of step sizes should give an empty list"
+hints:
+  - "Loop over hs and append one slope per h."
+  - "The slope for one h is (f(a + h) - f(a)) / h."

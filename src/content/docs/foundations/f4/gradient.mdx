@@ -1,0 +1,171 @@
+---
+title: "The gradient: direction of steepest ascent"
+module: f4
+order: 7
+estMinutes: 15
+objectives:
+  - "Assemble the gradient vector from partial derivatives and compute it numerically"
+  - "Explain why the gradient points in the direction of steepest ascent and is perpendicular to contours"
+  - "Compute a directional derivative as a dot product with a unit vector"
+goDeeper: mml-book
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import contourImg from '@/assets/diagrams/f4-gradient-contours.svg';
+
+The partial derivatives of a function, stacked into one vector, form the <Term id="gradient" />. It is
+the single most used object in machine learning: every training step of every neural network computes
+a gradient of the loss and moves the parameters against it. This lesson shows what the gradient means
+and why it points where it does.
+
+## The vector of partials
+
+For $f(x_1, \dots, x_n)$, the gradient is the [vector](/foundations/f3/vectors/) of all its partial
+derivatives:
+
+$$
+\nabla f = \left(\frac{\partial f}{\partial x_1},\; \frac{\partial f}{\partial x_2},\; \dots,\; \frac{\partial f}{\partial x_n}\right)
+$$
+
+$\nabla$ is read "nabla" or "grad". It has one entry per input, so it lives in the same space as the
+input: a function of 2 variables has a 2-vector gradient, and a loss of a million parameters has a
+gradient with a million entries, one for each parameter.
+
+**Worked example.** $f(x, y) = x^2 + 3y^2$, a bowl whose lowest point is $(0, 0)$.
+
+$$
+\nabla f = (2x,\; 6y), \qquad \nabla f(1, 1) = (2, 6)
+$$
+
+Numerically, the gradient is just the partial-derivative nudge from the
+[last lesson](/foundations/f4/partial-derivatives/), done for each input in turn. With the input stored
+as a NumPy array, nudging input $i$ means adding $h$ times the $i$-th unit vector:
+
+```python
+import numpy as np
+
+def f(p):
+    x, y = p
+    return x ** 2 + 3 * y ** 2
+
+def numerical_gradient(f, p, h=1e-5):
+    grad = np.zeros_like(p)
+    for i in range(len(p)):
+        step = np.zeros_like(p)
+        step[i] = h
+        grad[i] = (f(p + step) - f(p - step)) / (2 * h)
+    return grad
+
+p = np.array([1.0, 1.0])
+print(numerical_gradient(f, p))
+```
+
+```text title="Output"
+[2. 6.]
+```
+
+This costs two function evaluations per input. For a few inputs that is fine; for a million
+parameters it is a million times too slow, which is why training uses backpropagation and keeps
+numerical gradients for checking.
+
+## Directional derivatives
+
+The partials give slopes due east ($x$) and due north ($y$). What about the slope in any other
+direction? Let $\mathbf{u}$ be a [unit vector](/foundations/f3/dot-product/) (length 1) pointing the
+way you walk. A small step of length $t$ changes the inputs by $t\mathbf{u}$, and the multivariable
+linear approximation says the output changes by about
+
+$$
+\frac{\partial f}{\partial x}(t u_1) + \frac{\partial f}{\partial y}(t u_2) = t\,(\nabla f \cdot \mathbf{u})
+$$
+
+So the slope in direction $\mathbf{u}$, the **directional derivative**, is a dot product:
+
+$$
+D_{\mathbf{u}} f = \nabla f \cdot \mathbf{u}
+$$
+
+## Why the gradient is the steepest way up
+
+From F3, $\nabla f \cdot \mathbf{u} = \lVert\nabla f\rVert\,\lVert\mathbf{u}\rVert\cos\theta = \lVert\nabla f\rVert\cos\theta$,
+where $\theta$ is the angle between $\mathbf{u}$ and the gradient. That is:
+
+- **largest** when $\theta = 0$, walking *along* the gradient: slope $= \lVert\nabla f\rVert$;
+- **most negative** when $\theta = 180°$, walking *against* the gradient: slope $= -\lVert\nabla f\rVert$;
+- **zero** when $\theta = 90°$, walking at right angles to the gradient. That direction keeps the
+  height constant, so it runs along a contour line. The gradient is therefore **perpendicular to the
+  contours**.
+
+Check it by brute force: try every whole-degree direction at $(1, 1)$ and see which is steepest.
+
+```python
+import numpy as np
+
+g = np.array([2.0, 6.0])                     # gradient of x^2 + 3y^2 at (1, 1)
+angles = np.radians(np.arange(0, 360))       # every whole degree
+dirs = np.stack([np.cos(angles), np.sin(angles)], axis=1)   # unit vectors
+slopes = dirs @ g                            # directional derivative in each direction
+best = np.argmax(slopes)
+print("steepest direction (degrees):", best)
+print("its slope:", round(slopes[best], 4))
+print("gradient direction (degrees):", round(np.degrees(np.arctan2(g[1], g[0])), 2))
+print("gradient length:", round(np.linalg.norm(g), 4))
+```
+
+```text title="Output"
+steepest direction (degrees): 72
+its slope: 6.3244
+gradient direction (degrees): 71.57
+gradient length: 6.3246
+```
+
+The steepest whole-degree direction is the one closest to the gradient's direction, and its slope is
+(almost exactly) the gradient's length $\sqrt{2^2 + 6^2} \approx 6.32$.
+
+<Figure
+  src={contourImg}
+  alt="Elliptical contour lines of x squared plus 3 y squared around the origin. At the point (1, 1), on the f = 4 contour, an arrow labelled gradient (2, 6) points uphill at right angles to the contour, and a dashed arrow labelled minus gradient points downhill"
+  caption="The gradient at (1, 1) is perpendicular to the contour through that point. Minus the gradient is the steepest way down."
+/>
+
+## Downhill: where learning comes from
+
+Training wants the loss to go **down**, so it steps in the direction $-\nabla L$, the steepest descent
+direction. Taking repeated small steps
+
+$$
+\boldsymbol{\theta} \leftarrow \boldsymbol{\theta} - \eta\,\nabla L(\boldsymbol{\theta})
+$$
+
+where $\boldsymbol{\theta}$ is the vector of all parameters and $\eta$ (eta) is a small positive
+number called the **learning rate**, is **gradient descent**. F6 studies it properly: how to pick
+$\eta$, why it can zig-zag, and better variants. F9 shows how backpropagation computes $\nabla L$ for
+a whole network in one backward pass.
+
+Two things to notice in the figure:
+
+- $-\nabla f$ at $(1, 1)$ does **not** point straight at the minimum. It is dominated by the steep
+  $y$ direction of the stretched bowl, so it heads past the minimum rather than at it. Steepest descent is a local rule, not a map of the whole landscape,
+  which is one reason gradient descent can zig-zag.
+- At the minimum the surface is flat, so $\nabla f = \mathbf{0}$ and the steps stop. "All partial
+  derivatives are zero" is the multivariable version of "the derivative is zero at a minimum".
+
+:::tip[The gradient in one sentence]
+$\nabla f$ points in the direction that increases $f$ fastest, its length is that fastest rate, and it
+is perpendicular to the contour through the point.
+:::
+
+## Try it
+
+<CodeExercise id="f4-gradient-01" />
+
+<CodeExercise id="f4-gradient-02" />
+
+## Summary
+
+- $\nabla f$ is the vector of partial derivatives, with one entry per input.
+- Numerically: a central difference along each axis, two function calls per input.
+- The slope in direction $\mathbf{u}$ (a unit vector) is $\nabla f \cdot \mathbf{u}$.
+- The gradient points steepest uphill, with slope $\lVert\nabla f\rVert$, and is perpendicular to
+  contours. $-\nabla f$ points steepest downhill: the direction gradient descent steps in.

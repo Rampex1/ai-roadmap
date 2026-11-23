@@ -1,0 +1,169 @@
+---
+title: "Putting it together: from the derivative of a loss to learning"
+module: f4
+order: 9
+estMinutes: 14
+objectives:
+  - "Derive the partial derivatives of a mean squared error loss L(w, b) with the chain rule"
+  - "Verify a loss gradient numerically before using it"
+  - "Explain why a small step against the gradient lowers the loss, and run a few such steps"
+goDeeper: mml-book
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Every idea in this module now comes together in one small, complete example: fitting a straight line
+to data by following the derivative of a loss. It is the same loop that trains a large language model,
+with two parameters instead of billions.
+
+## The model and the loss
+
+We have inputs $x_1, \dots, x_n$ and targets $y_1, \dots, y_n$. The model predicts $\hat{y}_i = w x_i + b$
+with a weight $w$ and a bias $b$. Its error is measured by the **mean squared error** loss:
+
+$$
+L(w, b) = \frac{1}{n}\sum_{i=1}^{n} (w x_i + b - y_i)^2
+$$
+
+In NumPy this is `np.mean((w * x + b - y) ** 2)`. $L$ is a function of two variables, the parameters.
+The data are fixed numbers. So $L$ is a surface over the $(w, b)$ plane, and we want its lowest point.
+
+## The gradient, by the chain rule
+
+Name the inside of the square, the **residual**: $r_i = w x_i + b - y_i$. Each term of the loss is a
+chain: $(w, b) \to r_i \to r_i^2$.
+
+- Outer step: $\frac{d}{dr_i}r_i^2 = 2r_i$.
+- Inner steps: $\frac{\partial r_i}{\partial w} = x_i$ and $\frac{\partial r_i}{\partial b} = 1$.
+
+The mean is a sum times the constant $\frac{1}{n}$, so it passes straight through (sum and constant
+multiple rules). Multiplying along the chain:
+
+$$
+\frac{\partial L}{\partial w} = \frac{1}{n}\sum_{i=1}^{n} 2 r_i\, x_i, \qquad
+\frac{\partial L}{\partial b} = \frac{1}{n}\sum_{i=1}^{n} 2 r_i
+$$
+
+and $\nabla L = \left(\frac{\partial L}{\partial w}, \frac{\partial L}{\partial b}\right)$.
+
+Read them: if the residuals are mostly positive (predictions too high), $\frac{\partial L}{\partial b}$
+is positive, so lowering $b$ reduces the loss. Exactly what common sense says.
+
+## Computing it
+
+Take four points that lie exactly on $y = 2x + 1$, and start from $w = 0$, $b = 0$:
+
+```python
+import numpy as np
+
+x = np.array([0.0, 1.0, 2.0, 3.0])
+y = np.array([1.0, 3.0, 5.0, 7.0])           # made by y = 2x + 1
+
+def loss_and_grad(w, b):
+    r = w * x + b - y                        # residuals
+    loss = np.mean(r ** 2)
+    dw = np.mean(2 * r * x)
+    db = np.mean(2 * r)
+    return loss, dw, db
+
+loss, dw, db = loss_and_grad(0.0, 0.0)
+print(loss, dw, db)
+```
+
+```text title="Output"
+21.0 -17.0 -8.0
+```
+
+By hand: the residuals are $-1, -3, -5, -7$, so $L = \frac{1 + 9 + 25 + 49}{4} = 21$,
+$\frac{\partial L}{\partial b} = 2 \cdot \frac{-16}{4} = -8$, and
+$\frac{\partial L}{\partial w} = 2 \cdot \frac{0 - 3 - 10 - 21}{4} = -17$. Both partials are negative:
+increasing $w$ and $b$ will lower the loss.
+
+:::tip[Always check]
+Before trusting a hand-derived gradient, compare it with a central difference, as in
+[lesson 5](/foundations/f4/numerical-derivatives/). The homework does exactly this for $L(w, b)$. A
+gradient with a wrong sign or a missing factor of 2 still *runs*; it just trains badly, and that kind
+of bug is miserable to find later.
+:::
+
+## Why stepping against the gradient helps
+
+Change the parameters by a small step $\Delta\boldsymbol{\theta}$. The multivariable linear approximation from
+[lesson 6](/foundations/f4/partial-derivatives/) says
+
+$$
+\Delta L \approx \nabla L \cdot \Delta\boldsymbol{\theta}
+$$
+
+Choose $\Delta\boldsymbol{\theta} = -\eta\,\nabla L$ with a small learning rate $\eta > 0$. Then
+
+$$
+\Delta L \approx -\eta\,\nabla L \cdot \nabla L = -\eta\,\lVert\nabla L\rVert^2 \le 0
+$$
+
+A squared length is never negative, so (as long as the step is small enough for the linear
+approximation to hold) the loss goes down. Repeat, and you have **gradient descent**:
+
+```python
+import numpy as np
+
+x = np.array([0.0, 1.0, 2.0, 3.0])
+y = np.array([1.0, 3.0, 5.0, 7.0])
+
+w, b, lr = 0.0, 0.0, 0.05
+for step in range(101):
+    r = w * x + b - y
+    if step % 20 == 0:
+        print(f"step {step:3d}  loss {np.mean(r ** 2):8.5f}  w {w:.3f}  b {b:.3f}")
+    w -= lr * np.mean(2 * r * x)
+    b -= lr * np.mean(2 * r)
+```
+
+```text title="Output"
+step   0  loss 21.00000  w 0.000  b 0.000
+step  20  loss  0.00029  w 2.013  b 0.972
+step  40  loss  0.00009  w 2.007  b 0.984
+step  60  loss  0.00003  w 2.004  b 0.992
+step  80  loss  0.00001  w 2.002  b 0.995
+step 100  loss  0.00000  w 2.001  b 0.997
+```
+
+Starting from nothing, the parameters walk to $w \approx 2$, $b \approx 1$, the line that made the
+data. Nobody told the program the answer; it only ever asked "which way is downhill from here?"
+
+:::caution[The learning rate matters]
+If $\eta$ is too large, the step overshoots the valley, where the linear approximation no longer holds,
+and the loss can grow instead of shrink. Too small, and progress crawls. F6 is about choosing it well.
+:::
+
+## The module in one picture
+
+| Idea | Lesson | Role in learning |
+|---|---|---|
+| Derivative as slope | [1](/foundations/f4/rates-of-change/), [2](/foundations/f4/the-derivative/) | How fast the loss changes as a parameter changes |
+| Linear approximation | [2](/foundations/f4/the-derivative/) | Why small steps along the slope are predictable |
+| Rules, $e^x$, $\ln$ | [3](/foundations/f4/derivative-rules/) | The building blocks of real losses and activations |
+| <Term id="chain-rule" /> | [4](/foundations/f4/chain-rule/) | Derivatives through a chain of steps: backpropagation |
+| Finite differences | [5](/foundations/f4/numerical-derivatives/) | Checking that your gradients are right |
+| Partial derivatives | [6](/foundations/f4/partial-derivatives/) | One derivative per parameter |
+| Gradient | [7](/foundations/f4/gradient/) | Steepest uphill; step the other way |
+| Integrals | [8](/foundations/f4/integrals/) | Probabilities and expected losses (F5) |
+
+Where it goes next: **F5** uses logs and integrals for probability and cross-entropy, **F6** turns the
+loop above into a proper study of optimisation, and **F9** builds backpropagation for a whole neural
+network out of the chain rule.
+
+## Try it
+
+<CodeExercise id="f4-derivatives-and-learning-01" />
+
+<CodeExercise id="f4-derivatives-and-learning-02" />
+
+## Summary
+
+- MSE loss $L(w, b) = \frac{1}{n}\sum (w x_i + b - y_i)^2$ has
+  $\frac{\partial L}{\partial w} = \frac{1}{n}\sum 2r_i x_i$ and
+  $\frac{\partial L}{\partial b} = \frac{1}{n}\sum 2r_i$, by the chain rule.
+- Check gradients numerically before trusting them.
+- A small step $-\eta\nabla L$ changes the loss by about $-\eta\lVert\nabla L\rVert^2$, which is
+  never positive. Repeating it is gradient descent.

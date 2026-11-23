@@ -1,0 +1,107 @@
+items:
+  - id: f4-the-derivative-01
+    type: mcq
+    prompt: "Which expression is the definition of the derivative $f'(a)$?"
+    explanation: "The derivative is the limit of secant slopes over the interval from a to a + h as h shrinks to 0."
+    options:
+      - text: The limit as h goes to 0 of (f(a + h) - f(a)) / h
+        correct: true
+        why: This is the secant slope with the interval shrinking to nothing.
+      - text: (f(a + h) - f(a)) / h with h = 0
+        why: At h = 0 the fraction is 0/0, which is undefined. The limit is needed.
+      - text: The limit as h goes to 0 of f(a + h) - f(a)
+        why: Without dividing by h this just goes to 0 for any continuous function.
+      - text: f(a) / a
+        why: That is the slope of the line from the origin to the point, not the tangent slope.
+  - id: f4-the-derivative-02
+    type: numeric
+    prompt: "Using $\\frac{d}{dx}x^2 = 2x$, what is the slope of the tangent line to $y = x^2$ at $x = -3$?"
+    answer: -6
+    tol: 0.001
+    explanation: "2 × (-3) = -6. The curve is falling there, so the slope is negative."
+  - id: f4-the-derivative-03
+    type: multi
+    prompt: "At a point where $f'(x) = 0$ for a smooth function $f$, which statements are true?"
+    explanation: "A zero derivative means the tangent is flat at that instant. Minimums and maximums of smooth functions occur at such points, but a flat point is not guaranteed to be either (x cubed at 0 is flat but neither)."
+    options:
+      - text: The tangent line is horizontal there
+        correct: true
+        why: Its slope is f'(x) = 0.
+      - text: It could be a minimum or a maximum
+        correct: true
+        why: Smooth functions have zero slope at their minimums and maximums.
+      - text: It must be a minimum
+        why: It might be a maximum, or neither, like x cubed at 0.
+      - text: The function value must be 0 there
+        why: The slope is 0, not the height. x squared plus 5 has f'(0) = 0 but f(0) = 5.
+  - id: f4-the-derivative-04
+    type: numeric
+    prompt: "Use the local linear approximation $f(a + \\Delta x) \\approx f(a) + f'(a)\\,\\Delta x$ with $f(x) = x^2$, $a = 5$ and $\\Delta x = 0.1$. What estimate do you get for $5.1^2$?"
+    answer: 26
+    tol: 0.0001
+    explanation: "f(5) = 25 and f'(5) = 10, so 25 + 10 × 0.1 = 26. The true value is 26.01; the gap is Δx² = 0.01."
+  - id: f4-the-derivative-05
+    type: output
+    prompt: "What does this print?"
+    code: |
+      def f(x):
+          return x ** 2
+
+      a, dx = 2.0, 0.1
+      tangent = f(a) + 2 * a * dx
+      print(round(f(a + dx) - tangent, 4))
+    answer: "0.01"
+    explanation: "f(2.1) = 4.41 and the tangent gives 4 + 4 × 0.1 = 4.4. For x squared the gap is exactly Δx² = 0.01."
+  - id: f4-the-derivative-06
+    type: mcq
+    prompt: "For $f(x) = x^2$ at $a = 3$, the gap between the function and its tangent line is 0.01 when $\\Delta x = 0.1$. What is the gap when $\\Delta x = 0.01$?"
+    explanation: "The gap is Δx², so shrinking Δx 10 times shrinks the gap 100 times: 0.0001."
+    options:
+      - text: "0.0001"
+        correct: true
+        why: The gap is Δx squared, so it shrinks 100 times when Δx shrinks 10 times.
+      - text: "0.001"
+        why: That would be a gap proportional to Δx. For a smooth curve the gap shrinks faster.
+      - text: "0.01"
+        why: The gap depends on Δx; it does not stay fixed.
+      - text: "0"
+        why: The tangent is not exact for a curve; the gap is small but not zero.
+  - id: f4-the-derivative-07
+    type: mcq
+    prompt: "Why does gradient descent take *small* steps?"
+    explanation: "The derivative describes the tangent line (or plane), which matches the function well only near the current point. Small steps keep the approximation trustworthy."
+    options:
+      - text: The derivative only describes the function accurately near the current point
+        correct: true
+        why: The local linear approximation is excellent for small steps and poor for large ones.
+      - text: Large steps are slower to compute
+        why: A step costs the same to compute whatever its size.
+      - text: The derivative is always small
+        why: Derivatives can be any size; that is unrelated to the step size choice.
+      - text: Small steps guarantee reaching the global minimum
+        why: Small steps help each step go downhill, but nothing guarantees the global minimum.
+  - id: f4-the-derivative-08
+    type: mcq
+    prompt: "Why does $f(x) = |x|$ have no derivative at $x = 0$?"
+    explanation: "The slope is -1 just left of 0 and +1 just right of it. The secant slopes approach different values from each side, so there is no single tangent line."
+    options:
+      - text: The slope from the left is -1 and from the right is +1, so the limit does not exist
+        correct: true
+        why: A derivative needs one limit from both sides; at a corner they differ.
+      - text: Because f(0) = 0
+        why: Many functions have f(0) = 0 and a perfectly good derivative there, such as x squared.
+      - text: Because |x| is never negative
+        why: Being non-negative has nothing to do with differentiability.
+      - text: It does have one, equal to 0
+        why: No secant through 0 is flat; the slopes are -1 and +1.
+  - id: f4-the-derivative-09
+    type: cloze
+    prompt: "In Leibniz notation the derivative of $f$ with respect to $x$ is written $\\frac{df}{d?}$. Type the missing letter."
+    accept: ["x"]
+    explanation: "df/dx reads as a tiny change in f divided by a tiny change in x."
+  - id: f4-the-derivative-10
+    type: numeric
+    prompt: "The derivative of $\\sqrt{x}$ is $\\frac{1}{2\\sqrt{x}}$. Use a linear approximation at $a = 9$ to estimate $\\sqrt{9.6}$. Give your answer to 2 decimal places."
+    answer: 3.1
+    tol: 0.001
+    explanation: "√9 = 3 and the slope is 1 / (2 × 3) = 1/6, so √9.6 ≈ 3 + 0.6 / 6 = 3.1. The true value is about 3.098."

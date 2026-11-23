@@ -1,0 +1,49 @@
+id: f4-integrals-02
+lesson: foundations/f4/integrals
+title: Probabilities and expected values from a density
+prompt: |
+  A probability density `p` is a function that is never negative and has total area 1. Write:
+
+  - `prob_between(p, a, b)`: the probability $\int_a^b p(x)\,dx$.
+  - `expected_value(p, lo, hi)`: the expected value $\int_{lo}^{hi} x\,p(x)\,dx$, where the density is
+    zero outside `[lo, hi]`.
+
+  Estimate both integrals with `np.trapezoid` on `np.linspace(..., 10001)` points (or a midpoint
+  sum with many strips). For the density $p(x) = 2x$ on $[0, 1]$, `prob_between(p, 0, 0.5)` is `0.25`
+  and `expected_value(p, 0, 1)` is about `0.6667`.
+starter: |
+  import numpy as np
+
+  def prob_between(p, a, b):
+      pass
+
+  def expected_value(p, lo, hi):
+      pass
+solution: |
+  import numpy as np
+
+  def prob_between(p, a, b):
+      x = np.linspace(a, b, 10001)
+      return np.trapezoid(p(x), x)
+
+  def expected_value(p, lo, hi):
+      x = np.linspace(lo, hi, 10001)
+      return np.trapezoid(x * p(x), x)
+tests: |
+  import numpy as np
+  _tri = lambda x: 2 * x
+  _r = prob_between(_tri, 0, 0.5)
+  assert _r is not None, "prob_between returned None: did you forget the return statement?"
+  assert abs(_r - 0.25) < 1e-4, f"For p(x) = 2x, P(0 < X < 0.5) is 0.25, got {_r!r}"
+  assert abs(prob_between(_tri, 0, 1) - 1.0) < 1e-4, "The total probability should be 1"
+  _e = expected_value(_tri, 0, 1)
+  assert _e is not None, "expected_value returned None: did you forget the return statement?"
+  assert abs(_e - 2 / 3) < 1e-4, f"For p(x) = 2x on [0, 1], E[X] is 2/3, got {_e!r}"
+  _uni = lambda x: np.full_like(x, 0.5)
+  assert abs(expected_value(_uni, 2, 4) - 3.0) < 1e-4, "For the uniform density 0.5 on [2, 4], E[X] is 3"
+  assert abs(prob_between(_uni, 2.5, 3.0) - 0.25) < 1e-4, "For the uniform density 0.5 on [2, 4], P(2.5 < X < 3) is 0.25"
+  _exp = lambda x: np.exp(-x)
+  assert abs(expected_value(_exp, 0, 40) - 1.0) < 1e-3, "For the density e**(-x) on [0, infinity), E[X] is 1 (cut off at 40 here)"
+hints:
+  - "Build x = np.linspace(a, b, 10001) and pass p(x) and x to np.trapezoid."
+  - "For the expected value, integrate x * p(x) instead of p(x)."

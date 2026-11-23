@@ -1,0 +1,7 @@
+term: "Chain rule"
+short: "The derivative of a composition is the product of the derivatives of its parts: dy/dx = dy/du · du/dx."
+body: |
+  If $y = f(u)$ and $u = g(x)$, then $\frac{dy}{dx} = \frac{dy}{du}\cdot\frac{du}{dx}$: rates of change
+  multiply along a chain. Applied step by step through a long computation, from the output back to
+  the inputs, it is exactly what backpropagation does to train neural networks.
+related: ["derivative", "gradient", "sigmoid"]

@@ -1,0 +1,58 @@
+id: f4-gradient-02
+lesson: foundations/f4/gradient
+title: Gradient checking
+prompt: |
+  A **gradient check** compares an analytic gradient with a numerical one. Using the provided
+  `numerical_gradient`, write `gradient_check(f, grad_f, p)` that returns the relative error
+
+  $$\frac{\lVert \mathbf{a} - \mathbf{n} \rVert}{\max(\lVert \mathbf{a} \rVert + \lVert \mathbf{n} \rVert,\ 10^{-12})}$$
+
+  where `a = grad_f(p)` is the analytic gradient and `n` the numerical one. Use `np.linalg.norm` for
+  the lengths. A correct gradient gives a tiny number (below about `1e-7`); a buggy one gives
+  something much larger.
+starter: |
+  import numpy as np
+
+  def numerical_gradient(f, p, h=1e-5):
+      grad = np.zeros_like(p)
+      for i in range(len(p)):
+          step = np.zeros_like(p)
+          step[i] = h
+          grad[i] = (f(p + step) - f(p - step)) / (2 * h)
+      return grad
+
+  def gradient_check(f, grad_f, p):
+      pass
+solution: |
+  import numpy as np
+
+  def numerical_gradient(f, p, h=1e-5):
+      grad = np.zeros_like(p)
+      for i in range(len(p)):
+          step = np.zeros_like(p)
+          step[i] = h
+          grad[i] = (f(p + step) - f(p - step)) / (2 * h)
+      return grad
+
+  def gradient_check(f, grad_f, p):
+      a = grad_f(p)
+      n = numerical_gradient(f, p)
+      return np.linalg.norm(a - n) / max(np.linalg.norm(a) + np.linalg.norm(n), 1e-12)
+tests: |
+  import numpy as np
+  _f = lambda q: q[0] ** 2 * q[1] + np.exp(q[1])
+  _good = lambda q: np.array([2 * q[0] * q[1], q[0] ** 2 + np.exp(q[1])])
+  _bad = lambda q: np.array([2 * q[0], q[0] ** 2 + np.exp(q[1])])
+  _p = np.array([1.5, -0.5])
+  _e = gradient_check(_f, _good, _p)
+  assert _e is not None, "gradient_check returned None: did you forget the return statement?"
+  assert _e < 1e-7, f"The correct gradient should give a tiny relative error, got {_e!r}"
+  _eb = gradient_check(_f, _bad, _p)
+  assert _eb > 1e-2, f"A buggy gradient should give a large relative error, got {_eb!r}"
+  _expected = np.linalg.norm(_bad(_p) - _good(_p)) / (np.linalg.norm(_bad(_p)) + np.linalg.norm(_good(_p)))
+  assert abs(_eb - _expected) < 1e-6, f"Use the formula from the prompt: expected about {_expected:.5f}, got {_eb!r}"
+  _ez = gradient_check(lambda q: 0.0 * q[0] + 2.0, lambda q: np.zeros(2), _p)
+  assert np.isfinite(_ez) and _ez < 1e-7, f"When both gradients are zero the error should be 0, not nan: got {_ez!r}"
+hints:
+  - "Compute a = grad_f(p) and n = numerical_gradient(f, p)."
+  - "Divide np.linalg.norm(a - n) by max(np.linalg.norm(a) + np.linalg.norm(n), 1e-12)."

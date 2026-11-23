@@ -1,0 +1,40 @@
+id: f4-partial-derivatives-02
+lesson: foundations/f4/partial-derivatives
+title: A numerical partial derivative
+prompt: |
+  Write `partial(f, p, i, h=1e-5)`, where `f` takes a NumPy array `p` of inputs and returns a number.
+  It should return the central-difference estimate of $\frac{\partial f}{\partial p_i}$: nudge **only**
+  entry `i` of `p` by `+h` and by `-h`, keeping the others fixed.
+
+  Do not change the caller's array `p`: work on copies (`p.copy()`).
+starter: |
+  import numpy as np
+
+  def partial(f, p, i, h=1e-5):
+      pass
+solution: |
+  import numpy as np
+
+  def partial(f, p, i, h=1e-5):
+      up = p.copy()
+      down = p.copy()
+      up[i] += h
+      down[i] -= h
+      return (f(up) - f(down)) / (2 * h)
+tests: |
+  import numpy as np
+  _f = lambda q: q[0] ** 2 * q[1] + 3 * q[2]
+  _p = np.array([2.0, 1.0, 5.0])
+  _r = partial(_f, _p, 0)
+  assert _r is not None, "partial returned None: did you forget the return statement?"
+  assert abs(_r - 4.0) < 1e-6, f"For p0**2 * p1 + 3 p2 at (2, 1, 5), the partial in p0 is 2 * p0 * p1 = 4, got {_r!r}"
+  assert abs(partial(_f, _p, 1) - 4.0) < 1e-6, "The partial in p1 is p0**2 = 4"
+  assert abs(partial(_f, _p, 2) - 3.0) < 1e-6, "The partial in p2 is 3"
+  np.testing.assert_array_equal(_p, [2.0, 1.0, 5.0], err_msg="partial changed the input array p: work on p.copy()")
+  _g = lambda q: np.sin(q[0]) * np.exp(q[1])
+  _q = np.array([0.3, -0.7])
+  assert abs(partial(_g, _q, 0) - np.cos(0.3) * np.exp(-0.7)) < 1e-8, "Wrong partial of sin(p0) * exp(p1) in p0"
+  assert abs(partial(_g, _q, 1) - np.sin(0.3) * np.exp(-0.7)) < 1e-8, "Wrong partial of sin(p0) * exp(p1) in p1"
+hints:
+  - "Make two copies of p. Add h to entry i of one and subtract h from entry i of the other."
+  - "Return (f(up) - f(down)) / (2 * h)."

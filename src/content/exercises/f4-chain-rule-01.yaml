@@ -1,0 +1,44 @@
+id: f4-chain-rule-01
+lesson: foundations/f4/chain-rule
+title: Sigmoid and its derivative
+prompt: |
+  Write two functions that work on NumPy arrays:
+
+  - `sigmoid(z)` returns $\sigma(z) = \dfrac{1}{1 + e^{-z}}$.
+  - `sigmoid_grad(z)` returns its derivative, using the result from the lesson:
+    $\sigma'(z) = \sigma(z)\,(1 - \sigma(z))$.
+
+  `sigmoid(0)` is `0.5` and `sigmoid_grad(0)` is `0.25`.
+starter: |
+  import numpy as np
+
+  def sigmoid(z):
+      pass
+
+  def sigmoid_grad(z):
+      pass
+solution: |
+  import numpy as np
+
+  def sigmoid(z):
+      return 1 / (1 + np.exp(-z))
+
+  def sigmoid_grad(z):
+      s = sigmoid(z)
+      return s * (1 - s)
+tests: |
+  import numpy as np
+  _z = np.linspace(-6, 6, 13)
+  _s = sigmoid(_z)
+  assert _s is not None, "sigmoid returned None: did you forget the return statement?"
+  np.testing.assert_allclose(_s, 1 / (1 + np.exp(-_z)), rtol=1e-12, err_msg="sigmoid(z) should be 1 / (1 + e**(-z))")
+  assert abs(float(sigmoid(0.0)) - 0.5) < 1e-12, "sigmoid(0) should be 0.5"
+  _g = sigmoid_grad(_z)
+  assert _g is not None, "sigmoid_grad returned None: did you forget the return statement?"
+  assert abs(float(sigmoid_grad(0.0)) - 0.25) < 1e-12, f"sigmoid_grad(0) should be 0.25, got {sigmoid_grad(0.0)!r}"
+  _h = 1e-5
+  _num = (1 / (1 + np.exp(-(_z + _h))) - 1 / (1 + np.exp(-(_z - _h)))) / (2 * _h)
+  np.testing.assert_allclose(_g, _num, rtol=1e-6, atol=1e-10, err_msg="sigmoid_grad does not match a numerical derivative of the sigmoid")
+hints:
+  - "np.exp(-z) works on whole arrays."
+  - "In sigmoid_grad, call sigmoid(z) once, store it as s, and return s * (1 - s)."

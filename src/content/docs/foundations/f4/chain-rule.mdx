@@ -1,0 +1,202 @@
+---
+title: "The chain rule: the idea behind backpropagation"
+module: f4
+order: 4
+estMinutes: 15
+objectives:
+  - "Break a composed function into simple steps and differentiate it with the chain rule"
+  - "Compute a derivative with a forward pass and a backward pass through a computation graph"
+  - "Derive and use the derivative of the sigmoid, σ'(z) = σ(z)(1 − σ(z))"
+goDeeper: 3b1b-essence-calculus
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import graphImg from '@/assets/diagrams/f4-chain-graph.svg';
+
+A neural network is a long chain of simple functions: multiply by weights, add, apply a squashing
+function, repeat, then compute a loss. To train it you need the derivative of the loss with respect to
+every weight, through the whole chain. The <Term id="chain-rule" /> is the tool that does this, and
+running it efficiently from the output backwards is called **backpropagation**. This is the most
+important lesson in the module.
+
+## Composition: functions inside functions
+
+$y = (3x + 1)^2$ is two steps:
+
+1. $u = 3x + 1$ (the inner function)
+2. $y = u^2$ (the outer function)
+
+Feeding the output of one function into another is called **composition**. Most functions you meet
+in ML are compositions of a few simple pieces whose derivatives you already know.
+
+## Rates multiply
+
+Suppose $u$ changes 3 times as fast as $x$, and $y$ changes $2u$ times as fast as $u$. Then $y$
+changes $2u \times 3$ times as fast as $x$. Like gears: if gear A turns gear B 3 times per turn, and
+B turns C 2 times per turn, then A turns C 6 times per turn.
+
+That is the whole chain rule:
+
+$$
+\frac{dy}{dx} = \frac{dy}{du}\cdot\frac{du}{dx}
+$$
+
+where $\frac{dy}{du}$ is the derivative of the outer step (with respect to its own input $u$) and
+$\frac{du}{dx}$ is the derivative of the inner step. The $du$'s look as if they cancel, which is a good
+memory aid.
+
+**Worked example.** $y = (3x + 1)^2$, with $u = 3x + 1$:
+
+- $\frac{dy}{du} = 2u$ (power rule on $u^2$)
+- $\frac{du}{dx} = 3$
+- $\frac{dy}{dx} = 2u \cdot 3 = 6(3x + 1)$
+
+Check by expanding: $(3x + 1)^2 = 9x^2 + 6x + 1$, whose derivative is $18x + 6 = 6(3x + 1)$. Same
+answer.
+
+:::caution[The classic mistake]
+Forgetting the inner derivative. $\frac{d}{dx}(3x + 1)^2$ is **not** $2(3x + 1)$; you must multiply by
+the 3 from the inside. Likewise $\frac{d}{dx} e^{-x} = -e^{-x}$, because the inside, $-x$, has
+derivative $-1$.
+:::
+
+## Longer chains, step by step
+
+For three or more steps, keep multiplying. Take $y = e^{\sin(x^2)}$:
+
+| Step | Value | Local derivative |
+|---|---|---|
+| 1 | $a = x^2$ | $\frac{da}{dx} = 2x$ |
+| 2 | $b = \sin a$ | $\frac{db}{da} = \cos a$ |
+| 3 | $y = e^b$ | $\frac{dy}{db} = e^b$ |
+
+$$
+\frac{dy}{dx} = \frac{dy}{db}\cdot\frac{db}{da}\cdot\frac{da}{dx} = e^b \cdot \cos a \cdot 2x
+$$
+
+(The derivative of $\sin$ is $\cos$; you can take that on trust, or check it numerically in lesson 5.)
+
+## Forward pass, backward pass
+
+Organise the computation as a **computation graph**: each box is one simple step. Then:
+
+1. **Forward pass:** compute the values left to right, and *keep* every intermediate value
+   ($a$, $b$, $y$).
+2. **Backward pass:** start at the output and multiply local derivatives right to left. Each local
+   derivative only needs values saved in the forward pass.
+
+<Figure
+  src={graphImg}
+  alt="Four boxes in a row: x, a = x squared, b = sin a, y = e to the b. Forward arrows go left to right. Backward dashed arrows go right to left, labelled times e to the b, times cos a and times 2x"
+  caption="Forward: compute values. Backward: multiply local derivatives from the output back to the input."
+/>
+
+```python
+import math
+
+x = 1.5
+# forward pass: compute and keep each intermediate value
+a = x ** 2
+b = math.sin(a)
+y = math.exp(b)
+# backward pass: local derivatives, multiplied from the output back
+dy_db = math.exp(b)
+db_da = math.cos(a)
+da_dx = 2 * x
+dy_dx = dy_db * db_da * da_dx
+
+f = lambda t: math.exp(math.sin(t ** 2))
+h = 1e-6
+print(f"chain rule: {dy_dx:.6f}")
+print(f"numeric:    {(f(x + h) - f(x - h)) / (2 * h):.6f}")
+```
+
+```text title="Output"
+chain rule: -4.103116
+numeric:    -4.103116
+```
+
+The chain-rule answer matches a direct numerical estimate to six decimal places. This is exactly what
+PyTorch's `loss.backward()` does (F9): it records the forward pass as a graph, then walks it backwards
+multiplying local derivatives. A network has millions of boxes instead of three, but every box is this
+simple.
+
+:::tip[Why backwards?]
+Going from the output back means one backward pass gives the derivative of the loss with respect to
+*every* input and weight at once, sharing the products along the way. Going forwards would need a
+separate pass for each weight. For a model with a million weights, that is the difference between one
+pass and a million.
+:::
+
+## The sigmoid and its derivative
+
+The <Term id="sigmoid" /> function squashes any number into the range 0 to 1:
+
+$$
+\sigma(z) = \frac{1}{1 + e^{-z}}
+$$
+
+Large positive $z$ gives a value near 1, large negative $z$ near 0, and $\sigma(0) = 0.5$. Logistic
+regression (F7) uses it to turn a score into a probability.
+
+Its derivative is a perfect chain-rule exercise. Write it as a chain:
+
+| Step | Value | Local derivative |
+|---|---|---|
+| 1 | $u = 1 + e^{-z}$ | $\frac{du}{dz} = -e^{-z}$ (chain rule on $e^{-z}$) |
+| 2 | $\sigma = u^{-1}$ | $\frac{d\sigma}{du} = -u^{-2}$ (power rule) |
+
+Multiply:
+
+$$
+\sigma'(z) = -u^{-2}\cdot(-e^{-z}) = \frac{e^{-z}}{(1 + e^{-z})^2}
+$$
+
+A little algebra turns this into a much nicer form. Split the fraction:
+
+$$
+\frac{e^{-z}}{(1 + e^{-z})^2} = \frac{1}{1 + e^{-z}}\cdot\frac{e^{-z}}{1 + e^{-z}} = \sigma(z)\,\big(1 - \sigma(z)\big)
+$$
+
+(the last step uses $\frac{e^{-z}}{1 + e^{-z}} = \frac{(1 + e^{-z}) - 1}{1 + e^{-z}} = 1 - \sigma(z)$).
+
+So **$\sigma'(z) = \sigma(z)(1 - \sigma(z))$**: once the forward pass has computed $\sigma(z)$, the
+derivative costs one multiplication.
+
+```python
+import numpy as np
+
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+z = np.array([-5.0, -1.0, 0.0, 1.0, 5.0])
+s = sigmoid(z)
+print(np.round(s, 4))
+print(np.round(s * (1 - s), 4))
+```
+
+```text title="Output"
+[0.0067 0.2689 0.5    0.7311 0.9933]
+[0.0066 0.1966 0.25   0.1966 0.0066]
+```
+
+Notice the derivative is at most 0.25 (at $z = 0$) and nearly 0 for large $|z|$. In a deep chain the
+backward pass multiplies many such factors together, and a product of many numbers below 0.25 shrinks
+fast. This is the **vanishing gradient** problem, one reason modern networks mostly use other
+activation functions between layers (F9).
+
+## Try it
+
+<CodeExercise id="f4-chain-rule-01" />
+
+<CodeExercise id="f4-chain-rule-02" />
+
+## Summary
+
+- For $y = f(u)$ with $u = g(x)$: $\frac{dy}{dx} = \frac{dy}{du}\cdot\frac{du}{dx}$. Never forget the
+  inner derivative.
+- For longer chains, multiply all the local derivatives.
+- Forward pass computes and stores values; backward pass multiplies local derivatives from the output
+  back. That is backpropagation.
+- $\sigma'(z) = \sigma(z)(1 - \sigma(z))$, at most 0.25.

@@ -1,0 +1,46 @@
+id: f4-numerical-derivatives-02
+lesson: foundations/f4/numerical-derivatives
+title: A derivative checker
+prompt: |
+  Write `check_derivative(f, df, xs, tol=1e-6)` that tests whether `df` is the derivative of `f` at
+  every point in the NumPy array `xs`:
+
+  1. Compute the numerical derivative `n` with a central difference, `h = 1e-5`.
+  2. Compute the analytic derivative `a = df(xs)`.
+  3. Compute the error at each point,
+     `np.abs(a - n) / np.maximum(np.abs(a) + np.abs(n), 1.0)`.
+  4. Return `True` if the **largest** error is below `tol`, otherwise `False`.
+
+  The `1.0` floor makes this a relative error for large derivatives and an absolute error near 0,
+  where the numerical estimate is a tiny nonzero number (as the lesson explains).
+starter: |
+  import numpy as np
+
+  def check_derivative(f, df, xs, tol=1e-6):
+      h = 1e-5
+      return True
+solution: |
+  import numpy as np
+
+  def check_derivative(f, df, xs, tol=1e-6):
+      h = 1e-5
+      n = (f(xs + h) - f(xs - h)) / (2 * h)
+      a = df(xs)
+      err = np.abs(a - n) / np.maximum(np.abs(a) + np.abs(n), 1.0)
+      return bool(np.max(err) < tol)
+tests: |
+  import numpy as np
+  _xs = np.linspace(-3, 3, 25)
+  _sig = lambda z: 1 / (1 + np.exp(-z))
+  _r = check_derivative(_sig, lambda z: _sig(z) * (1 - _sig(z)), _xs)
+  assert _r is not None, "check_derivative returned None: did you forget the return statement?"
+  assert _r == True, "The correct sigmoid derivative should pass the check"
+  assert check_derivative(_sig, lambda z: _sig(z), _xs) == False, "sigmoid(z) is not the derivative of the sigmoid: the check should return False"
+  assert check_derivative(lambda x: x ** 3, lambda x: 3 * x, np.array([1.0])) == True, "At x = 1 alone, 3x and 3x**2 agree, so the check passes there"
+  assert check_derivative(lambda x: x ** 3, lambda x: 3 * x, np.array([1.0, 2.0])) == False, "3x is not the derivative of x**3: at x = 2 they disagree, so the check should fail"
+  assert check_derivative(lambda x: x ** 3, lambda x: 3 * x ** 2, _xs) == True, "3x**2 is the derivative of x**3: the check should pass, including at x = 0 (use the 1.0 floor)"
+  assert check_derivative(lambda x: 0 * x + 5.0, lambda x: 0 * x, _xs) == True, "A constant has derivative 0 everywhere: the check should pass"
+  assert check_derivative(np.sin, np.cos, _xs, tol=1e-30) == False, "With an impossibly small tol the check should fail: use the tol argument"
+hints:
+  - "The central difference works on the whole array xs at once."
+  - "np.max(err) gives the largest error; compare it with tol."

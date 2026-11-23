@@ -1,0 +1,155 @@
+---
+title: "Functions of several variables and partial derivatives"
+module: f4
+order: 6
+estMinutes: 14
+objectives:
+  - "Picture a function of two variables as a surface and as a contour map"
+  - "Compute partial derivatives by treating the other variables as constants"
+  - "Use partial derivatives for a linear approximation in several variables"
+  - "Add the contributions of several paths in the multivariable chain rule"
+goDeeper: mml-book
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A real model has many parameters, not one. A loss like $L(w, b)$ depends on a weight *and* a bias;
+a neural network's loss depends on millions of numbers. So we need derivatives of functions with
+several inputs. The good news: you already know how. A partial derivative is an ordinary derivative
+with all but one input frozen.
+
+## Functions of several variables
+
+$f(x, y) = x^2 y + 3y$ takes two numbers and returns one. Two ways to picture it:
+
+- **A surface.** Treat the output as height above the point $(x, y)$ on a floor. The function is a
+  landscape of hills and valleys.
+- **A contour map.** Like a hiking map, draw lines joining points of equal height. Lines packed close
+  together mean steep ground.
+
+For ML, the landscape is the **loss surface**: each point on the floor is one choice of parameters,
+and the height is how wrong the model is with those parameters. Training means walking downhill.
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+w = np.linspace(-1, 4, 100)
+b = np.linspace(-2, 3, 100)
+W, B = np.meshgrid(w, b)              # every (w, b) pair on a grid
+L = (W - 2) ** 2 + 0.5 * (B - 1) ** 2  # a made-up bowl-shaped loss
+
+plt.contour(W, B, L, levels=15)
+plt.xlabel("w")
+plt.ylabel("b")
+plt.show()
+```
+
+`np.meshgrid` builds two 2-D arrays holding the $w$ and $b$ coordinates of every grid point, so one
+NumPy expression evaluates the function everywhere at once. The contours are ellipses around the
+lowest point, $(2, 1)$.
+
+## Partial derivatives: freeze all but one
+
+Stand at a point on the surface and walk due east, in the $x$ direction only, keeping $y$ fixed. The
+slope you feel is the <Term id="partial-derivative" /> with respect to $x$, written
+
+$$
+\frac{\partial f}{\partial x}
+$$
+
+The curly $\partial$ ("partial") signals that $f$ has other inputs, which are being held
+constant. To compute it, **treat every other variable as a number** and use the ordinary rules.
+
+**Worked example.** $f(x, y) = x^2 y + 3y$.
+
+- For $\frac{\partial f}{\partial x}$, treat $y$ as a constant. $x^2 y$ is a constant ($y$) times
+  $x^2$, giving $2xy$; and $3y$ does not involve $x$ at all, giving 0. So
+  $\frac{\partial f}{\partial x} = 2xy$.
+- For $\frac{\partial f}{\partial y}$, treat $x$ as a constant. $x^2 y$ is a constant ($x^2$) times
+  $y$, giving $x^2$; and $3y$ gives 3. So $\frac{\partial f}{\partial y} = x^2 + 3$.
+
+At the point $(2, 1)$: $\frac{\partial f}{\partial x} = 2 \cdot 2 \cdot 1 = 4$ and
+$\frac{\partial f}{\partial y} = 4 + 3 = 7$. Moving $y$ changes $f$ faster here than moving $x$.
+
+The central difference from [lesson 5](/foundations/f4/numerical-derivatives/) checks these by
+nudging one input at a time:
+
+```python
+def f(x, y):
+    return x ** 2 * y + 3 * y
+
+x, y, h = 2.0, 1.0, 1e-5
+df_dx = (f(x + h, y) - f(x - h, y)) / (2 * h)   # nudge x only
+df_dy = (f(x, y + h) - f(x, y - h)) / (2 * h)   # nudge y only
+print(round(df_dx, 6), round(df_dy, 6))
+```
+
+```text title="Output"
+4.0 7.0
+```
+
+:::caution[Common slip]
+A term that does not contain the variable is a constant for that partial, so its partial is 0. But a
+term that contains the variable *multiplied by* another variable keeps that other variable:
+$\frac{\partial}{\partial x}(x^2 y) = 2xy$, not $2x$.
+:::
+
+## Linear approximation in several variables
+
+In one variable, change in output ≈ derivative × change in input. With two inputs, each one
+contributes its own share, and the shares add:
+
+$$
+f(x + \Delta x,\, y + \Delta y) \approx f(x, y) + \frac{\partial f}{\partial x}\Delta x + \frac{\partial f}{\partial y}\Delta y
+$$
+
+At $(2, 1)$, where $f = 7$, a step of $\Delta x = 0.01$ and $\Delta y = -0.02$ should change $f$ by
+about $4(0.01) + 7(-0.02) = -0.1$:
+
+```python
+def f(x, y):
+    return x ** 2 * y + 3 * y
+
+x, y = 2.0, 1.0
+dx, dy = 0.01, -0.02
+approx = f(x, y) + 4 * dx + 7 * dy      # f_x = 4 and f_y = 7 at (2, 1)
+print(f"approx {approx:.4f}  true {f(x + dx, y + dy):.4f}")
+```
+
+```text title="Output"
+approx 6.9000  true 6.8993
+```
+
+That sum of "partial × change" is a [dot product](/foundations/f3/dot-product/) of two vectors, which is
+where the next lesson picks up.
+
+## The multivariable chain rule
+
+In a network, one value often feeds several later computations. If $z$ depends on $x$ through two
+paths, say $z = f(u, v)$ with $u$ and $v$ both depending on $x$, then the contributions of the paths
+**add**:
+
+$$
+\frac{dz}{dx} = \frac{\partial z}{\partial u}\frac{du}{dx} + \frac{\partial z}{\partial v}\frac{dv}{dx}
+$$
+
+Each term is a chain rule along one path; the sum collects all paths. Example: $z = uv$ with
+$u = x^2$ and $v = 3x$. Then $\frac{\partial z}{\partial u} = v$, $\frac{\partial z}{\partial v} = u$,
+so $\frac{dz}{dx} = v \cdot 2x + u \cdot 3 = 6x^2 + 3x^2 = 9x^2$. Check: $z = 3x^3$, whose derivative is
+$9x^2$. In backpropagation this is why gradients arriving at a node from different branches are summed.
+
+## Try it
+
+<CodeExercise id="f4-partial-derivatives-01" />
+
+<CodeExercise id="f4-partial-derivatives-02" />
+
+## Summary
+
+- A function of two variables is a surface; its contour map joins points of equal height.
+- $\frac{\partial f}{\partial x}$: differentiate in $x$ with every other variable treated as a
+  constant.
+- Numerically: nudge one input at a time with a central difference.
+- $\Delta f \approx \frac{\partial f}{\partial x}\Delta x + \frac{\partial f}{\partial y}\Delta y$.
+- When a variable affects the output through several paths, add the chain-rule terms of each path.

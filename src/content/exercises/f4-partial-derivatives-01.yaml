@@ -1,0 +1,37 @@
+id: f4-partial-derivatives-01
+lesson: foundations/f4/partial-derivatives
+title: Partial derivatives by hand
+prompt: |
+  For $f(x, y) = x y^2 + e^x$, work out both partial derivatives by hand, then write
+  `partials(x, y)` that returns the pair `(df_dx, df_dy)` at the point `(x, y)`.
+
+  Remember: for $\frac{\partial f}{\partial x}$ treat $y$ as a constant, and for
+  $\frac{\partial f}{\partial y}$ treat $x$ as a constant.
+starter: |
+  import math
+
+  def partials(x, y):
+      df_dx = 2 * x * y
+      df_dy = 2 * y
+      return df_dx, df_dy
+solution: |
+  import math
+
+  def partials(x, y):
+      df_dx = y ** 2 + math.exp(x)
+      df_dy = 2 * x * y
+      return df_dx, df_dy
+tests: |
+  import math
+  _f = lambda x, y: x * y ** 2 + math.exp(x)
+  _h = 1e-6
+  for _x, _y in [(1.0, 2.0), (0.0, -1.0), (-1.5, 0.5), (2.0, 3.0)]:
+      _r = partials(_x, _y)
+      assert isinstance(_r, tuple) and len(_r) == 2, "Return a pair: return df_dx, df_dy"
+      _nx = (_f(_x + _h, _y) - _f(_x - _h, _y)) / (2 * _h)
+      _ny = (_f(_x, _y + _h) - _f(_x, _y - _h)) / (2 * _h)
+      assert math.isclose(_r[0], _nx, rel_tol=1e-5, abs_tol=1e-6), f"At ({_x}, {_y}), df/dx should be about {_nx:.5f}, got {_r[0]!r}"
+      assert math.isclose(_r[1], _ny, rel_tol=1e-5, abs_tol=1e-6), f"At ({_x}, {_y}), df/dy should be about {_ny:.5f}, got {_r[1]!r}"
+hints:
+  - "With y held constant, x * y**2 is a constant times x, so its x-derivative is y**2. Do not forget the e**x term."
+  - "With x held constant, e**x is a constant, so it vanishes from df/dy."

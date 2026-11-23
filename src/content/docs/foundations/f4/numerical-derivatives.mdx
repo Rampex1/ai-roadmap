@@ -1,0 +1,177 @@
+---
+title: "Numerical differentiation: checking derivatives with NumPy"
+module: f4
+order: 5
+estMinutes: 14
+objectives:
+  - "Implement forward and central difference approximations to a derivative"
+  - "Explain the step-size trade-off between truncation error and rounding error"
+  - "Use a central difference to check a hand-derived derivative at many points"
+goDeeper: mml-book
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+The definition of the derivative says: take a secant slope and let $h$ go to 0. A computer cannot take
+a limit, but it can use a small $h$ and compute the fraction. That gives a **numerical derivative**,
+also called a <Term id="finite-difference" /> approximation.
+
+You will not use this to train models: it is slow and slightly inaccurate. You will use it constantly
+to **check** derivatives you worked out by hand or coded yourself. If the two disagree, there is a bug.
+
+## Forward difference
+
+Just drop the limit:
+
+$$
+f'(x) \approx \frac{f(x + h) - f(x)}{h}
+$$
+
+This is the slope of the secant from $x$ to $x + h$. For a curved function it is a little off: the
+secant leans towards the side it samples. The error is roughly proportional to $h$. Halve $h$ and the
+error roughly halves.
+
+## Central difference
+
+Sample one step on **each side** instead:
+
+$$
+f'(x) \approx \frac{f(x + h) - f(x - h)}{2h}
+$$
+
+The lean on the right and the lean on the left mostly cancel. The error is roughly proportional to
+$h^2$: make $h$ 10 times smaller and the error drops about 100 times. For the same number of function
+calls (two), it is far more accurate. Use it by default.
+
+Try it on $f(x) = x^2$ at $x = 3$ with $h = 0.1$:
+
+- Forward: $\frac{3.1^2 - 3^2}{0.1} = \frac{0.61}{0.1} = 6.1$ (error 0.1).
+- Central: $\frac{3.1^2 - 2.9^2}{0.2} = \frac{1.2}{0.2} = 6$ (error 0, because for a parabola the leans
+  cancel exactly).
+
+## The step-size trade-off
+
+So should $h$ be as small as possible? No. Computers store numbers with about 16 significant digits
+([floating point, F1](/foundations/f1/numbers/)). When $h$ is tiny, $f(x + h)$ and $f(x)$ agree in
+almost all of those digits, and subtracting them leaves mostly rounding noise. Dividing by a tiny $h$
+then blows that noise up.
+
+Here is the error in the derivative of $\sin$ at $x = 1$ (the exact answer is $\cos 1$) for a range of
+step sizes:
+
+```python
+import numpy as np
+
+x = 1.0
+true = np.cos(x)                      # the exact derivative of sin at x
+print(f"{'h':>7} {'forward error':>14} {'central error':>14}")
+for h in [1e-1, 1e-3, 1e-5, 1e-8, 1e-11, 1e-13]:
+    fwd = (np.sin(x + h) - np.sin(x)) / h
+    cen = (np.sin(x + h) - np.sin(x - h)) / (2 * h)
+    print(f"{h:7.0e} {abs(fwd - true):14.2e} {abs(cen - true):14.2e}")
+```
+
+```text title="Output"
+      h  forward error  central error
+  1e-01       4.29e-02       9.00e-04
+  1e-03       4.21e-04       9.01e-08
+  1e-05       4.21e-06       1.11e-11
+  1e-08       2.97e-09       2.58e-09
+  1e-11       1.17e-06       1.17e-06
+  1e-13       7.34e-04       1.79e-04
+```
+
+Read the columns from top to bottom:
+
+- At first, shrinking $h$ helps. Each of the first three rows shrinks $h$ 100 times: the forward
+  error falls 100 times per row (proportional to $h$); the central error falls $10^4$ times
+  (proportional to $h^2$). This part is called **truncation
+  error**: the cost of using a secant instead of the tangent.
+- Past a point, shrinking $h$ hurts. That is **rounding error** taking over.
+- The best central difference here, about $10^{-11}$, comes at $h = 10^{-5}$. The forward difference
+  only reaches about $10^{-9}$, near $h = 10^{-8}$.
+
+:::tip[Rule of thumb]
+For a central difference with 64-bit floats, use $h$ around $10^{-5}$ (relative to the size of $x$).
+Expect agreement with the true derivative to roughly 6 to 10 significant digits, not all 16.
+:::
+
+## Whole arrays at once
+
+Because NumPy functions work element by element, one central-difference function differentiates at
+many points at once. Here it checks the known derivative of $\tanh$, which is $1 - \tanh^2 x$:
+
+```python
+import numpy as np
+
+def central_diff(f, x, h=1e-5):
+    return (f(x + h) - f(x - h)) / (2 * h)
+
+xs = np.linspace(-2, 2, 5)
+print(central_diff(np.tanh, xs))
+print(1 - np.tanh(xs) ** 2)            # the analytic derivative of tanh
+```
+
+```text title="Output"
+[0.07065082 0.41997434 1.         0.41997434 0.07065082]
+[0.07065082 0.41997434 1.         0.41997434 0.07065082]
+```
+
+This is the habit to build: **derive by hand, check numerically at several points**. Checking only one
+point can hide a bug that happens to vanish there (for example, a missing factor of $x$ checked at
+$x = 1$).
+
+## When you only have data
+
+Sometimes there is no formula, only measured values on a grid. `np.gradient` estimates the derivative
+from neighbouring samples, using central differences inside and one-sided ones at the two ends:
+
+```python
+import numpy as np
+
+x = np.linspace(0, 2, 5)
+y = x ** 2
+print(np.gradient(y, x))
+```
+
+```text title="Output"
+[0.5 1.  2.  3.  3.5]
+```
+
+The true derivative $2x$ at $0, 0.5, 1, 1.5, 2$ is $0, 1, 2, 3, 4$. The interior values are exact (the
+central difference is exact for a parabola), while the two ends, which can only look one way, are off
+by 0.5.
+
+## Checking analytic derivatives
+
+To compare an analytic derivative `df` against a numerical one, look at the **relative error**,
+
+$$
+\frac{|a - n|}{\max(|a| + |n|, \varepsilon)}
+$$
+
+where $a$ is the analytic value, $n$ the numerical one, and $\varepsilon$ a tiny number (such as
+$10^{-12}$) that avoids dividing by zero when both are 0. Relative error is fair to large and small
+derivatives alike. Below about $10^{-6}$ is a pass; around $10^{-2}$ or more is almost certainly a bug.
+
+:::caution[Watch out near zero]
+Where the true derivative is exactly 0, the numerical estimate is usually a tiny nonzero number. For
+$x^3$ at $x = 0$ the central difference gives $\frac{h^3 - (-h)^3}{2h} = h^2 = 10^{-10}$, and the
+relative error is then $\frac{10^{-10}}{10^{-10}} = 1$: a "failure" with nothing wrong. A common fix is
+to floor the denominator at 1 instead of $\varepsilon$, $\max(|a| + |n|, 1)$, so large derivatives are
+compared relatively and near-zero ones absolutely. The exercise below does this.
+:::
+
+## Try it
+
+<CodeExercise id="f4-numerical-derivatives-01" />
+
+<CodeExercise id="f4-numerical-derivatives-02" />
+
+## Summary
+
+- Forward difference $\frac{f(x + h) - f(x)}{h}$: error proportional to $h$.
+- Central difference $\frac{f(x + h) - f(x - h)}{2h}$: error proportional to $h^2$. Use it by default.
+- Too small an $h$ amplifies rounding error; $h \approx 10^{-5}$ is a good default for central
+  differences.
+- Always check hand-derived derivatives numerically at several points, using relative error.
