@@ -88,6 +88,7 @@ test.describe('dashboard /', () => {
     await completeWelcome(page);
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1 })).toContainText(/ai roadmap|dashboard/i);
+    await expect(page.locator('[data-due-count]')).toBeVisible(); // the dashboard island has rendered
     if (await continueLink(page).count()) {
       const href = await continueLink(page).first().getAttribute('href');
       expect(href).not.toBe(LESSON);
