@@ -59,6 +59,7 @@ export function checkContent(root) {
     }
     const id = slugOf(file, docsBase, /\.mdx?$/);
     if (fm.template === 'splash') continue; // home / landing pages are not lessons
+    if (fm.overview) err(file, '"overview" is reserved for generated module pages, not lesson files');
     lessons.set(id, { file, fm, body: m ? src.slice(m[0].length) : src });
   }
 

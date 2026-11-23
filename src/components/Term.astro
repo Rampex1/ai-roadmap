@@ -1,0 +1,67 @@
+---
+import { getEntry } from 'astro:content';
+
+interface Props { id: string; text?: string }
+const { id, text } = Astro.props;
+const entry = await getEntry('glossary', id);
+if (!entry) throw new Error(`<Term id="${id}">: no glossary entry "${id}"`);
+// Deterministic per-page id: count Term renders on this request.
+const n = ((Astro.locals as any).__termCount = ((Astro.locals as any).__termCount ?? 0) + 1);
+const tipId = `term-tip-${id}-${n}`;
+---
+
+<span class="air-term" data-term={id} tabindex="0" aria-describedby={tipId}
+  >{text ?? entry.data.term}<span class="air-term-tip" role="tooltip" id={tipId} aria-hidden="true">{entry.data.short}</span></span
+>
+
+<script>
+  // WCAG 1.4.13: Escape dismisses the tooltip until the pointer/focus leaves.
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const t = (document.activeElement as HTMLElement | null)?.closest('.air-term') ?? document.querySelector('.air-term:hover');
+    t?.classList.add('air-term-dismissed');
+  });
+  document.querySelectorAll('.air-term').forEach((t) => {
+    const reset = () => t.classList.remove('air-term-dismissed');
+    t.addEventListener('mouseleave', reset);
+    t.addEventListener('blur', reset);
+  });
+</script>
+
+<style>
+  .air-term {
+    position: relative;
+    text-decoration: underline dotted var(--air-brand);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.2em;
+    cursor: help;
+    border-radius: 3px;
+  }
+  .air-term-tip {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    z-index: 10;
+    width: max-content;
+    max-width: min(20rem, 80vw);
+    padding: 12px 14px;
+    border-radius: var(--air-radius);
+    background: var(--air-tooltip-bg);
+    color: var(--air-tooltip-fg);
+    box-shadow: var(--air-shadow-lg);
+    font-size: var(--sl-text-sm);
+    line-height: 1.5;
+    font-weight: 400;
+    text-align: left;
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, 4px);
+    transition: opacity 150ms ease, transform 150ms ease, visibility 150ms;
+  }
+  .air-term:not(.air-term-dismissed):hover .air-term-tip,
+  .air-term:not(.air-term-dismissed):focus-visible .air-term-tip {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
+  }
+</style>

@@ -1,0 +1,35 @@
+---
+import type { ImageMetadata } from 'astro';
+
+interface Props { src: ImageMetadata; alt: string; caption: string }
+const { src, alt, caption } = Astro.props;
+---
+
+<figure class="air-figure">
+  <img src={src.src} width={src.width} height={src.height} alt={alt} loading="lazy" decoding="async" />
+  <figcaption>{caption}</figcaption>
+</figure>
+
+<style>
+  .air-figure {
+    margin: 2rem auto;
+    padding: 20px;
+    max-width: 100%;
+    border: 1px solid var(--air-border);
+    border-radius: var(--air-radius-lg);
+    background: var(--air-surface);
+    text-align: center;
+  }
+  .air-figure img {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    height: auto;
+  }
+  .air-figure figcaption {
+    margin-top: 14px;
+    color: var(--sl-color-gray-3);
+    font-size: var(--sl-text-sm);
+    line-height: 1.5;
+  }
+</style>

@@ -1,0 +1,38 @@
+---
+import Default from '@astrojs/starlight/components/PageTitle.astro';
+import { COURSE_NAMES, courseOf } from '@/lib/sidebar';
+
+const { estMinutes, objectives, overview, description } = Astro.locals.starlightRoute.entry.data as {
+  estMinutes?: number;
+  objectives?: string[];
+  overview?: boolean;
+  description?: string;
+};
+const course = courseOf(Astro.url.pathname);
+const moduleId = Astro.url.pathname.split('/').filter(Boolean)[1];
+---
+
+{overview && course && moduleId && (
+  <p class="air-eyebrow air-title-eyebrow">{COURSE_NAMES[course]} · Module {moduleId.toUpperCase()}</p>
+)}
+<Default />
+{overview && description && <p class="air-subtitle">{description}</p>}
+{
+  !overview && objectives && (
+    <section class="air-lesson-meta" aria-labelledby="air-lesson-meta-label">
+      <div class="air-lesson-meta-head">
+        <h2 id="air-lesson-meta-label" class="air-eyebrow">In this lesson</h2>
+        {estMinutes && <span class="air-pill">{estMinutes} min</span>}
+      </div>
+      <ul class="air-checklist">{objectives.map((o) => <li>{o}</li>)}</ul>
+    </section>
+  )
+}
+
+<style>
+  h2.air-eyebrow {
+    margin: 0;
+    font-size: var(--sl-text-xs);
+    line-height: 1.5;
+  }
+</style>

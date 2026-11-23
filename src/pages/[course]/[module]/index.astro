@@ -1,0 +1,177 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { getCollection, type CollectionEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+  const modules = await getCollection('modules');
+  return modules.map((m) => ({ params: { course: m.data.course, module: m.data.id }, props: { mod: m, modules } }));
+}
+
+interface Props { mod: CollectionEntry<'modules'>; modules: CollectionEntry<'modules'>[] }
+const { mod, modules } = Astro.props;
+const { id, title, objectives, prereqs } = mod.data;
+const byId = new Map(modules.map((m) => [m.data.id, m.data]));
+const lessons = (await getCollection('docs', (e) => e.data.module === id)).sort((a, b) => (a.data.order ?? 0) - (b.data.order ?? 0));
+const totalMinutes = lessons.reduce((n, l) => n + (l.data.estMinutes ?? 0), 0);
+const summary = lessons.length
+  ? `${lessons.length} ${lessons.length === 1 ? 'lesson' : 'lessons'} · about ${totalMinutes} min`
+  : 'Lessons coming soon';
+---
+
+<StarlightPage frontmatter={{ title, description: summary, overview: true, tableOfContents: false }}>
+  <div class="mod not-content">
+    <section aria-labelledby="mod-objectives">
+      <h2 id="mod-objectives">What you will be able to do</h2>
+      <ul class="air-checklist">{objectives.map((o) => <li>{o}</li>)}</ul>
+    </section>
+
+    <section aria-labelledby="mod-prereqs">
+      <h2 id="mod-prereqs">Prerequisites</h2>
+      {prereqs.length ? (
+        <ul class="mod-chips">
+          {prereqs.map((p) => {
+            const m = byId.get(p);
+            return <li><a class="mod-chip" href={`/${m?.course}/${p}/`}><span class="mod-chip-id">{p.toUpperCase()}</span>{m?.title ?? p}</a></li>;
+          })}
+        </ul>
+      ) : (
+        <p class="mod-muted">None — you can start here.</p>
+      )}
+    </section>
+
+    <section aria-labelledby="mod-lessons">
+      <h2 id="mod-lessons">Lessons</h2>
+      {lessons.length ? (
+        <ol class="mod-lessons">
+          {lessons.map((l, i) => (
+            <li>
+              <a class="mod-lesson" href={`/${l.id}/`}>
+                <span class="mod-lesson-num" aria-hidden="true">{i + 1}</span>
+                <span class="mod-lesson-body">
+                  <span class="mod-lesson-title">{l.data.title}</span>
+                  {l.data.objectives?.[0] && <span class="mod-lesson-desc">{l.data.objectives[0]}</span>}
+                </span>
+                <span class="air-pill">{l.data.estMinutes} min</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <div class="mod-empty">
+          <p class="mod-empty-title">Coming soon</p>
+          <p class="mod-muted">Lessons for this module are being written. The objectives above show what it will cover.</p>
+        </div>
+      )}
+    </section>
+
+    {lessons.length > 0 && (
+      <section aria-labelledby="mod-practice">
+        <h2 id="mod-practice">Practice</h2>
+        {/* Routes arrive in later milestones; shown as disabled until then. */}
+        <div class="mod-actions">
+          <div class="mod-action">
+            <span class="mod-action-title">Mastery check</span>
+            <span class="mod-muted">Coming soon</span>
+          </div>
+          <div class="mod-action">
+            <span class="mod-action-title">Homework</span>
+            <span class="mod-muted">Coming soon</span>
+          </div>
+        </div>
+      </section>
+    )}
+  </div>
+</StarlightPage>
+
+<style>
+  .mod h2 {
+    margin: 2.5rem 0 0.875rem;
+    line-height: 1.3;
+    font-size: var(--sl-text-h4);
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    color: var(--sl-color-white);
+  }
+  .mod-muted { margin: 0; color: var(--sl-color-gray-3); font-size: var(--sl-text-sm); line-height: 1.5; }
+
+  .mod > section:first-child h2 { margin-top: 0; }
+  .mod ul, .mod ol { margin: 0; padding: 0; list-style: none; }
+  .mod .air-checklist { gap: 8px; }
+  .mod-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .mod-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px 8px 8px;
+    border: 1px solid var(--air-border);
+    border-radius: 999px;
+    background: var(--air-surface-raised);
+    color: var(--sl-color-gray-1);
+    font-size: var(--sl-text-sm);
+    text-decoration: none;
+    line-height: 1.4;
+  }
+  .mod-chip:hover { border-color: var(--air-brand); }
+  .mod-chip-id {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--air-brand-soft);
+    color: var(--air-brand-strong);
+    font-size: var(--sl-text-xs);
+    font-weight: 700;
+  }
+
+  .mod-lessons { display: grid; gap: 10px; }
+  .mod-lesson {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 18px;
+    border: 1px solid var(--air-border);
+    border-radius: var(--air-radius-lg);
+    background: var(--air-surface-raised);
+    box-shadow: var(--air-shadow);
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+  }
+  .mod-lesson:hover {
+    border-color: var(--air-brand);
+    box-shadow: var(--air-shadow-lg);
+    transform: translateY(-1px);
+  }
+  .mod-lesson-num {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--air-brand-soft);
+    color: var(--air-brand-strong);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .mod-lesson-body { flex: 1; min-width: 0; display: grid; gap: 2px; }
+  .mod-lesson-title { font-weight: 600; color: var(--sl-color-white); line-height: 1.4; }
+  .mod-lesson-desc { color: var(--sl-color-gray-3); font-size: var(--sl-text-sm); line-height: 1.5; }
+
+  .mod-empty {
+    padding: 20px 22px;
+    border: 1px dashed var(--air-border-strong);
+    border-radius: var(--air-radius-lg);
+    background: var(--air-surface);
+  }
+  .mod-empty-title { margin: 0 0 4px; font-weight: 600; color: var(--sl-color-white); }
+
+  .mod-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 12px; }
+  .mod-action {
+    display: grid;
+    gap: 2px;
+    padding: 16px 18px;
+    border: 1px dashed var(--air-border-strong);
+    border-radius: var(--air-radius-lg);
+    background: var(--air-surface);
+  }
+  .mod-action-title { font-weight: 600; color: var(--sl-color-gray-2); line-height: 1.4; }
+</style>

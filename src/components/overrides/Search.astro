@@ -1,0 +1,15 @@
+---
+import Default from '@astrojs/starlight/components/Search.astro';
+---
+
+<Default {...Astro.props} />
+
+{/* The default button's aria-label ("Search") omits its visible shortcut text, failing axe
+    label-content-name-mismatch. Runs after Starlight's inline script has set Ctrl/⌘. */}
+<script is:inline>
+  (() => {
+    const btn = document.querySelector('button[data-open-modal]');
+    const keys = [...(btn?.querySelectorAll(':scope > kbd > kbd') ?? [])].map((k) => k.textContent).join(' ');
+    if (btn && keys) btn.setAttribute('aria-label', `${btn.getAttribute('aria-label')} ${keys}`);
+  })();
+</script>

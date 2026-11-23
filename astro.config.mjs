@@ -26,6 +26,11 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'AI Roadmap',
+      routeMiddleware: './src/routeData.ts',
+      components: {
+        PageTitle: './src/components/overrides/PageTitle.astro',
+        Search: './src/components/overrides/Search.astro',
+      },
       customCss: ['katex/dist/katex.min.css', './src/styles/theme.css'],
       sidebar: courses
         .filter(([, slug]) => hasContent(slug))

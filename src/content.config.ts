@@ -21,10 +21,11 @@ const docs = defineCollection({
         estMinutes: z.number().int().positive().optional(),
         objectives: z.array(z.string().min(1)).min(1).optional(),
         goDeeper: id.optional(),
+        overview: z.boolean().optional(), // set by StarlightPage overview pages, which are not lessons
       }),
     })(ctx).superRefine((data, c) => {
-      // Every page except splash pages (the home) is a lesson and needs the lesson fields.
-      if (data.template === 'splash') return;
+      // Every page except splash pages (the home) and overview pages is a lesson and needs the lesson fields.
+      if (data.template === 'splash' || data.overview) return;
       for (const f of lessonFields)
         if (data[f] === undefined) c.addIssue({ code: 'custom', path: [f], message: `lesson frontmatter requires "${f}"` });
     }),

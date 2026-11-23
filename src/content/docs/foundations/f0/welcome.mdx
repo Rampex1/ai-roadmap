@@ -8,9 +8,18 @@ objectives:
   - "Read simple math notation used in the course"
 goDeeper: missing-semester
 ---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import courseMap from '@/assets/diagrams/course-map.svg';
 
 This course takes you from zero to mastery in AI. Each lesson is short, ends with
 retrieval practice, and feeds a spaced-review schedule.
+
+<Figure
+  src={courseMap}
+  alt="Foundations leads to three tracks: ML Engineering, Research and LLM Engineering."
+  caption="Everyone starts with Foundations, then picks one or more of the three tracks."
+/>
 
 Math is rendered with KaTeX. Inline: the mean of $n$ numbers is $\bar{x} = \frac{1}{n}\sum_{i=1}^{n} x_i$.
 
@@ -20,4 +29,5 @@ $$
 \theta_{t+1} = \theta_t - \eta \, \nabla_\theta L(\theta_t)
 $$
 
-That update rule is gradient descent, which you will derive in F6.
+That update rule is gradient descent: it steps against the <Term id="gradient" text="gradient" /> of the loss.
+You will derive it in F6.
