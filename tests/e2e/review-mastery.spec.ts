@@ -203,3 +203,11 @@ test.describe('mastery check', () => {
     await expect(link).toHaveAttribute('href', /\/foundations\/f0\/check\/?$/);
   });
 });
+
+test('the review page stays small: quiz items load per module on demand', async ({ request }) => {
+  const html = await (await request.get('/review/')).text();
+  expect(html.length).toBeLessThan(150_000);
+  const map = await request.get('/quiz/f0.json');
+  expect(map.ok()).toBe(true);
+  expect((await map.json()).length).toBeGreaterThan(0);
+});
