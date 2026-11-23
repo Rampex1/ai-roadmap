@@ -315,3 +315,54 @@ describe('createStore', () => {
     expect(store.update((s) => markLessonDone(s, 'a', NOW))).toEqual({ ok: false, error: 'quota' });
   });
 });
+
+describe('progress review fixes', () => {
+  it('update re-reads storage so another tab’s write is kept', () => {
+    const storage = memStorage();
+    const tab1 = createStore(storage, () => NOW);
+    const tab2 = createStore(storage, () => NOW);
+    tab1.update((s) => markLessonDone(s, 'a', NOW));
+    tab2.update((s) => markLessonDone(s, 'b', NOW));
+    expect(Object.keys(load(storage, NOW).state.lessons).sort()).toEqual(['a', 'b']);
+  });
+
+  it('refuses to save over corrupt storage until resetCorrupt is called', () => {
+    const storage = memStorage();
+    storage.setItem(STORAGE_KEY, '{{{');
+    const store = createStore(storage, () => NOW);
+    expect(store.update((s) => markLessonDone(s, 'a', NOW))).toEqual({ ok: false, error: 'corrupt' });
+    expect(storage.data.get(STORAGE_KEY)).toBe('{{{');
+    store.resetCorrupt();
+    expect(store.update((s) => markLessonDone(s, 'a', NOW))).toEqual({ ok: true });
+  });
+
+  it('does not make a second backup of the same corrupt content', () => {
+    const storage = memStorage();
+    storage.setItem(STORAGE_KEY, '{{{');
+    load(storage, NOW);
+    load(storage, new Date(NOW.getTime() + 5000));
+    expect([...storage.data.keys()].filter((k) => k.startsWith('airoadmap:corrupt:'))).toHaveLength(1);
+  });
+
+  it('does not notify or change state when the save fails', () => {
+    const store = createStore(fullStorage(), () => NOW);
+    let calls = 0;
+    store.subscribe(() => calls++);
+    store.update((s) => markLessonDone(s, 'a', NOW));
+    expect(calls).toBe(0);
+    expect(store.get().lessons).toEqual({});
+  });
+
+  it('drops malformed entries on import', () => {
+    const s = parseImport(JSON.stringify({ schemaVersion: 1, lessons: { a: null, b: 5 }, cards: { x: {} } }));
+    expect(s.lessons).toEqual({});
+    expect(s.cards).toEqual({});
+  });
+
+  it('never overwrites state written by a newer schema version', () => {
+    const storage = memStorage();
+    storage.setItem(STORAGE_KEY, JSON.stringify({ schemaVersion: 2, lessons: {} }));
+    const store = createStore(storage, () => NOW);
+    expect(store.update((s) => markLessonDone(s, 'a', NOW)).ok).toBe(false);
+  });
+});
