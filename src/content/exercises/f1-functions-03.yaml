@@ -1,0 +1,35 @@
+id: f1-functions-03
+lesson: foundations/f1/functions
+title: Default arguments
+prompt: |
+  Write `clip(x, low=0.0, high=1.0)` that returns `x` limited to the range from `low` to `high`:
+  values below `low` become `low`, values above `high` become `high`, and anything in between is
+  returned unchanged.
+
+  ```python
+  clip(1.7)                # 1.0
+  clip(-0.3)               # 0.0
+  clip(0.4)                # 0.4
+  clip(15, high=10)        # 10
+  clip(-5, low=-1, high=1) # -1
+  ```
+starter: |
+  def clip(x):
+      return x
+solution: |
+  def clip(x, low=0.0, high=1.0):
+      if x < low:
+          return low
+      if x > high:
+          return high
+      return x
+tests: |
+  assert clip(1.7) == 1.0, f"clip(1.7) should be 1.0, got {clip(1.7)!r}"
+  assert clip(-0.3) == 0.0, f"clip(-0.3) should be 0.0, got {clip(-0.3)!r}"
+  assert clip(0.4) == 0.4, f"clip(0.4) should be 0.4, got {clip(0.4)!r}"
+  assert clip(15, high=10) == 10, "clip(15, high=10) should be 10"
+  assert clip(-5, low=-1, high=1) == -1, "clip(-5, low=-1, high=1) should be -1"
+  assert clip(5, 0, 10) == 5, "clip(5, 0, 10) should be 5"
+hints:
+  - "Give the parameters defaults in the def line: `def clip(x, low=0.0, high=1.0):`."
+  - "Use `if x < low: return low`, then a similar check for high, then `return x`."

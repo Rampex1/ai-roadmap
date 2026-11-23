@@ -1,0 +1,54 @@
+id: f1-loops-01
+lesson: foundations/f1/loops
+title: Accumulate with a loop
+prompt: |
+  Using a `for` loop over `values` (not `sum`, `max` or `len`), compute:
+
+  - `total`: the sum of all values,
+  - `n_positive`: how many values are greater than 0,
+  - `largest`: the largest value.
+
+  For the list below these are `7`, `4` and `9`. The tests also try other lists.
+starter: |
+  values = [3, -2, 9, 0, -5, 1, 1]
+
+  total = 0
+  n_positive = 0
+  largest = 0
+solution: |
+  values = [3, -2, 9, 0, -5, 1, 1]
+
+  total = 0
+  n_positive = 0
+  largest = values[0]
+  for v in values:
+      total += v
+      if v > 0:
+          n_positive += 1
+      if v > largest:
+          largest = v
+tests: |
+  import contextlib, io, linecache, re
+  _src = "".join(linecache.cache["<your code>"][2])
+  def _rerun(*subs):
+      _new = _src
+      for _pat, _repl, _line in subs:
+          _new, _n = re.subn(_pat, _repl, _new, flags=re.M)
+          assert _n == 1, f"Keep the starter line `{_line}` as given (you can change the code below it): the tests swap in other values"
+      _ns = {"__name__": "__main__"}
+      with contextlib.redirect_stdout(io.StringIO()):
+          exec(compile(_new, "<your code>", "exec"), _ns)
+      return _ns
+  def _get(_ns, _name):
+      assert _name in _ns, f"Your code should define the variable `{_name}`"
+      return _ns[_name]
+  assert (total, n_positive, largest) == (7, 4, 9), f"Expected total=7, n_positive=4, largest=9; got {total}, {n_positive}, {largest}"
+  for _vals in ([-4, -7, -1], [5], [2, 8, 8, -3]):
+      _ns = _rerun(('^values[ \\t]*=[ \\t]*\\[\\s*3\\s*,\\s*\\-2\\s*,\\s*9\\s*,\\s*0\\s*,\\s*\\-5\\s*,\\s*1\\s*,\\s*1\\s*,?\\s*\\]', f"values = {_vals!r}", "values = [3, -2, 9, 0, -5, 1, 1]"))
+      _want = (sum(_vals), len([v for v in _vals if v > 0]), max(_vals))
+      _got = (_get(_ns, "total"), _get(_ns, "n_positive"), _get(_ns, "largest"))
+      assert _got == _want, f"For values = {_vals}: expected (total, n_positive, largest) = {_want}, got {_got}"
+hints:
+  - "Start the accumulators before the loop, then update them inside `for v in values:`."
+  - "Count with `if v > 0: n_positive += 1`."
+  - "Starting largest at 0 breaks when every value is negative. Start it at `values[0]` instead."

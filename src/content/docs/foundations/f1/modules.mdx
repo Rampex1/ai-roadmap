@@ -1,0 +1,237 @@
+---
+title: Modules, the standard library and reading code
+module: f1
+order: 12
+estMinutes: 16
+objectives:
+  - "Import modules and names with import, from ... import and import ... as"
+  - "Use math, random and collections from the standard library, and seed random numbers for reproducibility"
+  - "Explain why NumPy exists, and use a strategy to read code you did not write"
+goDeeper: python-tutorial-modules
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Nobody writes everything from scratch. Python's real power is the enormous amount of code other
+people have already written, tested and shared. This last lesson of F1 shows how to use it, and
+how that leads straight to the tools of the rest of the course.
+
+## import
+
+A <Term id="python-module" text="module" /> is a file of Python code (functions, values,
+classes) that you can load into your program with `import`. You saw `import math` in lesson 3:
+
+```python
+import math
+
+print(math.sqrt(16))
+print(math.pi)
+print(math.exp(1))
+print(math.log(math.e))
+```
+
+```text title="Output"
+4.0
+3.141592653589793
+2.718281828459045
+1.0
+```
+
+After `import math`, everything in the module is reached with a dot: `math.sqrt`, `math.pi`.
+The dot keeps names organised: `math.log` cannot clash with a `log` you write yourself.
+
+There are two other forms you will see everywhere:
+
+```python
+from math import sqrt, pi
+print(sqrt(2) * pi)
+
+import statistics as st
+print(st.mean([2, 4, 9]), st.median([2, 4, 9]))
+```
+
+```text title="Output"
+4.442882938158366
+5 4
+```
+
+- `from math import sqrt, pi` brings those names in directly, so you write `sqrt(2)`, not `math.sqrt(2)`.
+- `import statistics as st` gives the module a shorter nickname. The whole data-science world
+  uses fixed nicknames: `import numpy as np`, `import pandas as pd`,
+  `import matplotlib.pyplot as plt`. You will type these at the top of nearly every notebook from F2 on.
+
+Put imports at the top of your file, so readers see at a glance what your code depends on.
+
+## The standard library
+
+Python comes with a large set of modules built in, called the <Term id="standard-library" />.
+Nothing needs installing. A few you will reach for often:
+
+| Module | What it is for |
+|---|---|
+| `math` | square roots, logarithms, exponentials, trigonometry, `pi`, `isclose` |
+| `random` | random numbers, shuffling, sampling |
+| `statistics` | mean, median, standard deviation of small lists |
+| `collections` | handy extra containers such as `Counter` |
+| `json` | reading and writing JSON data |
+| `pathlib` | working with files and folders |
+| `time` | measuring how long things take |
+
+### random, and why seeds matter
+
+Machine learning uses randomness everywhere: shuffling data, initialising network weights,
+splitting data into train and test sets. The `random` module provides it:
+
+```python
+import random
+
+random.seed(42)
+print(random.random())
+print(random.randint(1, 6), random.randint(1, 6), random.randint(1, 6))
+print(random.choice(["rock", "paper", "scissors"]))
+deck = [1, 2, 3, 4, 5]
+random.shuffle(deck)
+print(deck)
+```
+
+```text title="Output"
+0.6394267984578837
+1 6 3
+rock
+[4, 1, 3, 5, 2]
+```
+
+- `random.random()` gives a float from 0 up to (not including) 1.
+- `random.randint(a, b)` gives a whole number from `a` to `b`, **including** `b` (unlike `range`).
+- `random.choice` picks one item; `random.shuffle` reorders a list in place.
+
+Computer randomness is really *pseudo*-random: a formula that produces numbers that look random,
+starting from a number called the **seed**. Set the same seed and you get the same sequence every
+time (on the same Python version). Run the code above again and you will get exactly those numbers.
+That is what makes ML experiments **reproducible**: you will see `random_state=42` or
+`torch.manual_seed(0)` at the top of countless scripts for this reason.
+
+### collections.Counter
+
+In lesson 9 you counted words with a dictionary. That pattern is so common that the standard
+library has a ready-made version:
+
+```python
+from collections import Counter
+
+words = "the cat and the hat and the bat".split()
+counts = Counter(words)
+print(counts["the"], counts["dog"])
+print(counts.most_common(2))
+```
+
+```text title="Output"
+3 0
+[('the', 3), ('and', 2)]
+```
+
+A `Counter` is a dictionary that counts. Missing keys give 0 instead of a `KeyError`, and
+`most_common(n)` returns the top `n` items as `(item, count)` tuples. It is worth knowing how to
+write the counting loop yourself, *and* worth knowing that you rarely have to.
+
+## Your own modules
+
+Any `.py` file is a module. If you save functions in a file called `helpers.py`, another file in
+the same folder can use them with `import helpers` and then call `helpers.mean(...)`. That is all
+a module is. As your projects grow beyond one notebook, you will split code into files this way.
+
+In other people's code you will often see this at the bottom of a file:
+
+```python
+def main():
+    print("running as a script")
+
+if __name__ == "__main__":
+    main()
+```
+
+```text title="Output"
+running as a script
+```
+
+It means "only call `main()` when this file is run directly, not when it is imported by another file".
+Python sets `__name__` to `"__main__"` for the file you run.
+
+## Packages, and why NumPy exists
+
+Beyond the standard library are hundreds of thousands of **packages** made by others, installed with
+a tool like `pip` or `uv` (you met `uv` in F0). Most of this course rests on a handful of them:
+NumPy, pandas, matplotlib, scikit-learn and PyTorch.
+
+Why not just use lists? Here is how you add two vectors element by element in plain Python:
+
+```python
+a = [1.0, 2.0, 3.0]
+b = [10.0, 20.0, 30.0]
+c = [x + y for x, y in zip(a, b)]
+print(c)
+```
+
+```text title="Output"
+[11.0, 22.0, 33.0]
+```
+
+It works, but there are two problems. First, every operation is a loop you have to write. Second,
+Python loops are slow: each pass does a lot of bookkeeping (checking types, finding methods). For a
+million numbers, or a neural network with millions of weights, that adds up to minutes instead of
+milliseconds.
+
+NumPy fixes both. It stores numbers in compact arrays and runs the loops in fast, compiled code.
+The same sum looks like maths:
+
+```python
+import numpy as np
+
+a = np.array([1.0, 2.0, 3.0])
+b = np.array([10.0, 20.0, 30.0])
+print(a + b)
+print(a * 2, a.mean())
+```
+
+```text title="Output"
+[11. 22. 33.]
+[2. 4. 6.] 2.0
+```
+
+No loop, and on large arrays it is typically tens to hundreds of times faster than the plain
+Python version. That is F2. Everything you learnt in F1 still applies: indexing, slicing,
+functions, the accumulator idea. NumPy just does it a whole array at a time.
+
+## Reading code you did not write
+
+From here on you will read a lot of other people's code: library documentation, tutorials, research
+repositories. A strategy:
+
+1. **Start with the imports.** They tell you what tools the code uses.
+2. **Find the entry point**: the `if __name__ == "__main__":` block, or the last cells of a notebook.
+   Follow the calls from there, top down.
+3. **Read function names and docstrings before bodies.** Good names tell you what; only read how when you need it.
+4. **Run it and print things.** Add `print(type(x), x)` to see what a variable really holds.
+5. **Look things up.** `help(math.log)` shows a function's documentation right in Python, and
+   `dir(obj)` lists what an object can do. The official docs and the tutor on this site are there too.
+
+```python
+import math
+help(math.hypot)
+```
+
+The output is the docstring of `math.hypot`, the same kind of docstring you wrote in lesson 8.
+
+## Try it
+
+<CodeExercise id="f1-modules-01" />
+
+<CodeExercise id="f1-modules-02" />
+
+## Summary
+
+- `import m` then `m.name`; `from m import name`; `import m as alias`. Put imports at the top.
+- The standard library (`math`, `random`, `statistics`, `collections` and more) needs no installing.
+- `random.seed(n)` makes random results reproducible, which is essential for experiments.
+- `collections.Counter` counts things; `most_common(n)` gives the top items.
+- Plain Python loops are slow for big numeric work. NumPy, next in F2, does whole-array maths quickly.

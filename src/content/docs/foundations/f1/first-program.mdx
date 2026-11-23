@@ -1,0 +1,183 @@
+---
+title: Your first program
+module: f1
+order: 1
+estMinutes: 12
+objectives:
+  - "Run a Python program and predict what it prints"
+  - "Use print() to show text and numbers, and comments to explain code"
+  - "Read a simple error message instead of panicking"
+goDeeper: think-python
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A **program** is a list of instructions that a computer follows exactly, one after another.
+Python is a programming language: a precise way of writing those instructions that both you
+and the computer can read. Almost every tool you will meet later in this course, from NumPy to
+PyTorch, is used through Python, so this module is the ground everything else stands on.
+
+You do not need to install anything for this module. Every exercise runs right here in your
+browser. If you set up Python or Colab in F0, you can also paste any example into a notebook cell
+and run it there.
+
+## Hello, world
+
+Here is a complete Python program:
+
+```python
+print("Hello, world!")
+```
+
+```text title="Output"
+Hello, world!
+```
+
+Three things are going on:
+
+- `print` is a **function**: a named command that does a job. Its job is to show something on the screen.
+- The parentheses `( )` hold what you give to the function. Programmers call this the *argument*.
+- `"Hello, world!"` is a piece of text. Text in Python goes inside quotes, so Python knows it is
+  text and not an instruction. The quotes themselves are not printed.
+
+You can use single quotes or double quotes; they mean the same thing. Pick one and be consistent.
+
+```python
+print('Single quotes work too.')
+```
+
+```text title="Output"
+Single quotes work too.
+```
+
+## Programs run from top to bottom
+
+A program with several lines runs them in order, top to bottom. Each `print` starts a new line
+of output.
+
+```python
+print("Step 1: read the lesson")
+print("Step 2: try the exercise")
+print("Step 3: take the quiz")
+```
+
+```text title="Output"
+Step 1: read the lesson
+Step 2: try the exercise
+Step 3: take the quiz
+```
+
+This sounds obvious, but "the computer does exactly what I wrote, in the order I wrote it" is
+the single most useful idea for understanding why a program behaves the way it does.
+
+## Printing numbers and doing sums
+
+`print` can show numbers too. Numbers do **not** go in quotes, and Python works out any
+arithmetic before printing.
+
+```python
+print(42)
+print(2 + 3)
+print("2 + 3")
+```
+
+```text title="Output"
+42
+5
+2 + 3
+```
+
+Look closely at the last two lines. Without quotes, `2 + 3` is a calculation and Python prints
+the result. With quotes, `"2 + 3"` is just text, and Python prints it as it is.
+
+You can give `print` several things at once, separated by commas. It prints them on one line
+with a space between each:
+
+```python
+print("Minutes per week:", 15 * 5)
+```
+
+```text title="Output"
+Minutes per week: 75
+```
+
+The `*` symbol means multiply. You will meet all the arithmetic symbols in lesson 3.
+A `print()` with nothing inside prints an empty line, which is handy for spacing output.
+
+## Comments: notes for humans
+
+Any text after a `#` on a line is a **comment**. Python ignores it completely. Comments are
+for people, including you in three weeks, who need to understand *why* the code does what it does.
+
+```python
+# Estimate study time for this module.
+lessons = 12
+print(lessons * 15)  # about 15 minutes per lesson
+```
+
+```text title="Output"
+180
+```
+
+(The line `lessons = 12` creates a *variable*, a name for a value. That is the topic of the next
+lesson; for now, read it as "let lessons stand for 12".)
+
+A good comment explains intent, not the obvious. `# multiply by 15` adds nothing that the code
+does not already say; `# about 15 minutes per lesson` tells the reader where 15 came from.
+
+## When things go wrong
+
+You will make mistakes, and Python will tell you about them. Every programmer, at every level,
+sees error messages many times a day. The skill is reading them calmly.
+
+Python has strict rules about how code must be written, called its <Term id="syntax" />.
+If you break those rules, for example by forgetting a closing quote, Python refuses to run the
+program at all and reports a `SyntaxError`:
+
+```text
+print("Hello)
+      ^
+SyntaxError: unterminated string literal (detected at line 1)
+```
+
+The little `^` points to where Python got confused. Here the quote that opens the text is never
+closed. (The exact wording can vary slightly between Python versions, but the last line always
+names the kind of error.)
+
+Another common one: Python is **case-sensitive**, so `Print` and `print` are different names.
+Only `print` exists:
+
+```python
+Print("hi")
+```
+
+```text title="Output (error)"
+Traceback (most recent call last):
+  File "main.py", line 1, in <module>
+    Print("hi")
+    ^^^^^
+NameError: name 'Print' is not defined. Did you mean: 'print'?
+```
+
+When you see an error, read the **last line first**. It tells you the kind of error
+(`NameError`) and a short description; recent Python versions even suggest a fix. The lines above it tell you *where* it happened.
+Lesson 11 covers errors properly; for now, the habit to build is: read the last line, then look
+at the line number.
+
+## Try it
+
+The exercise box below is a small editor. Type your code, press **Run**, and hidden tests check
+your answer. If you are stuck, **Hint** reveals one clue at a time.
+
+<CodeExercise id="f1-first-program-01" />
+
+This one starts broken on purpose. Read the error, then fix it.
+
+<CodeExercise id="f1-first-program-02" />
+
+## Summary
+
+- A program is a sequence of instructions that runs top to bottom.
+- `print(...)` shows text (in quotes) and numbers (no quotes). Commas print several things with spaces between.
+- `#` starts a comment that Python ignores.
+- Errors are normal. Read the last line first: it names the problem.

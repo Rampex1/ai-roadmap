@@ -1,0 +1,226 @@
+---
+title: Dictionaries
+module: f1
+order: 9
+estMinutes: 16
+objectives:
+  - "Create dictionaries, look values up by key, and add, change and remove entries"
+  - "Loop over keys, values and items, and count things with the counting pattern"
+  - "Choose between a list and a dictionary for a given job"
+goDeeper: python-tutorial-data-structures
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A list finds things by **position**: item 0, item 1, item 2. Often you want to find things by
+**name** instead: the price of "apple", the capital of "France", the number of times the word "the"
+appears. For that, Python has the <Term id="dictionary" />, or `dict`.
+
+## Keys and values
+
+A dictionary stores **key: value** pairs inside curly braces:
+
+```python
+ages = {"Ada": 36, "Alan": 41, "Grace": 85}
+print(ages["Alan"])
+print(len(ages))
+```
+
+```text title="Output"
+41
+3
+```
+
+`ages["Alan"]` looks up the value stored under the key `"Alan"`. The syntax looks like list
+indexing, but instead of a position you give a key. Keys are usually strings or numbers, and each
+key appears at most once. Values can be anything: numbers, strings, lists, even other dicts.
+
+## Adding, changing and removing
+
+Dictionaries are mutable, like lists. Assigning to a key adds it if it is new, or replaces its value
+if it already exists:
+
+```python
+stock = {"apple": 5, "pear": 2}
+stock["banana"] = 12   # new key: added
+stock["apple"] = 4     # existing key: replaced
+del stock["pear"]      # removed
+print(stock)
+```
+
+```text title="Output"
+{'apple': 4, 'banana': 12}
+```
+
+Dictionaries remember the order in which keys were first added, so printing shows them in that order.
+
+## Missing keys
+
+Looking up a key that is not there is a `KeyError`:
+
+```python
+stock = {"apple": 4}
+print(stock["kiwi"])
+```
+
+```text title="Output (error)"
+Traceback (most recent call last):
+  File "main.py", line 2, in <module>
+    print(stock["kiwi"])
+          ~~~~~^^^^^^^^
+KeyError: 'kiwi'
+```
+
+There are two safe ways to handle keys that might be missing. Check first with `in` (which checks
+**keys**, not values), or use `.get(key, default)`, which returns the default instead of failing:
+
+```python
+stock = {"apple": 4}
+print("kiwi" in stock)
+print(stock.get("kiwi", 0))
+print(stock.get("apple", 0))
+print(stock.get("kiwi"))
+```
+
+```text title="Output"
+False
+0
+4
+None
+```
+
+Without a default, `.get` returns `None` for a missing key.
+
+## Looping over a dictionary
+
+Looping over a dict directly gives you its keys. Use `.values()` for the values and `.items()`
+for key-value pairs, which is what you want most of the time:
+
+```python
+prices = {"apple": 0.5, "bread": 2.25, "milk": 1.1}
+for item in prices:
+    print(item, end=" ")
+print()
+print(sum(prices.values()))
+for item, price in prices.items():
+    print(f"{item:>6}: {price:.2f}")
+```
+
+```text title="Output"
+apple bread milk 
+3.85
+ apple: 0.50
+ bread: 2.25
+  milk: 1.10
+```
+
+(`:>6` in the f-string right-aligns the text in 6 characters, lining up the colons.)
+
+## The counting pattern
+
+Counting how often each thing occurs is one of the most useful patterns in data work. It is the
+accumulator pattern from lesson 7 with a dictionary as the accumulator:
+
+```python
+words = "the cat and the hat and the bat".split()
+counts = {}
+for w in words:
+    counts[w] = counts.get(w, 0) + 1
+print(counts)
+```
+
+```text title="Output"
+{'the': 3, 'cat': 1, 'and': 2, 'hat': 1, 'bat': 1}
+```
+
+`counts.get(w, 0)` is the count so far, or 0 the first time a word is seen. Add 1 and store it
+back. Counting word frequencies like this is the first step of classic text classifiers, and you
+will build a fuller word counter in this module's homework.
+
+To find the most common word, `max` can compare keys by their values:
+
+```python
+counts = {"the": 3, "cat": 1, "and": 2}
+print(max(counts, key=counts.get))
+print(sorted(counts, key=counts.get, reverse=True))
+```
+
+```text title="Output"
+the
+['the', 'and', 'cat']
+```
+
+`key=counts.get` tells `max` and `sorted` to rank each key by `counts.get(key)`, its count.
+
+## Dictionary comprehensions
+
+Like lists, dicts have a comprehension syntax: `{key: value for ...}`.
+
+```python
+words = ["cat", "horse", "ox"]
+lengths = {w: len(w) for w in words}
+print(lengths)
+vocab = {w: i for i, w in enumerate(words)}
+print(vocab)
+```
+
+```text title="Output"
+{'cat': 3, 'horse': 5, 'ox': 2}
+{'cat': 0, 'horse': 1, 'ox': 2}
+```
+
+That second one is a tiny **vocabulary**: a dict that maps each word to a whole-number ID. Every
+language model starts with exactly this kind of lookup table, turning text into numbers that maths
+can work on.
+
+## Records: dicts inside lists
+
+A dictionary is a natural way to describe one *thing* with named fields. A list of such dicts is a
+simple table, one dict per row. This is also the shape of JSON, the data format most web APIs use.
+
+```python
+people = [
+    {"name": "Ada", "age": 36},
+    {"name": "Alan", "age": 41},
+]
+for p in people:
+    print(p["name"], "is", p["age"])
+print(sum(p["age"] for p in people) / len(people))
+```
+
+```text title="Output"
+Ada is 36
+Alan is 41
+38.5
+```
+
+In F2, pandas turns this kind of list of records into a DataFrame with a single function call.
+
+## List or dictionary?
+
+| Use a list when... | Use a dict when... |
+|---|---|
+| order and position matter (the 3rd reading) | you look things up by a name or ID |
+| items are all the same kind of thing | each key maps to its own value |
+| you will mostly loop over everything | you need fast "is it there?" checks |
+
+The last row deserves a note. Checking `x in some_list` has to look through the list item by item,
+so it gets slower as the list grows. Checking `key in some_dict` jumps straight to the right place
+and is just as fast for a million keys as for ten.
+
+One rule about keys: they must be values that cannot change, such as strings, numbers or tuples
+(lesson 10). A list cannot be a key, because it could change after it was stored.
+
+## Try it
+
+<CodeExercise id="f1-dictionaries-01" />
+
+<CodeExercise id="f1-dictionaries-02" />
+
+## Summary
+
+- A dict maps keys to values: `d = {"a": 1}`, look up with `d["a"]`, add or change with `d["b"] = 2`.
+- A missing key is a `KeyError`; use `key in d` or `d.get(key, default)` to be safe.
+- Loop with `for k, v in d.items():`.
+- The counting pattern: `counts[x] = counts.get(x, 0) + 1`.
+- Use a dict to look things up by name; use a list when position matters.

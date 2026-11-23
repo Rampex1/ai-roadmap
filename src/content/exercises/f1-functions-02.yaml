@@ -1,0 +1,27 @@
+id: f1-functions-02
+lesson: foundations/f1/functions
+title: Mean squared error
+prompt: |
+  The **mean squared error** measures how far a model's predictions are from the true values:
+  $$\text{MSE} = \frac{1}{n}\sum_{i=1}^{n} (p_i - y_i)^2$$
+  Write `mse(predictions, targets)` that returns it for two lists of the same length.
+  For example `mse([2, 4], [1, 7])` is $\frac{(2-1)^2 + (4-7)^2}{2} = \frac{1 + 9}{2} = 5.0$.
+starter: |
+  def mse(predictions, targets):
+      """Return the mean squared error between two equal-length lists."""
+      return 0
+solution: |
+  def mse(predictions, targets):
+      """Return the mean squared error between two equal-length lists."""
+      total = 0
+      for p, y in zip(predictions, targets):
+          total += (p - y) ** 2
+      return total / len(targets)
+tests: |
+  assert abs(mse([2, 4], [1, 7]) - 5.0) < 1e-9, f"mse([2, 4], [1, 7]) should be 5.0, got {mse([2, 4], [1, 7])!r}"
+  assert mse([1, 2, 3], [1, 2, 3]) == 0, "Perfect predictions should give an MSE of 0"
+  assert abs(mse([0.5], [0.0]) - 0.25) < 1e-9, f"mse([0.5], [0.0]) should be 0.25, got {mse([0.5], [0.0])!r}"
+  assert abs(mse([3, -1, 2, 0], [1, 1, 1, 1]) - 2.5) < 1e-9, f"mse([3, -1, 2, 0], [1, 1, 1, 1]) should be 2.5, got {mse([3, -1, 2, 0], [1, 1, 1, 1])!r}"
+hints:
+  - "Use the accumulator pattern with `zip(predictions, targets)` to walk both lists together."
+  - "Add up `(p - y) ** 2` for each pair, then divide by the number of items."

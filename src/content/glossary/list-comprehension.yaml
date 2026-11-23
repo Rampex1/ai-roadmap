@@ -1,0 +1,7 @@
+term: "List comprehension"
+short: "A one-line way to build a new list from a sequence, like [x * 2 for x in xs if x > 0]."
+body: |
+  It combines a loop, an optional filter and an expression for each new item. Dictionaries and sets
+  have the same syntax with curly braces: `{w: len(w) for w in words}`. Use comprehensions for simple
+  transforms and filters, and a normal loop when the logic gets long.
+related: ["loop", "list"]

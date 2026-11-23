@@ -1,0 +1,40 @@
+id: f1-errors-02
+lesson: foundations/f1/errors
+title: Reject bad input
+prompt: |
+  Write `average_rating(ratings)` that returns the mean of a list of star ratings, but first checks
+  its input and **raises a `ValueError`** with a helpful message if:
+
+  - the list is empty, or
+  - any rating is outside the range 1 to 5.
+
+  ```python
+  average_rating([4, 5, 3])   # 4.0
+  average_rating([])          # ValueError
+  average_rating([4, 6])      # ValueError
+  ```
+starter: |
+  def average_rating(ratings):
+      return sum(ratings) / len(ratings)
+solution: |
+  def average_rating(ratings):
+      if len(ratings) == 0:
+          raise ValueError("need at least one rating")
+      for r in ratings:
+          if r < 1 or r > 5:
+              raise ValueError(f"rating {r} is outside 1 to 5")
+      return sum(ratings) / len(ratings)
+tests: |
+  assert average_rating([4, 5, 3]) == 4.0, f"average_rating([4, 5, 3]) should be 4.0, got {average_rating([4, 5, 3])!r}"
+  assert average_rating([1, 5]) == 3.0, "1 and 5 are valid ratings"
+  for _bad in ([], [4, 6], [0, 3], [5, 5, -2]):
+      try:
+          average_rating(_bad)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError(f"average_rating({_bad}) should raise ValueError")
+hints:
+  - "Check for the empty list first: `if len(ratings) == 0: raise ValueError(\"...\")`."
+  - "Loop over the ratings and raise if `r < 1 or r > 5`."
+  - "Only after both checks, return the mean."

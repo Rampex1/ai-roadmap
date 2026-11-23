@@ -1,0 +1,217 @@
+---
+title: Functions
+module: f1
+order: 8
+estMinutes: 18
+objectives:
+  - "Define functions with def, parameters and return, and call them with positional and keyword arguments"
+  - "Explain the difference between returning a value and printing it"
+  - "Describe local scope: why variables inside a function are not visible outside it"
+  - "Document a function with a docstring"
+goDeeper: cs50p
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+You have been using functions since lesson 1: `print`, `len`, `sum`, `sorted`. Now you will write
+your own. A <Term id="function" /> is a named, reusable piece of code that takes some inputs and
+gives back a result. Functions are how programs stay readable as they grow, and they map
+directly onto maths: $f(x) = x^2$ becomes a three-word Python function.
+
+## Defining and calling a function
+
+```python
+def square(x):
+    return x * x
+
+print(square(3))
+print(square(1.5) + 1)
+```
+
+```text title="Output"
+9
+3.25
+```
+
+The parts:
+
+- `def` starts a function definition, followed by the function's name and its **parameters** in
+  parentheses, then a colon.
+- The indented block below is the **body**. It does not run when Python reads the `def`; it runs
+  each time the function is **called**.
+- `return x * x` ends the function and hands the value back to whoever called it.
+- `square(3)` is a call. The value `3` you pass in is called an **argument**; inside the body,
+  the parameter `x` refers to it.
+
+The value a call returns can be used anywhere a value can: printed, stored, or used in more maths,
+as in `square(1.5) + 1`.
+
+Functions can take several parameters, and can call other functions:
+
+```python
+def mean(xs):
+    return sum(xs) / len(xs)
+
+def variance(xs):
+    m = mean(xs)
+    return sum((x - m) ** 2 for x in xs) / len(xs)
+
+data = [2, 4, 4, 4, 5, 5, 7, 9]
+print(mean(data), variance(data))
+```
+
+```text title="Output"
+5.0 4.0
+```
+
+(`sum((x - m) ** 2 for x in xs)` is like a list comprehension without the square brackets:
+`sum` adds up the values as they are produced.) Notice how `variance` reads almost like the
+maths, because the details of the mean are tucked away in their own function. You will write
+exactly these functions again in F5.
+
+## return is not print
+
+This is the most important idea in the lesson, and the most common beginner confusion.
+
+- `print` **shows** a value on the screen, for a human. The program cannot use what was printed.
+- `return` **hands back** a value to the code that called the function, so the program can keep working with it.
+
+```python
+def add_print(a, b):
+    print(a + b)
+
+def add_return(a, b):
+    return a + b
+
+x = add_print(2, 3)
+y = add_return(2, 3)
+print("x is", x)
+print("y is", y)
+```
+
+```text title="Output"
+5
+x is None
+y is 5
+```
+
+`add_print` displayed 5, but it returned nothing, so `x` got `None`, the value every function
+returns when it reaches the end without a `return`. Trying `add_print(2, 3) * 10` would crash with
+a `TypeError`, because `None * 10` makes no sense. Rule of thumb: functions that compute something
+should `return` it; leave printing to the code that calls them.
+
+`return` also ends the function immediately, which is handy with `if`:
+
+```python
+def relu(x):
+    if x > 0:
+        return x
+    return 0.0
+
+print(relu(2.5), relu(-1.0))
+```
+
+```text title="Output"
+2.5 0.0
+```
+
+ReLU ("rectified linear unit") is the most widely used activation function in neural networks,
+and you have just written it. When `x > 0`, the first `return` runs and the function is over;
+the second `return` is reached only for other values.
+
+## Default values and keyword arguments
+
+A parameter can have a **default value**, used when the caller does not supply one. Callers can
+also name arguments explicitly, as **keyword arguments**, which makes calls easier to read:
+
+```python
+def describe(score, label="score", digits=2):
+    return f"{label}: {score:.{digits}f}"
+
+print(describe(0.91234))
+print(describe(0.91234, "accuracy"))
+print(describe(0.91234, digits=4))
+```
+
+```text title="Output"
+score: 0.91
+accuracy: 0.91
+score: 0.9123
+```
+
+You will meet this style everywhere in ML libraries, for example
+`train_test_split(X, y, test_size=0.2, random_state=0)` in F7. Parameters with defaults must come
+after the ones without.
+
+## Scope: what a function can see
+
+Variables created inside a function are **local**: they exist only while that call runs, and
+code outside cannot see them. This is the function's <Term id="scope" />.
+
+```python
+def compute():
+    result = 42
+    return result
+
+compute()
+print(result)
+```
+
+```text title="Output (error)"
+Traceback (most recent call last):
+  File "main.py", line 6, in <module>
+    print(result)
+          ^^^^^^
+NameError: name 'result' is not defined
+```
+
+The fix is to keep what the function returns: `result = compute()`. Local scope is a feature,
+not a nuisance. It means you can use a name like `total` inside one function without worrying
+that it clashes with a `total` somewhere else.
+
+A function *can* read variables defined outside it, at the top level of the program. But relying
+on that makes code hard to follow. Pass in what a function needs as parameters, and return what it
+produces. A function that only depends on its inputs is easy to test and reuse.
+
+## Docstrings
+
+A string on the first line of a function body is its **docstring**: documentation that tools and
+`help()` can show. Write one for any function someone else (or future you) will use:
+
+```python
+def accuracy(predictions, labels):
+    """Return the fraction of predictions that equal their label.
+
+    Both arguments are lists of the same length.
+    """
+    correct = 0
+    for p, y in zip(predictions, labels):
+        if p == y:
+            correct += 1
+    return correct / len(labels)
+
+print(accuracy([1, 0, 1, 1], [1, 1, 1, 0]))
+```
+
+```text title="Output"
+0.5
+```
+
+The triple quotes `"""` let a string span several lines. A good docstring says what the function
+returns and what it expects, not how it works inside.
+
+## Try it
+
+<CodeExercise id="f1-functions-01" />
+
+<CodeExercise id="f1-functions-02" />
+
+<CodeExercise id="f1-functions-03" />
+
+## Summary
+
+- `def name(params):` defines a function; the indented body runs each time it is called.
+- `return` hands a value back and ends the call. Without it, a function returns `None`.
+- `print` shows; `return` gives back. Compute with `return`.
+- Parameters can have defaults, and callers can pass keyword arguments like `digits=4`.
+- Variables inside a function are local to it. Pass inputs in, return outputs out.

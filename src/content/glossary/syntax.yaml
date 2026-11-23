@@ -1,0 +1,7 @@
+term: "Syntax"
+short: "The grammar rules that say how code must be written for Python to understand it."
+body: |
+  Breaking the rules, for example by leaving out a closing quote or a colon, gives a `SyntaxError`,
+  and Python refuses to run any of the program. Syntax errors are found before the code runs, unlike
+  exceptions, which happen while it runs.
+related: ["exception", "indentation"]

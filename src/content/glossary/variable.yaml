@@ -1,0 +1,8 @@
+term: "Variable"
+short: "A name attached to a value, created with assignment such as x = 5."
+body: |
+  Assignment `name = value` works out the right side first, then attaches the name to the result, so
+  `count = count + 1` is normal Python. A variable is best pictured as a name tag on a value rather
+  than a box: `b = a` puts a second tag on the same value instead of copying it, which matters for
+  mutable values like lists.
+related: ["data-type", "mutability", "scope"]

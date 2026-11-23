@@ -1,0 +1,29 @@
+id: f1-first-program-01
+lesson: foundations/f1/first-program
+title: Say hello
+prompt: |
+  Write a program that prints exactly these two lines:
+
+  ```text
+  Hello, Python!
+  I am learning AI.
+  ```
+
+  Spelling, capital letters and punctuation all count.
+starter: |
+  # Write your two print lines below.
+solution: |
+  print("Hello, Python!")
+  print("I am learning AI.")
+tests: |
+  import contextlib, io, linecache
+  _buf = io.StringIO()
+  with contextlib.redirect_stdout(_buf):
+      exec(compile("".join(linecache.cache["<your code>"][2]), "<your code>", "exec"), {"__name__": "__main__"})
+  _lines = _buf.getvalue().splitlines()
+  assert len(_lines) == 2, f"Expected 2 lines of output, got {len(_lines)}: {_lines!r}"
+  assert _lines[0] == "Hello, Python!", f"Line 1 should be 'Hello, Python!', got {_lines[0]!r}"
+  assert _lines[1] == "I am learning AI.", f"Line 2 should be 'I am learning AI.', got {_lines[1]!r}"
+hints:
+  - "Each line of output needs its own `print(...)`."
+  - "Put the text in quotes: `print(\"Hello, Python!\")`."

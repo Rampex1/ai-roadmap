@@ -1,0 +1,109 @@
+items:
+  - id: f1-errors-01
+    type: mcq
+    prompt: "A traceback has five lines of frames, then `KeyError: 'price'`. Where should you start reading?"
+    explanation: "The last line names the exception and message; the frame just above it shows the line where it happened."
+    options:
+      - text: At the last line, then the frame just above it
+        correct: true
+        why: The bottom says what went wrong and the frame above it says where.
+      - text: At the first line, because that is where the program started
+        why: The top frames show how the program got there, which is useful later but not first.
+      - text: Anywhere; the lines are in random order
+        why: Frames are ordered with the most recent call last, at the bottom.
+  - id: f1-errors-02
+    type: mcq
+    prompt: "Which exception does `int(\"3.5\")` raise?"
+    explanation: "The argument is the right type (a string), but its value is not a whole number, so it is a ValueError. `int(float(\"3.5\"))` would give 3."
+    options:
+      - text: ValueError
+        correct: true
+        why: The type is fine but the text does not hold a whole number.
+      - text: TypeError
+        why: int() does accept strings, so the type is not the problem.
+      - text: None; it returns 3
+        why: int() only converts strings that look like whole numbers. It does not round or chop text.
+  - id: f1-errors-03
+    type: output
+    prompt: "What does this print?"
+    code: |
+      try:
+          x = [1, 2, 3][3]
+          print("got", x)
+      except IndexError:
+          print("no such index")
+      print("done")
+    answer: |
+      no such index
+      done
+    explanation: "Index 3 does not exist in a 3-item list. The IndexError jumps straight to the except block, skipping the print in try, and the program then carries on."
+  - id: f1-errors-04
+    type: multi
+    prompt: "Which of these are good practice with try/except?"
+    explanation: "Catch specific exceptions around the smallest piece of code that can fail for a reason you understand."
+    options:
+      - text: Catch a specific exception type, such as except ValueError
+        correct: true
+        why: Specific types handle the expected problem without hiding unrelated bugs.
+      - text: Keep the try block as small as possible
+        correct: true
+        why: A small block makes it clear which line you expect to fail.
+      - text: Wrap the whole program in try with a bare except so it never crashes
+        why: That hides every bug, including typos, and leaves you with wrong results and no clue why.
+      - text: Use try/except to silence an error you do not understand yet
+        why: Understand the error first. Silencing it usually turns a crash into a silent wrong answer.
+  - id: f1-errors-05
+    type: output
+    prompt: "What does this print?"
+    code: |
+      def check(p):
+          if not 0 <= p <= 1:
+              raise ValueError("not a probability")
+          return p
+
+      try:
+          check(0.5)
+          check(1.5)
+          print("all fine")
+      except ValueError as e:
+          print("caught:", e)
+    answer: "caught: not a probability"
+    explanation: "check(0.5) passes. check(1.5) raises, so the rest of the try block, including the print, is skipped and the except block runs."
+  - id: f1-errors-06
+    type: mcq
+    prompt: "Which line raises a TypeError?"
+    explanation: "Adding a string and an int is an operation on incompatible types."
+    options:
+      - text: 'total = "Score: " + 10'
+        correct: true
+        why: str + int is not defined, so this is a TypeError.
+      - text: 'total = int("10") + 10'
+        why: int("10") is 10, and 10 + 10 is 20. No error.
+      - text: 'total = {"a": 1}["b"]'
+        why: That is a KeyError, because the key b is missing.
+  - id: f1-errors-07
+    type: order
+    prompt: "Put these debugging steps in a sensible order."
+    explanation: "Understand the message, locate the line, check the actual values, then make one change and re-run."
+    items:
+      - Read the last line of the traceback
+      - Go to the line the traceback points at
+      - Print the values and types used on that line
+      - Fix one thing and run the code again
+  - id: f1-errors-08
+    type: cloze
+    prompt: "To signal bad input from your own function, write the keyword ____ followed by an exception, such as `ValueError(\"message\")`."
+    explanation: "`raise` creates and throws an exception."
+    accept: ["raise"]
+  - id: f1-errors-09
+    type: mcq
+    prompt: "A traceback shows `main.py, line 12, in <module>` above `main.py, line 3, in mean`, then `ZeroDivisionError`. What does this tell you?"
+    explanation: "The bottom frame is where the error happened (line 3 in mean). The frame above shows the call on line 12 that led there, which is often where the bad value came from."
+    options:
+      - text: The division failed on line 3 inside mean, which was called from line 12
+        correct: true
+        why: Frames go from the outermost call at the top to the failing line at the bottom.
+      - text: The division failed on line 12, which then called mean
+        why: The failing line is in the bottom frame, not the top one.
+      - text: There were two separate errors, one on each line
+        why: A traceback describes one exception and the chain of calls leading to it.

@@ -1,0 +1,7 @@
+term: "Exception"
+short: "An error that happens while a program runs, such as ValueError or KeyError."
+body: |
+  An unhandled exception stops the program and prints a traceback. `try` / `except SomeError:` catches
+  an expected exception so the program can recover, and `raise ValueError("message")` signals bad
+  input from your own code. Catch specific exception types rather than everything.
+related: ["traceback", "syntax"]

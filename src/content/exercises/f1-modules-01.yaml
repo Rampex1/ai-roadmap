@@ -1,0 +1,27 @@
+id: f1-modules-01
+lesson: foundations/f1/modules
+title: The sigmoid function
+prompt: |
+  The **sigmoid** function squashes any number into the range 0 to 1, which is how a classifier
+  turns a raw score into a probability:
+  $$\sigma(x) = \frac{1}{1 + e^{-x}}$$
+  Import the `math` module and write `sigmoid(x)` using `math.exp`.
+  For example `sigmoid(0)` is `0.5`, and `sigmoid(2)` is about `0.8808`.
+starter: |
+  def sigmoid(x):
+      return 0
+solution: |
+  import math
+
+
+  def sigmoid(x):
+      return 1 / (1 + math.exp(-x))
+tests: |
+  import math as _m
+  assert abs(sigmoid(0) - 0.5) < 1e-12, f"sigmoid(0) should be 0.5, got {sigmoid(0)!r}"
+  assert abs(sigmoid(2) - 0.8807970779778823) < 1e-9, f"sigmoid(2) should be about 0.8808, got {sigmoid(2)!r}"
+  assert abs(sigmoid(-2) - (1 - sigmoid(2))) < 1e-12, "sigmoid(-x) should equal 1 - sigmoid(x)"
+  assert 0 < sigmoid(-10) < 0.001 and 0.999 < sigmoid(10) < 1, "Large negative x should give nearly 0, large positive nearly 1"
+hints:
+  - "Put `import math` at the top, then `math.exp(-x)` is e to the power -x."
+  - "Mind the parentheses: `1 / (1 + math.exp(-x))`."

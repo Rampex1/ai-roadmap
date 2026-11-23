@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 220" width="640" height="220" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Aliasing: after b = a, the names a and b both point to the same list object, while c = a.copy() points to a separate list</title>
+  <g font-size="18" font-weight="700" fill="#ffffff" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace">
+    <rect x="24" y="30" width="72" height="44" rx="10" fill="#0f766e"/>
+    <text x="60" y="58">a</text>
+    <rect x="24" y="96" width="72" height="44" rx="10" fill="#0f766e"/>
+    <text x="60" y="124">b</text>
+    <rect x="24" y="162" width="72" height="44" rx="10" fill="#0f766e"/>
+    <text x="60" y="190">c</text>
+  </g>
+  <g fill="none" stroke="#8b93b8" stroke-width="2" stroke-linecap="round">
+    <path d="M96 52 C 160 52, 180 84, 236 84"/>
+    <path d="M96 118 C 160 118, 180 92, 236 92"/>
+    <path d="M96 184 L 236 184"/>
+  </g>
+  <g fill="#8b93b8">
+    <path d="M236 78 l10 6 -10 6z"/>
+    <path d="M236 86 l10 6 -10 6z"/>
+    <path d="M236 178 l10 6 -10 6z"/>
+  </g>
+  <g font-size="20" font-weight="700" fill="#ffffff" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace">
+    <rect x="250" y="62" width="270" height="52" rx="10" fill="#4f46e5"/>
+    <text x="385" y="95">[1, 2, 3, 4]</text>
+    <rect x="250" y="160" width="270" height="48" rx="10" fill="#4f46e5" opacity="0.75"/>
+    <text x="385" y="191">[1, 2, 3]</text>
+  </g>
+  <g font-size="13" fill="#8b93b8">
+    <text x="532" y="84">one list,</text>
+    <text x="532" y="102">two names</text>
+    <text x="532" y="181">a separate</text>
+    <text x="532" y="199">copy</text>
+  </g>
+</svg>

@@ -1,0 +1,108 @@
+items:
+  - id: f1-variables-and-types-01
+    type: output
+    prompt: "What does this print?"
+    code: |
+      x = 4
+      x = x * 3
+      x += 1
+      print(x)
+    answer: "13"
+    explanation: "x starts at 4, becomes 4 * 3 = 12, then 12 + 1 = 13. The right side is always worked out first."
+  - id: f1-variables-and-types-02
+    type: mcq
+    prompt: "In Python, what does `n = n + 1` mean?"
+    explanation: "`=` is assignment: evaluate the right side, then attach the name on the left to the result."
+    options:
+      - text: Take the current value of n, add 1, and make n refer to the result
+        correct: true
+        why: The right side is evaluated first, then n is re-assigned.
+      - text: An equation with no solution, so Python reports an error
+        why: "= is not equality in Python. It assigns; it does not state a fact to check."
+      - text: Check whether n equals n + 1 and give True or False
+        why: "Checking equality uses ==, which you will meet in lesson 5."
+  - id: f1-variables-and-types-03
+    type: output
+    prompt: "What does this print?"
+    code: |
+      print("5" + "5")
+      print(5 + 5)
+    answer: |
+      55
+      10
+    explanation: "For strings, `+` joins the text, giving `55`. For numbers it adds, giving `10`."
+  - id: f1-variables-and-types-04
+    type: mcq
+    prompt: "What is the type of `3.0`?"
+    explanation: "The decimal point makes it a float, even though its value is a whole number."
+    options:
+      - text: float
+        correct: true
+        why: Any number written with a decimal point is a float.
+      - text: int
+        why: Its value is whole, but the decimal point makes it a float.
+      - text: str
+        why: It has no quotes, so it is a number, not text.
+  - id: f1-variables-and-types-05
+    type: output
+    prompt: "What does this print?"
+    code: |
+      print(int(9.99))
+      print(round(9.99))
+    answer: |
+      9
+      10
+    explanation: "`int()` chops off the decimal part; `round()` rounds to the nearest whole number."
+  - id: f1-variables-and-types-06
+    type: multi
+    prompt: "Which of these lines raise an error?"
+    explanation: "Joining a str and an int with `+` is a TypeError, and `int(\"ten\")` is a ValueError because the text holds no digits. The other two lines are fine."
+    options:
+      - text: "print(\"Total: \" + 7)"
+        correct: true
+        why: "A str plus an int is a TypeError. Use str(7) first."
+      - text: "int(\"ten\")"
+        correct: true
+        why: 'int() can only convert text that contains a whole number, such as "10".'
+      - text: "float(\"2.5\") + 1"
+        why: 'float("2.5") is 2.5, and 2.5 + 1 is 3.5. No error.'
+      - text: "print(\"Total:\", 7)"
+        why: Commas pass separate arguments to print, so no conversion is needed.
+  - id: f1-variables-and-types-07
+    type: output
+    prompt: "What does this print?"
+    code: |
+      a = 1
+      b = a
+      a = 2
+      print(a, b)
+    answer: "2 1"
+    explanation: "`b = a` attaches b to the value 1. Moving the name a to 2 afterwards does not move b."
+  - id: f1-variables-and-types-08
+    type: multi
+    prompt: "Which of these are valid Python variable names?"
+    explanation: "Names may use letters, digits and underscores but cannot start with a digit or contain spaces or hyphens."
+    options:
+      - text: learning_rate
+        correct: true
+        why: Letters and an underscore, in snake_case style.
+      - text: x2
+        correct: true
+        why: Digits are allowed as long as they are not first.
+      - text: 2x
+        why: A name cannot start with a digit.
+      - text: learning-rate
+        why: The hyphen is read as a minus sign, so this means learning minus rate.
+  - id: f1-variables-and-types-09
+    type: cloze
+    prompt: "The built-in function ____ tells you what kind of value something is."
+    explanation: "`type(42)` gives `<class 'int'>`."
+    accept: ["type", "type()"]
+  - id: f1-variables-and-types-10
+    type: order
+    prompt: "Put the steps Python takes to run `total = price * qty` in order."
+    explanation: "The right side is evaluated first (look up the values, then multiply); only then is the name on the left attached to the result."
+    items:
+      - Look up the values of price and qty
+      - Multiply the two values
+      - Attach the name total to the result

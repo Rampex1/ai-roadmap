@@ -1,0 +1,22 @@
+id: f1-first-program-02
+lesson: foundations/f1/first-program
+title: Fix the broken program
+prompt: |
+  This program should print `Total minutes: 180`, but it has **two** mistakes.
+  Run it, read the error, fix one thing, run again. Repeat until it works.
+starter: |
+  # Should print: Total minutes: 180
+  Print("Total minutes:" 12 * 15)
+solution: |
+  # Should print: Total minutes: 180
+  print("Total minutes:", 12 * 15)
+tests: |
+  import contextlib, io, linecache
+  _buf = io.StringIO()
+  with contextlib.redirect_stdout(_buf):
+      exec(compile("".join(linecache.cache["<your code>"][2]), "<your code>", "exec"), {"__name__": "__main__"})
+  _out = _buf.getvalue().strip()
+  assert _out == "Total minutes: 180", f"Expected 'Total minutes: 180', got {_out!r}"
+hints:
+  - "Python names are case-sensitive. Is it `Print` or `print`?"
+  - "To print two things on one line, separate them with a comma."

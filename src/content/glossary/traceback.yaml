@@ -1,0 +1,7 @@
+term: "Traceback"
+short: "The report Python prints when an exception is not handled, showing the chain of calls that led to it."
+body: |
+  Read it from the bottom up: the last line names the exception and its message, the frame above it
+  shows the line where it happened, and earlier frames show how the program got there. The most recent
+  call is last.
+related: ["exception"]

@@ -1,0 +1,46 @@
+id: f1-strings-03
+lesson: foundations/f1/strings
+title: Format a training report
+prompt: |
+  Use an f-string to set `report` to exactly:
+
+  ```text
+  epoch 3: loss=0.257, accuracy=91.4%
+  ```
+
+  built from the variables below. The loss needs 3 decimal places and the accuracy
+  is a percentage with 1 decimal place.
+starter: |
+  epoch = 3
+  loss = 0.25713
+  accuracy = 0.91372
+
+  report = ""
+solution: |
+  epoch = 3
+  loss = 0.25713
+  accuracy = 0.91372
+
+  report = f"epoch {epoch}: loss={loss:.3f}, accuracy={accuracy:.1%}"
+tests: |
+  import contextlib, io, linecache, re
+  _src = "".join(linecache.cache["<your code>"][2])
+  def _rerun(*subs):
+      _new = _src
+      for _pat, _repl, _line in subs:
+          _new, _n = re.subn(_pat, _repl, _new, flags=re.M)
+          assert _n == 1, f"Keep the starter line `{_line}` as given (you can change the code below it): the tests swap in other values"
+      _ns = {"__name__": "__main__"}
+      with contextlib.redirect_stdout(io.StringIO()):
+          exec(compile(_new, "<your code>", "exec"), _ns)
+      return _ns
+  def _get(_ns, _name):
+      assert _name in _ns, f"Your code should define the variable `{_name}`"
+      return _ns[_name]
+  assert report == "epoch 3: loss=0.257, accuracy=91.4%", f"Got {report!r}"
+  _ns = _rerun(('^loss[ \\t]*=[ \\t]*0\\.25713[ \\t]*(?=#|$)', "loss = 1.5", "loss = 0.25713"), ('^accuracy[ \\t]*=[ \\t]*0\\.91372[ \\t]*(?=#|$)', "accuracy = 0.5", "accuracy = 0.91372"))
+  assert _get(_ns, "report") == "epoch 3: loss=1.500, accuracy=50.0%", "Build report from the variables with format specs, not by typing the numbers"
+hints:
+  - "Start with `f\"epoch {epoch}: ...\"` and add the other values in braces."
+  - "`{loss:.3f}` gives 3 decimal places."
+  - "`{accuracy:.1%}` turns 0.91372 into 91.4%."

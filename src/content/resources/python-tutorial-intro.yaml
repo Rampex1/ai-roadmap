@@ -1,0 +1,5 @@
+title: "An Informal Introduction to Python (official tutorial)"
+url: https://docs.python.org/3/tutorial/introduction.html
+kind: course
+free: true
+modules: [f1]

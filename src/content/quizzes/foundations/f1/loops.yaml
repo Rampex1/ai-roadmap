@@ -1,0 +1,109 @@
+items:
+  - id: f1-loops-01
+    type: output
+    prompt: "What does this print?"
+    code: |
+      total = 0
+      for i in range(4):
+          total += i
+      print(total)
+    answer: "6"
+    explanation: "`range(4)` is 0, 1, 2, 3 (it stops before 4), and 0 + 1 + 2 + 3 = 6."
+  - id: f1-loops-02
+    type: numeric
+    prompt: "How many times does the body of `for i in range(3, 15, 3):` run?"
+    explanation: "The values are 3, 6, 9 and 12. The next one, 15, is the stop value and is excluded, so the body runs 4 times."
+    answer: 4
+  - id: f1-loops-03
+    type: output
+    prompt: "This was meant to add up the list. What does it actually print?"
+    code: |
+      for x in [5, 10, 20]:
+          total = 0
+          total += x
+      print(total)
+    answer: "20"
+    explanation: "`total = 0` is inside the loop, so it is reset on every pass. After the last pass it holds only the last item. Move the initialisation above the loop."
+  - id: f1-loops-04
+    type: output
+    prompt: "What does this print?"
+    code: |
+      for n in [1, 2, 3, 4, 5]:
+          if n == 2:
+              continue
+          if n == 4:
+              break
+          print(n)
+    answer: |
+      1
+      3
+    explanation: "2 is skipped by `continue`, and `break` stops the loop at 4 before it is printed, so 5 is never reached."
+  - id: f1-loops-05
+    type: output
+    prompt: "What does this print?"
+    code: |
+      x = 1
+      while x < 50:
+          x = x * 3
+      print(x)
+    answer: "81"
+    explanation: "x goes 1, 3, 9, 27, 81. The check happens before each pass: 27 < 50 so it runs once more, giving 81, then 81 < 50 is false and the loop ends."
+  - id: f1-loops-06
+    type: output
+    prompt: "What does this print?"
+    code: |
+      print([c * 2 for c in "abc" if c != "b"])
+    answer: "['aa', 'cc']"
+    explanation: "The comprehension walks the string, skips \"b\", and repeats each remaining character twice."
+  - id: f1-loops-07
+    type: mcq
+    prompt: "Which loop is the better fit for \"keep training until the validation loss stops improving\"?"
+    explanation: "You do not know in advance how many passes you need, so a while loop on the stopping condition fits."
+    options:
+      - text: A while loop that checks the stopping condition
+        correct: true
+        why: while repeats for as long as a condition holds, however many passes that takes.
+      - text: A for loop over range(10)
+        why: That always runs exactly 10 times, whether or not the loss is still improving.
+      - text: A list comprehension
+        why: Comprehensions build lists from existing sequences; they cannot stop on a changing condition.
+  - id: f1-loops-08
+    type: multi
+    prompt: "Which of these produce the list `[0, 2, 4, 6]`?"
+    explanation: "All three of the correct options generate the even numbers from 0 up to 6."
+    options:
+      - text: list(range(0, 8, 2))
+        correct: true
+        why: Start 0, stop before 8, step 2.
+      - text: "[2 * i for i in range(4)]"
+        correct: true
+        why: i is 0 to 3, doubled gives 0, 2, 4, 6.
+      - text: "[i for i in range(7) if i % 2 == 0]"
+        correct: true
+        why: Keeps the even values from 0 to 6.
+      - text: list(range(0, 6, 2))
+        why: The stop value 6 is excluded, so this is [0, 2, 4].
+  - id: f1-loops-09
+    type: output
+    prompt: "What does this print?"
+    code: |
+      for i, ch in enumerate("hi"):
+          print(i, ch)
+    answer: |
+      0 h
+      1 i
+    explanation: "`enumerate` pairs each item with its index, starting at 0."
+  - id: f1-loops-10
+    type: order
+    prompt: "Put the parts of the accumulator pattern in the order they appear in code."
+    explanation: "Initialise before the loop, update inside it, and use the result after it."
+    items:
+      - Set the accumulator to its starting value, such as total = 0
+      - Start the loop, such as for x in data
+      - Update the accumulator inside the loop body
+      - Use the finished result after the loop ends
+  - id: f1-loops-11
+    type: cloze
+    prompt: "The keyword that exits a loop immediately, skipping any remaining passes, is ____ ."
+    explanation: "`break` leaves the loop; `continue` only skips the rest of the current pass."
+    accept: ["break"]

@@ -1,0 +1,35 @@
+id: f1-errors-01
+lesson: foundations/f1/errors
+title: Parse messy numbers
+prompt: |
+  Real data has junk in it. Write `parse_numbers(texts)` that converts each string in `texts`
+  to a float and returns the list of the ones that worked, **skipping** any that cannot be converted.
+  Use `try` / `except ValueError`.
+
+  ```python
+  parse_numbers(["1.5", "abc", "2", "", "-0.5"])   # [1.5, 2.0, -0.5]
+  ```
+starter: |
+  def parse_numbers(texts):
+      numbers = []
+      for t in texts:
+          numbers.append(float(t))
+      return numbers
+solution: |
+  def parse_numbers(texts):
+      numbers = []
+      for t in texts:
+          try:
+              numbers.append(float(t))
+          except ValueError:
+              pass
+      return numbers
+tests: |
+  _r = parse_numbers(["1.5", "abc", "2", "", "-0.5"])
+  assert _r == [1.5, 2.0, -0.5], f"Expected [1.5, 2.0, -0.5], got {_r!r}"
+  assert parse_numbers([]) == [], "An empty list should give []"
+  assert parse_numbers(["n/a", "?"]) == [], "If nothing converts, return []"
+  assert parse_numbers(["10", "1e-3"]) == [10.0, 0.001], "float() understands scientific notation like 1e-3"
+hints:
+  - "Run the starter first: which exception does `float(\"abc\")` raise?"
+  - "Put the append inside `try:`, and in `except ValueError:` do nothing with `pass`."

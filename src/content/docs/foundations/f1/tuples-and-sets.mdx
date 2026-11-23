@@ -1,0 +1,196 @@
+---
+title: Tuples and sets
+module: f1
+order: 10
+estMinutes: 14
+objectives:
+  - "Create tuples, unpack them into names, and return several values from a function"
+  - "Use sets to remove duplicates, test membership and compare collections"
+  - "Choose between list, tuple, set and dict for a task"
+goDeeper: think-python
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+You now know lists and dictionaries. Python has two more built-in collections that you will see
+all the time: tuples, for small fixed groups of values, and sets, for collections of unique items.
+
+## Tuples
+
+A <Term id="tuple" /> is an ordered sequence, like a list, but **immutable**: once made, it
+cannot change. Tuples are written with parentheses (or just commas):
+
+```python
+point = (3, 4)
+rgb = 255, 128, 0
+print(point[0], rgb)
+print(len(rgb))
+```
+
+```text title="Output"
+3 (255, 128, 0)
+3
+```
+
+Indexing, slicing, `len`, `in` and looping all work exactly as for lists. What does not work is
+changing one: `point[0] = 5` is a `TypeError`, and tuples have no `append`.
+
+Why want something you cannot change? A tuple says "these values belong together as a fixed
+group": an (x, y) point, a (red, green, blue) colour, a (height, width) size. You will meet a
+very important tuple in F2. The **shape** of a NumPy array is a tuple: an image dataset might have
+shape `(60000, 28, 28)`, meaning 60,000 images of 28 by 28 pixels.
+
+One oddity: a tuple with one item needs a trailing comma, because `(5)` is just the number 5 in
+parentheses.
+
+```python
+print(type((5)), type((5,)))
+```
+
+```text title="Output"
+<class 'int'> <class 'tuple'>
+```
+
+## Unpacking
+
+You can pull a tuple apart into separate names in one line. This is called **unpacking**:
+
+```python
+point = (3, 4)
+x, y = point
+print(x, y)
+
+a, b = 1, 2
+a, b = b, a          # swap two variables
+print(a, b)
+```
+
+```text title="Output"
+3 4
+2 1
+```
+
+The number of names on the left must match the number of items on the right; otherwise you get
+a `ValueError`. The swap works because Python builds the tuple `(b, a)` on the right first, then
+unpacks it into `a` and `b`.
+
+Unpacking is what happened in lesson 7 when you wrote `for i, name in enumerate(...)`: each item
+from `enumerate` is an `(index, value)` tuple, unpacked into two names. Likewise `for k, v in d.items()`.
+
+### Returning several values
+
+A function can return a tuple, and the caller can unpack it. This is how Python functions
+"return several values":
+
+```python
+def min_max(xs):
+    return min(xs), max(xs)
+
+low, high = min_max([4, 9, 1, 7])
+print(low, high)
+print(min_max([4, 9, 1, 7]))
+```
+
+```text title="Output"
+1 9
+(1, 9)
+```
+
+ML libraries do this constantly. For example, in F7 you will write
+`X_train, X_test, y_train, y_test = train_test_split(X, y)`, unpacking four returned values at once.
+
+Because tuples are immutable, they can be dictionary keys, which lists cannot:
+
+```python
+distances = {("A", "B"): 5, ("B", "C"): 3}
+print(distances[("A", "B")])
+```
+
+```text title="Output"
+5
+```
+
+## Sets
+
+A <Term id="set" /> is an unordered collection of **unique** items. Write it with curly braces,
+or build one from any sequence with `set()`. Duplicates disappear automatically:
+
+```python
+labels = ["cat", "dog", "cat", "bird", "dog", "cat"]
+unique = set(labels)
+print(len(labels), len(unique))
+print(sorted(unique))
+print("dog" in unique)
+```
+
+```text title="Output"
+6 3
+['bird', 'cat', 'dog']
+True
+```
+
+`set(labels)` is the quickest way to answer "which distinct classes does my dataset have?".
+Sets have no order, so they cannot be indexed (`unique[0]` is a `TypeError`), and printing a set
+may show its items in any order. That is why the example uses `sorted()` to print them predictably.
+
+Like dict keys, checking `x in some_set` is fast no matter how big the set is.
+
+Sets can grow and shrink with `add` and `remove`. One trap: `{}` is an empty **dict**, not an
+empty set. Write `set()` for an empty set.
+
+```python
+seen = set()
+seen.add(3)
+seen.add(3)
+seen.add(5)
+print(len(seen), 3 in seen)
+```
+
+```text title="Output"
+2 True
+```
+
+### Set operations
+
+Sets support the operations from maths: union, intersection and difference.
+
+```python
+a = {"apple", "pear", "plum"}
+b = {"pear", "kiwi"}
+print(sorted(a | b))   # union: in either
+print(sorted(a & b))   # intersection: in both
+print(sorted(a - b))   # difference: in a but not b
+```
+
+```text title="Output"
+['apple', 'kiwi', 'pear', 'plum']
+['pear']
+['apple', 'plum']
+```
+
+These are handy for comparing collections: which words appear in both documents, which users
+are in the test set but not the training set (a mistake called *data leakage*, which you will
+learn to catch in F7).
+
+## Which collection when?
+
+| Collection | Ordered? | Changeable? | Duplicates? | Typical use |
+|---|---|---|---|---|
+| `list` `[1, 2]` | yes | yes | yes | a sequence of items you will add to or loop over |
+| `tuple` `(1, 2)` | yes | no | yes | a fixed group: a point, a shape, several return values |
+| `set` `{1, 2}` | no | yes | no | unique items, fast membership, set maths |
+| `dict` `{"a": 1}` | yes (insertion order) | yes | keys unique | look up a value by its key |
+
+## Try it
+
+<CodeExercise id="f1-tuples-and-sets-01" />
+
+<CodeExercise id="f1-tuples-and-sets-02" />
+
+## Summary
+
+- Tuples are immutable sequences: `(3, 4)`. A single item needs a comma: `(5,)`.
+- Unpacking assigns several names at once: `x, y = point`; `a, b = b, a` swaps.
+- Functions return several values as a tuple, which the caller unpacks.
+- Sets hold unique items with no order; use them to remove duplicates and test membership. `set()` is empty; `{}` is a dict.
+- `|`, `&` and `-` give union, intersection and difference.

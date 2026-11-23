@@ -1,0 +1,7 @@
+term: "Set"
+short: "An unordered collection of unique items, written {1, 2, 3} or made with set()."
+body: |
+  Building a set from a list removes duplicates, and `x in some_set` is fast however large the set is.
+  Sets support union `|`, intersection `&` and difference `-`. An empty set is `set()`, because `{}`
+  is an empty dictionary.
+related: ["dictionary", "list"]

@@ -1,0 +1,93 @@
+items:
+  - id: f1-first-program-01
+    type: output
+    prompt: "What does this program print?"
+    code: |
+      print("Ready")
+      print(3 * 4)
+      print("3 * 4")
+    answer: |
+      Ready
+      12
+      3 * 4
+    explanation: "Lines run top to bottom. `3 * 4` without quotes is a calculation (12); with quotes it is text, printed as written."
+  - id: f1-first-program-02
+    type: mcq
+    prompt: "Why does `print(\"7 + 1\")` print `7 + 1` rather than `8`?"
+    explanation: "Quotes make text. Python never does arithmetic inside text; it prints the characters as they are."
+    options:
+      - text: Because the quotes make it a piece of text, not a calculation
+        correct: true
+        why: Anything inside quotes is text, so Python prints the characters exactly.
+      - text: Because print cannot do arithmetic
+        why: "print(7 + 1) prints 8: Python works out the sum first, then print shows the result."
+      - text: Because the spaces around + stop the calculation
+        why: Spaces around operators are optional and do not change the meaning.
+  - id: f1-first-program-03
+    type: output
+    prompt: "What does this print? (Comments are part of the code.)"
+    code: |
+      # print("one")
+      print("two")  # print("three")
+    answer: "two"
+    explanation: "Everything after `#` on a line is ignored, including code that looks like a print."
+  - id: f1-first-program-04
+    type: output
+    prompt: "What does this print?"
+    code: |
+      print("Lessons:", 12, "Quizzes:", 12)
+    answer: "Lessons: 12 Quizzes: 12"
+    explanation: "Commas separate the arguments; print puts one space between each of them."
+  - id: f1-first-program-05
+    type: mcq
+    prompt: "Running `Print(\"hi\")` fails with `NameError: name 'Print' is not defined`. What is the fix?"
+    explanation: "Python is case-sensitive; the function is `print` in lowercase."
+    options:
+      - text: Write print in lowercase
+        correct: true
+        why: Names in Python are case-sensitive, and only lowercase print exists.
+      - text: Use single quotes instead of double quotes
+        why: Both kinds of quotes mean the same thing; the problem is the name.
+      - text: Install the Print package
+        why: print is built into Python. Nothing needs installing; the capital P is the problem.
+  - id: f1-first-program-06
+    type: multi
+    prompt: "Which of these statements about comments are true?"
+    explanation: "Comments start with `#`, are ignored by Python, and are most useful when they explain why."
+    options:
+      - text: Python ignores everything after a # on that line
+        correct: true
+        why: That is exactly what a comment is.
+      - text: A comment can sit at the end of a line of code
+        correct: true
+        why: "Code before the # still runs; only the part after # is ignored."
+      - text: Comments make a program run faster
+        why: Comments have no effect on what the program does or how fast it runs.
+      - text: The best comments explain why the code does something
+        correct: true
+        why: The code already says what it does; a comment adds the reason.
+  - id: f1-first-program-07
+    type: order
+    prompt: "Put these lines in order so the program prints the steps 1, 2, 3 in sequence."
+    explanation: "Python runs lines from top to bottom, so the output order is the line order."
+    items:
+      - print("1. Read")
+      - print("2. Practise")
+      - print("3. Review")
+  - id: f1-first-program-08
+    type: cloze
+    prompt: "When an error appears, read the ____ line of the message first: it names the kind of error."
+    explanation: "The last line names the error type and gives a short description; the lines above show where it happened."
+    accept: ["last", "final", "bottom"]
+  - id: f1-first-program-09
+    type: mcq
+    prompt: "What is wrong with `print(\"Hello)`?"
+    explanation: "The text is opened with a quote but never closed, so Python cannot tell where it ends. That breaks the syntax rules, so nothing runs."
+    options:
+      - text: The closing quote is missing, which is a SyntaxError
+        correct: true
+        why: Text must be wrapped in a matching pair of quotes.
+      - text: Nothing; it prints Hello)
+        why: Python cannot tell where the text ends, so it refuses to run the line.
+      - text: The parentheses should be square brackets
+        why: Functions are called with round parentheses.

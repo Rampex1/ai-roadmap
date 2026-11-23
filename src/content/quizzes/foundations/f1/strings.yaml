@@ -1,0 +1,91 @@
+items:
+  - id: f1-strings-01
+    type: output
+    prompt: "What does this print?"
+    code: |
+      s = "machine"
+      print(s[0], s[3], s[-1])
+    answer: "m h e"
+    explanation: "Indices start at 0: m(0) a(1) c(2) h(3). `-1` is the last character, e."
+  - id: f1-strings-02
+    type: output
+    prompt: "What does this print?"
+    code: |
+      s = "learning"
+      print(s[1:4])
+    answer: "ear"
+    explanation: "The slice includes index 1 and stops before index 4: characters 1, 2 and 3 are e, a, r."
+  - id: f1-strings-03
+    type: numeric
+    prompt: "For any string `s` with at least 5 characters, how many characters does `s[2:5]` contain?"
+    explanation: "A slice `[start:stop]` has `stop - start` characters: 5 - 2 = 3."
+    answer: 3
+  - id: f1-strings-04
+    type: mcq
+    prompt: "`name = \"ada\"` and then `name.upper()` runs on its own line. What is `name` afterwards?"
+    explanation: "Strings are immutable. `upper()` returns a new string, which was thrown away because nothing was assigned."
+    options:
+      - text: '"ada"'
+        correct: true
+        why: The method made a new string "ADA" but nothing kept it. Write name = name.upper() to keep it.
+      - text: '"ADA"'
+        why: String methods never change the original; they return a new string.
+      - text: An error
+        why: Calling upper() is fine. Its result is just discarded.
+  - id: f1-strings-05
+    type: output
+    prompt: "What does this print?"
+    code: |
+      words = "red green  blue".split()
+      print(len(words), "+".join(words))
+    answer: "3 red+green+blue"
+    explanation: "`split()` with no argument splits on any run of spaces, so the double space does not create an empty word."
+  - id: f1-strings-06
+    type: output
+    prompt: "What does this print?"
+    code: |
+      x = 2 / 3
+      print(f"{x:.2f} and {x:.0%}")
+    answer: "0.67 and 67%"
+    explanation: "`:.2f` rounds to 2 decimal places. `:.0%` multiplies by 100 and shows no decimals."
+  - id: f1-strings-07
+    type: multi
+    prompt: "Which expressions give the string `\"ON\"` when `word = \"PYTHON\"`?"
+    explanation: "O and N are at indices 4 and 5, which are also -2 and -1."
+    options:
+      - text: word[4:]
+        correct: true
+        why: From index 4 to the end.
+      - text: word[-2:]
+        correct: true
+        why: The last two characters.
+      - text: word[4:5]
+        why: Stop is excluded, so this is only "O".
+      - text: word[5:4]
+        why: When start is past stop, a slice is empty.
+  - id: f1-strings-08
+    type: mcq
+    prompt: "What happens when you run `word = \"cat\"` and then `word[0] = \"b\"`?"
+    explanation: "Strings are immutable, so item assignment is a TypeError. Build a new string instead: `\"b\" + word[1:]`."
+    options:
+      - text: A TypeError, because strings cannot be changed in place
+        correct: true
+        why: Strings are immutable; you make a new string rather than editing one.
+      - text: word becomes "bat"
+        why: That would need the string to be changed in place, which Python does not allow.
+      - text: An IndexError
+        why: Index 0 exists. The problem is the assignment, not the index.
+  - id: f1-strings-09
+    type: cloze
+    prompt: "To show the float `loss` with exactly 4 decimal places in an f-string, you write `f\"{loss:____}\"`."
+    explanation: "`.4f` means fixed-point with 4 digits after the decimal point."
+    accept: [".4f", "0.4f"]
+  - id: f1-strings-10
+    type: order
+    prompt: "`\"  Hi There \".strip().lower().split()` runs in steps. Put the intermediate results in order."
+    explanation: "Chained methods run left to right, each on the result of the previous one."
+    items:
+      - '"  Hi There "'
+      - '"Hi There"'
+      - '"hi there"'
+      - "['hi', 'there']"

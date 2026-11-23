@@ -1,0 +1,44 @@
+id: f1-numbers-01
+lesson: foundations/f1/numbers
+title: Hours, minutes and seconds
+prompt: |
+  A training run took `total_seconds = 7384` seconds. Split it into whole `hours`,
+  whole `minutes` (0 to 59) and leftover `seconds` (0 to 59), all as ints.
+  For 7384 seconds that is 2 hours, 3 minutes and 4 seconds.
+
+  Compute them with `//` and `%` from `total_seconds`; do not type the answers in.
+starter: |
+  total_seconds = 7384
+
+  hours = 0
+  minutes = 0
+  seconds = 0
+solution: |
+  total_seconds = 7384
+
+  hours = total_seconds // 3600
+  minutes = (total_seconds % 3600) // 60
+  seconds = total_seconds % 60
+tests: |
+  import contextlib, io, linecache, re
+  _src = "".join(linecache.cache["<your code>"][2])
+  def _rerun(*subs):
+      _new = _src
+      for _pat, _repl, _line in subs:
+          _new, _n = re.subn(_pat, _repl, _new, flags=re.M)
+          assert _n == 1, f"Keep the starter line `{_line}` as given (you can change the code below it): the tests swap in other values"
+      _ns = {"__name__": "__main__"}
+      with contextlib.redirect_stdout(io.StringIO()):
+          exec(compile(_new, "<your code>", "exec"), _ns)
+      return _ns
+  def _get(_ns, _name):
+      assert _name in _ns, f"Your code should define the variable `{_name}`"
+      return _ns[_name]
+  assert (hours, minutes, seconds) == (2, 3, 4), f"For 7384 s expected 2 h 3 min 4 s, got {hours} h {minutes} min {seconds} s"
+  assert all(isinstance(v, int) for v in (hours, minutes, seconds)), "Use // and % so the results stay ints"
+  _ns = _rerun(('^total_seconds[ \\t]*=[ \\t]*7384[ \\t]*(?=#|$)', "total_seconds = 3661", "total_seconds = 7384"))
+  assert (_get(_ns, "hours"), _get(_ns, "minutes"), _get(_ns, "seconds")) == (1, 1, 1), "Compute from total_seconds: 3661 s should give 1 h 1 min 1 s"
+hints:
+  - "An hour has 3600 seconds, so `total_seconds // 3600` is the whole hours."
+  - "`total_seconds % 3600` is what is left after taking out the hours. Split that into minutes with `// 60`."
+  - "The leftover seconds are `total_seconds % 60`."

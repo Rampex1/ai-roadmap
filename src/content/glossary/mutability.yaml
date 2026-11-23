@@ -1,0 +1,7 @@
+term: "Mutability"
+short: "Whether a value can be changed in place after it is created."
+body: |
+  Lists, dicts and sets are mutable; numbers, strings and tuples are immutable. Mutability matters
+  when two names refer to the same value: changing a mutable value through one name is visible through
+  the other. Only immutable values can be dictionary keys or set items.
+related: ["list", "tuple", "variable"]

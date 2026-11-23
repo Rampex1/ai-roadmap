@@ -1,0 +1,47 @@
+id: f1-strings-01
+lesson: foundations/f1/strings
+title: Slice a file name
+prompt: |
+  Image datasets often encode information in file names. Given `filename = "cat_0042.png"`, set:
+
+  - `label` to the part before the underscore: `"cat"`
+  - `number` to the four digits as an **int**: `42`
+  - `extension` to the last three characters: `"png"`
+
+  Use slicing or string methods on `filename`; do not type the answers in.
+starter: |
+  filename = "cat_0042.png"
+
+  label = ""
+  number = 0
+  extension = ""
+solution: |
+  filename = "cat_0042.png"
+
+  label = filename[:3]
+  number = int(filename[4:8])
+  extension = filename[-3:]
+tests: |
+  import contextlib, io, linecache, re
+  _src = "".join(linecache.cache["<your code>"][2])
+  def _rerun(*subs):
+      _new = _src
+      for _pat, _repl, _line in subs:
+          _new, _n = re.subn(_pat, _repl, _new, flags=re.M)
+          assert _n == 1, f"Keep the starter line `{_line}` as given (you can change the code below it): the tests swap in other values"
+      _ns = {"__name__": "__main__"}
+      with contextlib.redirect_stdout(io.StringIO()):
+          exec(compile(_new, "<your code>", "exec"), _ns)
+      return _ns
+  def _get(_ns, _name):
+      assert _name in _ns, f"Your code should define the variable `{_name}`"
+      return _ns[_name]
+  assert label == "cat", f"label should be 'cat', got {label!r}"
+  assert number == 42 and isinstance(number, int), f"number should be the int 42, got {number!r}"
+  assert extension == "png", f"extension should be 'png', got {extension!r}"
+  _ns = _rerun(('^filename[ \\t]*=[ \\t]*(["\'])cat_0042\\.png\\1', 'filename = "dog_1337.jpg"', 'filename = "cat_0042.png"'))
+  assert (_get(_ns, "label"), _get(_ns, "number"), _get(_ns, "extension")) == ("dog", 1337, "jpg"), "Compute from filename, so dog_1337.jpg gives 'dog', 1337, 'jpg'"
+hints:
+  - "Count the indices: c is 0, the underscore is 3, the digits are 4 to 7."
+  - "`filename[4:8]` gives the text `\"0042\"`. Wrap it in `int(...)` to get a number."
+  - "Negative indices count from the end: `filename[-3:]`."

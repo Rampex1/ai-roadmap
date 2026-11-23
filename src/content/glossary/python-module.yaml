@@ -1,0 +1,8 @@
+term: "Module (Python)"
+short: "A file of Python code whose functions and values you can load with import."
+body: |
+  `import math` loads a module and you reach its contents with a dot, as in `math.sqrt`. `from math
+  import sqrt` imports a name directly, and `import numpy as np` gives a module a short alias. Any
+  `.py` file you write is a module too. A package is a collection of modules, usually installed with
+  pip or uv.
+related: ["standard-library", "function"]

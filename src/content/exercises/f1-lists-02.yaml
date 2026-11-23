@@ -1,0 +1,50 @@
+id: f1-lists-02
+lesson: foundations/f1/lists
+title: Keep a real backup
+prompt: |
+  This code tries to keep a `backup` of the data before cleaning it, but after the cleaning
+  steps the backup has changed too. Run it and look at the output.
+
+  Fix the one line that is wrong, so `backup` stays `[3, -1, 4, -1, 5]` while `data` is cleaned.
+starter: |
+  data = [3, -1, 4, -1, 5]
+  backup = data
+
+  # cleaning: remove the two -1 placeholders
+  data.remove(-1)
+  data.remove(-1)
+
+  print("data:  ", data)
+  print("backup:", backup)
+solution: |
+  data = [3, -1, 4, -1, 5]
+  backup = data.copy()
+
+  # cleaning: remove the two -1 placeholders
+  data.remove(-1)
+  data.remove(-1)
+
+  print("data:  ", data)
+  print("backup:", backup)
+tests: |
+  import contextlib, io, linecache, re
+  _src = "".join(linecache.cache["<your code>"][2])
+  def _rerun(*subs):
+      _new = _src
+      for _pat, _repl, _line in subs:
+          _new, _n = re.subn(_pat, _repl, _new, flags=re.M)
+          assert _n == 1, f"Keep the starter line `{_line}` as given (you can change the code below it): the tests swap in other values"
+      _ns = {"__name__": "__main__"}
+      with contextlib.redirect_stdout(io.StringIO()):
+          exec(compile(_new, "<your code>", "exec"), _ns)
+      return _ns
+  def _get(_ns, _name):
+      assert _name in _ns, f"Your code should define the variable `{_name}`"
+      return _ns[_name]
+  assert data == [3, 4, 5], f"data should be cleaned to [3, 4, 5], got {data!r}"
+  assert backup == [3, -1, 4, -1, 5], f"backup should still be [3, -1, 4, -1, 5], got {backup!r}"
+  _ns = _rerun(('^data[ \\t]*=[ \\t]*\\[\\s*3\\s*,\\s*\\-1\\s*,\\s*4\\s*,\\s*\\-1\\s*,\\s*5\\s*,?\\s*\\]', "data = [-1, 7, -1, 8]", "data = [3, -1, 4, -1, 5]"))
+  assert _get(_ns, "data") == [7, 8] and _get(_ns, "backup") == [-1, 7, -1, 8], "Make backup a copy of data, so it works for any data"
+hints:
+  - "`backup = data` does not copy anything. It gives the same list a second name."
+  - "Make an independent copy with `data.copy()`."

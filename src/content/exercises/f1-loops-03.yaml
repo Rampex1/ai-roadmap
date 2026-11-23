@@ -1,0 +1,42 @@
+id: f1-loops-03
+lesson: foundations/f1/loops
+title: List comprehensions
+prompt: |
+  Use list comprehensions (one line each) to build:
+
+  - `lengths`: the length of each word in `words`,
+  - `long_words`: the words with more than 3 letters, in upper case.
+
+  For the words below, `lengths` is `[3, 5, 2, 4]` and `long_words` is `["QUICK", "LAZY"]`.
+starter: |
+  words = ["the", "quick", "ox", "lazy"]
+
+  lengths = []
+  long_words = []
+solution: |
+  words = ["the", "quick", "ox", "lazy"]
+
+  lengths = [len(w) for w in words]
+  long_words = [w.upper() for w in words if len(w) > 3]
+tests: |
+  import contextlib, io, linecache, re
+  _src = "".join(linecache.cache["<your code>"][2])
+  def _rerun(*subs):
+      _new = _src
+      for _pat, _repl, _line in subs:
+          _new, _n = re.subn(_pat, _repl, _new, flags=re.M)
+          assert _n == 1, f"Keep the starter line `{_line}` as given (you can change the code below it): the tests swap in other values"
+      _ns = {"__name__": "__main__"}
+      with contextlib.redirect_stdout(io.StringIO()):
+          exec(compile(_new, "<your code>", "exec"), _ns)
+      return _ns
+  def _get(_ns, _name):
+      assert _name in _ns, f"Your code should define the variable `{_name}`"
+      return _ns[_name]
+  assert lengths == [3, 5, 2, 4], f"lengths should be [3, 5, 2, 4], got {lengths!r}"
+  assert long_words == ["QUICK", "LAZY"], f"long_words should be ['QUICK', 'LAZY'], got {long_words!r}"
+  _ns = _rerun((r'''^words[ \t]*=[ \t]*\[\s*(["'])the\1\s*,\s*(["'])quick\2\s*,\s*(["'])ox\3\s*,\s*(["'])lazy\4\s*,?\s*\]''', 'words = ["data", "is", "fun", "really"]', 'words = ["the", "quick", "ox", "lazy"]'))
+  assert _get(_ns, "lengths") == [4, 2, 3, 6] and _get(_ns, "long_words") == ["DATA", "REALLY"], "Build both lists from words, so they work for any list of words"
+hints:
+  - "The pattern is `[expression for w in words]`."
+  - "Add a filter at the end: `[... for w in words if len(w) > 3]`."

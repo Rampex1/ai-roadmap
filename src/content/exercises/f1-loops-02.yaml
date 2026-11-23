@@ -1,0 +1,45 @@
+id: f1-loops-02
+lesson: foundations/f1/loops
+title: Loop until good enough
+prompt: |
+  A training loss starts at `loss = 5.0` and each training step multiplies it by `0.8`.
+  Use a `while` loop to find how many steps it takes until the loss is **below** `target`.
+  Store the number of steps in `steps` and the final loss in `loss`.
+
+  For `target = 1.0` the answer is 8 steps (the loss ends at about 0.839).
+starter: |
+  loss = 5.0
+  target = 1.0
+
+  steps = 0
+solution: |
+  loss = 5.0
+  target = 1.0
+
+  steps = 0
+  while loss >= target:
+      loss = loss * 0.8
+      steps += 1
+tests: |
+  import contextlib, io, linecache, re
+  _src = "".join(linecache.cache["<your code>"][2])
+  def _rerun(*subs):
+      _new = _src
+      for _pat, _repl, _line in subs:
+          _new, _n = re.subn(_pat, _repl, _new, flags=re.M)
+          assert _n == 1, f"Keep the starter line `{_line}` as given (you can change the code below it): the tests swap in other values"
+      _ns = {"__name__": "__main__"}
+      with contextlib.redirect_stdout(io.StringIO()):
+          exec(compile(_new, "<your code>", "exec"), _ns)
+      return _ns
+  def _get(_ns, _name):
+      assert _name in _ns, f"Your code should define the variable `{_name}`"
+      return _ns[_name]
+  assert steps == 8, f"For target 1.0, steps should be 8, got {steps!r}"
+  assert abs(loss - 5.0 * 0.8 ** 8) < 1e-9, f"loss should end at about 0.839, got {loss!r}"
+  for _t, _want in [(0.1, 18), (4.5, 1), (6.0, 0)]:
+      _ns = _rerun(('^target[ \\t]*=[ \\t]*1\\.0[ \\t]*(?=#|$)', f"target = {_t}", "target = 1.0"))
+      assert _get(_ns, "steps") == _want, f"For target {_t}, steps should be {_want}, got {_ns['steps']!r}"
+hints:
+  - "Keep looping while the loss is NOT yet below the target: `while loss >= target:`."
+  - "Inside the loop, update the loss and add 1 to steps."

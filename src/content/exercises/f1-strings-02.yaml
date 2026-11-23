@@ -1,0 +1,45 @@
+id: f1-strings-02
+lesson: foundations/f1/strings
+title: Clean up messy text
+prompt: |
+  Text from the web is messy. Set `clean` to a cleaned-up version of `raw` that:
+
+  1. has no spaces at either end,
+  2. is all lowercase,
+  3. has every `"!"` removed.
+
+  For the `raw` below, `clean` should be `"great movie, would watch again"`.
+  Then set `n_words` to the number of words in `clean` (use `split()`).
+starter: |
+  raw = "   GREAT Movie!!, would watch AGAIN!  "
+
+  clean = raw
+  n_words = 0
+solution: |
+  raw = "   GREAT Movie!!, would watch AGAIN!  "
+
+  clean = raw.strip().lower().replace("!", "")
+  n_words = len(clean.split())
+tests: |
+  import contextlib, io, linecache, re
+  _src = "".join(linecache.cache["<your code>"][2])
+  def _rerun(*subs):
+      _new = _src
+      for _pat, _repl, _line in subs:
+          _new, _n = re.subn(_pat, _repl, _new, flags=re.M)
+          assert _n == 1, f"Keep the starter line `{_line}` as given (you can change the code below it): the tests swap in other values"
+      _ns = {"__name__": "__main__"}
+      with contextlib.redirect_stdout(io.StringIO()):
+          exec(compile(_new, "<your code>", "exec"), _ns)
+      return _ns
+  def _get(_ns, _name):
+      assert _name in _ns, f"Your code should define the variable `{_name}`"
+      return _ns[_name]
+  assert clean == "great movie, would watch again", f"Expected 'great movie, would watch again', got {clean!r}"
+  assert n_words == 5, f"n_words should be 5, got {n_words!r}"
+  _ns = _rerun(('^raw[ \\t]*=[ \\t]*(["\'])\\ \\ \\ GREAT\\ Movie!!,\\ would\\ watch\\ AGAIN!\\ \\ \\1', 'raw = " Hi THERE!! bye! "', 'raw = "   GREAT Movie!!, would watch AGAIN!  "'))
+  assert (_get(_ns, "clean"), _get(_ns, "n_words")) == ("hi there bye", 3), "Compute clean and n_words from raw, so they work for any text"
+hints:
+  - "Chain the methods: `raw.strip().lower()` and then one more."
+  - "`replace(\"!\", \"\")` replaces every exclamation mark with nothing."
+  - "`clean.split()` gives a list of words, and `len()` counts them."

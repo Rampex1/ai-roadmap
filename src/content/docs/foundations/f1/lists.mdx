@@ -1,0 +1,208 @@
+---
+title: Lists
+module: f1
+order: 6
+estMinutes: 15
+objectives:
+  - "Create lists and read from them with indexing and slicing"
+  - "Change lists with append, insert, pop, remove, sort and item assignment"
+  - "Explain why two names can share one list, and make a copy when you need one"
+goDeeper: python-tutorial-data-structures
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import listAlias from '@/assets/diagrams/f1-list-alias.svg';
+
+Data comes in collections: a column of house prices, the pixel values of an image, the words of
+a sentence. Python's basic collection is the <Term id="list" />: an ordered sequence of values
+written in square brackets.
+
+```python
+prices = [250, 310, 199, 420]
+words = ["the", "cat", "sat"]
+mixed = [1, "two", 3.0, True]
+empty = []
+print(prices)
+print(len(words), len(empty))
+```
+
+```text title="Output"
+[250, 310, 199, 420]
+3 0
+```
+
+A list can hold any types, even a mix, though in practice a list usually holds one kind of thing.
+
+## Indexing and slicing work just like strings
+
+Everything you learnt about indexing and slicing strings in lesson 4 carries over. Positions start
+at 0, `-1` is the last item, and a slice `[start:stop]` excludes `stop`:
+
+```python
+prices = [250, 310, 199, 420]
+print(prices[0], prices[-1])
+print(prices[1:3])
+print(prices[::-1])
+print(310 in prices)
+```
+
+```text title="Output"
+250 420
+[310, 199]
+[420, 199, 310, 250]
+True
+```
+
+A slice of a list is a new list. The `in` operator checks whether a value is in the list.
+
+## Lists can be changed
+
+Here is the big difference from strings: lists are **mutable**. You can change them in place.
+This idea, <Term id="mutability" />, explains a lot of Python's behaviour.
+
+```python
+scores = [70, 85, 90]
+scores[0] = 75          # replace an item
+scores.append(60)       # add to the end
+scores.insert(1, 100)   # insert at index 1
+print(scores)
+last = scores.pop()     # remove and return the last item
+print(last, scores)
+scores.remove(100)      # remove the first item equal to 100
+print(scores)
+```
+
+```text title="Output"
+[75, 100, 85, 90, 60]
+60 [75, 100, 85, 90]
+[75, 85, 90]
+```
+
+| Method | What it does |
+|---|---|
+| `lst.append(x)` | add `x` to the end |
+| `lst.insert(i, x)` | insert `x` before index `i` |
+| `lst.pop()` | remove the last item and return it (`lst.pop(i)` removes index `i`) |
+| `lst.remove(x)` | remove the first item equal to `x` (a `ValueError` if there is none) |
+| `lst.sort()` | sort the list in place |
+| `lst.index(x)` | the index of the first `x` |
+| `lst.count(x)` | how many times `x` appears |
+
+You can also join lists with `+`, which makes a new list: `[1, 2] + [3]` is `[1, 2, 3]`.
+
+## sort versus sorted
+
+There are two ways to sort, and mixing them up is a classic bug:
+
+```python
+nums = [3, 1, 2]
+result = nums.sort()
+print(nums, result)
+
+nums = [3, 1, 2]
+new = sorted(nums)
+print(nums, new)
+print(sorted(nums, reverse=True))
+```
+
+```text title="Output"
+[1, 2, 3] None
+[3, 1, 2] [1, 2, 3]
+[3, 2, 1]
+```
+
+- `nums.sort()` **changes the list** and returns `None`. So `nums = nums.sort()` throws your list away and leaves `None`!
+- `sorted(nums)` leaves `nums` alone and **returns a new** sorted list.
+- `reverse=True` is a *keyword argument*: an option passed by name. Lesson 8 explains them.
+
+The general pattern: methods that change a list in place (`append`, `sort`, `insert`, `remove`)
+return `None`. Do not assign their result. (`pop` is the exception: it returns the item it removed.)
+
+## Built-in functions that take a list
+
+```python
+data = [4, 8, 15, 16, 23, 42]
+print(sum(data), min(data), max(data))
+print(sum(data) / len(data))
+```
+
+```text title="Output"
+108 4 42
+18.0
+```
+
+`sum(data) / len(data)` is the mean: the most common statistic in all of data science.
+
+## Two names, one list
+
+Remember the name-tag picture from lesson 2? It matters now. Assigning a list to a second name
+does **not** copy it. Both names are tags on the *same* list:
+
+```python
+a = [1, 2, 3]
+b = a
+c = a.copy()
+b.append(4)
+print(a)
+print(b)
+print(c)
+```
+
+```text title="Output"
+[1, 2, 3, 4]
+[1, 2, 3, 4]
+[1, 2, 3]
+```
+
+<Figure
+  src={listAlias}
+  alt="Names a and b both have arrows to one list containing 1, 2, 3, 4. Name c has an arrow to a separate list containing 1, 2, 3."
+  caption="b = a makes a second name for the same list. a.copy() makes a new, independent list."
+/>
+
+Changing the list through `b` changed what `a` sees, because there is only one list. This is called
+*aliasing*. When you want an independent list, copy it with `a.copy()`, `list(a)` or `a[:]`.
+
+This catches out experienced programmers too, and it comes back in NumPy and PyTorch, where
+slicing an array often gives a *view* that shares memory with the original. The name-tag picture
+will keep you out of trouble.
+
+## Lists of lists
+
+A list can contain other lists. A list of rows is the simplest way to store a table or a
+matrix:
+
+```python
+grid = [
+    [1, 2, 3],
+    [4, 5, 6],
+]
+print(grid[1])
+print(grid[1][2])
+print(len(grid), len(grid[0]))
+```
+
+```text title="Output"
+[4, 5, 6]
+6
+2 3
+```
+
+`grid[1]` is the second row, and `grid[1][2]` is the item at index 2 of that row. This is
+how a 2 by 3 matrix looks in plain Python. In F2 you will meet NumPy arrays, which store the same
+grid far more efficiently and let you write `grid[1, 2]`.
+
+## Try it
+
+<CodeExercise id="f1-lists-01" />
+
+<CodeExercise id="f1-lists-02" />
+
+## Summary
+
+- Lists are ordered, written `[a, b, c]`, and indexed and sliced like strings.
+- Lists are mutable: `append`, `insert`, `pop`, `remove`, `sort` and `lst[i] = x` change them in place.
+- In-place methods return `None`. `sorted()` returns a new list; `.sort()` changes the old one.
+- `b = a` shares one list between two names. Use `a.copy()` for an independent copy.
+- A list of lists can represent a table or matrix: `grid[row][col]`.

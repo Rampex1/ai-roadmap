@@ -1,0 +1,7 @@
+term: "Dictionary"
+short: "A collection of key-value pairs, written {key: value}, for looking values up by key."
+body: |
+  `d[key]` looks up a value and raises `KeyError` if the key is missing; `d.get(key, default)` returns
+  a default instead. Keys are unique and must be immutable. Dicts are fast for lookups and membership
+  tests, and the counting pattern `counts[x] = counts.get(x, 0) + 1` builds frequency tables.
+related: ["list", "set", "mutability"]

@@ -1,0 +1,38 @@
+id: f1-variables-and-types-02
+lesson: foundations/f1/variables-and-types
+title: Build a sentence
+prompt: |
+  Using the variables `name` and `age`, create a variable `sentence` that holds exactly
+  `Ada is 36 years old` (a string). Build it from the variables with `+`, not by typing `36` again.
+starter: |
+  name = "Ada"
+  age = 36
+
+  sentence = ""
+solution: |
+  name = "Ada"
+  age = 36
+
+  sentence = name + " is " + str(age) + " years old"
+tests: |
+  import contextlib, io, linecache, re
+  _src = "".join(linecache.cache["<your code>"][2])
+  def _rerun(*subs):
+      _new = _src
+      for _pat, _repl, _line in subs:
+          _new, _n = re.subn(_pat, _repl, _new, flags=re.M)
+          assert _n == 1, f"Keep the starter line `{_line}` as given (you can change the code below it): the tests swap in other values"
+      _ns = {"__name__": "__main__"}
+      with contextlib.redirect_stdout(io.StringIO()):
+          exec(compile(_new, "<your code>", "exec"), _ns)
+      return _ns
+  def _get(_ns, _name):
+      assert _name in _ns, f"Your code should define the variable `{_name}`"
+      return _ns[_name]
+  assert isinstance(sentence, str), "sentence should be a string"
+  assert sentence == "Ada is 36 years old", f"Expected 'Ada is 36 years old', got {sentence!r}"
+  _ns = _rerun(('^age[ \\t]*=[ \\t]*36[ \\t]*(?=#|$)', "age = 41", "age = 36"), ('^name[ \\t]*=[ \\t]*(["\'])Ada\\1', 'name = "Grace"', 'name = "Ada"'))
+  assert _get(_ns, "sentence") == "Grace is 41 years old", "Build sentence from the name and age variables, so it still works when they change"
+hints:
+  - "`+` joins strings, but `age` is an int. Convert it with `str(age)` first."
+  - "Mind the spaces: `name + \" is \" + ...`"

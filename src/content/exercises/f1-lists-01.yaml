@@ -1,0 +1,56 @@
+id: f1-lists-01
+lesson: foundations/f1/lists
+title: Work with a list of readings
+prompt: |
+  `temps` holds four temperature readings. Write code that:
+
+  1. replaces the **first** reading with `20.0`,
+  2. appends a new reading `22.4` to the end,
+  3. sets `warmest` to the largest reading,
+  4. sets `mean_temp` to the average of all readings,
+  5. sets `ranked` to a **new** list of the readings sorted from smallest to largest, leaving `temps` in its original order.
+starter: |
+  temps = [21.5, 23.0, 19.8, 25.1]
+
+  # your code here
+
+  warmest = None
+  mean_temp = None
+  ranked = None
+solution: |
+  temps = [21.5, 23.0, 19.8, 25.1]
+
+  temps[0] = 20.0
+  temps.append(22.4)
+
+  warmest = max(temps)
+  mean_temp = sum(temps) / len(temps)
+  ranked = sorted(temps)
+tests: |
+  import contextlib, io, linecache, re
+  _src = "".join(linecache.cache["<your code>"][2])
+  def _rerun(*subs):
+      _new = _src
+      for _pat, _repl, _line in subs:
+          _new, _n = re.subn(_pat, _repl, _new, flags=re.M)
+          assert _n == 1, f"Keep the starter line `{_line}` as given (you can change the code below it): the tests swap in other values"
+      _ns = {"__name__": "__main__"}
+      with contextlib.redirect_stdout(io.StringIO()):
+          exec(compile(_new, "<your code>", "exec"), _ns)
+      return _ns
+  def _get(_ns, _name):
+      assert _name in _ns, f"Your code should define the variable `{_name}`"
+      return _ns[_name]
+  assert temps == [20.0, 23.0, 19.8, 25.1, 22.4], f"temps should be [20.0, 23.0, 19.8, 25.1, 22.4], got {temps!r}"
+  assert warmest == 25.1, f"warmest should be 25.1, got {warmest!r}"
+  assert mean_temp is not None and abs(mean_temp - 22.06) < 1e-9, f"mean_temp should be 22.06, got {mean_temp!r}"
+  assert ranked == [19.8, 20.0, 22.4, 23.0, 25.1], f"ranked should be sorted, got {ranked!r}"
+  assert ranked is not temps, "ranked must be a new list; use sorted(temps), not temps.sort()"
+  _ns = _rerun(('^temps[ \\t]*=[ \\t]*\\[\\s*21\\.5\\s*,\\s*23\\.0\\s*,\\s*19\\.8\\s*,\\s*25\\.1\\s*,?\\s*\\]', "temps = [10.0, 30.0, 5.0, 12.0]", "temps = [21.5, 23.0, 19.8, 25.1]"))
+  assert _get(_ns, "temps") == [20.0, 30.0, 5.0, 12.0, 22.4], "Change temps with item assignment and append, so it works for other readings too"
+  assert _get(_ns, "warmest") == 30.0 and abs(_get(_ns, "mean_temp") - 17.88) < 1e-9, "Compute warmest and mean_temp from temps with max, sum and len, not by typing the numbers"
+  assert _get(_ns, "ranked") == [5.0, 12.0, 20.0, 22.4, 30.0], "Build ranked with sorted(temps)"
+hints:
+  - "`temps[0] = 20.0` replaces the first item; `temps.append(22.4)` adds one at the end."
+  - "`max`, `sum` and `len` all take a list."
+  - "`sorted(temps)` returns a new sorted list. `temps.sort()` would change temps and return None."

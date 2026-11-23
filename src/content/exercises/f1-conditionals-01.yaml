@@ -1,0 +1,50 @@
+id: f1-conditionals-01
+lesson: foundations/f1/conditionals
+title: Letter grades
+prompt: |
+  Set `grade` from `score` using these rules:
+
+  | score | grade |
+  |---|---|
+  | 90 or more | `"A"` |
+  | 80 to 89 | `"B"` |
+  | 70 to 79 | `"C"` |
+  | below 70 | `"F"` |
+
+  The tests will also try other scores, so use `if` / `elif` / `else` on `score`.
+starter: |
+  score = 85
+
+  grade = "?"
+solution: |
+  score = 85
+
+  if score >= 90:
+      grade = "A"
+  elif score >= 80:
+      grade = "B"
+  elif score >= 70:
+      grade = "C"
+  else:
+      grade = "F"
+tests: |
+  import contextlib, io, linecache, re
+  _src = "".join(linecache.cache["<your code>"][2])
+  def _rerun(*subs):
+      _new = _src
+      for _pat, _repl, _line in subs:
+          _new, _n = re.subn(_pat, _repl, _new, flags=re.M)
+          assert _n == 1, f"Keep the starter line `{_line}` as given (you can change the code below it): the tests swap in other values"
+      _ns = {"__name__": "__main__"}
+      with contextlib.redirect_stdout(io.StringIO()):
+          exec(compile(_new, "<your code>", "exec"), _ns)
+      return _ns
+  def _get(_ns, _name):
+      assert _name in _ns, f"Your code should define the variable `{_name}`"
+      return _ns[_name]
+  for _s, _g in [(85, "B"), (100, "A"), (90, "A"), (89, "B"), (80, "B"), (79, "C"), (70, "C"), (69, "F"), (0, "F")]:
+      _ns = _rerun(('^score[ \\t]*=[ \\t]*85[ \\t]*(?=#|$)', f"score = {_s}", "score = 85"))
+      assert _get(_ns, "grade") == _g, f"score {_s} should give grade {_g!r}, got {_ns['grade']!r}"
+hints:
+  - "Start with the highest band: `if score >= 90:`."
+  - "Each `elif` is only checked when the ones above it were false, so `elif score >= 80:` already means 80 to 89."

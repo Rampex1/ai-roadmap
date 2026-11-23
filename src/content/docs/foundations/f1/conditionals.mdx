@@ -1,0 +1,216 @@
+---
+title: Booleans, comparisons and if
+module: f1
+order: 5
+estMinutes: 16
+objectives:
+  - "Write comparisons and combine them with and, or and not"
+  - "Control which code runs with if, elif and else, using indentation to mark blocks"
+  - "Predict which branch runs, including how elif order and truthiness affect it"
+goDeeper: python-tutorial-control-flow
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+So far every line of every program has run, top to bottom. Real programs make decisions: if the
+model's confidence is high, accept the prediction; otherwise, ask a human. Decisions are built
+from yes-or-no values called booleans.
+
+## Booleans and comparisons
+
+A <Term id="boolean" /> is a value that is either `True` or `False` (capital first letter, no
+quotes). You usually get one by comparing things:
+
+| Operator | Meaning | Example | Result |
+|---|---|---|---|
+| `==` | equal to | `3 == 3` | `True` |
+| `!=` | not equal to | `3 != 3` | `False` |
+| `<` | less than | `2 < 5` | `True` |
+| `>` | greater than | `2 > 5` | `False` |
+| `<=` | less than or equal to | `5 <= 5` | `True` |
+| `>=` | greater than or equal to | `4 >= 5` | `False` |
+
+```python
+age = 17
+print(age >= 18)
+print(age == 17)
+print("cat" == "Cat")
+```
+
+```text title="Output"
+False
+True
+False
+```
+
+String comparison is exact and case-sensitive, so `"cat"` and `"Cat"` are different.
+
+**`=` versus `==`** is the classic beginner mix-up. One `=` *assigns* a value to a name.
+Two, `==`, *asks* whether two values are equal and gives `True` or `False`. Writing
+`if age = 18:` is a `SyntaxError`, and Python will even suggest you meant `==`.
+
+Python lets you chain comparisons the way you would in maths, which is very handy for range checks:
+
+```python
+p = 0.7
+print(0 <= p <= 1)
+```
+
+```text title="Output"
+True
+```
+
+## Combining conditions: and, or, not
+
+- `a and b` is `True` only when **both** are true.
+- `a or b` is `True` when **at least one** is true.
+- `not a` flips `True` to `False` and back.
+
+```python
+temp = 22
+raining = False
+print(temp > 15 and not raining)
+print(temp > 30 or raining)
+```
+
+```text title="Output"
+True
+False
+```
+
+Comparisons such as `>` and `==` are worked out before any of these. Then `not` is applied first, then `and`, then `or`. As with arithmetic, use
+parentheses whenever the meaning is not instantly obvious: `(a or b) and c` reads far better
+than relying on the rules.
+
+## if: run code only sometimes
+
+An `if` statement runs a block of code only when its condition is true:
+
+```python
+confidence = 0.93
+if confidence > 0.9:
+    print("Accept the prediction")
+    print("No review needed")
+print("Done")
+```
+
+```text title="Output"
+Accept the prediction
+No review needed
+Done
+```
+
+Look at the shape:
+
+- The line starting with `if` ends with a colon `:`.
+- The lines that belong to the `if` are **indented** by four spaces. That group of lines is a *block*.
+- The first line back at the left edge (`print("Done")`) is no longer part of the `if`, so it always runs.
+
+Python uses <Term id="indentation" /> to decide which lines belong together. Many other languages
+use curly braces for this; Python uses the spaces themselves, so getting them right is not optional.
+Mismatched indentation gives an `IndentationError`. Editors, notebooks and the exercise boxes here
+insert four spaces when you press Tab.
+
+## else and elif: choose between paths
+
+`else` gives a block that runs when the condition is false. `elif` (short for "else if") adds
+more conditions to try in turn:
+
+```python
+score = 74
+if score >= 90:
+    grade = "A"
+elif score >= 80:
+    grade = "B"
+elif score >= 70:
+    grade = "C"
+else:
+    grade = "F"
+print(grade)
+```
+
+```text title="Output"
+C
+```
+
+Python checks the conditions **from the top** and runs the **first** block whose condition is
+true, then skips the rest of the chain. With a score of 74, `score >= 90` is false, `score >= 80`
+is false, `score >= 70` is true, so the grade is C. The later `else` is never reached.
+
+Because only the first match runs, **order matters**. Here is the same idea written in the wrong
+order:
+
+```python
+score = 95
+if score >= 70:
+    grade = "C"
+elif score >= 90:
+    grade = "A"
+else:
+    grade = "F"
+print(grade)
+```
+
+```text title="Output"
+C
+```
+
+95 is at least 70, so the first branch wins and the `elif score >= 90` is never even checked.
+When conditions overlap, put the most specific one first.
+
+## A machine learning example
+
+A classifier often outputs a probability, and you turn it into a decision with a threshold:
+
+```python
+prob_spam = 0.62
+threshold = 0.5
+if prob_spam >= threshold:
+    label = "spam"
+else:
+    label = "not spam"
+print(f"p={prob_spam:.2f} -> {label}")
+```
+
+```text title="Output"
+p=0.62 -> spam
+```
+
+For short either-or choices like this, Python has a one-line form, the *conditional
+expression*: `label = "spam" if prob_spam >= threshold else "not spam"`. It does exactly the
+same thing.
+
+## Truthiness
+
+`if` does not strictly need a boolean. Python treats some values as false-like ("falsy"):
+`0`, `0.0`, the empty string `""`, `None`, and empty collections such as an empty list.
+Everything else counts as true ("truthy").
+
+```python
+name = ""
+if name:
+    print("Hello,", name)
+else:
+    print("No name given")
+```
+
+```text title="Output"
+No name given
+```
+
+`if name:` is a common shorthand for "if name is not empty". You will read it in other people's
+code constantly, so it pays to recognise it.
+
+## Try it
+
+<CodeExercise id="f1-conditionals-01" />
+
+<CodeExercise id="f1-conditionals-02" />
+
+## Summary
+
+- Comparisons (`==`, `!=`, `<`, `>`, `<=`, `>=`) produce `True` or `False`. `=` assigns; `==` compares.
+- `and`, `or` and `not` combine conditions; use parentheses for clarity.
+- `if` / `elif` / `else` run the first block whose condition is true. Order the conditions carefully.
+- Indentation (four spaces) marks which lines belong to a block.
+- `0`, `""`, `None` and empty collections are falsy; almost everything else is truthy.

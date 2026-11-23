@@ -1,0 +1,7 @@
+term: "Loop"
+short: "Code that repeats a block, either once per item (for) or while a condition holds (while)."
+body: |
+  `for x in sequence:` runs its block for each item, and `range(n)` gives the numbers 0 to n-1 to loop
+  over. `while condition:` repeats until the condition becomes false. `break` leaves a loop early and
+  `continue` skips to the next pass. Training a model is one long loop over the data.
+related: ["list-comprehension", "indentation"]

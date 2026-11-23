@@ -1,0 +1,47 @@
+id: f1-dictionaries-02
+lesson: foundations/f1/dictionaries
+title: Build a vocabulary
+prompt: |
+  Language models turn words into numbers with a **vocabulary**: a dict mapping each distinct word
+  to an ID. Write two functions:
+
+  - `build_vocab(words)` returns a dict that gives each **distinct** word an ID, in order of first
+    appearance, starting at 0.
+  - `encode(words, vocab)` returns the list of IDs for `words`, using `-1` for any word not in `vocab`.
+
+  ```python
+  vocab = build_vocab(["to", "be", "or", "not", "to", "be"])
+  # {'to': 0, 'be': 1, 'or': 2, 'not': 3}
+  encode(["not", "to", "go"], vocab)
+  # [3, 0, -1]
+  ```
+starter: |
+  def build_vocab(words):
+      vocab = {}
+      return vocab
+
+
+  def encode(words, vocab):
+      return []
+solution: |
+  def build_vocab(words):
+      vocab = {}
+      for w in words:
+          if w not in vocab:
+              vocab[w] = len(vocab)
+      return vocab
+
+
+  def encode(words, vocab):
+      return [vocab.get(w, -1) for w in words]
+tests: |
+  _v = build_vocab(["to", "be", "or", "not", "to", "be"])
+  assert _v == {"to": 0, "be": 1, "or": 2, "not": 3}, f"build_vocab gave {_v!r}"
+  assert build_vocab([]) == {}, "An empty list should give an empty vocabulary"
+  _e = encode(["not", "to", "go"], _v)
+  assert _e == [3, 0, -1], f"encode(['not', 'to', 'go'], vocab) should be [3, 0, -1], got {_e!r}"
+  assert encode([], _v) == [], "Encoding an empty list should give []"
+hints:
+  - "Only add a word when it is not already a key: `if w not in vocab:`."
+  - "The next free ID is simply `len(vocab)`, the number of words stored so far."
+  - "For encode, `vocab.get(w, -1)` gives -1 for unknown words."

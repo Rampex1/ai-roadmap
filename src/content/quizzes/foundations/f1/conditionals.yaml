@@ -1,0 +1,107 @@
+items:
+  - id: f1-conditionals-01
+    type: output
+    prompt: "What does this print?"
+    code: |
+      x = 15
+      if x > 10:
+          print("big")
+      elif x > 5:
+          print("medium")
+      else:
+          print("small")
+    answer: "big"
+    explanation: "Only the first true branch runs. `x > 10` is true, so the elif is never checked, even though `x > 5` is also true."
+  - id: f1-conditionals-02
+    type: mcq
+    prompt: "What is the difference between `=` and `==`?"
+    explanation: "`=` attaches a name to a value; `==` compares two values and gives a boolean."
+    options:
+      - text: = assigns a value to a name; == asks whether two values are equal
+        correct: true
+        why: Assignment changes what a name refers to, while == only produces True or False.
+      - text: They are interchangeable
+        why: Using = inside an if condition is a SyntaxError, so they are not interchangeable.
+      - text: == is a stricter version of = that also checks the type
+        why: Both are different operations entirely. One assigns, one compares.
+  - id: f1-conditionals-03
+    type: output
+    prompt: "What does this print?"
+    code: |
+      a = True
+      b = False
+      print(a and b, a or b, not b)
+    answer: "False True True"
+    explanation: "`and` needs both true; `or` needs at least one; `not` flips the value."
+  - id: f1-conditionals-04
+    type: output
+    prompt: "What does this print? Watch the indentation."
+    code: |
+      n = 3
+      if n > 5:
+          print("A")
+          print("B")
+      print("C")
+    answer: "C"
+    explanation: "A and B are inside the if block, which is skipped because 3 is not greater than 5. C is not indented, so it always runs."
+  - id: f1-conditionals-05
+    type: multi
+    prompt: "Which of these values are falsy (treated as False by `if`)?"
+    explanation: "Zero, empty strings, None and empty collections are falsy. Any non-empty string is truthy, even \"False\" or \"0\"."
+    options:
+      - text: "0"
+        correct: true
+        why: The number zero is falsy.
+      - text: '""'
+        correct: true
+        why: The empty string is falsy.
+      - text: None
+        correct: true
+        why: None, meaning no value, is falsy.
+      - text: '"False"'
+        why: This is a non-empty string, and every non-empty string is truthy, whatever it says.
+      - text: "-1"
+        why: Any non-zero number is truthy, including negatives.
+  - id: f1-conditionals-06
+    type: mcq
+    prompt: "A program checks `if score >= 50:` and then `elif score >= 80:` to print \"pass\" and \"distinction\". What happens for a score of 85?"
+    explanation: "85 >= 50 is true, so the first branch runs and the elif is skipped. Put the more specific check, >= 80, first."
+    options:
+      - text: It prints pass, because the first true condition wins
+        correct: true
+        why: if/elif runs only the first branch whose condition holds.
+      - text: It prints distinction, because 85 is closer to 80
+        why: Python does not look for the best match, only the first true one.
+      - text: It prints both pass and distinction
+        why: That would need two separate if statements, not if and elif.
+  - id: f1-conditionals-07
+    type: output
+    prompt: "What does this print?"
+    code: |
+      p = 0.35
+      label = "cat" if p >= 0.5 else "dog"
+      print(label, 0 < p < 0.5)
+    answer: "dog True"
+    explanation: "0.35 is below the 0.5 threshold, so label is dog. The chained comparison checks 0 < 0.35 and 0.35 < 0.5, both true."
+  - id: f1-conditionals-08
+    type: cloze
+    prompt: "The keyword short for \"else if\", used to test another condition in a chain, is ____ ."
+    explanation: "`elif` lets you check further conditions after an `if`."
+    accept: ["elif"]
+  - id: f1-conditionals-09
+    type: order
+    prompt: "Order the lines to make a valid program that prints \"even\" or \"odd\" for n."
+    explanation: "Assign n first, then the if line with its indented block, then else with its indented block."
+    items:
+      - "n = 7"
+      - "if n % 2 == 0:"
+      - "    print(\"even\")"
+      - "else:"
+      - "    print(\"odd\")"
+  - id: f1-conditionals-10
+    type: output
+    prompt: "What does this print?"
+    code: |
+      print(not 3 > 2 or 1 == 1)
+    answer: "True"
+    explanation: "Comparisons such as `>` and `==` are evaluated before `not`, `and` and `or`: `3 > 2` is True and `1 == 1` is True. Then `not True` is False, and `False or True` is True."

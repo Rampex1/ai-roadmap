@@ -1,0 +1,30 @@
+id: f1-dictionaries-01
+lesson: foundations/f1/dictionaries
+title: Count the words
+prompt: |
+  Write `word_counts(text)` that returns a dictionary mapping each word in `text` to the number
+  of times it appears. Treat upper and lower case as the same word (convert to lowercase first),
+  and split on spaces with `split()`.
+
+  ```python
+  word_counts("The cat saw the other cat")
+  # {'the': 2, 'cat': 2, 'saw': 1, 'other': 1}
+  ```
+starter: |
+  def word_counts(text):
+      counts = {}
+      return counts
+solution: |
+  def word_counts(text):
+      counts = {}
+      for w in text.lower().split():
+          counts[w] = counts.get(w, 0) + 1
+      return counts
+tests: |
+  _r = word_counts("The cat saw the other cat")
+  assert _r == {"the": 2, "cat": 2, "saw": 1, "other": 1}, f"Got {_r!r}"
+  assert word_counts("") == {}, "An empty text should give an empty dict"
+  assert word_counts("a A a b") == {"a": 3, "b": 1}, f"word_counts('a A a b') should be {{'a': 3, 'b': 1}}, got {word_counts('a A a b')!r}"
+hints:
+  - "Lowercase and split first: `text.lower().split()`."
+  - "Inside the loop: `counts[w] = counts.get(w, 0) + 1`."

@@ -1,0 +1,44 @@
+id: f1-numbers-02
+lesson: foundations/f1/numbers
+title: Distance between two points
+prompt: |
+  The straight-line distance between points $(x_1, y_1)$ and $(x_2, y_2)$ is
+  $$d = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}$$
+  Machine learning uses exactly this distance to find "nearby" data points.
+  Set `distance` to the distance between the two points below, using `**`
+  (remember that a square root is the power 0.5). For these points it is `5.0`.
+starter: |
+  x1 = 1
+  y1 = 2
+  x2 = 4
+  y2 = 6
+
+  distance = 0
+solution: |
+  x1 = 1
+  y1 = 2
+  x2 = 4
+  y2 = 6
+
+  distance = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
+tests: |
+  import contextlib, io, linecache, re
+  _src = "".join(linecache.cache["<your code>"][2])
+  def _rerun(*subs):
+      _new = _src
+      for _pat, _repl, _line in subs:
+          _new, _n = re.subn(_pat, _repl, _new, flags=re.M)
+          assert _n == 1, f"Keep the starter line `{_line}` as given (you can change the code below it): the tests swap in other values"
+      _ns = {"__name__": "__main__"}
+      with contextlib.redirect_stdout(io.StringIO()):
+          exec(compile(_new, "<your code>", "exec"), _ns)
+      return _ns
+  def _get(_ns, _name):
+      assert _name in _ns, f"Your code should define the variable `{_name}`"
+      return _ns[_name]
+  assert abs(distance - 5.0) < 1e-9, f"distance should be 5.0, got {distance!r}"
+  _ns = _rerun(('^x2[ \\t]*=[ \\t]*4[ \\t]*(?=#|$)', "x2 = 2", "x2 = 4"), ('^y2[ \\t]*=[ \\t]*6[ \\t]*(?=#|$)', "y2 = 3", "y2 = 6"))
+  assert abs(_get(_ns, "distance") - 2 ** 0.5) < 1e-9, "Compute distance from the variables x1, y1, x2, y2 so it works for any points"
+hints:
+  - "Work out the differences `x2 - x1` and `y2 - y1` first, then square each with `** 2`."
+  - "Wrap the whole sum in parentheses before taking `** 0.5`, otherwise the power only applies to the last term."

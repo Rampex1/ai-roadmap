@@ -1,0 +1,7 @@
+term: "Zero-based indexing"
+short: "Counting positions from 0, so the first item of a sequence is at index 0."
+body: |
+  In Python, `s[0]` is the first item and `s[len(s) - 1]` the last; negative indices count from the
+  end, with `-1` the last item. Slices `s[start:stop]` include `start` and exclude `stop`. NumPy,
+  pandas and PyTorch all index the same way.
+related: ["string", "list"]

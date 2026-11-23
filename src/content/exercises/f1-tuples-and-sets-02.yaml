@@ -1,0 +1,36 @@
+id: f1-tuples-and-sets-02
+lesson: foundations/f1/tuples-and-sets
+title: Compare two vocabularies
+prompt: |
+  Write two functions using sets:
+
+  - `n_distinct(words)` returns how many **different** words are in the list.
+  - `shared(words_a, words_b)` returns a **sorted list** of the words that appear in both lists, each once.
+
+  ```python
+  n_distinct(["a", "b", "a", "c", "b"])          # 3
+  shared(["cat", "dog", "cat"], ["dog", "cat", "eel"])  # ['cat', 'dog']
+  ```
+starter: |
+  def n_distinct(words):
+      return len(words)
+
+
+  def shared(words_a, words_b):
+      return []
+solution: |
+  def n_distinct(words):
+      return len(set(words))
+
+
+  def shared(words_a, words_b):
+      return sorted(set(words_a) & set(words_b))
+tests: |
+  assert n_distinct(["a", "b", "a", "c", "b"]) == 3, f"n_distinct should be 3, got {n_distinct(['a', 'b', 'a', 'c', 'b'])!r}"
+  assert n_distinct([]) == 0, "n_distinct([]) should be 0"
+  _s = shared(["cat", "dog", "cat"], ["dog", "cat", "eel"])
+  assert _s == ["cat", "dog"], f"shared should be ['cat', 'dog'], got {_s!r}"
+  assert shared(["x"], ["y"]) == [], "No words in common should give []"
+hints:
+  - "`set(words)` drops duplicates, and `len` counts what is left."
+  - "`set(a) & set(b)` is the intersection. Wrap it in `sorted(...)` to get a sorted list."

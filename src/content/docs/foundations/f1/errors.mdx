@@ -1,0 +1,196 @@
+---
+title: Errors and exceptions
+module: f1
+order: 11
+estMinutes: 16
+objectives:
+  - "Read a traceback from the bottom up to find what went wrong and where"
+  - "Recognise the common exception types and what usually causes each"
+  - "Handle expected failures with try/except, and signal bad input with raise"
+goDeeper: python-tutorial-errors
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Every programmer spends a large part of their time fixing code that does not work yet. The
+difference between a beginner and an expert is not that experts make fewer mistakes; it is that
+they read error messages calmly and find the cause quickly. This lesson teaches that skill.
+
+## Two kinds of error
+
+- A **syntax error** means Python cannot even understand the code: a missing colon, an unclosed
+  bracket or quote, bad indentation. Python reports it *before running anything*.
+- An <Term id="exception" /> happens *while the program runs*: the code is valid Python, but
+  something goes wrong at that moment, such as dividing by zero or looking up a missing key. The
+  program stops at that line unless something handles the exception.
+
+## Reading a traceback
+
+When an exception is not handled, Python prints a <Term id="traceback" />: a report of where the
+program was when it failed. Here is a program with a bug:
+
+```python
+def mean(xs):
+    return sum(xs) / len(xs)
+
+def report(name, xs):
+    avg = mean(xs)
+    return f"{name}: {avg:.2f}"
+
+print(report("week 1", [3, 4, 5]))
+print(report("week 2", []))
+```
+
+```text title="Output (error)"
+week 1: 4.00
+Traceback (most recent call last):
+  File "main.py", line 9, in <module>
+    print(report("week 2", []))
+          ~~~~~~^^^^^^^^^^^^^^
+  File "main.py", line 5, in report
+    avg = mean(xs)
+  File "main.py", line 2, in mean
+    return sum(xs) / len(xs)
+           ~~~~~~~~^~~~~~~~~
+ZeroDivisionError: division by zero
+```
+
+Read it **from the bottom up**:
+
+1. **The last line** says *what* went wrong: a `ZeroDivisionError`, "division by zero".
+2. **The frame just above it** says *where*: line 2, inside `mean`, in `sum(xs) / len(xs)`.
+   The `^` marks point at the exact operation.
+3. **The frames above that** say *how the program got there*: line 9 called `report`, which on
+   line 5 called `mean`. "Most recent call last" means the deepest call is at the bottom.
+
+Now reason about it: `len(xs)` was 0, so the list was empty. Following the chain up, the empty list
+came from line 9, `report("week 2", [])`. The bug is not really in `mean`; it is that nobody decided
+what the mean of no numbers should be. Tracebacks show you where the program *noticed* the problem,
+and you follow the frames to find where it *started*.
+
+The first line, `week 1: 4.00`, is a reminder that everything before the failing line ran normally.
+
+## Common exceptions
+
+| Exception | Usual cause | Example |
+|---|---|---|
+| `NameError` | a name that was never assigned, often a typo | `prnt("hi")` |
+| `TypeError` | an operation on the wrong type | `"age: " + 36` |
+| `ValueError` | the right type but an unsuitable value | `int("ten")` |
+| `IndexError` | a position past the end of a sequence | `[1, 2][5]` |
+| `KeyError` | a dictionary key that is not there | `{"a": 1}["b"]` |
+| `ZeroDivisionError` | dividing by zero | `1 / 0` |
+| `AttributeError` | a method or attribute the value does not have | `[1, 2].push(3)` |
+| `IndentationError` | inconsistent indentation (a kind of syntax error) | a block not indented under `if` |
+
+You have met most of these already. When you meet a new one, the name plus the message is
+usually enough to search the web for or to ask the tutor about.
+
+## A debugging routine
+
+When something breaks, or the output is simply wrong:
+
+1. **Read the last line** of the traceback. What kind of error, and what does the message say?
+2. **Go to the line** it points at. Which values are involved?
+3. **Check your assumptions** with `print`: print the values and their types just before the
+   failing line, for example `print(xs, type(xs), len(xs))`.
+4. **Shrink the problem.** Try the failing expression on its own with simple values.
+5. **Fix one thing at a time**, and run again.
+
+Silent bugs, where the program runs but gives the wrong answer, are harder than crashes. That is
+why ML practitioners print shapes and sample values all the time, and why tests (like the hidden
+ones in the exercises) are so valuable.
+
+## Handling exceptions with try and except
+
+Sometimes failure is expected and you know what to do about it. Text that should be a number
+might not be, or a key might be missing. `try` / `except` lets you catch the exception and recover:
+
+```python
+raw_values = ["3.5", "4.0", "n/a", "2.5"]
+values = []
+for raw in raw_values:
+    try:
+        values.append(float(raw))
+    except ValueError:
+        print(f"skipping {raw!r}")
+print(values)
+```
+
+```text title="Output"
+skipping 'n/a'
+[3.5, 4.0, 2.5]
+```
+
+Python runs the `try` block. If a `ValueError` happens inside it, Python jumps to the matching
+`except` block instead of crashing, then carries on after it. (`{raw!r}` in the f-string shows the
+value with quotes, which makes odd strings easier to spot.)
+
+Good habits:
+
+- **Catch specific exceptions**, like `except ValueError:`. A bare `except:` catches *everything*,
+  including your own typos, and hides real bugs.
+- **Keep the `try` block small**, around just the line that can fail for the expected reason.
+- **Do not use try to hide errors you do not understand.** First find out why they happen.
+
+You can catch several types at once with `except (KeyError, IndexError):`, and give the exception
+a name to see its message with `except ValueError as e:`. There are also optional `else` (runs only
+if nothing failed) and `finally` (always runs) blocks, which you will meet in other people's code.
+
+## Raising your own exceptions
+
+Your own functions should complain loudly when they get input that makes no sense, rather than
+returning a wrong answer quietly. Use `raise`:
+
+```python
+def mean(xs):
+    if len(xs) == 0:
+        raise ValueError("mean() of an empty list is undefined")
+    return sum(xs) / len(xs)
+
+try:
+    mean([])
+except ValueError as e:
+    print("Error:", e)
+```
+
+```text title="Output"
+Error: mean() of an empty list is undefined
+```
+
+A clear message at the point where the bad value first appears saves whoever calls your function
+(often you) a long hunt. Libraries like NumPy and scikit-learn do exactly this, with messages like
+"Found input variables with inconsistent numbers of samples".
+
+### assert: sanity checks
+
+`assert condition, "message"` raises an `AssertionError` if the condition is false. It is a quick
+way to state something you believe must be true:
+
+```python
+predictions = [1, 0, 1]
+labels = [1, 0, 0]
+assert len(predictions) == len(labels), "predictions and labels differ in length"
+print("lengths match")
+```
+
+```text title="Output"
+lengths match
+```
+
+The hidden tests in every exercise on this site are `assert` statements. In ML code, asserting that
+shapes and lengths match catches a whole family of silent bugs early.
+
+## Try it
+
+<CodeExercise id="f1-errors-01" />
+
+<CodeExercise id="f1-errors-02" />
+
+## Summary
+
+- Syntax errors stop the program before it runs; exceptions happen while it runs.
+- Read a traceback bottom up: the last line says what, the frame above it says where, and the frames above that say how you got there.
+- Know the common exceptions: `NameError`, `TypeError`, `ValueError`, `IndexError`, `KeyError`, `ZeroDivisionError`, `AttributeError`.
+- `try` / `except SomeError:` recovers from expected failures. Catch specific types and keep the block small.
+- `raise ValueError("...")` rejects bad input with a clear message; `assert` states what must be true.

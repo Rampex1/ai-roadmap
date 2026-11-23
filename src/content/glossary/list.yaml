@@ -1,0 +1,7 @@
+term: "List"
+short: "An ordered, changeable sequence of values, written in square brackets like [1, 2, 3]."
+body: |
+  Lists are indexed and sliced from 0 and are mutable: `append`, `insert`, `pop`, `remove`, `sort` and
+  item assignment change them in place. Because they are mutable, two names can share one list, so use
+  `copy()` when you need an independent one. NumPy arrays are the fast, numeric relative of lists.
+related: ["mutability", "zero-based-indexing", "list-comprehension", "tuple"]

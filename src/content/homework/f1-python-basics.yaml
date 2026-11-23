@@ -1,0 +1,29 @@
+id: f1-python-basics
+module: f1
+kind: homework
+title: "Build a word-frequency counter"
+brief: |
+  Build a small text-analysis tool from scratch with plain Python: the same first step that spam
+  filters and language-model tokenisers take. Download the notebook and open it in
+  [Google Colab](https://colab.research.google.com/) (File > Upload notebook) or any Jupyter.
+  Nothing needs installing.
+
+  Each task has a `TODO` cell and a check cell that prints `OK` when your code is right:
+
+  1. **`clean_text(text)`**: lowercase the text and replace punctuation with spaces.
+  2. **`tokenize(text)`**: turn the cleaned text into a list of words.
+  3. **`count_words(words)`**: count each word with a dictionary (no `Counter`).
+  4. **`top_n(counts, n)`**: return the `n` most common `(word, count)` pairs, ties in alphabetical order.
+  5. **`summarize(text)`**: return total and distinct word counts, the longest word and the mean
+     word length, raising a `ValueError` for text with no words.
+  6. **Report**: print a neat summary with f-strings.
+
+  A stretch task removes stop words with a set and checks your counts against `collections.Counter`.
+notebook: /homework/f1-python-basics.ipynb
+rubric:
+  - "Every check cell for Tasks 1 to 5 prints OK after restarting and running all cells"
+  - "count_words uses a dictionary and a loop, not collections.Counter"
+  - "summarize raises a ValueError with a clear message when the text has no words"
+  - "The Task 6 report prints numbers computed by your functions, not typed in, using f-strings"
+  - "Every function you wrote has a one-line docstring saying what it returns"
+compute: "Runs in free Colab or any laptop in under 15 minutes"

@@ -1,0 +1,7 @@
+term: "String"
+short: "A sequence of characters (text), written in quotes, with type str."
+body: |
+  Strings can be indexed and sliced like lists, but they are immutable: methods such as `upper()`,
+  `strip()` and `replace()` return new strings rather than changing the original. `split()` turns a
+  string into a list of words and `join()` turns a list back into a string.
+related: ["zero-based-indexing", "f-string", "mutability"]

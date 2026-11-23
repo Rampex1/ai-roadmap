@@ -1,0 +1,7 @@
+term: "Boolean"
+short: "A value that is either True or False, with type bool."
+body: |
+  Comparisons such as `x > 3` or `a == b` produce booleans, and `and`, `or` and `not` combine them.
+  `if` and `while` use them to decide what runs. Python also treats some other values as false-like
+  (falsy): `0`, `""`, `None` and empty collections.
+related: ["data-type", "indentation"]

@@ -1,0 +1,7 @@
+term: "Data type"
+short: "The kind of a value, such as int, float, str or bool, which decides what you can do with it."
+body: |
+  `type(value)` reveals a value's type. Operations depend on types: `+` adds numbers but joins
+  strings, and mixing a string with a number is a `TypeError`. Convert between types with `int()`,
+  `float()` and `str()`.
+related: ["variable", "floating-point", "string", "boolean"]

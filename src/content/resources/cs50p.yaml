@@ -1,0 +1,5 @@
+title: "CS50's Introduction to Programming with Python (Harvard)"
+url: https://cs50.harvard.edu/python/
+kind: course
+free: true
+modules: [f1]

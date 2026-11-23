@@ -1,0 +1,26 @@
+id: f1-functions-01
+lesson: foundations/f1/functions
+title: Write a function that returns
+prompt: |
+  Write a function `fahrenheit(celsius)` that **returns** the temperature in Fahrenheit,
+  using $F = C \times \frac{9}{5} + 32$. For example `fahrenheit(100)` returns `212.0`
+  and `fahrenheit(-40)` returns `-40.0`.
+
+  Return the value; do not print it.
+starter: |
+  def fahrenheit(celsius):
+      print(celsius * 9 / 5 + 32)
+solution: |
+  def fahrenheit(celsius):
+      return celsius * 9 / 5 + 32
+tests: |
+  import contextlib, io
+  with contextlib.redirect_stdout(io.StringIO()):
+      _r = fahrenheit(100)
+  assert _r is not None, "fahrenheit(100) returned None. Did you print instead of return?"
+  assert abs(_r - 212) < 1e-9, f"fahrenheit(100) should be 212.0, got {_r!r}"
+  assert abs(fahrenheit(0) - 32) < 1e-9, f"fahrenheit(0) should be 32.0, got {fahrenheit(0)!r}"
+  assert abs(fahrenheit(-40) + 40) < 1e-9, f"fahrenheit(-40) should be -40.0, got {fahrenheit(-40)!r}"
+  assert abs(fahrenheit(37) - 98.6) < 1e-9, f"fahrenheit(37) should be 98.6, got {fahrenheit(37)!r}"
+hints:
+  - "The starter prints the answer, so the function returns None. Swap `print(...)` for `return ...`."

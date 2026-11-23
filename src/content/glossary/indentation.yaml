@@ -1,0 +1,7 @@
+term: "Indentation"
+short: "The spaces at the start of a line, which Python uses to group lines into blocks."
+body: |
+  The body of an `if`, `for`, `while` or `def` is indented, conventionally by four spaces, under a
+  line that ends with a colon. The first line back at the outer level ends the block. Inconsistent
+  indentation gives an `IndentationError`.
+related: ["syntax", "loop", "function"]

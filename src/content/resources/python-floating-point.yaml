@@ -1,0 +1,5 @@
+title: "Floating-Point Arithmetic: Issues and Limitations (Python docs)"
+url: https://docs.python.org/3/tutorial/floatingpoint.html
+kind: course
+free: true
+modules: [f1]

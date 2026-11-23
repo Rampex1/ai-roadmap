@@ -1,0 +1,99 @@
+items:
+  - id: f1-modules-01
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import math
+      print(math.sqrt(25), math.floor(2.7))
+    answer: "5.0 2"
+    explanation: "`math.sqrt` always returns a float, so 5.0. `math.floor` rounds down to an int, so 2."
+  - id: f1-modules-02
+    type: mcq
+    prompt: "After `from math import sqrt`, how do you take the square root of 9?"
+    explanation: "`from math import sqrt` brings the name `sqrt` in directly, so no `math.` prefix is needed (and `math` itself is not defined)."
+    options:
+      - text: sqrt(9)
+        correct: true
+        why: The name sqrt was imported directly into your program.
+      - text: math.sqrt(9)
+        why: Only sqrt was imported, not the name math, so this is a NameError.
+      - text: import sqrt(9)
+        why: import loads modules or names; it does not call functions.
+  - id: f1-modules-03
+    type: mcq
+    prompt: "Why do ML scripts often call `random.seed(0)` (or similar) at the start?"
+    explanation: "Seeding makes pseudo-random results repeatable, so experiments can be reproduced and compared fairly."
+    options:
+      - text: So the random results are the same every run, making experiments reproducible
+        correct: true
+        why: The same seed always produces the same sequence of numbers.
+      - text: To make the numbers more random
+        why: A seed does not change how random the numbers look, only which sequence you get.
+      - text: Because random will not work without it
+        why: Without a seed, Python picks one for you and results differ between runs.
+  - id: f1-modules-04
+    type: multi
+    prompt: "Which of these are part of Python's standard library, so they need no installing?"
+    explanation: "math, random and collections ship with Python. NumPy is a separate package you install."
+    options:
+      - text: math
+        correct: true
+        why: Built in.
+      - text: random
+        correct: true
+        why: Built in.
+      - text: collections
+        correct: true
+        why: Built in, and home of Counter.
+      - text: numpy
+        why: NumPy is a third-party package, installed with pip or uv (or preinstalled on Colab).
+  - id: f1-modules-05
+    type: output
+    prompt: "What does this print?"
+    code: |
+      from collections import Counter
+      c = Counter("mississippi")
+      print(c["s"], c["z"], c.most_common(1))
+    answer: "4 0 [('i', 4)]"
+    explanation: "Counter counts each letter. A missing key gives 0, not a KeyError. i and s both appear 4 times; ties keep the order of first appearance, and i appears before s."
+  - id: f1-modules-06
+    type: mcq
+    prompt: "What is the main reason NumPy exists, rather than doing numeric work with Python lists?"
+    explanation: "Python loops pay a bookkeeping cost on every pass. NumPy stores numbers compactly and loops in compiled code, and lets you write whole-array maths."
+    options:
+      - text: Whole-array operations run in fast compiled code instead of slow Python loops
+        correct: true
+        why: This makes large numeric work many times faster and the code closer to the maths.
+      - text: Python lists cannot hold numbers
+        why: Lists hold numbers fine; they are just slow for heavy numeric work.
+      - text: NumPy is required to use the math module
+        why: math is in the standard library and works without NumPy.
+  - id: f1-modules-07
+    type: cloze
+    prompt: "By convention, NumPy is imported with the nickname np, using `import numpy ____ np`."
+    explanation: "`import numpy as np` is the standard alias used in almost every data-science notebook."
+    accept: ["as"]
+  - id: f1-modules-08
+    type: numeric
+    prompt: "`random.randint(1, 6)` can return how many different values?"
+    explanation: "Unlike `range`, randint includes both ends, so it returns 1, 2, 3, 4, 5 or 6: six values."
+    answer: 6
+  - id: f1-modules-09
+    type: order
+    prompt: "Put these steps for reading an unfamiliar script in a sensible order."
+    explanation: "See the dependencies, find where execution starts, skim names and docstrings, then run it and inspect values."
+    items:
+      - Read the imports at the top
+      - Find the entry point, such as the main block
+      - Read function names and docstrings
+      - Run it and print values to check your understanding
+  - id: f1-modules-10
+    type: output
+    prompt: "What does this print?"
+    code: |
+      def main():
+          return "hi"
+
+      print(__name__ == "__main__", main())
+    answer: "True hi"
+    explanation: "When a file is run directly, Python sets `__name__` to \"__main__\"."

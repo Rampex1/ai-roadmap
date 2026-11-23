@@ -1,0 +1,97 @@
+items:
+  - id: f1-lists-01
+    type: output
+    prompt: "What does this print?"
+    code: |
+      xs = [10, 20, 30, 40, 50]
+      print(xs[1], xs[-2], xs[1:3])
+    answer: "20 40 [20, 30]"
+    explanation: "Index 1 is the second item (20); -2 is the second from the end (40); the slice takes indices 1 and 2."
+  - id: f1-lists-02
+    type: output
+    prompt: "What does this print?"
+    code: |
+      a = [1, 2]
+      b = a
+      b.append(3)
+      print(a)
+    answer: "[1, 2, 3]"
+    explanation: "`b = a` does not copy the list; both names refer to the same list, so appending through b is visible through a."
+  - id: f1-lists-03
+    type: output
+    prompt: "What does this print?"
+    code: |
+      nums = [3, 1, 2]
+      nums = nums.sort()
+      print(nums)
+    answer: "None"
+    explanation: "`.sort()` sorts in place and returns None. Assigning that None back to nums loses the list. Use `nums.sort()` alone, or `nums = sorted(nums)`."
+  - id: f1-lists-04
+    type: mcq
+    prompt: "You need a sorted version of `scores` but must keep `scores` in its original order. What should you write?"
+    explanation: "`sorted()` returns a new list and leaves the original untouched."
+    options:
+      - text: ranked = sorted(scores)
+        correct: true
+        why: sorted builds and returns a new sorted list.
+      - text: ranked = scores.sort()
+        why: This reorders scores itself and sets ranked to None.
+      - text: ranked = scores; ranked.sort()
+        why: ranked and scores are the same list, so sorting one sorts the other.
+  - id: f1-lists-05
+    type: multi
+    prompt: "Which of these make an independent copy of the list `a` (so changing the copy leaves `a` alone)?"
+    explanation: "`a.copy()`, `list(a)` and the full slice `a[:]` all build a new list. Plain assignment only adds a name."
+    options:
+      - text: a.copy()
+        correct: true
+        why: The copy method builds a new list with the same items.
+      - text: list(a)
+        correct: true
+        why: list() builds a new list from any sequence.
+      - text: a[:]
+        correct: true
+        why: Slicing always creates a new list, and [:] takes everything.
+      - text: b = a
+        why: This gives the same list a second name; no copy is made.
+  - id: f1-lists-06
+    type: numeric
+    prompt: "`grid = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]`. What is `grid[2][0] + grid[0][2]`?"
+    explanation: "`grid[2]` is the row `[7, 8, 9]`, so `grid[2][0]` is 7. `grid[0][2]` is 3. 7 + 3 = 10."
+    answer: 10
+  - id: f1-lists-07
+    type: output
+    prompt: "What does this print?"
+    code: |
+      xs = [5, 6, 7]
+      last = xs.pop()
+      xs.insert(0, last)
+      print(xs)
+    answer: "[7, 5, 6]"
+    explanation: "`pop()` removes and returns 7, leaving [5, 6]. Inserting 7 at index 0 gives [7, 5, 6]."
+  - id: f1-lists-08
+    type: mcq
+    prompt: "What is the key difference between a list and a string?"
+    explanation: "Both are ordered sequences you can index and slice, but only lists can be changed in place."
+    options:
+      - text: Lists are mutable (changeable in place); strings are immutable
+        correct: true
+        why: You can do lst[0] = x, but s[0] = x is a TypeError.
+      - text: Lists start counting at 1, strings at 0
+        why: Both use zero-based indexing.
+      - text: Only strings can be sliced
+        why: Lists slice exactly like strings.
+  - id: f1-lists-09
+    type: cloze
+    prompt: "To add the value 7 to the end of the list `xs`, you write `xs.____(7)`."
+    explanation: "`append` adds one item to the end of a list, changing it in place."
+    accept: ["append"]
+  - id: f1-lists-10
+    type: order
+    prompt: "`xs = [4, 2, 9]`. Order these expressions by the value they give, smallest first."
+    explanation: "`len(xs)` is 3, `xs[0]` is 4, `max(xs)` is 9 and `sum(xs)` is 15."
+    items:
+      - len(xs)
+      - xs[0]
+      - max(xs)
+      - sum(xs)

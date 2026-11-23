@@ -1,0 +1,7 @@
+term: "Function"
+short: "A named, reusable block of code that takes inputs (parameters) and returns a result."
+body: |
+  Define one with `def name(params):` and an indented body, and hand back a value with `return`. A
+  function without `return` gives `None`. Printing a value is not the same as returning it: only a
+  returned value can be used by the calling code.
+related: ["scope", "python-module"]

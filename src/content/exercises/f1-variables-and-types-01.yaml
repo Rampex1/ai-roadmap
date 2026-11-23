@@ -1,0 +1,42 @@
+id: f1-variables-and-types-01
+lesson: foundations/f1/variables-and-types
+title: Convert text to numbers
+prompt: |
+  A study log stores hours as text: `hours_text = "7.5"`.
+  Create a variable `minutes` that holds the number of minutes as a **float** (`450.0`),
+  and a variable `whole_hours` that holds the hours with the decimal part chopped off, as an **int** (`7`).
+starter: |
+  hours_text = "7.5"
+
+  minutes = 0
+  whole_hours = 0
+solution: |
+  hours_text = "7.5"
+
+  hours = float(hours_text)
+  minutes = hours * 60
+  whole_hours = int(hours)
+tests: |
+  import contextlib, io, linecache, re
+  _src = "".join(linecache.cache["<your code>"][2])
+  def _rerun(*subs):
+      _new = _src
+      for _pat, _repl, _line in subs:
+          _new, _n = re.subn(_pat, _repl, _new, flags=re.M)
+          assert _n == 1, f"Keep the starter line `{_line}` as given (you can change the code below it): the tests swap in other values"
+      _ns = {"__name__": "__main__"}
+      with contextlib.redirect_stdout(io.StringIO()):
+          exec(compile(_new, "<your code>", "exec"), _ns)
+      return _ns
+  def _get(_ns, _name):
+      assert _name in _ns, f"Your code should define the variable `{_name}`"
+      return _ns[_name]
+  assert isinstance(minutes, float), f"minutes should be a float, got {type(minutes).__name__}"
+  assert minutes == 450.0, f"minutes should be 450.0, got {minutes!r}"
+  assert isinstance(whole_hours, int), f"whole_hours should be an int, got {type(whole_hours).__name__}"
+  assert whole_hours == 7, f"whole_hours should be 7, got {whole_hours!r}"
+  _ns = _rerun(('^hours_text[ \\t]*=[ \\t]*(["\'])7\\.5\\1', 'hours_text = "2.25"', 'hours_text = "7.5"'))
+  assert (_get(_ns, "minutes"), _get(_ns, "whole_hours")) == (135.0, 2), "Compute from hours_text: for \"2.25\" minutes should be 135.0 and whole_hours 2"
+hints:
+  - "First turn the text into a number with `float(hours_text)`."
+  - "An hour has 60 minutes. `int(7.5)` chops the decimal part off and gives `7`."

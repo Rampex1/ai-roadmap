@@ -1,0 +1,8 @@
+term: "Floating-point number"
+short: "A number with a fractional part (a float), stored in binary with limited precision."
+body: |
+  Python floats keep about 15 to 17 significant decimal digits. Most decimal fractions such as 0.1
+  have no exact binary form, so small rounding errors appear: `0.1 + 0.2` is `0.30000000000000004`.
+  Compare floats with a tolerance, for example `math.isclose(a, b)`, never with `==`. Neural networks
+  are trained with floats, often with even less precision.
+related: ["data-type"]

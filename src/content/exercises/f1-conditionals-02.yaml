@@ -1,0 +1,39 @@
+id: f1-conditionals-02
+lesson: foundations/f1/conditionals
+title: Is it a leap year?
+prompt: |
+  A year is a leap year if it is divisible by 4, **except** years divisible by 100,
+  which are leap years only if they are also divisible by 400.
+  So 2024 is a leap year, 1900 is not, and 2000 is.
+
+  Set `is_leap` to `True` or `False` for `year`. Combine conditions with `and`, `or` and `%`.
+starter: |
+  year = 2024
+
+  is_leap = None
+solution: |
+  year = 2024
+
+  is_leap = year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
+tests: |
+  import contextlib, io, linecache, re
+  _src = "".join(linecache.cache["<your code>"][2])
+  def _rerun(*subs):
+      _new = _src
+      for _pat, _repl, _line in subs:
+          _new, _n = re.subn(_pat, _repl, _new, flags=re.M)
+          assert _n == 1, f"Keep the starter line `{_line}` as given (you can change the code below it): the tests swap in other values"
+      _ns = {"__name__": "__main__"}
+      with contextlib.redirect_stdout(io.StringIO()):
+          exec(compile(_new, "<your code>", "exec"), _ns)
+      return _ns
+  def _get(_ns, _name):
+      assert _name in _ns, f"Your code should define the variable `{_name}`"
+      return _ns[_name]
+  for _y, _want in [(2024, True), (2023, False), (1900, False), (2000, True), (2100, False), (1996, True)]:
+      _ns = _rerun(('^year[ \\t]*=[ \\t]*2024[ \\t]*(?=#|$)', f"year = {_y}", "year = 2024"))
+      assert _get(_ns, "is_leap") is _want, f"year {_y}: is_leap should be {_want}, got {_ns['is_leap']!r}"
+hints:
+  - "`year % 4 == 0` is True when year is divisible by 4."
+  - "Divisible by 4 AND (not divisible by 100 OR divisible by 400)."
+  - "You can also write it with if / elif / else, setting is_leap in each branch."

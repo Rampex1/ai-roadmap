@@ -1,0 +1,111 @@
+items:
+  - id: f1-functions-01
+    type: output
+    prompt: "What does this print?"
+    code: |
+      def double(x):
+          print(x * 2)
+
+      result = double(4)
+      print(result)
+    answer: |
+      8
+      None
+    explanation: "`double` prints 8 but has no `return`, so it returns None, which is what `result` holds."
+  - id: f1-functions-02
+    type: mcq
+    prompt: "A function computes an average that other code needs to use. Should it print the average or return it?"
+    explanation: "Returning hands the value back to the caller, who can then store it, print it, or compute with it. Printing only shows it."
+    options:
+      - text: Return it, so the caller can use the value
+        correct: true
+        why: The caller can still print a returned value, but cannot use a printed one.
+      - text: Print it, because print also makes the value available to the program
+        why: print only writes text to the screen; the function still returns None.
+      - text: It makes no difference
+        why: Printing gives the caller None, which breaks any further calculation.
+  - id: f1-functions-03
+    type: output
+    prompt: "What does this print?"
+    code: |
+      def sign(x):
+          if x > 0:
+              return "positive"
+          if x < 0:
+              return "negative"
+          return "zero"
+
+      print(sign(-3), sign(0))
+    answer: "negative zero"
+    explanation: "`return` ends the function at once. For -3 the second check returns; for 0 neither check is true, so the last line returns \"zero\"."
+  - id: f1-functions-04
+    type: output
+    prompt: "What does this print?"
+    code: |
+      def power(base, exp=2):
+          return base ** exp
+
+      print(power(3), power(2, 3), power(exp=0, base=5))
+    answer: "9 8 1"
+    explanation: "`power(3)` uses the default exp=2. `power(2, 3)` is 2 cubed. Keyword arguments can come in any order: 5 to the power 0 is 1."
+  - id: f1-functions-05
+    type: mcq
+    prompt: "A function body sets `count = 10`. After the function is called, the main program runs `print(count)` and gets a NameError. Why?"
+    explanation: "Variables assigned inside a function are local to that call; they disappear when it returns."
+    options:
+      - text: count is a local variable that exists only inside the function
+        correct: true
+        why: Return the value and store it, as in count = my_function().
+      - text: The function was never called
+        why: Even after a call, local variables are not visible outside the function.
+      - text: count is a reserved word in Python
+        why: count is an ordinary name; it is just not defined in the outer scope.
+  - id: f1-functions-06
+    type: multi
+    prompt: "Which statements about functions are true?"
+    explanation: "The body runs on each call, not at definition. A function with no return gives None, and a function can call other functions."
+    options:
+      - text: The body runs every time the function is called, not when def is read
+        correct: true
+        why: def only defines the function; calling it runs the body.
+      - text: A function with no return statement returns None
+        correct: true
+        why: Reaching the end of the body without return gives None.
+      - text: A function can call other functions, including ones you wrote
+        correct: true
+        why: Building functions from smaller functions is how programs stay readable.
+      - text: A function can only have one parameter
+        why: A function can have as many parameters as it needs, or none at all.
+  - id: f1-functions-07
+    type: output
+    prompt: "What does this print?"
+    code: |
+      def f(x):
+          x = x + 1
+          return x
+
+      x = 10
+      y = f(x)
+      print(x, y)
+    answer: "10 11"
+    explanation: "Inside f, x is a local name. Rebinding it to x + 1 does not touch the outer x, which stays 10."
+  - id: f1-functions-08
+    type: cloze
+    prompt: "A string written on the first line of a function body, describing what the function does, is called a ____ ."
+    explanation: "A docstring documents a function; `help()` and editors show it."
+    accept: ["docstring", "doc string", "doc-string"]
+  - id: f1-functions-09
+    type: order
+    prompt: "Order the lines to define and use a function that returns the larger of two numbers."
+    explanation: "The def line comes first, then the indented body, then the unindented call that uses the result."
+    items:
+      - "def larger(a, b):"
+      - "    if a > b:"
+      - "        return a"
+      - "    return b"
+      - "print(larger(3, 7))"
+  - id: f1-functions-10
+    type: numeric
+    prompt: "With `def f(x): return 2 * x + 1`, what is `f(f(3))`?"
+    explanation: "Inner call first: f(3) = 7. Then f(7) = 15."
+    answer: 15

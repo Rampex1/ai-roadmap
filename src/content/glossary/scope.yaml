@@ -1,0 +1,7 @@
+term: "Scope"
+short: "The region of a program where a name is visible."
+body: |
+  Names assigned inside a function are local: they exist only during that call and cannot be seen
+  outside. This keeps functions independent, so a `total` inside one function never clashes with
+  another. Pass values in as parameters and get results out with `return`.
+related: ["function", "variable"]

@@ -1,0 +1,208 @@
+---
+title: Values, types and variables
+module: f1
+order: 2
+estMinutes: 15
+objectives:
+  - "Create and update variables with the assignment operator ="
+  - "Name the basic types int, float, str and bool, and check a value's type with type()"
+  - "Convert between types with int(), float() and str(), and explain why mixing types can fail"
+goDeeper: python-tutor
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Programs work with **values**: numbers like `12` or `0.5`, text like `"cat"`, and a few others.
+To use a value more than once, you give it a name. A name attached to a value is a
+<Term id="variable" />.
+
+## Assignment: giving a value a name
+
+```python
+lessons = 12
+minutes_each = 15
+total = lessons * minutes_each
+print(total)
+```
+
+```text title="Output"
+180
+```
+
+The `=` sign here does **not** mean "is equal to" as in maths. It means *assign*: work out the
+value on the right, then attach the name on the left to it. Read `total = lessons * minutes_each`
+as "total becomes lessons times minutes_each".
+
+Because the right side is worked out first, this line, which is nonsense in maths, is perfectly
+normal in Python:
+
+```python
+count = 5
+count = count + 1
+print(count)
+```
+
+```text title="Output"
+6
+```
+
+Python takes the current value of `count` (5), adds 1, and attaches `count` to the result (6).
+Updating a variable like this is so common that there is a shortcut, `+=`. Likewise `-=`, `*=`
+and `/=`:
+
+```python
+score = 10
+score += 5   # same as score = score + 5
+score *= 2   # same as score = score * 2
+print(score)
+```
+
+```text title="Output"
+30
+```
+
+A variable must be assigned before you use it. Using a name that was never assigned gives a
+`NameError`, the same error you saw for `Print` in lesson 1.
+
+### Naming rules
+
+- Names can contain letters, digits and underscores, but cannot start with a digit: `x1` is fine, `1x` is not.
+- No spaces. Python style is to join words with underscores, `learning_rate`, called *snake_case*.
+- Names are case-sensitive: `Total` and `total` are different variables.
+- Choose names that say what the value means. `minutes_each` beats `m`. In ML code you will
+  see short names like `x`, `y` and `lr` because they match the maths, and that is fine when
+  the meaning is clear.
+
+## Types: what kind of value is it?
+
+Every value has a <Term id="data-type" text="type" /> that decides what you can do with it.
+Four types cover most of this module:
+
+| Type | Meaning | Examples |
+|---|---|---|
+| `int` | whole number (integer) | `0`, `42`, `-7` |
+| `float` | number with a decimal point | `3.14`, `0.5`, `2.0` |
+| `str` | text (a *string* of characters) | `"cat"`, `'42'`, `""` |
+| `bool` | true or false | `True`, `False` |
+
+The built-in function `type()` tells you a value's type:
+
+```python
+print(type(42))
+print(type(2.0))
+print(type("42"))
+print(type(True))
+```
+
+```text title="Output"
+<class 'int'>
+<class 'float'>
+<class 'str'>
+<class 'bool'>
+```
+
+Notice that `2.0` is a `float` even though it is a whole number: the decimal point makes it one.
+And `"42"` is a `str`, because of the quotes. It *looks* like a number but it is text.
+
+There is one more value you will see often: `None`, which means "no value here". It has its
+own type, `NoneType`. Functions that do not hand back a result give `None`, as you will see in
+lesson 8.
+
+## Why types matter: mixing them
+
+Python will add two numbers, and it will join (concatenate) two strings with `+`. It will not
+guess what you mean when you mix a string and a number:
+
+```python
+print(2 + 3)
+print("2" + "3")
+print(2 + 3.5)
+```
+
+```text title="Output"
+5
+23
+5.5
+```
+
+`"2" + "3"` is `"23"` because joining text is all `+` means for strings. Mixing `int` and
+`float` is fine; the result is a `float`. But a string plus a number fails:
+
+```python
+age = 36
+print("Age: " + age)
+```
+
+```text title="Output (error)"
+Traceback (most recent call last):
+  File "main.py", line 2, in <module>
+    print("Age: " + age)
+          ~~~~~~~~^~~~~
+TypeError: can only concatenate str (not "int") to str
+```
+
+A `TypeError` means "this operation does not work on these types".
+
+## Converting between types
+
+You can convert values with `int()`, `float()` and `str()`:
+
+```python
+age = 36
+print("Age: " + str(age))
+
+text = "19"
+print(int(text) + 1)
+print(float("2.5") * 2)
+print(int(7.9))
+```
+
+```text title="Output"
+Age: 36
+20
+5.0
+7
+```
+
+Two things to notice:
+
+- `int(7.9)` is `7`, not `8`. Converting a float to an int **chops off** the decimal part; it
+  does not round. Use `round(7.9)` if you want `8`.
+- `int("hello")` fails with a `ValueError`, because there is no number in that text to convert.
+
+Conversions matter in data work. Numbers read from a file or a web form arrive as strings,
+like `"19"`, and you must convert them before doing arithmetic.
+
+## Variables are name tags
+
+A helpful picture: a variable is a **name tag** tied to a value, not a box that holds it.
+Assigning `b = a` ties a second tag to the *same* value; it does not copy anything.
+
+```python
+a = 10
+b = a
+a = 20
+print(a, b)
+```
+
+```text title="Output"
+20 10
+```
+
+`a = 20` moved the `a` tag to a new value; `b` is still tied to 10. With numbers and strings
+this picture and the "box" picture give the same answers. With lists (lesson 6) they do not,
+and the name-tag picture is the one that predicts what Python really does.
+
+## Try it
+
+<CodeExercise id="f1-variables-and-types-01" />
+
+<CodeExercise id="f1-variables-and-types-02" />
+
+## Summary
+
+- `name = value` assigns: the right side is worked out first, then the name is attached.
+- `+=` and friends update a variable in place of writing it twice.
+- The core types are `int`, `float`, `str` and `bool`; `type()` reveals them.
+- Mixing a string and a number with `+` is a `TypeError`. Convert with `int()`, `float()` and `str()`;
+  `int()` of a float chops, it does not round.

@@ -1,0 +1,6 @@
+term: "Standard library"
+short: "The collection of modules that ships with Python, usable without installing anything."
+body: |
+  It includes `math`, `random`, `statistics`, `collections`, `json`, `pathlib` and many more. Third-
+  party packages such as NumPy, pandas and PyTorch are not part of it and must be installed.
+related: ["python-module"]

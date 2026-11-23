@@ -1,0 +1,207 @@
+---
+title: Numbers and arithmetic
+module: f1
+order: 3
+estMinutes: 15
+objectives:
+  - "Use the arithmetic operators + - * / // % ** and predict their results"
+  - "Apply Python's order of operations, using parentheses to make intent clear"
+  - "Explain why 0.1 + 0.2 is not exactly 0.3, and compare floats safely"
+goDeeper: python-floating-point
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Machine learning is, at heart, a great deal of arithmetic. Before NumPy does it a million
+numbers at a time, you need to know exactly what Python does with one or two.
+
+## The operators
+
+| Operator | Meaning | Example | Result |
+|---|---|---|---|
+| `+` | add | `7 + 2` | `9` |
+| `-` | subtract | `7 - 2` | `5` |
+| `*` | multiply | `7 * 2` | `14` |
+| `/` | divide | `7 / 2` | `3.5` |
+| `//` | floor division (divide, round down) | `7 // 2` | `3` |
+| `%` | remainder (modulo) | `7 % 2` | `1` |
+| `**` | power | `7 ** 2` | `49` |
+
+Most of these behave as you would expect from school. Three deserve a closer look.
+
+### `/` always gives a float
+
+```python
+print(6 / 3)
+print(type(6 / 3))
+```
+
+```text title="Output"
+2.0
+<class 'float'>
+```
+
+Even when the division comes out even, `/` gives a `float`. If you want a whole-number answer,
+use `//`.
+
+### `//` and `%`: whole parts and leftovers
+
+Floor division `//` tells you how many *whole* times one number fits into another, and `%`
+tells you what is left over. Together they split a quantity into units:
+
+```python
+seconds = 135
+minutes = seconds // 60
+leftover = seconds % 60
+print(minutes, "min", leftover, "s")
+```
+
+```text title="Output"
+2 min 15 s
+```
+
+`%` has a classic use: `n % 2` is `0` for even numbers and `1` for odd ones. You will use the
+same idea to do something "every 10th step" in a training loop, with `step % 10 == 0`.
+
+"Floor" means *round down*, towards negative infinity. For negative numbers that is not the same
+as chopping off the decimal: `-7 // 2` is `-4`, because -3.5 rounded down is -4. You will rarely
+need this, but it explains a surprise if you meet it.
+
+### `**` is power
+
+`2 ** 3` is $2^3 = 8$. Fractional powers give roots: `9 ** 0.5` is the square root of 9.
+
+```python
+print(2 ** 10)
+print(9 ** 0.5)
+print(10 ** -2)
+```
+
+```text title="Output"
+1024
+3.0
+0.01
+```
+
+## Order of operations
+
+Python follows the same precedence rules as maths: powers first, then multiplication and
+division (`*`, `/`, `//`, `%`), then addition and subtraction. Operators at the same level go left
+to right, except `**`, which groups right to left: `2 ** 3 ** 2` is `2 ** 9`, which is 512. Parentheses override everything.
+
+```python
+print(2 + 3 * 4)
+print((2 + 3) * 4)
+print(2 * 3 ** 2)
+print(-3 ** 2)
+```
+
+```text title="Output"
+14
+20
+18
+-9
+```
+
+The last one surprises people. `**` binds more tightly than the minus sign, so `-3 ** 2` means
+`-(3 ** 2)`, which is -9. Write `(-3) ** 2` if you mean 9.
+
+When in doubt, add parentheses. They cost nothing and make your intent obvious to the reader.
+For example, the average of two numbers is `(a + b) / 2`, never `a + b / 2`.
+
+## Integers are exact, floats are approximate
+
+Python integers can be as large as you like and are always exact:
+
+```python
+print(2 ** 100)
+```
+
+```text title="Output"
+1267650600228229401496703205376
+```
+
+Floats are different. A <Term id="floating-point" text="floating-point number" /> is stored in
+binary with a fixed number of digits (about 15 to 17 significant decimal digits). Most decimal
+fractions, like 0.1, cannot be written exactly in binary, just as 1/3 cannot be written exactly
+in decimal. So tiny rounding errors creep in:
+
+```python
+print(0.1 + 0.2)
+print(0.1 + 0.2 == 0.3)
+```
+
+```text title="Output"
+0.30000000000000004
+False
+```
+
+This is not a Python bug; every language that uses standard floats does the same. (`==` checks
+whether two values are equal; lesson 5 covers it.) The practical rule:
+
+**Never test floats for exact equality.** Check that they are close instead:
+
+```python
+import math
+print(abs((0.1 + 0.2) - 0.3) < 1e-9)
+print(math.isclose(0.1 + 0.2, 0.3))
+```
+
+```text title="Output"
+True
+True
+```
+
+`abs()` gives the absolute value (the distance from zero), so `abs(a - b) < 1e-9` asks "are
+a and b within a billionth of each other?". `math.isclose` does the same job for you.
+(`import math` loads Python's maths toolbox; lesson 12 explains `import`.)
+
+This will matter a lot later: neural networks are trained with floats, often with even fewer
+digits than Python's, and checking a computed gradient always means "close enough", never "equal".
+
+### Scientific notation
+
+Floats can be written in scientific notation with `e`: `1e-3` means $1 \times 10^{-3}$, which
+is 0.001. You will see this constantly for small numbers like learning rates.
+
+```python
+learning_rate = 3e-4
+print(learning_rate)
+print(2.5e6)
+```
+
+```text title="Output"
+0.0003
+2500000.0
+```
+
+## Handy built-in functions
+
+```python
+print(abs(-4.5))
+print(round(3.14159, 2))
+print(min(3, 8, 1), max(3, 8, 1))
+```
+
+```text title="Output"
+4.5
+3.14
+1 8
+```
+
+`round(x, 2)` rounds to two decimal places. One quirk: `round` sends exact halves to the
+nearest **even** number, so `round(2.5)` is `2` and `round(3.5)` is `4`. This "banker's
+rounding" avoids a bias upwards when you round lots of numbers.
+
+## Try it
+
+<CodeExercise id="f1-numbers-01" />
+
+<CodeExercise id="f1-numbers-02" />
+
+## Summary
+
+- `/` always gives a float; `//` divides and rounds down; `%` gives the remainder; `**` is power.
+- Precedence: `**`, then `* / // %`, then `+ -`. Use parentheses whenever it helps.
+- Integers are exact. Floats are approximate, so compare them with a tolerance, never with `==`.
+- `1e-3` is scientific notation for 0.001.

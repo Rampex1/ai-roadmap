@@ -1,0 +1,7 @@
+term: "f-string"
+short: "A string literal prefixed with f that inserts the values of expressions written in curly braces."
+body: |
+  `f"loss={loss:.3f}"` puts the value of `loss` into the text, formatted with 3 decimal places. The
+  part after the colon is a format spec: `.2f` for fixed decimals, `.1%` for percentages, `5d` for a
+  padded whole number. f-strings are the usual way to print progress during training.
+related: ["string"]

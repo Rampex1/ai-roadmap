@@ -1,0 +1,7 @@
+term: "Tuple"
+short: "An ordered, immutable sequence, written with parentheses like (3, 4)."
+body: |
+  Tuples group a fixed set of values: a point, a colour, several values returned from a function. They
+  can be unpacked into names with `x, y = point`. Because they are immutable they can be dictionary
+  keys. The shape of a NumPy array is a tuple, such as `(60000, 28, 28)`.
+related: ["list", "mutability"]

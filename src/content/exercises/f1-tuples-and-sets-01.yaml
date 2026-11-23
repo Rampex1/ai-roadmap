@@ -1,0 +1,31 @@
+id: f1-tuples-and-sets-01
+lesson: foundations/f1/tuples-and-sets
+title: Return several values
+prompt: |
+  Write `summary(xs)` that returns a tuple `(smallest, largest, mean)` for a non-empty list of numbers.
+  Then use **unpacking** to set `lo`, `hi` and `avg` from `summary(data)`.
+
+  For the `data` below, `summary(data)` is `(2, 10, 6.0)`.
+starter: |
+  def summary(xs):
+      return None
+
+
+  data = [4, 10, 2, 8, 6]
+  lo = hi = avg = None
+solution: |
+  def summary(xs):
+      return min(xs), max(xs), sum(xs) / len(xs)
+
+
+  data = [4, 10, 2, 8, 6]
+  lo, hi, avg = summary(data)
+tests: |
+  _r = summary([4, 10, 2, 8, 6])
+  assert isinstance(_r, tuple), f"summary should return a tuple, got {type(_r).__name__}"
+  assert _r == (2, 10, 6.0), f"summary([4, 10, 2, 8, 6]) should be (2, 10, 6.0), got {_r!r}"
+  assert summary([5]) == (5, 5, 5.0), f"summary([5]) should be (5, 5, 5.0), got {summary([5])!r}"
+  assert (lo, hi, avg) == (2, 10, 6.0), f"lo, hi, avg should be 2, 10, 6.0; got {lo!r}, {hi!r}, {avg!r}"
+hints:
+  - "`return a, b, c` returns a tuple of three values."
+  - "Unpack with `lo, hi, avg = summary(data)`."

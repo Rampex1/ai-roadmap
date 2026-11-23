@@ -1,0 +1,29 @@
+id: f1-modules-02
+lesson: foundations/f1/modules
+title: Top words with Counter
+prompt: |
+  Use `Counter` from the `collections` module to write `top_words(text, k)`, which returns the
+  `k` most common words in `text` (lowercased, split on spaces) as a list of `(word, count)` tuples,
+  most common first.
+
+  ```python
+  top_words("the cat and the hat and the bat", 2)
+  # [('the', 3), ('and', 2)]
+  ```
+starter: |
+  def top_words(text, k):
+      return []
+solution: |
+  from collections import Counter
+
+
+  def top_words(text, k):
+      return Counter(text.lower().split()).most_common(k)
+tests: |
+  _r = top_words("the cat and the hat and the bat", 2)
+  assert _r == [("the", 3), ("and", 2)], f"Expected [('the', 3), ('and', 2)], got {_r!r}"
+  assert top_words("A a B", 1) == [("a", 2)], "Lowercase the text first, so A and a count as the same word"
+  assert top_words("", 3) == [], "An empty text has no words"
+hints:
+  - "Start with `from collections import Counter`."
+  - "`Counter(words)` counts a list of words, and `.most_common(k)` returns the top k pairs."

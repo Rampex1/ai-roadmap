@@ -1,0 +1,272 @@
+---
+title: Loops
+module: f1
+order: 7
+estMinutes: 20
+objectives:
+  - "Repeat code over a list, a string or a range() with a for loop"
+  - "Use the accumulator pattern to compute totals, counts and maximums"
+  - "Write while loops that stop on a condition, and use break and continue"
+  - "Build new lists in one line with list comprehensions"
+goDeeper: automate-the-boring-stuff
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Computers are good at doing the same thing many times without getting bored. A <Term id="loop" />
+repeats a block of code. Training a neural network is, at its core, one loop: look at some data,
+adjust the model a little, repeat thousands of times.
+
+## for loops
+
+A `for` loop runs its block once for each item in a sequence, with a variable set to that item:
+
+```python
+fruits = ["apple", "banana", "cherry"]
+for fruit in fruits:
+    print("I like", fruit)
+print("done")
+```
+
+```text title="Output"
+I like apple
+I like banana
+I like cherry
+done
+```
+
+Read it as "for each fruit in fruits, do this". The block is marked by indentation, exactly as
+with `if`. The name `fruit` is your choice; pick one that describes a single item.
+
+A `for` loop works over anything you can step through, including a string, one character at a time:
+
+```python
+for ch in "hey":
+    print(ch.upper())
+```
+
+```text title="Output"
+H
+E
+Y
+```
+
+## range: looping a number of times
+
+`range(n)` produces the numbers `0, 1, ..., n-1`. Like slicing, it stops *before* the end value,
+so `range(5)` gives five numbers:
+
+```python
+for i in range(5):
+    print(i, end=" ")
+print()
+print(list(range(2, 6)))
+print(list(range(0, 10, 3)))
+```
+
+```text title="Output"
+0 1 2 3 4 
+[2, 3, 4, 5]
+[0, 3, 6, 9]
+```
+
+- `range(start, stop)` counts from `start` up to but not including `stop`.
+- `range(start, stop, step)` counts in steps of `step`.
+- `print(..., end=" ")` ends with a space instead of a new line, so the output stays on one line.
+- `list(range(...))` turns the range into a list so you can see all of it.
+
+## The accumulator pattern
+
+Most loops you write will follow one shape: start a variable before the loop, update it on each
+pass, and use it after the loop. This is the **accumulator pattern**.
+
+```python
+losses = [0.9, 0.7, 0.4, 0.5, 0.3]
+
+total = 0                 # 1. start before the loop
+for loss in losses:
+    total += loss         # 2. update inside the loop
+mean = total / len(losses)  # 3. use after the loop
+print(f"mean loss {mean:.2f}")
+```
+
+```text title="Output"
+mean loss 0.56
+```
+
+The same shape counts things and finds the best item:
+
+```python
+losses = [0.9, 0.7, 0.4, 0.5, 0.3]
+
+count_below = 0
+best = losses[0]
+for loss in losses:
+    if loss < 0.6:
+        count_below += 1
+    if loss < best:
+        best = loss
+print(count_below, best)
+```
+
+```text title="Output"
+3 0.3
+```
+
+Yes, `sum`, `min` and `max` already exist. But the pattern itself is what matters: when the
+built-ins do not do quite what you need, the accumulator is how you write it yourself.
+
+A very common mistake is to put the starting line *inside* the loop, which resets it on every pass.
+If your total only ever equals the last item, check where `total = 0` is.
+
+## enumerate and zip
+
+Often you need the position as well as the item. `enumerate` gives you both:
+
+```python
+for i, name in enumerate(["Ada", "Alan", "Grace"]):
+    print(i, name)
+```
+
+```text title="Output"
+0 Ada
+1 Alan
+2 Grace
+```
+
+`zip` walks two lists side by side, which is perfect for comparing predictions with true answers:
+
+```python
+predictions = [1, 0, 1, 1]
+labels = [1, 0, 0, 1]
+correct = 0
+for p, y in zip(predictions, labels):
+    if p == y:
+        correct += 1
+print(f"accuracy {correct / len(labels):.0%}")
+```
+
+```text title="Output"
+accuracy 75%
+```
+
+(`for i, name in ...` unpacks a pair into two names at once. Lesson 10 explains how.)
+
+## while loops
+
+A `while` loop repeats *as long as* a condition is true. Use it when you do not know in advance how
+many passes you need:
+
+```python
+x = 100.0
+steps = 0
+while x > 1:
+    x = x / 2
+    steps += 1
+print(steps, x)
+```
+
+```text title="Output"
+7 0.78125
+```
+
+Each pass checks the condition first. After 7 halvings `x` is 0.78125, the condition `x > 1` is
+false, and the loop ends. This "keep improving until good enough" shape is exactly how optimisation
+algorithms decide when to stop.
+
+If the condition never becomes false, the loop runs forever. If your code seems to hang, look for a
+`while` loop whose variable never changes. (The exercise boxes stop any run after 10 seconds.)
+
+## break and continue
+
+- `break` leaves the loop immediately.
+- `continue` skips the rest of this pass and moves to the next item.
+
+```python
+readings = [12, -1, 15, 999, 14]
+for r in readings:
+    if r < 0:
+        continue      # skip bad readings
+    if r == 999:
+        break         # 999 marks the end of the data
+    print(r)
+```
+
+```text title="Output"
+12
+15
+```
+
+## List comprehensions
+
+Building a new list from an old one is so common that Python has a compact syntax for it. This
+loop:
+
+```python
+nums = [1, 2, 3, 4, 5, 6]
+squares = []
+for n in nums:
+    squares.append(n ** 2)
+print(squares)
+```
+
+```text title="Output"
+[1, 4, 9, 16, 25, 36]
+```
+
+can be written as one <Term id="list-comprehension" />:
+
+```python
+nums = [1, 2, 3, 4, 5, 6]
+squares = [n ** 2 for n in nums]
+even_squares = [n ** 2 for n in nums if n % 2 == 0]
+print(squares)
+print(even_squares)
+```
+
+```text title="Output"
+[1, 4, 9, 16, 25, 36]
+[4, 16, 36]
+```
+
+Read `[n ** 2 for n in nums if n % 2 == 0]` as "a list of `n ** 2`, for each `n` in `nums`, keeping
+only those where `n` is even". The `if` part is optional. Comprehensions are everywhere in
+real Python, including ML code. Use them for simple transforms and filters; when the logic needs
+several lines, a normal loop is clearer.
+
+## Nested loops
+
+A loop inside a loop runs the inner loop completely for every pass of the outer one. That is
+how you visit every cell of a grid:
+
+```python
+grid = [[1, 2], [3, 4]]
+total = 0
+for row in grid:
+    for value in row:
+        total += value
+print(total)
+```
+
+```text title="Output"
+10
+```
+
+Nested loops get slow fast: 1000 rows of 1000 values is a million passes. This is one of the
+main reasons NumPy exists, as you will see in lesson 12 and in F2.
+
+## Try it
+
+<CodeExercise id="f1-loops-01" />
+
+<CodeExercise id="f1-loops-02" />
+
+<CodeExercise id="f1-loops-03" />
+
+## Summary
+
+- `for item in sequence:` runs the block once per item. `range(n)` gives `0` to `n-1`.
+- The accumulator pattern: initialise before the loop, update inside, use after.
+- `enumerate` gives index and item; `zip` walks lists side by side.
+- `while condition:` repeats until the condition is false. `break` exits; `continue` skips ahead.
+- `[expr for x in xs if cond]` builds a new list in one line.

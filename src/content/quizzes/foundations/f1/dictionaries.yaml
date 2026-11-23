@@ -1,0 +1,98 @@
+items:
+  - id: f1-dictionaries-01
+    type: output
+    prompt: "What does this print?"
+    code: |
+      d = {"a": 1, "b": 2}
+      d["c"] = 3
+      d["a"] = 10
+      print(d)
+    answer: "{'a': 10, 'b': 2, 'c': 3}"
+    explanation: "Assigning a new key adds it at the end; assigning an existing key replaces its value but keeps its position."
+  - id: f1-dictionaries-02
+    type: mcq
+    prompt: "`d = {\"x\": 1}`. What does `d[\"y\"]` do?"
+    explanation: "Square-bracket lookup of a missing key raises KeyError. Use `d.get(\"y\")` or check `\"y\" in d` first."
+    options:
+      - text: Raises a KeyError
+        correct: true
+        why: The key y does not exist, and square brackets do not have a fallback.
+      - text: Returns None
+        why: That is what d.get("y") does. Square brackets raise an error instead.
+      - text: Returns 0
+        why: Python never invents a value for a missing key; d.get("y", 0) would give 0.
+  - id: f1-dictionaries-03
+    type: output
+    prompt: "What does this print?"
+    code: |
+      d = {"apple": 3, "pear": 5}
+      print("apple" in d, 5 in d, d.get("plum", 0))
+    answer: "True False 0"
+    explanation: "`in` checks keys, not values, so `5 in d` is False. `.get` returns the default 0 for the missing key."
+  - id: f1-dictionaries-04
+    type: output
+    prompt: "What does this print?"
+    code: |
+      counts = {}
+      for ch in "banana":
+          counts[ch] = counts.get(ch, 0) + 1
+      print(counts)
+    answer: "{'b': 1, 'a': 3, 'n': 2}"
+    explanation: "The counting pattern: each character's count starts at 0 the first time it is seen and goes up by 1 each time. Keys appear in order of first appearance."
+  - id: f1-dictionaries-05
+    type: multi
+    prompt: "For which of these jobs is a dictionary a better fit than a list?"
+    explanation: "Dicts shine when you look things up by a key. Lists suit ordered sequences where position matters."
+    options:
+      - text: Looking up a student's grade by their name
+        correct: true
+        why: The name is a natural key for the grade.
+      - text: Mapping each word in a vocabulary to an integer ID
+        correct: true
+        why: A word-to-ID lookup is exactly what dicts are for.
+      - text: Storing temperature readings in the order they were taken
+        why: Order and position matter here, and there is no natural key, so a list fits.
+      - text: Counting how many times each label appears in a dataset
+        correct: true
+        why: Each label is a key and its count is the value.
+  - id: f1-dictionaries-06
+    type: output
+    prompt: "What does this print?"
+    code: |
+      scores = {"Ada": 91, "Alan": 78}
+      for name, s in scores.items():
+          print(name, s >= 80)
+    answer: |
+      Ada True
+      Alan False
+    explanation: "`.items()` gives each key-value pair, which the loop unpacks into `name` and `s`."
+  - id: f1-dictionaries-07
+    type: output
+    prompt: "What does this print?"
+    code: |
+      sq = {n: n * n for n in range(1, 4)}
+      print(sq[3], len(sq))
+    answer: "9 3"
+    explanation: "The comprehension builds {1: 1, 2: 4, 3: 9}: three entries, and key 3 maps to 9."
+  - id: f1-dictionaries-08
+    type: mcq
+    prompt: "Why can a list not be used as a dictionary key?"
+    explanation: "Keys must be immutable so that a stored key can never change and become impossible to find. Lists are mutable."
+    options:
+      - text: Lists can change, and keys must be values that cannot change
+        correct: true
+        why: Strings, numbers and tuples are immutable and work as keys.
+      - text: Dictionary keys must be strings
+        why: Numbers and tuples work as keys too.
+      - text: Lists are too long to be keys
+        why: Length has nothing to do with it; even an empty list cannot be a key.
+  - id: f1-dictionaries-09
+    type: cloze
+    prompt: "To loop over both keys and values of a dict `d`, write `for k, v in d.____():`."
+    explanation: "`.items()` yields (key, value) pairs."
+    accept: ["items"]
+  - id: f1-dictionaries-10
+    type: numeric
+    prompt: "`stock = {\"a\": 2, \"b\": 7, \"c\": 1}`. After `stock[\"b\"] -= 3` and `del stock[\"c\"]`, what is `sum(stock.values())`?"
+    explanation: "b becomes 4 and c is removed, leaving a: 2 and b: 4, which sum to 6."
+    answer: 6
