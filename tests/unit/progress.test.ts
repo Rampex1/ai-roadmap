@@ -366,3 +366,24 @@ describe('progress review fixes', () => {
     expect(store.update((s) => markLessonDone(s, 'a', NOW)).ok).toBe(false);
   });
 });
+
+describe('final review fixes', () => {
+  it('import never takes away mastery or a passed exercise', () => {
+    const current = emptyState();
+    current.mastery.f0 = { best: 0.9, mastered: true, attempts: 2, lastItems: [], updatedAt: ago(5) };
+    current.exercises.e = { passed: true, updatedAt: ago(5) };
+    const incoming = emptyState();
+    incoming.mastery.f0 = { best: 0.5, mastered: false, attempts: 1, lastItems: ['x'], updatedAt: ago(1) };
+    incoming.exercises.e = { passed: false, updatedAt: ago(1) };
+    const m = mergeImport(current, incoming);
+    expect(m.mastery.f0).toMatchObject({ mastered: true, best: 0.9, attempts: 2, lastItems: ['x'] });
+    expect(m.exercises.e.passed).toBe(true);
+  });
+  it('keeps a copy of newer-schema data before it can be replaced', () => {
+    const storage = memStorage();
+    const raw = JSON.stringify({ schemaVersion: 2, lessons: {} });
+    storage.setItem(STORAGE_KEY, raw);
+    load(storage, NOW);
+    expect([...storage.data.entries()].some(([k, v]) => k.startsWith('airoadmap:corrupt:') && v === raw)).toBe(true);
+  });
+});
