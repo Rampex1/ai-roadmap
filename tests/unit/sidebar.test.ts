@@ -25,3 +25,15 @@ describe('filterSidebar', () => {
     expect(filterSidebar(sidebar, '/roadmap/')).toHaveLength(2);
   });
 });
+
+describe('filterSidebar fallback and flattenLinks', () => {
+  it('keeps the full sidebar for a course with no lessons yet', async () => {
+    const sidebar = [group('Foundations', '/foundations/f0/welcome/')];
+    expect(filterSidebar(sidebar, '/mle/a1/')).toHaveLength(1);
+  });
+  it('flattens nested links in order', async () => {
+    const { flattenLinks } = await import('@/lib/sidebar');
+    const nested = [{ type: 'group', label: 'G', entries: [{ type: 'link', href: '/a/' }, { type: 'group', label: 'H', entries: [{ type: 'link', href: '/b/' }] }] }];
+    expect(flattenLinks(nested).map((l: any) => l.href)).toEqual(['/a/', '/b/']);
+  });
+});
