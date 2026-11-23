@@ -1,0 +1,7 @@
+term: Spaced repetition
+short: Reviewing material at growing intervals, timed for just before you would forget it.
+body: |
+  Memories fade along a forgetting curve; each well-timed review makes the next fade slower, so intervals can grow from days to weeks to months.
+  This site schedules reviews with **FSRS**, an open-source algorithm that estimates, for each question,
+  how likely you are to still remember it and brings it back when that chance drops to about 90%.
+related: [retrieval-practice, mastery-check]

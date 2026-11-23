@@ -1,0 +1,6 @@
+term: Version control
+short: A system that records snapshots of your files over time so you can see what changed and go back.
+body: |
+  Instead of `essay-final-v2-REAL.docx`, you keep one set of files and a history of named snapshots.
+  **Git** is by far the most used version control system; GitHub is a website that hosts git repositories online.
+related: [repository, git-commit]

@@ -1,0 +1,6 @@
+term: Repository
+short: A project folder whose history git tracks, stored in a hidden .git folder inside it.
+body: |
+  `git init` turns an ordinary folder into a repository (often shortened to "repo").
+  A copy of the repository can also live on a server such as GitHub, called a remote; `git push` sends your commits there.
+related: [version-control, git-commit]

@@ -1,0 +1,5 @@
+title: "uv documentation (Astral)"
+url: https://docs.astral.sh/uv/
+kind: tool
+free: true
+modules: [f0]

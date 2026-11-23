@@ -1,0 +1,7 @@
+term: Package manager
+short: A tool that downloads, installs and updates software libraries for you.
+body: |
+  In this course the package manager is **uv**. It installs Python itself, creates virtual environments,
+  and adds libraries such as NumPy with one command (`uv add numpy`).
+  Other Python package managers you may meet are pip, conda and Poetry.
+related: [dependency, virtual-environment]

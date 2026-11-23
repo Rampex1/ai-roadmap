@@ -1,0 +1,66 @@
+id: f0-terminal-cd
+lesson: foundations/f0/terminal
+title: Where does cd take you?
+prompt: |
+  Complete `cd(cwd, target)`. `cwd` is the absolute path you are in now, such as `"/Users/ada/Documents"`,
+  and `target` is what you would type after `cd`. Return the absolute path you end up in.
+  Assume every folder exists and the home folder is `"/Users/ada"`. Rules:
+
+  - a target starting with `/` is absolute; `~` means the home folder; anything else starts from `cwd`;
+  - `.` means "stay here" and `..` means "go up one level" (going up from `/` stays at `/`).
+
+  For example, `cd("/Users/ada/Documents", "../Downloads")` returns `"/Users/ada/Downloads"`.
+  The path parts are already split for you; you only need to fill in the loop.
+starter: |
+  HOME = "/Users/ada"
+
+  def cd(cwd, target):
+      if target.startswith("/"):
+          start = "/"
+      elif target == "~" or target.startswith("~/"):
+          start = HOME
+          target = target[1:]
+      else:
+          start = cwd
+      parts = [p for p in start.split("/") if p]   # e.g. ["Users", "ada"]
+      for step in target.split("/"):
+          # Fill this in: skip "" and ".", pop the last part for "..", otherwise append step.
+          pass
+      return "/" + "/".join(parts)
+solution: |
+  HOME = "/Users/ada"
+
+  def cd(cwd, target):
+      if target.startswith("/"):
+          start = "/"
+      elif target == "~" or target.startswith("~/"):
+          start = HOME
+          target = target[1:]
+      else:
+          start = cwd
+      parts = [p for p in start.split("/") if p]
+      for step in target.split("/"):
+          if step == "" or step == ".":
+              continue
+          if step == "..":
+              if parts:
+                  parts.pop()
+          else:
+              parts.append(step)
+      return "/" + "/".join(parts)
+tests: |
+  def check(cwd, target, want):
+      got = cd(cwd, target)
+      assert got == want, f"cd({cwd!r}, {target!r}) should be {want!r}, got {got!r}"
+  check("/Users/ada", "Documents", "/Users/ada/Documents")
+  check("/Users/ada/Documents", "..", "/Users/ada")
+  check("/Users/ada/Documents", "../Downloads", "/Users/ada/Downloads")
+  check("/Users/ada/Documents", "../Downloads/../Desktop", "/Users/ada/Desktop")
+  check("/Users/ada/Documents", "/tmp", "/tmp")
+  check("/tmp", "~", "/Users/ada")
+  check("/tmp", "~/ai-course", "/Users/ada/ai-course")
+  check("/Users/ada", "./ai-course/.", "/Users/ada/ai-course")
+  check("/", "..", "/")
+hints:
+  - "Inside the loop, compare `step` with `if step == \"..\":`. `parts.pop()` removes the last folder and `parts.append(step)` adds one."
+  - "Skip empty steps and `\".\"` with `continue`. Only pop when `parts` is not empty, so `..` at `/` stays at `/`."

@@ -1,0 +1,260 @@
+---
+title: Installing Python with uv
+module: f0
+order: 4
+estMinutes: 20
+objectives:
+  - "Install uv and a recent Python on a Mac"
+  - "Create a project, add libraries with uv add, and run a script with uv run"
+  - "Explain in plain words what a virtual environment is and why each project gets one"
+goDeeper: uv-docs
+---
+import Term from '@/components/Term.astro';
+
+Lesson exercises run Python inside your browser, so you can do F1 with nothing installed. From this module's homework on,
+homework uses real Python on your own computer (or on Colab, next lesson). This lesson sets that up with **uv**, a fast, free tool
+that installs Python, keeps each project's libraries separate, and runs your code, all with a handful of commands.
+
+## Three words first
+
+- **Python** is a programming language, and also the program (the *interpreter*) that reads `.py` files and runs them.
+- A **library** (or *package*) is code someone else wrote that you can reuse, such as **NumPy** for fast maths on arrays
+  of numbers or **matplotlib** for plots. Libraries your project needs are its <Term id="dependency" text="dependencies" />.
+- A <Term id="package-manager" /> downloads and installs Python and libraries for you. Ours is **uv**.
+
+:::note[Why not the Python that comes with the Mac?]
+macOS may already have a `python3` command, provided by Apple's developer tools. Leave it alone: it is there for Apple's
+tools, its version is chosen by Apple, and installing libraries into it can cause confusing problems.
+uv installs its own Python, separately, and never touches Apple's.
+:::
+
+## Step 1: install uv
+
+Open Terminal and paste this command from the official uv documentation:
+
+```zsh
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Read it once before running it: `curl` downloads the installer script from astral.sh, and `| sh` runs it. Piping a
+script into `sh` means "run whatever this website sends", so only do it with sources you trust, such as a tool's official
+docs. (If you already use Homebrew, `brew install uv` works too.)
+
+The installer puts `uv` in a folder in your home directory and adds that folder to your shell's search path, the list of
+folders zsh looks in for commands. The search path is only read when a shell starts, so **close the Terminal window
+and open a new one**. Then check:
+
+```zsh
+uv --version
+```
+
+```text
+uv 0.9.12 (…)
+```
+
+Your version number will be different; any recent version is fine.
+
+:::caution[zsh: command not found: uv]
+The shell can't find uv yet. First, open a brand new Terminal window. If that doesn't help, read the last lines the
+installer printed: they show the exact command to add uv to your path (for zsh it is usually
+`source $HOME/.local/bin/env`).
+:::
+
+## Step 2: install Python
+
+```zsh
+uv python install 3.13
+```
+
+```text
+Installed Python 3.13.9 in 2.41s
+ + cpython-3.13.9-macos-aarch64-none
+```
+
+We pin version **3.13** for this course because every library we use supports it. (A plain `uv python install`
+gets the newest version, which libraries sometimes lag behind.) The last number, here 9, is a bug-fix release and
+will probably be higher for you. `aarch64` means an Apple Silicon (M-series)
+Mac; on an older Intel Mac you will see `x86_64` instead. Check it works:
+
+```zsh
+uv run --python 3.13 python --version
+```
+
+```text
+Python 3.13.9
+```
+
+You can also talk to Python directly. Start an interactive session (a *REPL*: read, evaluate, print, loop):
+
+```zsh
+uv run --python 3.13 python
+```
+
+```text
+Python 3.13.9 (main, …) [Clang …] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+>>>
+```
+
+The `>>>` is Python's prompt (not zsh's). Type `2 + 3` and press Return; Python prints `5`. Leave with `exit()`
+or **Ctrl + D**.
+
+## Step 3: a project with its own environment
+
+### The problem virtual environments solve
+
+Imagine two projects. An old one needs version 1 of a library; a new one needs version 2. If both share one Python with
+one set of libraries, upgrading for the new project breaks the old one. Now imagine ten projects.
+
+The fix is a <Term id="virtual-environment" />: a private folder, inside each project, holding that project's Python and
+libraries. Projects can't break each other because they don't share anything. uv creates this folder for you, named
+`.venv` (the dot makes it hidden), and uses it automatically. You never need to "activate" it if you run things with
+`uv run`.
+
+### Create the project
+
+Go to the course folder you made in the terminal lesson (or make it now with `mkdir ~/ai-course`) and turn it into
+a uv project:
+
+```zsh
+cd ~/ai-course
+uv init --python 3.13
+```
+
+```text
+Initialized project `ai-course`
+```
+
+uv creates a few files. The important one is **`pyproject.toml`**, the project's description: its name, the Python
+version it needs, and its dependencies. Depending on your uv version you may also see a `README.md`, a
+`.python-version` file, and some starter code; you can leave those alone. uv also starts a git repository here, which
+you will learn about in the git lesson.
+
+### Add libraries
+
+```zsh
+uv add numpy matplotlib
+```
+
+```text
+Using CPython 3.13.9
+Creating virtual environment at: .venv
+Resolved 12 packages in 1.10s
+Installed 11 packages in 95ms
+ + matplotlib==3.10.7
+ + numpy==2.3.5
+ …
+```
+
+The exact numbers and versions will differ. Three things just happened:
+
+1. uv created the virtual environment `.venv`.
+2. It installed NumPy and matplotlib, plus the libraries *they* depend on, into `.venv`.
+3. It recorded them: `pyproject.toml` now lists them, and a new file **`uv.lock`** records the exact version of every
+   package installed. With those two files, anyone (including future you, on a new laptop) can rebuild an identical
+   environment with one command, `uv sync`.
+
+Peek at the dependency list:
+
+```zsh
+cat pyproject.toml
+```
+
+```text
+[project]
+name = "ai-course"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "matplotlib>=3.10.7",
+    "numpy>=2.3.5",
+]
+…
+```
+
+### Write and run a script
+
+Open a simple text editor in the terminal, `nano`, to create a file called `stats.py`:
+
+```zsh
+nano stats.py
+```
+
+Type these three lines:
+
+```python
+import numpy as np
+heights = np.array([150, 160, 170, 180])
+print("mean height:", heights.mean())
+```
+
+Save with **Ctrl + O** then **Return**, and exit with **Ctrl + X**. Now run it:
+
+```zsh
+uv run stats.py
+```
+
+```text
+mean height: 165.0
+```
+
+`uv run` makes sure the environment matches `pyproject.toml` (installing anything missing), then runs your script with
+the project's Python and libraries. **Use `uv run` for everything in a project** and you never need to think about which
+Python you are using.
+
+:::tip[A real code editor]
+`nano` is fine for a few lines. For anything longer, a free code editor such as Visual Studio Code is much nicer:
+colours, line numbers, and it can open the whole `ai-course` folder. You don't need one until F2.
+:::
+
+### Worked example: why `uv run` matters
+
+What if you skip uv and run the script with whatever `python3` macOS finds?
+
+```zsh
+python3 stats.py
+```
+
+You will probably see one of two things: macOS offers to install its developer tools, or Python says
+
+```text
+ModuleNotFoundError: No module named 'numpy'
+```
+
+The second is the virtual environment doing its job: NumPy was installed into this project's `.venv`, not into
+Apple's Python. Running `uv run stats.py` instead works because it uses the project's environment.
+
+## If something breaks
+
+`.venv` is disposable. If an environment ever gets into a strange state, delete it and let uv rebuild it from
+`pyproject.toml` and `uv.lock`:
+
+```zsh
+rm -r .venv
+uv sync
+```
+
+Never put your own files inside `.venv`, and don't edit it by hand.
+
+## Cheat sheet
+
+| You want to… | Command |
+|---|---|
+| Install a Python version | `uv python install 3.13` |
+| See installed and available Pythons | `uv python list` |
+| Start a project in the current folder | `uv init --python 3.13` |
+| Add a library to the project | `uv add numpy` |
+| Remove a library | `uv remove numpy` |
+| Run a script with the project's environment | `uv run stats.py` |
+| Rebuild the environment from the lockfile | `uv sync` |
+| Update uv itself (if installed with the script) | `uv self update` |
+
+## Summary
+
+- uv installs Python (`uv python install 3.13`) separately from Apple's, and manages libraries for you.
+- A project is a folder with a `pyproject.toml`; `uv add` records a dependency and installs it into the project's
+  own `.venv`; `uv.lock` pins exact versions.
+- A virtual environment keeps each project's libraries private, so projects can't break each other.
+- Run code with `uv run`, and you always get the right Python and libraries.

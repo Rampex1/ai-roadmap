@@ -1,0 +1,177 @@
+---
+title: "Notebooks: Jupyter and Colab"
+module: f0
+order: 5
+estMinutes: 20
+objectives:
+  - "Start JupyterLab from a uv project and run code and Markdown cells"
+  - "Explain how the kernel remembers variables, and why running cells out of order causes bugs"
+  - "Open a notebook in Google Colab, switch on a free GPU, and save your work to Google Drive"
+goDeeper: jupyter-docs
+---
+import Term from '@/components/Term.astro';
+
+A script runs from top to bottom and prints its output. A <Term id="jupyter-notebook" /> lets you run code **one piece
+at a time** and see each result, including tables and plots, right under the code that made it, with your notes
+in between. That makes notebooks the standard tool for exploring data and the format of every homework in this course.
+
+You can run notebooks in two places: **JupyterLab** on your own Mac, and **Google Colab** in the cloud. Both open the
+same `.ipynb` files.
+
+## Cells and the kernel
+
+A notebook is a list of **cells**. There are two main kinds:
+
+- **Code cells** hold Python. Running one executes it and shows its output below.
+- **Markdown cells** hold formatted text: headings, lists, links and maths such as `$x^2$`.
+
+Behind the page sits the <Term id="jupyter-kernel" text="kernel" />: a running Python process that executes your cells and
+**remembers every variable** they create. Next to each code cell, a number such as `[3]` shows the order in which cells
+were run: `[3]` means "the third cell executed in this session". `[*]` means "running now".
+
+### Worked example: the out-of-order trap
+
+The kernel remembers what you *ran*, not what you can *see*. Suppose a notebook has these cells:
+
+```python
+# Cell A
+price = 10
+```
+
+```python
+# Cell B
+total = price * 3
+print(total)
+```
+
+You run A, then B, and B prints `30`. Then you edit cell A to `price = 12` but **don't run it**, and rerun B.
+It still prints `30`: the kernel still holds `price = 10`. Worse, if you later *delete* cell A, B keeps working, until
+someone else opens the notebook and runs it from the top, where `price` no longer exists:
+
+```text
+NameError: name 'price' is not defined
+```
+
+The cure is a habit: **before you trust or share a notebook, restart the kernel and run every cell from the top**.
+In JupyterLab that is **Kernel → Restart Kernel and Run All Cells…**; in Colab, **Runtime → Restart session and run all**
+(menu names occasionally change slightly; look for "restart" and "run all").
+
+## JupyterLab on your Mac
+
+You already have a uv project from the last lesson. Start JupyterLab inside it:
+
+```zsh
+cd ~/ai-course
+uv run --with jupyter jupyter lab
+```
+
+The first start takes a moment while uv fetches Jupyter. Then your browser opens a page at an address like
+`http://localhost:8888/lab`. `--with jupyter` adds Jupyter just for this command, **without** adding it to your
+project's dependencies, while the notebook can still import everything the project has, such as NumPy.
+
+:::caution[Keep the Terminal window open]
+The terminal is running the Jupyter server; the browser tab is only its window. Closing the terminal stops Jupyter and
+any notebook running in it. When you are done, save your notebooks, go back to the terminal, and press **Ctrl + C**
+(press it twice if Jupyter asks you to confirm).
+:::
+
+In the **Launcher** tab, click the **Python 3** tile under *Notebook*. A new `Untitled.ipynb` appears in the file list
+on the left; rename it by right-clicking it. In the first cell, type:
+
+```python
+import numpy as np
+x = np.arange(5)
+x * 2
+```
+
+Press **Shift + Enter** to run the cell and move to the next one. You see:
+
+```text
+array([0, 2, 4, 6, 8])
+```
+
+Notice there was no `print`: a notebook automatically shows the value of a cell's **last line**.
+
+### Keyboard shortcuts worth learning
+
+Jupyter has two modes. In **edit mode** (cursor in a cell) you type code. Press **Esc** for **command mode**, where single
+keys act on whole cells:
+
+| Keys | Action |
+|---|---|
+| Shift + Enter | Run cell, move to the next |
+| Esc, then A / B | Insert a cell above / below |
+| Esc, then M / Y | Turn cell into Markdown / code |
+| Esc, then D, D | Delete cell |
+| Enter | Back to edit mode |
+
+## Google Colab
+
+[Colab](https://colab.research.google.com) is a free Google service that runs notebooks on Google's computers. You need a
+Google account and nothing else installed. Two reasons we use it:
+
+1. **A free <Term id="gpu" text="GPU" />.** Training is far faster on a powerful GPU with lots of memory; an 8 GB Mac
+   can't train large networks well. From F9 on, every notebook that trains a network runs on Colab.
+2. **No setup.** NumPy, pandas, matplotlib and PyTorch are already installed.
+
+### Your first Colab notebook
+
+1. Go to colab.research.google.com and sign in.
+2. Choose **File → New notebook in Drive**.
+3. Type `print("hello from the cloud")` in the cell and press **Shift + Enter**. The first run takes a few seconds
+   while Colab connects you to a machine (a *runtime*).
+
+The notebook is saved in your Google Drive, in a folder called **Colab Notebooks**. To open a homework notebook from this
+site, download the `.ipynb` file and use **File → Upload notebook**.
+
+### Turning on a GPU
+
+Choose **Runtime → Change runtime type**, pick a GPU (on the free tier this is usually a **T4 GPU**), and save. Check that
+it worked with a shell command; in a notebook, a line starting with `!` runs in the shell instead of Python:
+
+```python
+!nvidia-smi
+```
+
+This prints a table describing the GPU. If it says the command was not found or no GPU is available, the runtime is
+CPU-only. Only switch the GPU on when a notebook needs it: free GPU time is limited.
+
+### The rules of the free tier
+
+Colab's own FAQ is clear that free resources are **not guaranteed and not unlimited**:
+
+- Which GPUs are offered, and how much you get, changes over time and depends on demand and on your recent usage.
+- A session can last at most about **12 hours**, and **idle** sessions are disconnected much sooner.
+- When a runtime is recycled, its machine is deleted, along with **any file you created or uploaded on it**.
+  The notebook itself is safe in Drive, but its variables and outputs need re-running.
+
+So: save important results (a trained model, a CSV) to Google Drive, which survives. This mounts your Drive as a folder:
+
+```python
+from google.colab import drive
+drive.mount('/content/drive')
+```
+
+Colab asks for permission, then your files appear under `/content/drive/MyDrive/`.
+
+:::tip[Installing a package on Colab]
+If a library is missing, run `%pip install some-package` in a cell. It lasts only for the current runtime, so put the
+install cell at the top of the notebook.
+:::
+
+## Which one when?
+
+| Situation | Use |
+|---|---|
+| Homework in F2–F8, data exploration, anything small | JupyterLab on your Mac (works offline) |
+| Training neural networks (F9 onwards), large models | Colab with a GPU |
+| Working away from your own computer | Colab |
+| Private data you shouldn't upload | Your Mac |
+
+## Summary
+
+- A notebook is a list of code and Markdown cells. Shift + Enter runs a cell; the last line's value is shown.
+- The kernel remembers what you ran, in the order you ran it. Restart and run all before trusting a notebook.
+- Locally: `uv run --with jupyter jupyter lab` inside your project; keep the terminal open; Ctrl + C to stop.
+- Colab: free, nothing to install, optional GPU via Runtime → Change runtime type. Sessions are temporary, so save
+  results to Drive.

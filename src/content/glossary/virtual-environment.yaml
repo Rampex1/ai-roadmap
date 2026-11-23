@@ -1,0 +1,7 @@
+term: Virtual environment
+short: A private folder holding one project's Python and libraries, kept separate from every other project.
+body: |
+  Without one, every project shares the same libraries, and upgrading a library for one project can break another.
+  uv creates a virtual environment in a hidden `.venv` folder inside each project and uses it automatically when you type `uv run`.
+  Deleting `.venv` is safe: uv rebuilds it from `pyproject.toml` and `uv.lock`.
+related: [dependency, package-manager]

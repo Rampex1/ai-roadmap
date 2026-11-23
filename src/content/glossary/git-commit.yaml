@@ -1,0 +1,7 @@
+term: Commit (git)
+short: A saved snapshot of your project in git, with a message saying what changed and why.
+body: |
+  You choose what goes into a commit with `git add` (this is called staging), then save the snapshot with `git commit -m "message"`.
+  Each commit has an id (a long hexadecimal hash such as `3f2a9c1…`), an author, a date and a pointer to the previous commit,
+  so together they form the project's history, shown by `git log`.
+related: [repository, version-control]

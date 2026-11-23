@@ -1,0 +1,5 @@
+title: "Project Jupyter documentation"
+url: https://docs.jupyter.org/en/latest/
+kind: tool
+free: true
+modules: [f0]

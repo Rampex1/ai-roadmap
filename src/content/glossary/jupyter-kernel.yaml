@@ -1,0 +1,7 @@
+term: Kernel (Jupyter)
+short: The running Python process behind a notebook that executes cells and remembers their variables.
+body: |
+  Variables live in the kernel, not in the page, so the order you run cells in matters more than the order they appear.
+  **Restart kernel** wipes that memory. Restarting and then running every cell from top to bottom
+  is the standard way to check a notebook really works.
+related: [jupyter-notebook]

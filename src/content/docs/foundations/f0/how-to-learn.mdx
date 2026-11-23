@@ -1,0 +1,167 @@
+---
+title: How to learn here
+module: f0
+order: 2
+estMinutes: 15
+objectives:
+  - "Explain why retrieval practice, spacing and interleaving beat rereading"
+  - "Describe how quizzes, review sessions and mastery checks work on this site"
+  - "Plan a sustainable weekly study routine"
+  - "Use the optional AI tutor in a way that helps you learn rather than skip the learning"
+goDeeper: augmenting-long-term-memory
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Getting to mastery in AI takes hundreds of hours. How you spend those hours matters as much as how many you spend.
+This lesson covers the few study habits that research supports most strongly, and shows how this site builds them in,
+so you can trust the system and spend your effort where it counts.
+
+## Three ideas from learning science
+
+### 1. Retrieval practice: test yourself, don't reread
+
+The most natural way to study is to reread your notes until they feel familiar. It is also one of the least effective.
+Familiarity is a trap: the page *looks* known, so it feels learned, but you have not practised the thing you will actually
+need to do later, which is pulling the idea out of your own head.
+
+<Term id="retrieval-practice" /> means answering questions from memory. Each time you successfully recall something,
+the memory gets stronger, and even a *failed* attempt followed by the correct answer helps more than rereading.
+Psychologists call this the testing effect, and it has been replicated many times.
+
+That is why every lesson here ends with a quiz, and why the quiz tells you to answer from memory first.
+Scrolling back up to find the answer turns a memory workout into a reading exercise.
+
+:::tip[A two-second rule]
+Before you click an option, say your answer to yourself, or write it down. Committing to an answer, even a wrong one,
+is what makes the feedback stick.
+:::
+
+### 2. Spacing: review just before you forget
+
+You forget most new facts within days. This decay is called the forgetting curve. The good news is that each review,
+if it comes at the right moment, makes the next decline slower. So the gaps between reviews can grow: a day, then a few
+days, then weeks, then months.
+
+That is <Term id="spaced-repetition" />. Doing your reviews in spaced sessions beats cramming the same amount into one
+session, even though cramming feels more productive at the time.
+
+### 3. Interleaving: mix it up
+
+If you practise ten questions on topic A and then ten on topic B, each question tells you in advance which idea to use.
+Mix A, B and C together and you must first work out *which* idea a question needs, which is exactly the skill a real problem
+demands. This is <Term id="interleaving" />. It feels harder, and it usually works better.
+
+:::note[Desirable difficulty]
+All three techniques feel harder than rereading. That effort is the point: researchers call it a *desirable difficulty*.
+If studying feels easy, check that you are actually retrieving, not just recognising.
+:::
+
+## How this site uses them
+
+### Lesson quizzes
+
+Each lesson has a pool of at least eight questions. Every time you load the page you see **five, picked at random**,
+so a second visit gives you a partly new set. Question types include multiple choice, "select all that apply",
+numbers, "what does this code print?", putting steps in order, and fill-in-the-blank.
+
+After you answer, you see why each option is right or wrong. Read the explanation even when you were right:
+sometimes you were right for the wrong reason.
+
+### Review: your daily spaced practice
+
+The first time you answer a question, the site creates a review card for it. From then on the **Review** page
+(in the top bar) shows the cards that are due today: up to 50 per session, mixed across modules.
+
+The schedule comes from **FSRS** (Free Spaced Repetition Scheduler), an open-source algorithm. In plain words, for every
+card FSRS keeps track of:
+
+- **Retrievability**: its estimate of the chance you could recall the answer *right now*. This drops as time passes.
+- **Stability**: how slowly that chance drops. Precisely, it is the number of days it takes to fall from 100% to 90%.
+  Each successful review raises stability, so the card comes back less often.
+- **Difficulty**: how hard this particular card is for you, which controls how much stability grows after each review.
+
+FSRS schedules the next review for roughly when your chance of remembering falls to **90%**. Two rules on this site
+keep the data honest:
+
+- **Right means Good, wrong means Again.** There is no "hard" or "easy" button. A wrong answer brings the card back soon.
+- **Only your first answer to a question each day counts.** You can retry for practice, but the schedule only uses the
+  first attempt. Otherwise you could "pass" a card just by remembering what you clicked a minute ago.
+
+Exercises (the code boxes) are *not* review cards. Only quiz questions are.
+
+### Mastery checks and testing out
+
+Each module ends with a <Term id="mastery-check" />: **12 questions** drawn from all of the module's lessons, interleaved,
+and chosen to favour the questions you are weakest on. Score **80% or more** and the module is marked mastered.
+If you score less, the result lists the lessons to revisit. A retake avoids the questions from your previous attempt
+where it can, so you can't pass by memorising one set.
+
+Already know a topic? The module page lets you take the same check **before** the lessons. That is called **testing out**.
+Pass it and you can skip ahead with a clear conscience. Either way, your answers feed your review cards.
+
+### Your progress lives in this browser
+
+There are no accounts. Your progress is saved in this browser on this computer, so:
+
+- clearing your browser's site data, or switching browsers, starts you from zero;
+- **Settings** has an **Export progress** button that downloads a backup file. Export once a week (the dashboard reminds
+  you), and use **Import** to restore it.
+
+## A study routine you can keep
+
+Consistency beats intensity. Four 45-minute sessions a week, every week, will take you further than one exhausting
+weekend a month. Here is a pattern that works for most people:
+
+1. **Review first (5–15 minutes).** Open Review and clear what is due. Starting with review warms up your memory and keeps
+   the pile from growing.
+2. **One new lesson (15–30 minutes).** Read actively: run every command, try every exercise *before* opening a hint,
+   then take the quiz from memory.
+3. **Stop while you still have energy.** Note where you will start next time.
+
+A useful rule for the week: **do not skip review two days in a row.** Missing one day is fine; FSRS adapts. But reviews pile
+up, and a pile of 200 cards is how people quit.
+
+### Worked example: how long will Foundations take?
+
+Suppose you study 5 days a week for 45 minutes a day. That is 5 × 45 = 225 minutes, or 3.75 hours a week.
+Foundations has roughly 90 lessons. If each lesson, with its quiz and exercises, takes about 25 minutes, plus a share of
+homework and review, budget about 40 minutes per lesson in total: 90 × 40 = 3,600 minutes, which is 60 hours.
+At 3.75 hours a week that is 60 ÷ 3.75 = **16 weeks**, about four months. Slower is fine. Steady matters more than fast.
+
+### Try it: a toy review scheduler
+
+FSRS is too complex to write in a few lines, but the core idea of spacing is not. Here is a much simpler rule, close to
+the classic Leitner box system: **after a correct answer, double the gap; after a wrong answer, go back to 1 day.**
+Write it in Python. You don't need to know Python yet: read the hints, and treat this as a puzzle.
+
+<CodeExercise id="f0-how-to-learn-interval" />
+
+Notice what the rule does: a card you keep getting right quickly moves out to weeks and months, while a card you miss
+stays close. FSRS does the same thing, but tunes the gaps to each card and to your own memory.
+
+## Using the AI tutor well
+
+Every lesson has an **Ask the tutor** button, and quiz feedback and code errors have an **Explain this with the tutor**
+button. The tutor is **optional and off by default**; you connect it in **Settings** to a free model, either online
+(for example OpenRouter's free models) or running on your own Mac (Ollama). Nothing else on the site needs it.
+
+The tutor already knows which lesson you are on and is told to give hints before full solutions. To learn from it rather
+than outsource your thinking:
+
+- **Try first.** Ask after you have made an attempt, and say what you tried: "I expected 5 but got 4.5 because…".
+- **Ask for a hint, not the answer.** "Give me one hint" keeps the retrieval work with you.
+- **Explain it back.** After an explanation, close the drawer and explain the idea in your own words, or ask the tutor
+  to quiz you on it.
+- **Stay sceptical.** Language models can be confidently wrong, and small free models more so. If the tutor disagrees
+  with the lesson, check the lesson's Go deeper source.
+- **Mind your privacy.** Some free tiers let the provider use your prompts (the Settings page says which). Never paste
+  passwords or API keys into a chat.
+
+## Summary
+
+- Retrieval, spacing and interleaving are effortful, and that effort is what makes learning last.
+- Lesson quizzes show 5 random questions from a pool; answering creates review cards that FSRS schedules for when your
+  recall would drop to about 90%.
+- Mastery checks are 12 mixed questions with an 80% pass mark; taken before the lessons, the same check lets you test out.
+- Back up your progress from Settings, and study little and often: review first, then one new lesson.

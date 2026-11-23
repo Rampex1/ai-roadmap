@@ -1,0 +1,7 @@
+term: GPU
+short: A graphics processor; a chip that does thousands of simple calculations at once, which makes neural network training much faster.
+body: |
+  Training a neural network is mostly multiplying large tables of numbers, a job GPUs do far faster than a normal CPU.
+  Google Colab lends free GPUs for limited sessions; availability is not guaranteed.
+  In this course anything that needs a GPU runs on Colab, so an 8 GB laptop is enough.
+related: [jupyter-notebook]

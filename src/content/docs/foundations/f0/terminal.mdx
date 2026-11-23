@@ -1,0 +1,253 @@
+---
+title: Terminal basics
+module: f0
+order: 3
+estMinutes: 20
+objectives:
+  - "Open the Terminal on a Mac and read a command and its output"
+  - "Navigate folders with pwd, ls and cd using absolute and relative paths"
+  - "Create, copy, move and delete files and folders safely"
+  - "Use Tab completion, command history and Ctrl+C"
+goDeeper: missing-semester
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Almost every AI tool you will use, from installing Python to training a model on a server, is driven by typed
+commands. The <Term id="terminal" /> looks intimidating at first, but you only need about a dozen commands to be
+comfortable, and they are the same ones professionals use every day.
+
+## Opening the Terminal
+
+1. Press **Cmd + Space** to open Spotlight.
+2. Type **Terminal** and press **Return**.
+
+A window opens with a line that looks something like this:
+
+```text
+ada@MacBook-Air ~ %
+```
+
+This is the **prompt**. It tells you the user name (`ada`), the computer name, the current folder (`~`, your home
+folder), and ends with `%`, meaning "ready for a command". The program reading what you type is the <Term id="shell" />;
+on current Macs the default shell is **zsh** (older accounts may still use bash, which works
+almost the same for everything here).
+
+:::note[Reading command examples]
+In this course, a command block shows only what you type. When we also show the output, it appears in a separate block.
+Many online tutorials start command lines with `$` or `%`: that symbol is the prompt, so **don't type it**.
+:::
+
+## Where am I? `pwd` and `ls`
+
+Type `pwd` (print working directory) and press **Return**:
+
+```zsh
+pwd
+```
+
+```text
+/Users/ada
+```
+
+Your name will differ. That folder is your **home folder**, and the shell is "standing in" it. The folder the shell is
+standing in is called the <Term id="working-directory" />.
+
+Now list what is in it:
+
+```zsh
+ls
+```
+
+```text
+Applications  Desktop  Documents  Downloads  Library  Movies  Music  Pictures  Public
+```
+
+These are the same folders you see in Finder. Commands can take **options** (also called flags), which start with `-`.
+`ls -la` lists everything as a long list (`-l`) including hidden files (`-a`), whose names start with a dot:
+
+```zsh
+ls -la
+```
+
+```text
+total 16
+drwxr-x---+ 15 ada  staff   480 Nov 23 09:12 .
+drwxr-xr-x   5 root admin   160 Oct  1 10:00 ..
+-rw-------   1 ada  staff  2310 Nov 23 09:10 .zsh_history
+drwx------+  4 ada  staff   128 Oct  1 10:05 Desktop
+...
+```
+
+A `d` at the start of a line means a folder (a *directory*). You will see `.` and `..` at the top; they are explained
+next.
+
+## Paths: the address of a file
+
+A <Term id="file-path" /> is a file's address: folder names separated by `/`.
+
+| Path | Meaning |
+|---|---|
+| `/Users/ada/Documents` | **Absolute**: starts at the very top of the disk, `/` |
+| `Documents` | **Relative**: starts from the working directory |
+| `~` | Your home folder, here `/Users/ada` |
+| `.` | The current folder |
+| `..` | The folder one level up |
+
+If you are in `/Users/ada`, then `Documents/notes.txt` and `/Users/ada/Documents/notes.txt` and `~/Documents/notes.txt`
+all point to the same file.
+
+## Moving around: `cd`
+
+`cd` (change directory) moves the shell to another folder:
+
+```zsh
+cd Documents
+pwd
+```
+
+```text
+/Users/ada/Documents
+```
+
+Then go up one level, then jump home from anywhere:
+
+```zsh
+cd ..
+pwd
+cd ~
+```
+
+```text
+/Users/ada
+```
+
+Typing just `cd` with nothing after it also takes you home.
+
+### Worked example: following a path
+
+Start in `/Users/ada/Documents`. Run `cd ../Downloads/../Desktop`. Where do you end up? Read it left to right:
+
+1. `..` goes up from `/Users/ada/Documents` to `/Users/ada`.
+2. `Downloads` goes into `/Users/ada/Downloads`.
+3. `..` goes back up to `/Users/ada`.
+4. `Desktop` goes into `/Users/ada/Desktop`.
+
+Answer: `/Users/ada/Desktop`. Paths are just instructions followed one step at a time.
+
+## Making things: `mkdir`, `touch`, `echo`
+
+Let's make a folder for this course, then go into it:
+
+```zsh
+mkdir ~/ai-course
+cd ~/ai-course
+```
+
+`mkdir` (make directory) makes a folder. Now make files:
+
+```zsh
+touch notes.txt
+echo "Day 1: learned the terminal" > log.txt
+ls
+```
+
+```text
+log.txt  notes.txt
+```
+
+`touch` creates an empty file. `echo` prints text, and `>` sends that text into a file instead of the screen,
+**replacing** what was in the file. Use `>>` to **add** to the end instead. Print a file's contents with `cat`:
+
+```zsh
+echo "Day 2: installed uv" >> log.txt
+cat log.txt
+```
+
+```text
+Day 1: learned the terminal
+Day 2: installed uv
+```
+
+To see the folder in Finder, type `open .` (the dot means "this folder").
+
+## Copying, moving and deleting
+
+```zsh
+cp log.txt log-backup.txt
+mv notes.txt ideas.txt
+mkdir old
+mv log-backup.txt old/
+ls
+```
+
+```text
+ideas.txt  log.txt  old
+```
+
+Line by line: `cp` **copies** `log.txt` to a new file `log-backup.txt`. `mv` **moves** `notes.txt` to `ideas.txt`,
+which is how you rename a file. Then we make a folder `old` and move the backup into it.
+
+To delete a file use `rm`; to delete a folder and everything inside it use `rm -r`:
+
+```zsh
+rm ideas.txt
+rm -r old
+```
+
+:::caution[rm has no undo]
+`rm` does **not** move things to the Trash. They are gone. Before pressing Return on any `rm`, run `pwd` and `ls`
+to check where you are and what you are about to delete. Never run `rm -rf` with a path you don't fully understand,
+and never paste a deletion command from the internet without reading it.
+:::
+
+## Spaces in names
+
+The shell splits commands at spaces, so `cd My Folder` means "cd with two arguments" and fails. Use quotes, or avoid
+spaces in names you create (use `-` or `_` instead):
+
+```zsh
+mkdir "My Folder"
+cd "My Folder"
+cd ..
+```
+
+## Keys that save you time
+
+- **Tab** completes names. Type `cd Doc` and press Tab; the shell fills in `Documents/`. If several names match, zsh lists them.
+  Tab completion also prevents typos.
+- **Up arrow** brings back your previous commands, so you can rerun or edit them.
+- **Ctrl + C** stops a running command. If something seems stuck, this is how you get your prompt back.
+- **Ctrl + L** or the `clear` command clears the screen (your history is kept).
+- `man ls` shows the manual for `ls`. Press **Space** to page down and **q** to quit.
+
+## When things go wrong
+
+Errors are normal and usually tell you exactly what happened. Two you will meet constantly:
+
+```text
+zsh: command not found: pyhton3
+```
+
+You typed a command that doesn't exist; here it is a typo for `python3`. (Or a program isn't installed or isn't on the
+shell's search path; you will see this in the next lesson.)
+
+```text
+cd: no such file or directory: Documnets
+```
+
+The folder isn't where you said. Check spelling with `ls`, and use Tab completion.
+
+## Try it: simulate `cd`
+
+To check your understanding of paths, write a function that works out where `cd` would take you. You are not expected to
+know Python yet; the hints walk you through it. If it feels too hard, skip it and come back after F1.
+
+<CodeExercise id="f0-terminal-cd" />
+
+## Summary
+
+- The terminal runs a shell (zsh on a Mac). You type a command, press Return, read the output.
+- `pwd` shows where you are, `ls` what is here, `cd` moves you. `~` is home, `..` is up, `/` starts an absolute path.
+- `mkdir`, `touch`, `echo … >`, `cat`, `cp`, `mv`, `rm` create, read, copy, move and delete. `rm` is permanent.
+- Tab completes, Up arrow repeats, Ctrl + C stops.

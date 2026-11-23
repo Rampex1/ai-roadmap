@@ -1,0 +1,6 @@
+term: Mastery check
+short: A 12-question mixed quiz across a whole module; scoring 80% or more marks the module as mastered.
+body: |
+  Questions are drawn from every lesson in the module, favouring the ones you are weakest on.
+  If you score below 80%, the result lists the lessons to revisit. Taking the check before the lessons is called **testing out**.
+related: [spaced-repetition, interleaving]

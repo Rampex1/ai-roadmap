@@ -1,0 +1,6 @@
+term: Dependency
+short: A library your code needs in order to run, such as NumPy or matplotlib.
+body: |
+  A project lists its dependencies in a file (for uv, `pyproject.toml`), so the same setup can be rebuilt on another computer.
+  A lockfile (`uv.lock`) records the exact versions that were installed, which makes results reproducible.
+related: [package-manager, virtual-environment]

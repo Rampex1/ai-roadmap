@@ -1,0 +1,27 @@
+id: f0-setup
+module: f0
+kind: homework
+title: "F0 homework: set up your tools"
+brief: |
+  Put everything from this module together: a working Python, a notebook, and your first git history.
+
+  1. In Terminal, make sure your course project exists and has the libraries it needs:
+     `cd ~/ai-course`, then `uv add numpy matplotlib`.
+  2. Download the notebook below, move it into `~/ai-course`, and start JupyterLab with
+     `uv run --with jupyter jupyter lab`. (No Mac setup yet? Open it in Google Colab instead with
+     *File → Upload notebook*.)
+  3. Run every cell from top to bottom. Each check prints `OK` or a result; fix anything that fails
+     using the lessons on uv and notebooks.
+  4. Write your reflection in the last Markdown cell, then use **Restart kernel and run all** (JupyterLab)
+     or **Restart session and run all** (Colab) to confirm the notebook runs cleanly from the start.
+  5. Save it into git. If `git status` says *not a git repository*, run `git init` first. Then: `git add f0-setup.ipynb`, then `git commit -m "Add F0 setup homework"`, and check it
+     appears in `git log --oneline`.
+notebook: /homework/f0-setup.ipynb
+rubric:
+  - "`uv --version` and `uv run python --version` both work in a new Terminal window"
+  - "The notebook's first cell prints a Python version of 3.10 or newer"
+  - "The NumPy and matplotlib cell prints the squares and shows the parabola plot"
+  - "Restart kernel and run all (or Restart session and run all on Colab) completes with no errors"
+  - "The reflection cell contains your study plan, including when you will do reviews"
+  - "The notebook is committed: `git log --oneline` in ~/ai-course shows your commit (run `git init` first if `git status` says not a git repository)"
+compute: "Runs on any laptop or free Colab in under 15 minutes"

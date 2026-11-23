@@ -1,0 +1,110 @@
+items:
+  - id: f0-how-to-learn-01
+    type: mcq
+    prompt: "You have one hour before a test on a chapter you've read once. Which use of the hour will most likely help you remember the most a week later?"
+    explanation: "Retrieval practice (answering from memory, then checking) strengthens memory more than rereading or highlighting, which mostly build a feeling of familiarity."
+    options:
+      - text: Close the book and answer practice questions, checking each answer afterwards
+        correct: true
+        why: This is retrieval practice. Each recall attempt, followed by feedback, strengthens the memory.
+      - text: Reread the chapter twice, slowly
+        why: Rereading makes the text feel familiar, but you never practise recalling it.
+      - text: Highlight the key sentences in the chapter
+        why: Highlighting is a passive activity with little evidence of lasting benefit on its own.
+      - text: Copy the chapter summary out by hand
+        why: Copying with the text in front of you is still not recalling from memory.
+  - id: f0-how-to-learn-02
+    type: multi
+    prompt: "Which statements about this site's spaced review are true?"
+    explanation: "Cards are created when you first answer a question; the first answer each day is the only one that updates the schedule; exercises are not cards; wrong answers bring a card back sooner."
+    options:
+      - text: A review card is created the first time you answer a quiz question
+        correct: true
+        why: Questions you have never seen have no card yet.
+      - text: Only your first answer to a question each day updates its schedule
+        correct: true
+        why: Retries give feedback but are not recorded, so you can't pass a card from short-term memory.
+      - text: Code exercises are also scheduled as review cards
+        why: Only quiz questions are review cards; exercises are not re-run in review.
+      - text: A wrong answer pushes the next review further into the future
+        why: The opposite. A wrong answer is graded Again, which brings the card back soon.
+  - id: f0-how-to-learn-03
+    type: numeric
+    prompt: "A mastery check has 12 questions and the pass mark is 80%. What is the smallest number of correct answers that passes?"
+    explanation: "80% of 12 is 9.6. You can't get 0.6 of a question, so you need 10 (10/12 ≈ 83%). 9/12 = 75% is not enough."
+    answer: 10
+  - id: f0-how-to-learn-04
+    type: mcq
+    prompt: "In FSRS, what does a card's stability measure?"
+    explanation: "Stability is how slowly your memory of that card fades: the number of days until your chance of recalling it falls from 100% to 90%. Successful reviews increase it."
+    options:
+      - text: How many days it takes for your chance of recalling the card to fall from 100% to 90%
+        correct: true
+        why: That is the definition. Higher stability means the card can wait longer before the next review.
+      - text: Your chance of recalling the card right now
+        why: That is retrievability, which falls over time; stability controls how fast it falls.
+      - text: How hard the card is compared with other cards
+        why: That is difficulty, which affects how much stability grows after each review.
+      - text: How many times you have answered the card correctly in a row
+        why: FSRS does not just count a streak; it models how memory decays over time.
+  - id: f0-how-to-learn-05
+    type: cloze
+    prompt: "Mixing different topics in one practice session, so you must work out which idea each question needs, is called ____."
+    explanation: "Interleaving: practising A, C, B, A… rather than blocks of A then B. It feels harder but usually works better."
+    accept: ["interleaving", "interleaved practice", "interleave"]
+  - id: f0-how-to-learn-06
+    type: order
+    prompt: "Put the steps of the suggested study session in order."
+    explanation: "Review first so due cards never pile up, then learn something new actively, take its quiz from memory, and stop while you still have energy."
+    items:
+      - Clear the cards due on the Review page
+      - Read one new lesson, running the commands and trying the exercises
+      - Take the lesson quiz from memory
+      - Stop and note where to start next time
+  - id: f0-how-to-learn-07
+    type: mcq
+    prompt: "You are stuck on a code exercise. Which way of using the AI tutor helps you learn most?"
+    explanation: "Making an attempt, explaining it, and asking for one hint keeps the thinking (and the retrieval) with you."
+    options:
+      - text: Describe what you tried and what you expected, then ask for one hint
+        correct: true
+        why: The tutor can target your misunderstanding, and you still do the solving.
+      - text: Paste the exercise and ask for the full solution straight away
+        why: You get a passing answer but skip the practice that makes the idea stick.
+      - text: Avoid the tutor entirely and keep guessing for an hour
+        why: Struggle is useful up to a point; long unproductive guessing wastes time a hint would save.
+      - text: Ask the tutor to grade your progress and mark the lesson complete
+        why: The tutor cannot change your progress; it only answers questions.
+  - id: f0-how-to-learn-08
+    type: multi
+    prompt: "Your progress on this site is stored in your browser. Which of these could lose it?"
+    explanation: "Progress lives in this browser's storage on this computer. Clearing site data or switching browser or computer loses access; a regular export from Settings is the backup."
+    options:
+      - text: Clearing your browser's data for this site
+        correct: true
+        why: That deletes the stored progress.
+      - text: Opening the site in a different browser
+        correct: true
+        why: Each browser has its own storage, so the other browser starts empty (you can import a backup there).
+      - text: Closing the tab and coming back tomorrow
+        why: Progress persists across tabs and restarts in the same browser.
+      - text: Exporting your progress from Settings
+        why: Exporting only downloads a copy; it does not change what is stored.
+  - id: f0-how-to-learn-09
+    type: mcq
+    prompt: "You answer a quiz question wrong, read the explanation, and immediately answer it again correctly. What does the review schedule record?"
+    explanation: "Only the first graded attempt per question per day counts, so the schedule records the wrong answer and will bring the card back soon."
+    options:
+      - text: The first, wrong answer, so the card comes back soon
+        correct: true
+        why: Retries the same day give feedback but do not update the schedule.
+      - text: The second, correct answer, so the card is pushed far into the future
+        why: That would reward short-term memory of the explanation, which is why retries are not recorded.
+      - text: An average of the two answers
+        why: Each graded attempt is either Good or Again; there is no averaging.
+  - id: f0-how-to-learn-10
+    type: numeric
+    prompt: "You study 4 days a week for 30 minutes a day. How many hours is that over 6 weeks?"
+    explanation: "4 × 30 = 120 minutes = 2 hours a week, and 2 × 6 = 12 hours."
+    answer: 12
+    tol: 0.01

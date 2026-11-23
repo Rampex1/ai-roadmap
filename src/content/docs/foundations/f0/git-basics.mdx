@@ -1,0 +1,250 @@
+---
+title: Git and GitHub basics
+module: f0
+order: 6
+estMinutes: 20
+objectives:
+  - "Explain what version control is for and what a commit is"
+  - "Create a repository and record changes with git init, add, commit, status, diff and log"
+  - "Keep files out of a repository with .gitignore"
+  - "Describe how a local repository is pushed to GitHub"
+goDeeper: pro-git
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import gitAreas from '@/assets/diagrams/f0-git-areas.svg';
+
+You have probably seen folders like this:
+
+```text
+report.docx
+report-v2.docx
+report-v2-final.docx
+report-v2-final-REALLY-final.docx
+```
+
+<Term id="version-control" /> replaces that mess with a single set of files plus a **history** of snapshots. Each
+snapshot records exactly what changed, when, and why, so you can see how a project evolved, find when a bug appeared, and
+go back if an experiment fails. **Git** is the version control system nearly everyone uses, and **GitHub** is a website
+that stores copies of git projects online. Every ML project, paper reproduction and open-source model you will meet lives
+in git.
+
+## Setting up git (once)
+
+Check whether git is installed:
+
+```zsh
+git --version
+```
+
+```text
+git version 2.39.5 (Apple Git-154)
+```
+
+Any version is fine. If instead macOS shows a pop-up offering to install the **command line developer tools**, click
+**Install** and wait; git comes with them. Then run `git --version` again.
+
+Next, tell git who you are. This is stamped on every snapshot you make. Use your own name and email:
+
+```zsh
+git config --global user.name "Ada Lovelace"
+git config --global user.email "ada@example.com"
+git config --global init.defaultBranch main
+```
+
+The last line names your main line of history `main`, which is what GitHub uses. These settings are saved once
+for your user account; you never need to repeat them.
+
+:::note[Email privacy]
+If you later push to a public GitHub repository, this email becomes public in its history. GitHub offers a private
+"noreply" address in **Settings → Emails** that you can use here instead.
+:::
+
+## Your first repository
+
+Make a practice folder and turn it into a <Term id="repository" />:
+
+```zsh
+mkdir ~/git-practice
+cd ~/git-practice
+git init
+```
+
+```text
+Initialized empty Git repository in /Users/ada/git-practice/.git/
+```
+
+Git stores the whole history in a hidden `.git` folder inside your project. Don't edit or delete it: deleting `.git`
+deletes the history.
+
+Create a file and ask git what it sees:
+
+```zsh
+echo "# My notes" > notes.md
+git status
+```
+
+```text
+On branch main
+
+No commits yet
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	notes.md
+
+nothing added to commit but untracked files present (use "git add" to track)
+```
+
+**Untracked** means git sees the file but is not recording it yet. `git status` is the command you will run most:
+it always tells you what state things are in, and usually what to do next.
+
+## The three areas
+
+<Figure
+  src={gitAreas}
+  alt="Three boxes left to right: working folder, staging area, history. git add moves changes from the working folder to the staging area; git commit moves them from the staging area into history."
+  caption="git add picks changes for the next snapshot; git commit saves the snapshot into history."
+/>
+
+Saving a snapshot takes two steps:
+
+1. **`git add`** puts changes into the **staging area**: "include this in the next snapshot".
+2. **`git commit`** saves everything staged as one <Term id="git-commit" text="commit" />, with a message.
+
+Why two steps? You often change several things at once but want to save them as separate, meaningful snapshots:
+"fix the plot" and "add a new dataset" are easier to understand, and undo, as two commits than as one.
+
+```zsh
+git add notes.md
+git commit -m "Add notes file"
+```
+
+```text
+[main (root-commit) 3f2a9c1] Add notes file
+ 1 file changed, 1 insertion(+)
+ create mode 100644 notes.md
+```
+
+`3f2a9c1` is the start of the commit's unique id (yours will differ). The message after `-m` should say **what changed
+and why**, in a few words, so future you can scan the history.
+
+## Change, inspect, commit again
+
+Add a line to the file and see exactly what changed with `git diff`:
+
+```zsh
+echo "Git tracks every change." >> notes.md
+git diff
+```
+
+```text
+diff --git a/notes.md b/notes.md
+index 4c8b9a1..b1e6722 100644
+--- a/notes.md
++++ b/notes.md
+@@ -1 +1,2 @@
+ # My notes
++Git tracks every change.
+```
+
+Lines starting with `+` were added (and `-` removed). Press **q** if the output fills the screen and doesn't return
+to the prompt. Commit it:
+
+```zsh
+git add notes.md
+git commit -m "Add a line about git"
+git log --oneline
+```
+
+```text
+a1b2c3d (HEAD -> main) Add a line about git
+3f2a9c1 Add notes file
+```
+
+`git log` lists commits, newest first. `HEAD -> main` marks where you are now. Plain `git log` (without `--oneline`)
+also shows authors and dates.
+
+### Undoing a change you haven't committed
+
+Suppose you mess up `notes.md` (and have not staged or committed the change) and want it back as it was at the
+last commit:
+
+```zsh
+git restore notes.md
+```
+
+:::caution[restore discards work]
+`git restore` throws away the file's unstaged changes, permanently. (If you had already run `git add` on it, it goes back
+to the staged version instead, not the last commit.) Committing often is what makes git safe:
+anything committed can be recovered.
+:::
+
+## Keeping files out: `.gitignore`
+
+Some files should never go into a repository:
+
+- **Environments and generated files**, such as `.venv/`, which can be rebuilt and are large.
+- **Secrets**: API keys, passwords, files such as `.env`. Once a secret is pushed to GitHub, assume it is leaked,
+  even if you delete it later, because it remains in the history.
+- **Big data files and trained models**, which git handles badly.
+- **System clutter** like macOS's `.DS_Store` files.
+
+List patterns in a file named `.gitignore` at the top of the repository, one per line:
+
+```text
+.venv/
+.env
+.DS_Store
+data/
+*.ckpt
+```
+
+`data/` ignores a whole folder, and `*.ckpt` ignores every file ending in `.ckpt`. Ignored files don't appear in
+`git status` and can't be added by accident. Good news: if git was installed when you ran `uv init`, uv already created
+a git repository and a `.gitignore` that ignores `.venv` in your `ai-course` project. Have a look with
+`cat ~/ai-course/.gitignore`.
+
+## GitHub: a copy in the cloud (optional for now)
+
+Pushing to GitHub gives you a backup and a public portfolio. You won't need it until later in the course, so treat this
+as a preview.
+
+1. Create a free account at github.com, then create a **new repository** named `git-practice`, *without* a README
+   (your local repository already has history).
+2. Connect your local repository to it and push your commits:
+
+```zsh
+git remote add origin https://github.com/YOUR-USERNAME/git-practice.git
+git push -u origin main
+```
+
+`origin` is the conventional nickname for the GitHub copy, called a **remote**. `-u` remembers it, so afterwards a plain
+`git push` sends new commits.
+
+GitHub does not accept your account password for `git push`. The easiest way to sign in is the **GitHub CLI**: install
+it from cli.github.com, run `gh auth login`, and answer yes when it asks to authenticate git. After that, pushing just
+works.
+
+## The everyday loop
+
+| Step | Command |
+|---|---|
+| What changed? | `git status`, `git diff` |
+| Pick changes for the snapshot | `git add file.py` (or `git add .` for everything not ignored) |
+| Save the snapshot | `git commit -m "Short description"` |
+| See history | `git log --oneline` |
+| Send to GitHub | `git push` |
+
+:::tip[Before git add .]
+`git add .` stages *everything* in the folder that isn't ignored. Run `git status` first and make sure no secret or huge
+file is about to go in.
+:::
+
+## Summary
+
+- Version control keeps one copy of your files plus a history of commits (snapshots with messages).
+- `git init` starts a repository; `git add` stages changes; `git commit -m` saves them; `git status`, `git diff` and
+  `git log` show what is going on.
+- `.gitignore` keeps environments, secrets, big data and clutter out of the repository.
+- `git push` sends commits to a remote such as GitHub; sign in with the GitHub CLI, never by pasting secrets into files.

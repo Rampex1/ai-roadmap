@@ -1,0 +1,7 @@
+term: Terminal
+short: An app where you control the computer by typing text commands instead of clicking.
+body: |
+  On a Mac the built-in app is called Terminal (in Applications > Utilities).
+  The window shows a prompt, you type a command, press Return, and the output appears below.
+  The program that actually reads and runs your commands is the shell; the terminal is the window around it.
+related: [shell, working-directory]

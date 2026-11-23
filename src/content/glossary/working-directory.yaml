@@ -1,0 +1,7 @@
+term: Working directory
+short: The folder your shell is currently "in"; relative paths start from here.
+body: |
+  `pwd` (print working directory) shows it and `cd` changes it.
+  When you open a new terminal window it starts in your home folder, written `~`.
+  Commands such as `ls` or `uv run hello.py` look for files relative to the working directory.
+related: [file-path, shell]

@@ -1,0 +1,7 @@
+term: Jupyter notebook
+short: A document that mixes runnable code cells, their output, and formatted notes, saved as an .ipynb file.
+body: |
+  You run one cell at a time and see the result (a number, a table, a plot) directly under it,
+  which makes notebooks ideal for exploring data and for homework.
+  JupyterLab is the app that opens notebooks on your own computer; Google Colab opens the same files in the cloud.
+related: [jupyter-kernel, gpu]

@@ -46,10 +46,42 @@ items:
       - Read the lesson
       - Answer the lesson quiz
       - Pass the module mastery check
-      - Review items when they come due
+      - Keep reviewing items as they come due, after the module is done
   - id: f0-welcome-06
     type: cloze
     prompt: "Gradient descent steps against the ____ of the loss."
     explanation: "The gradient points uphill; stepping against it lowers the loss."
     accept: ["gradient"]
     regex: "^(the )?gradient$"
+  - id: f0-welcome-07
+    type: mcq
+    prompt: "Where does the Python code in a lesson's exercise box run?"
+    explanation: "Lesson exercises run in your browser with a built-in Python, so they need no installation. Homework, starting with this module's, uses Python on your own Mac or on Colab."
+    options:
+      - text: In your web browser, with nothing to install
+        correct: true
+        why: The site ships a Python that runs inside the browser page.
+      - text: On a Google server, so you need an account
+        why: That describes Colab, which is used for some homework, not lesson exercises.
+      - text: In the Terminal, after installing Python
+        why: Local Python is set up later in this module and used for homework, not lesson exercises.
+  - id: f0-welcome-08
+    type: numeric
+    prompt: "What is the mean of 10, 20, 30 and 40?"
+    explanation: "$\\bar{x} = \\frac{10 + 20 + 30 + 40}{4} = \\frac{100}{4} = 25$."
+    answer: 25
+    tol: 0.001
+  - id: f0-welcome-09
+    type: mcq
+    prompt: "In $\\bar{x} = \\frac{1}{n}\\sum_{i=1}^{n} x_i$, what does the symbol $\\sum_{i=1}^{n} x_i$ mean?"
+    explanation: "$\\sum$ (capital sigma) means add up. $\\sum_{i=1}^{n} x_i = x_1 + x_2 + \\dots + x_n$."
+    options:
+      - text: Add up all the numbers from the first to the n-th
+        correct: true
+        why: Sigma with i running from 1 to n means the sum $x_1 + x_2 + \dots + x_n$.
+      - text: Multiply all the numbers together
+        why: A product uses capital pi, $\prod$, not sigma.
+      - text: Count how many numbers there are
+        why: That count is $n$ itself; sigma adds the values.
+      - text: Take the largest number
+        why: The largest value is written $\max$, not $\sum$.

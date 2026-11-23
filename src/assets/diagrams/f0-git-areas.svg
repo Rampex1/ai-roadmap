@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 230" width="680" height="230" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Git's three areas: working folder, staging area, history</title>
+  <g font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle">
+    <rect x="16" y="40" width="180" height="96" rx="14" fill="#4f46e5"/>
+    <text x="106" y="80">Working folder</text>
+    <rect x="250" y="40" width="180" height="96" rx="14" fill="#0f766e"/>
+    <text x="340" y="80">Staging area</text>
+    <rect x="484" y="40" width="180" height="96" rx="14" fill="#b45309"/>
+    <text x="574" y="80">History</text>
+  </g>
+  <g font-size="13" fill="#ffffff" text-anchor="middle" opacity="0.92">
+    <text x="106" y="106">files you edit</text>
+    <text x="340" y="106">changes picked for</text>
+    <text x="340" y="123">the next commit</text>
+    <text x="574" y="106">saved commits</text>
+  </g>
+  <g fill="none" stroke="#8b93b8" stroke-width="2.5" stroke-linecap="round">
+    <path d="M196 88 L 240 88"/>
+    <path d="M430 88 L 474 88"/>
+  </g>
+  <g fill="#8b93b8">
+    <path d="M240 82 l10 6 -10 6z"/>
+    <path d="M474 82 l10 6 -10 6z"/>
+  </g>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" font-weight="600" fill="#8b93b8" text-anchor="middle">
+    <text x="223" y="28">git add</text>
+    <text x="457" y="28">git commit</text>
+  </g>
+  <g fill="none" stroke="#8b93b8" stroke-width="2" stroke-dasharray="5 5" stroke-linecap="round">
+    <path d="M106 136 L 106 176 L 574 176 L 574 136"/>
+  </g>
+  <g font-size="13" fill="#8b93b8" text-anchor="middle">
+    <text x="340" y="200">git status shows what differs between the areas · git log lists the history</text>
+  </g>
+</svg>

@@ -1,0 +1,7 @@
+term: File path
+short: The address of a file or folder, written as folder names separated by slashes.
+body: |
+  An **absolute** path starts at the top of the disk with `/`, for example `/Users/ada/ai-course/notes.txt`.
+  A **relative** path starts from the working directory, for example `ai-course/notes.txt`.
+  `~` is shorthand for your home folder, `.` means "this folder" and `..` means "the folder above".
+related: [working-directory]

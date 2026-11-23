@@ -1,0 +1,7 @@
+term: Shell
+short: The program inside a terminal that reads your commands and runs them.
+body: |
+  macOS uses **zsh** (the Z shell) as its default shell. Bash is a close relative you will see in many tutorials;
+  almost all the basic commands in this course work the same in both.
+  A line of shell commands saved in a file is called a shell script.
+related: [terminal]

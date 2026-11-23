@@ -1,0 +1,33 @@
+id: f0-how-to-learn-interval
+lesson: foundations/f0/how-to-learn
+title: A toy review scheduler
+prompt: |
+  Complete `next_interval(days, correct)`. It takes the current gap between reviews in days
+  and whether you answered correctly, and returns the next gap:
+
+  - correct: double the gap, so `next_interval(4, True)` is `8`;
+  - wrong: reset to 1 day, so `next_interval(16, False)` is `1`.
+
+  This is a simplified rule for practice, not the FSRS algorithm the site really uses.
+starter: |
+  def next_interval(days, correct):
+      # Replace this line: double the gap if correct, otherwise go back to 1.
+      return days
+solution: |
+  def next_interval(days, correct):
+      if correct:
+          return days * 2
+      return 1
+tests: |
+  assert next_interval(1, True) == 2, f"next_interval(1, True) should be 2, got {next_interval(1, True)!r}"
+  assert next_interval(4, True) == 8, f"next_interval(4, True) should be 8, got {next_interval(4, True)!r}"
+  assert next_interval(16, False) == 1, f"next_interval(16, False) should be 1, got {next_interval(16, False)!r}"
+  assert next_interval(1, False) == 1, f"next_interval(1, False) should be 1, got {next_interval(1, False)!r}"
+  gaps, d = [], 1
+  for ok in [True, True, True, False, True]:
+      d = next_interval(d, ok)
+      gaps.append(d)
+  assert gaps == [2, 4, 8, 1, 2], f"answers right, right, right, wrong, right should give gaps [2, 4, 8, 1, 2], got {gaps}"
+hints:
+  - "Use an `if` statement: `if correct:` runs the indented line below it only when `correct` is `True`."
+  - "Inside the `if`, `return days * 2`. After it (not indented under the `if`), `return 1`."
