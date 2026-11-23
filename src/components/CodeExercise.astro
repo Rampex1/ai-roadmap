@@ -17,8 +17,7 @@ const headingId = `ex-${id}`;
 
 <section class="air-ex not-content" data-exercise-id={id} aria-labelledby={headingId}>
   <div class="air-ex-head">
-    <span class="air-eyebrow">Exercise</span>
-    <h3 id={headingId}>{title}</h3>
+    <h3 id={headingId}><span class="air-ex-label">Exercise:</span> {title}</h3>
   </div>
   <div class="air-ex-prompt" set:html={promptHtml} />
   <CodeExerciseIsland client:only="react" id={id} title={title} starter={starter} tests={tests} hintsHtml={hintsHtml}>

@@ -27,6 +27,11 @@ const astro = (...args) => {
   const r = spawnSync('npx', ['astro', ...args], { stdio: 'inherit' });
   if (r.status !== 0) process.exit(r.status ?? 1);
 };
-if (!process.argv.includes('--serve')) astro('build');
+if (!process.argv.includes('--serve')) {
+  // Make sure the vendored Python runtime exists before building (postinstall may have been skipped).
+  const v = spawnSync(process.execPath, ['scripts/vendor-pyodide.mjs', '--if-missing'], { stdio: 'inherit' });
+  if (v.status !== 0) process.exit(v.status ?? 1);
+  astro('build');
+}
 // --ignore-lock: always run in the foreground (Astro 7 auto-backgrounds under coding agents); the probe above guards the port.
 astro('preview', '--port', String(PORT), '--host', 'localhost', '--ignore-lock');

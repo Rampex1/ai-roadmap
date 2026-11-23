@@ -1,4 +1,5 @@
 import { askTutor } from '@/lib/ask-tutor';
+import { courseOf } from '@/lib/sidebar';
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import { EditorState, Prec } from '@codemirror/state';
 import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, drawSelection } from '@codemirror/view';
@@ -102,15 +103,15 @@ const highlight = HighlightStyle.define([
 const draftKey = (id: string) => `airoadmap:draft:${id}`;
 const readDraft = (id: string) => {
   try {
-    return sessionStorage.getItem(draftKey(id));
+    return localStorage.getItem(draftKey(id));
   } catch {
     return null;
   }
 };
 const writeDraft = (id: string, code: string, starter: string) => {
   try {
-    if (code === starter) sessionStorage.removeItem(draftKey(id));
-    else sessionStorage.setItem(draftKey(id), code);
+    if (code === starter) localStorage.removeItem(draftKey(id));
+    else localStorage.setItem(draftKey(id), code);
   } catch {}
 };
 
@@ -160,7 +161,11 @@ export default function CodeExerciseIsland({ id, title, starter, tests, hintsHtm
     setAnnounce(r.status === 'passed' ? STATUS_TEXT.passed : r.status === 'stopped' ? `${r.message}.` : `${STATUS_TEXT[r.status]} ${r.message.split('\n').at(-1)}`);
     // Pass is sticky (recordExercise); a stop or a broken runtime is not an attempt.
     if (r.status !== 'stopped' && !r.unavailable)
-      setSaveError(saveErrorText(store.update((s) => recordExercise(s, id, r.status === 'passed', new Date()))));
+      setSaveError(saveErrorText(store.update((s) => {
+        const next = recordExercise(s, id, r.status === 'passed', new Date());
+        const course = courseOf(location.pathname);
+        return course ? { ...next, settings: { ...next.settings, lastCourse: course } } : next;
+      })));
   };
   runRef.current = run;
 

@@ -91,8 +91,12 @@ export function load(storage: StorageLike, now = new Date()): { state: State; co
     return { state: emptyState(), corrupt: true };
   }
   // A newer schema than this build understands: read what we can, but never overwrite it.
-  if (isObj(parsed) && typeof parsed.schemaVersion === 'number' && parsed.schemaVersion > 1)
+  if (isObj(parsed) && typeof parsed.schemaVersion === 'number' && parsed.schemaVersion > 1) {
+    try {
+      storage.setItem(CORRUPT_PREFIX + hash(raw), raw); // keep a copy before any reset/import can replace it
+    } catch {}
     return { state: reviveCards(migrate(parsed)), corrupt: true };
+  }
   return { state: reviveCards(migrate(parsed)), corrupt: false };
 }
 
@@ -147,11 +151,20 @@ export function parseImport(text: string): State {
 const newer = <T extends { updatedAt: Iso }>(a: T | undefined, b: T | undefined) =>
   !a ? b! : !b ? a : Date.parse(b.updatedAt) > Date.parse(a.updatedAt) ? b : a;
 
+/** Newer record wins, but earned flags are sticky: an older pass/mastery is never lost to a newer failure. */
+function keepEarned(kind: (typeof RECORDS)[number], a: any, b: any, win: any) {
+  if (!a || !b) return win;
+  if (kind === 'exercises') return { ...win, passed: a.passed || b.passed };
+  if (kind === 'mastery')
+    return { ...win, mastered: a.mastered || b.mastered, best: Math.max(a.best, b.best), attempts: Math.max(a.attempts, b.attempts) };
+  return win;
+}
+
 export function mergeImport(current: State, incoming: State): State {
   const out: State = { ...current };
   for (const k of RECORDS) {
     const merged: Record<string, any> = { ...current[k] };
-    for (const [id, rec] of Object.entries(incoming[k])) merged[id] = newer(merged[id], rec as any);
+    for (const [id, rec] of Object.entries(incoming[k])) merged[id] = keepEarned(k, merged[id], rec, newer(merged[id], rec as any));
     (out as any)[k] = merged;
   }
   const seen = new Set(current.reviews.map((r) => `${r.itemId}@${r.at}`));

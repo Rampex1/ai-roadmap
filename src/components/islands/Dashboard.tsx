@@ -14,7 +14,7 @@ export default function Dashboard({ modules, lessons, itemIds }: { modules: Site
   const due = dueItems(state, new Date(), new Set(itemIds)).length;
   const last = state.settings.lastExportAt;
   const needsBackup = !last || Date.now() - Date.parse(last) > BACKUP_DAYS * 86_400_000;
-  const started = Object.keys(state.lessons).length > 0;
+  const started = Object.keys(state.lessons).length + Object.keys(state.cards).length + Object.keys(state.mastery).length > 0;
 
   return (
     <div className="air-dash not-content">

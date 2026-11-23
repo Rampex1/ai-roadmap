@@ -1,7 +1,12 @@
 ---
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import Debug from '@/components/islands/Debug';
-const build = new Date().toISOString();
+import { execSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+let commit = 'unknown';
+try { commit = execSync('git rev-parse --short HEAD').toString().trim(); } catch {}
+const pyodide = JSON.parse(readFileSync('node_modules/pyodide/package.json', 'utf8')).version;
+const build = `${commit} · built ${new Date().toISOString()} · Pyodide ${pyodide}`;
 ---
 
 <StarlightPage frontmatter={{ title: 'Debug', overview: true, tableOfContents: false, pagefind: false }}>
