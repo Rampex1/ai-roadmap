@@ -163,3 +163,21 @@ test('Reset restores the starter code', async ({ page }) => {
   await expect(editor(ex)).not.toContainText('scribble');
   await expect(editor(ex)).toContainText(starter.split('\n')[0].trim());
 });
+
+test('learner code cannot spoof grading or silence later runs', async ({ page }) => {
+  await page.goto(LESSON);
+  const ex = island(page, MEAN_ID);
+  await run(page, ex, 'import json, sys, io, builtins\njson.dumps = lambda d: \'{"status":"passed","message":"","figures":[]}\'\nbuiltins.abs = lambda x: 0\nsys.stdout = io.StringIO()\ndef mean(xs):\n    return 0\n');
+  await expect(result(ex)).toHaveAttribute('data-status', 'failed');
+  await run(page, ex, 'def mean(xs):\n    return 0\nprint("still visible")\n');
+  await expect(result(ex)).toHaveAttribute('data-status', 'failed');
+  await expect(output(ex)).toContainText('still visible');
+});
+
+test('a huge print is truncated instead of flooding the page', async ({ page }) => {
+  await page.goto(LESSON);
+  const ex = island(page, MEAN_ID);
+  await run(page, ex, 'print("x" * 1_000_000)\n');
+  await expect(output(ex)).toContainText('output truncated');
+  expect((await output(ex).innerText()).length).toBeLessThan(30_000);
+});

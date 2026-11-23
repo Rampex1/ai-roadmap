@@ -103,3 +103,18 @@ describe('checkExercises', () => {
     }, TIMEOUT);
   });
 });
+
+describe.skipIf(!HAS_PYODIDE)('checkExercises time limit and isolation', () => {
+  it('reports a solution that runs past the browser time limit instead of hanging', async () => {
+    const checkExercises = await load();
+    const errors = await checkExercises(dirWith({ ...GOOD, id: 'demo-loop', solution: 'while True:\n    pass\n' }));
+    expect(errors.join('\n')).toMatch(/demo-loop.*time limit/);
+  }, TIMEOUT);
+
+  it('a previous exercise cannot spoof grading by patching json or builtins', async () => {
+    const checkExercises = await load();
+    const spoof = { ...GOOD, id: 'a-spoof', starter: 'import json, builtins\njson.dumps = lambda d: "{}"\nbuiltins.len = lambda x: 0\n' };
+    const victim = { ...GOOD, id: 'b-victim' };
+    expect(await checkExercises(dirWith(spoof, victim))).toEqual([]);
+  }, TIMEOUT);
+});
