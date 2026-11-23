@@ -1,0 +1,9 @@
+id: research-capstone
+module: b14
+kind: capstone
+title: "Research capstone: reproduce a paper with ablations"
+brief: "Placeholder brief. Written when module b14 ships."
+notebook: /homework/research-capstone.ipynb
+rubric:
+  - "Placeholder rubric item"
+compute: "Placeholder; set when the capstone is written."

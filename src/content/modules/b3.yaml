@@ -1,0 +1,8 @@
+id: b3
+course: research
+title: "Backprop by hand"
+order: 4
+prereqs: ["b2"]
+objectives:
+  - "Explain the core ideas of backprop by hand"
+  - "Derive or implement the key methods of backprop by hand"

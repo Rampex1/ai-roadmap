@@ -1,0 +1,9 @@
+id: a12
+course: mle
+title: "Teams and responsible deployment"
+order: 12
+prereqs: ["a11"]
+objectives:
+  - "Explain the core ideas of teams and responsible deployment"
+  - "Apply teams and responsible deployment to a working ML project"
+capstone: mle-capstone

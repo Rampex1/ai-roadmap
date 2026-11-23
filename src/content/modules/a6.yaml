@@ -1,0 +1,8 @@
+id: a6
+course: mle
+title: "Software engineering for ML"
+order: 6
+prereqs: ["a5"]
+objectives:
+  - "Explain the core ideas of software engineering for ML"
+  - "Apply software engineering for ML to a working ML project"

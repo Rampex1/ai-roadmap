@@ -1,0 +1,7 @@
+term: Gradient
+short: The vector of partial derivatives of a function; it points in the direction of steepest increase.
+body: |
+  For a function $f(x_1, \dots, x_n)$ the gradient is
+  $\nabla f = \left(\frac{\partial f}{\partial x_1}, \dots, \frac{\partial f}{\partial x_n}\right)$.
+  Gradient descent steps in the opposite direction to reduce a loss.
+related: []

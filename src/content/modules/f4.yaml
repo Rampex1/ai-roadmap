@@ -1,0 +1,9 @@
+id: f4
+course: foundations
+title: "Calculus"
+order: 5
+prereqs: ["f3"]
+objectives:
+  - "Compute derivatives and partial derivatives"
+  - "Apply the chain rule to composed functions"
+  - "Interpret gradients geometrically"

@@ -1,0 +1,8 @@
+id: b7
+course: research
+title: "Transformers from scratch"
+order: 8
+prereqs: ["b6"]
+objectives:
+  - "Explain the core ideas of transformers from scratch"
+  - "Derive or implement the key methods of transformers from scratch"

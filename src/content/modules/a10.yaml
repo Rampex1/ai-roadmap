@@ -1,0 +1,8 @@
+id: a10
+course: mle
+title: "Monitoring and drift"
+order: 10
+prereqs: ["a9"]
+objectives:
+  - "Explain the core ideas of monitoring and drift"
+  - "Apply monitoring and drift to a working ML project"

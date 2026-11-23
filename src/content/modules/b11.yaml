@@ -1,0 +1,8 @@
+id: b11
+course: research
+title: "Reinforcement learning"
+order: 12
+prereqs: ["b10"]
+objectives:
+  - "Explain the core ideas of reinforcement learning"
+  - "Derive or implement the key methods of reinforcement learning"

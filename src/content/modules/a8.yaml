@@ -1,0 +1,8 @@
+id: a8
+course: mle
+title: "Serving with FastAPI, Docker and ONNX"
+order: 8
+prereqs: ["a7"]
+objectives:
+  - "Explain the core ideas of serving with FastAPI, Docker and ONNX"
+  - "Apply serving with FastAPI, Docker and ONNX to a working ML project"

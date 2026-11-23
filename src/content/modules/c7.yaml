@@ -1,0 +1,8 @@
+id: c7
+course: llm
+title: "Agents"
+order: 7
+prereqs: ["c6"]
+objectives:
+  - "Explain the core ideas of agents"
+  - "Build and evaluate an application using agents"

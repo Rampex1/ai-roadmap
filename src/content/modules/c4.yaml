@@ -1,0 +1,8 @@
+id: c4
+course: llm
+title: "Embeddings and vector search"
+order: 4
+prereqs: ["c3"]
+objectives:
+  - "Explain the core ideas of embeddings and vector search"
+  - "Build and evaluate an application using embeddings and vector search"

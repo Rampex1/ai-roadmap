@@ -1,0 +1,9 @@
+id: c12
+course: llm
+title: "Multimodal"
+order: 12
+prereqs: ["c11"]
+objectives:
+  - "Explain the core ideas of multimodal"
+  - "Build and evaluate an application using multimodal"
+capstone: llm-capstone

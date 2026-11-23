@@ -1,0 +1,8 @@
+id: c10
+course: llm
+title: "Fine-tuning with LoRA and DPO"
+order: 10
+prereqs: ["c9", "f5"]
+objectives:
+  - "Explain the core ideas of fine-tuning with LoRA and DPO"
+  - "Build and evaluate an application using fine-tuning with LoRA and DPO"

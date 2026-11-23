@@ -1,0 +1,9 @@
+id: f0
+course: foundations
+title: "Setup and how to learn here"
+order: 1
+prereqs: []
+objectives:
+  - "Use the terminal, install Python with uv, and run Jupyter or Colab"
+  - "Use git for basic version control"
+  - "Explain how lessons, spaced review and mastery checks work on this site"

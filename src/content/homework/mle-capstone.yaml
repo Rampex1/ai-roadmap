@@ -1,0 +1,9 @@
+id: mle-capstone
+module: a12
+kind: capstone
+title: "ML Engineering capstone: a served, tested, monitored classifier"
+brief: "Placeholder brief. Written when module a12 ships."
+notebook: /homework/mle-capstone.ipynb
+rubric:
+  - "Placeholder rubric item"
+compute: "Placeholder; set when the capstone is written."

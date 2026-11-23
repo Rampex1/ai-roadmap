@@ -1,0 +1,9 @@
+id: f3
+course: foundations
+title: "Linear algebra"
+order: 4
+prereqs: ["f2"]
+objectives:
+  - "Compute with vectors, matrices and matrix products"
+  - "Explain linear maps, rank, eigenvectors and SVD"
+  - "Read linear-algebra notation used in ML"

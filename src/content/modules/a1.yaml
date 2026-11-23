@@ -1,0 +1,8 @@
+id: a1
+course: mle
+title: "Problem framing"
+order: 1
+prereqs: ["f8", "f10", "f11"]
+objectives:
+  - "Explain the core ideas of problem framing"
+  - "Apply problem framing to a working ML project"

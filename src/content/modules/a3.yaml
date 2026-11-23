@@ -1,0 +1,8 @@
+id: a3
+course: mle
+title: "Data management"
+order: 3
+prereqs: ["a2"]
+objectives:
+  - "Explain the core ideas of data management"
+  - "Apply data management to a working ML project"

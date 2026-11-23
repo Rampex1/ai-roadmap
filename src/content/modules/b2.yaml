@@ -1,0 +1,8 @@
+id: b2
+course: research
+title: "Probabilistic ML"
+order: 3
+prereqs: ["b1"]
+objectives:
+  - "Explain the core ideas of probabilistic ML"
+  - "Derive or implement the key methods of probabilistic ML"

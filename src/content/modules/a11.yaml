@@ -1,0 +1,8 @@
+id: a11
+course: mle
+title: "Scaling"
+order: 11
+prereqs: ["a10"]
+objectives:
+  - "Explain the core ideas of scaling"
+  - "Apply scaling to a working ML project"

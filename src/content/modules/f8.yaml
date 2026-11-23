@@ -1,0 +1,9 @@
+id: f8
+course: foundations
+title: "Trees, ensembles and clustering"
+order: 9
+prereqs: ["f7"]
+objectives:
+  - "Train decision trees, random forests and gradient boosting"
+  - "Cluster data with k-means"
+  - "Choose between model families for tabular data"

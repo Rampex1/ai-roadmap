@@ -1,0 +1,8 @@
+id: b12
+course: research
+title: "Reasoning and interpretability"
+order: 13
+prereqs: ["b11"]
+objectives:
+  - "Explain the core ideas of reasoning and interpretability"
+  - "Derive or implement the key methods of reasoning and interpretability"

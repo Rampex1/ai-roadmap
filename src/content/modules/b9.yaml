@@ -1,0 +1,8 @@
+id: b9
+course: research
+title: "Generative models"
+order: 10
+prereqs: ["b8"]
+objectives:
+  - "Explain the core ideas of generative models"
+  - "Derive or implement the key methods of generative models"

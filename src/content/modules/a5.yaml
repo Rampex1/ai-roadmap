@@ -1,0 +1,8 @@
+id: a5
+course: mle
+title: "Evaluation"
+order: 5
+prereqs: ["a4"]
+objectives:
+  - "Explain the core ideas of evaluation"
+  - "Apply evaluation to a working ML project"

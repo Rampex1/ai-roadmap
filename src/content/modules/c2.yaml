@@ -1,0 +1,8 @@
+id: c2
+course: llm
+title: "APIs and open models"
+order: 2
+prereqs: ["c1"]
+objectives:
+  - "Explain the core ideas of APIs and open models"
+  - "Build and evaluate an application using APIs and open models"

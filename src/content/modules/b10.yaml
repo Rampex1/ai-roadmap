@@ -1,0 +1,8 @@
+id: b10
+course: research
+title: "Self-supervised and multimodal learning"
+order: 11
+prereqs: ["b9"]
+objectives:
+  - "Explain the core ideas of self-supervised and multimodal learning"
+  - "Derive or implement the key methods of self-supervised and multimodal learning"

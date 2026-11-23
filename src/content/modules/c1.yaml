@@ -1,0 +1,8 @@
+id: c1
+course: llm
+title: "How LLMs work"
+order: 1
+prereqs: ["f10", "f2"]
+objectives:
+  - "Explain the core ideas of how LLMs work"
+  - "Build and evaluate an application using how LLMs work"

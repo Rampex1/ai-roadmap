@@ -1,0 +1,9 @@
+id: llm-capstone
+module: c12
+kind: capstone
+title: "LLM Engineering capstone: RAG agent with MCP and evals vs a LoRA fine-tune"
+brief: "Placeholder brief. Written when module c12 ships."
+notebook: /homework/llm-capstone.ipynb
+rubric:
+  - "Placeholder rubric item"
+compute: "Placeholder; set when the capstone is written."

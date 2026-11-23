@@ -1,0 +1,8 @@
+id: a7
+course: mle
+title: "Testing"
+order: 7
+prereqs: ["a6"]
+objectives:
+  - "Explain the core ideas of testing"
+  - "Apply testing to a working ML project"

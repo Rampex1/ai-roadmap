@@ -1,0 +1,10 @@
+id: f11
+course: foundations
+title: "Responsible AI: bias, fairness, privacy, safety"
+order: 12
+prereqs: ["f7"]
+objectives:
+  - "Identify sources of bias in data and models"
+  - "Apply basic fairness metrics"
+  - "Explain privacy and safety risks of ML systems"
+capstone: foundations-capstone

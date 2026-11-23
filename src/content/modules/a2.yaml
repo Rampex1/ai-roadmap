@@ -1,0 +1,8 @@
+id: a2
+course: mle
+title: "Deep learning practice and transfer learning"
+order: 2
+prereqs: ["a1"]
+objectives:
+  - "Explain the core ideas of deep learning practice and transfer learning"
+  - "Apply deep learning practice and transfer learning to a working ML project"

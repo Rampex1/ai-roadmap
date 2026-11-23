@@ -1,0 +1,8 @@
+id: a4
+course: mle
+title: "Experiment tracking and tuning"
+order: 4
+prereqs: ["a3"]
+objectives:
+  - "Explain the core ideas of experiment tracking and tuning"
+  - "Apply experiment tracking and tuning to a working ML project"

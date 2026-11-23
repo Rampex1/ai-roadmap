@@ -1,0 +1,8 @@
+id: c6
+course: llm
+title: "Tool use"
+order: 6
+prereqs: ["c5"]
+objectives:
+  - "Explain the core ideas of tool use"
+  - "Build and evaluate an application using tool use"

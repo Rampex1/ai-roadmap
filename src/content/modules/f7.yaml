@@ -1,0 +1,9 @@
+id: f7
+course: foundations
+title: "Classical ML"
+order: 8
+prereqs: ["f5", "f6"]
+objectives:
+  - "Train and evaluate linear and logistic regression"
+  - "Use train/validation/test splits and cross-validation"
+  - "Diagnose overfitting with bias and variance"

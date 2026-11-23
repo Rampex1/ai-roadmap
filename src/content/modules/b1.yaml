@@ -1,0 +1,8 @@
+id: b1
+course: research
+title: "Learning theory"
+order: 2
+prereqs: ["b0"]
+objectives:
+  - "Explain the core ideas of learning theory"
+  - "Derive or implement the key methods of learning theory"

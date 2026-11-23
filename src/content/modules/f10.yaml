@@ -1,0 +1,9 @@
+id: f10
+course: foundations
+title: "Embeddings and an introduction to transformers and LLMs"
+order: 11
+prereqs: ["f9"]
+objectives:
+  - "Explain what embeddings capture and how similarity works"
+  - "Describe attention and the transformer block"
+  - "Explain how LLMs are trained and used"

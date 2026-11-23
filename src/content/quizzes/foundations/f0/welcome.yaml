@@ -1,0 +1,11 @@
+items:
+  - id: f0-welcome-01
+    type: mcq
+    prompt: "In $\\theta_{t+1} = \\theta_t - \\eta \\nabla_\\theta L$, what does $\\eta$ control?"
+    explanation: "$\\eta$ is the learning rate: it scales each step."
+    options:
+      - text: The step size
+        correct: true
+        why: The gradient gives a direction; $\eta$ scales how far you move.
+      - text: The number of steps
+        why: The number of steps is how many times you apply the update, not $\eta$.

@@ -1,0 +1,8 @@
+id: a9
+course: mle
+title: "CI/CD"
+order: 9
+prereqs: ["a8"]
+objectives:
+  - "Explain the core ideas of cI/CD"
+  - "Apply cI/CD to a working ML project"

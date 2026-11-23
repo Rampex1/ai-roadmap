@@ -1,0 +1,9 @@
+id: f1
+course: foundations
+title: "Python basics"
+order: 2
+prereqs: ["f0"]
+objectives:
+  - "Write Python with variables, types, control flow and functions"
+  - "Use lists, dicts, strings and comprehensions fluently"
+  - "Read and debug short Python programs"

@@ -1,0 +1,9 @@
+id: b14
+course: research
+title: "Doing research"
+order: 15
+prereqs: ["b13"]
+objectives:
+  - "Explain the core ideas of doing research"
+  - "Derive or implement the key methods of doing research"
+capstone: research-capstone

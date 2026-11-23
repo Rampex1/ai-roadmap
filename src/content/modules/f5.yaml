@@ -1,0 +1,9 @@
+id: f5
+course: foundations
+title: "Probability, statistics and information theory basics"
+order: 6
+prereqs: ["f4"]
+objectives:
+  - "Work with random variables, distributions and expectation"
+  - "Estimate parameters and quantify uncertainty"
+  - "Compute entropy, cross-entropy and KL divergence"

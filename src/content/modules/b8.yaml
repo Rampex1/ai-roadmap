@@ -1,0 +1,8 @@
+id: b8
+course: research
+title: "Pretraining and post-training"
+order: 9
+prereqs: ["b7"]
+objectives:
+  - "Explain the core ideas of pretraining and post-training"
+  - "Derive or implement the key methods of pretraining and post-training"

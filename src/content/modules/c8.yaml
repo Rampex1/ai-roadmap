@@ -1,0 +1,8 @@
+id: c8
+course: llm
+title: "MCP"
+order: 8
+prereqs: ["c7"]
+objectives:
+  - "Explain the core ideas of MCP"
+  - "Build and evaluate an application using MCP"

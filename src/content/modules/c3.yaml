@@ -1,0 +1,8 @@
+id: c3
+course: llm
+title: "Prompt and context engineering"
+order: 3
+prereqs: ["c2"]
+objectives:
+  - "Explain the core ideas of prompt and context engineering"
+  - "Build and evaluate an application using prompt and context engineering"

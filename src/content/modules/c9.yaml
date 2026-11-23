@@ -1,0 +1,8 @@
+id: c9
+course: llm
+title: "Evals"
+order: 9
+prereqs: ["c8"]
+objectives:
+  - "Explain the core ideas of evals"
+  - "Build and evaluate an application using evals"

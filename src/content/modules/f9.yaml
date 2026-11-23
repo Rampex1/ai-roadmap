@@ -1,0 +1,9 @@
+id: f9
+course: foundations
+title: "Neural nets from scratch, then PyTorch"
+order: 10
+prereqs: ["f6"]
+objectives:
+  - "Implement an MLP and backpropagation in NumPy"
+  - "Train a small network in PyTorch"
+  - "Tune initialisation, activation and regularisation"

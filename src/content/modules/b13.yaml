@@ -1,0 +1,8 @@
+id: b13
+course: research
+title: "Reading and reproducing papers"
+order: 14
+prereqs: ["b12"]
+objectives:
+  - "Explain the core ideas of reading and reproducing papers"
+  - "Derive or implement the key methods of reading and reproducing papers"

@@ -1,0 +1,8 @@
+id: b6
+course: research
+title: "Sequence models"
+order: 7
+prereqs: ["b5"]
+objectives:
+  - "Explain the core ideas of sequence models"
+  - "Derive or implement the key methods of sequence models"

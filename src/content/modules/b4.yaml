@@ -1,0 +1,8 @@
+id: b4
+course: research
+title: "Optimisers"
+order: 5
+prereqs: ["b3"]
+objectives:
+  - "Explain the core ideas of optimisers"
+  - "Derive or implement the key methods of optimisers"

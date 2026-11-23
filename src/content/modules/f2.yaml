@@ -1,0 +1,9 @@
+id: f2
+course: foundations
+title: "Python for data: NumPy, pandas, matplotlib"
+order: 3
+prereqs: ["f1"]
+objectives:
+  - "Vectorise computations with NumPy arrays"
+  - "Load, clean and summarise tables with pandas"
+  - "Plot data with matplotlib"

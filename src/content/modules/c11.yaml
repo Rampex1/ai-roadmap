@@ -1,0 +1,8 @@
+id: c11
+course: llm
+title: "LLMOps, security and safety"
+order: 11
+prereqs: ["c10"]
+objectives:
+  - "Explain the core ideas of LLMOps, security and safety"
+  - "Build and evaluate an application using LLMOps, security and safety"

@@ -1,0 +1,8 @@
+id: c5
+course: llm
+title: "RAG"
+order: 5
+prereqs: ["c4"]
+objectives:
+  - "Explain the core ideas of RAG"
+  - "Build and evaluate an application using RAG"
