@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { dueItems } from '@/lib/srs';
 import type { PoolItem } from '@/lib/pool';
 import { QuizItemCard } from './Quiz';
@@ -6,19 +6,30 @@ import { useProgress } from './useProgress';
 
 const CAP = 50;
 
-export default function ReviewSession({ items }: { items: PoolItem[] }) {
+export default function ReviewSession({ itemModule }: { itemModule: Record<string, string> }) {
   const [state] = useProgress();
-  // Freeze the session's item list when it starts, so answering doesn't reshuffle the page.
-  const session = useMemo(() => {
-    const byId = new Map(items.map((i) => [i.id, i]));
-    const due = dueItems(state, new Date(), new Set(byId.keys()));
+  const [session, setSession] = useState<PoolItem[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  // Pick the due items once when the session starts (answering must not reshuffle the page),
+  // then fetch only the modules they come from.
+  useEffect(() => {
+    const due = dueItems(state, new Date(), new Set(Object.keys(itemModule)));
     for (let i = due.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [due[i], due[j]] = [due[j], due[i]];
     }
-    return due.slice(0, CAP).map((id) => byId.get(id)!);
+    const picked = due.slice(0, CAP);
+    const modules = [...new Set(picked.map((id) => itemModule[id]))];
+    Promise.all(modules.map((m) => fetch(`/quiz/${m}.json`).then((r) => (r.ok ? (r.json() as Promise<PoolItem[]>) : Promise.reject(r.status)))))
+      .then((lists) => {
+        const byId = new Map(lists.flat().map((i) => [i.id, i]));
+        setSession(picked.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : [])));
+      })
+      .catch(() => setFailed(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items]);
+  }, [itemModule]);
+  if (failed) return <p role="alert" className="air-callout air-callout-error not-content">Could not load review items. Reload the page to try again.</p>;
+  if (!session) return <p className="not-content" role="status">Loading your review…</p>;
   const total = Object.keys(state.cards).length;
   if (!session.length)
     return (

@@ -11,14 +11,15 @@
     "serve": "node scripts/start.mjs --serve",
     "dev": "astro dev --port 4321",
     "build": "node scripts/vendor-pyodide.mjs --if-missing && astro build",
-    "check": "npm run build && npm run check:content && npm run check:exercises && npm run check:notebooks && npm run check:links",
+    "check": "npm run build && npm run check:content && npm run check:exercises && npm run check:notebooks && npm run check:links && npm run check:coverage",
     "check:content": "node scripts/check-content.mjs",
     "check:exercises": "node scripts/check-exercises.mjs",
     "vendor:pyodide": "node scripts/vendor-pyodide.mjs",
     "test": "vitest run",
     "e2e": "playwright test",
     "check:notebooks": "node scripts/check-notebooks.mjs",
-    "check:links": "node scripts/check-links.mjs"
+    "check:links": "node scripts/check-links.mjs",
+    "check:coverage": "node scripts/check-coverage.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "7.3.10",
