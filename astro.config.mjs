@@ -29,6 +29,7 @@ export default defineConfig({
       routeMiddleware: './src/routeData.ts',
       components: {
         PageTitle: './src/components/overrides/PageTitle.astro',
+        Footer: './src/components/overrides/Footer.astro',
         Search: './src/components/overrides/Search.astro',
       },
       customCss: ['katex/dist/katex.min.css', './src/styles/theme.css'],

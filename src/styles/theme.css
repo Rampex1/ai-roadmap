@@ -404,3 +404,50 @@ starlight-toc a[aria-current='true'] {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------- Shared UI primitives for islands (buttons, cards, callouts) ---------- */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.air-btn {
+  display: inline-flex; align-items: center; gap: 0.5em;
+  padding: 10px 18px; min-height: 44px;
+  border: 1px solid var(--air-border-strong); border-radius: var(--air-radius);
+  background: var(--air-surface-raised); color: var(--sl-color-white);
+  font: inherit; font-weight: 600; font-size: var(--sl-text-sm);
+  cursor: pointer; transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+.air-btn:hover { border-color: var(--air-brand-line); background: var(--air-brand-soft); }
+.air-btn:active { transform: translateY(1px); }
+.air-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.air-btn:has(input:focus-visible) { outline: 2px solid var(--air-brand); outline-offset: 2px; }
+.air-btn-primary { background: var(--air-brand); border-color: var(--air-brand); color: #fff; }
+.air-btn-primary:hover { background: var(--air-brand-strong); border-color: var(--air-brand-strong); }
+.air-btn-danger { color: #b42318; border-color: color-mix(in srgb, #b42318 40%, transparent); }
+:root[data-theme='dark'] .air-btn-danger { color: #fda29b; }
+.air-row { display: flex; flex-wrap: wrap; gap: var(--air-space-3); }
+.air-card {
+  padding: 20px 24px; margin-block: var(--air-space-4);
+  border: 1px solid var(--air-border); border-radius: var(--air-radius-lg);
+  background: var(--air-surface); box-shadow: var(--air-shadow);
+}
+.air-card > h2 { margin: 0 0 0.4em; font-size: var(--sl-text-xl); }
+.air-card > p { margin: 0 0 1em; color: var(--sl-color-gray-2); line-height: 1.6; }
+.air-callout {
+  padding: 12px 16px; margin-block: var(--air-space-3);
+  border: 1px solid var(--air-border); border-radius: var(--air-radius); line-height: 1.5;
+}
+.air-callout-ok { border-color: color-mix(in srgb, var(--air-success) 45%, transparent); background: var(--air-success-soft); }
+.air-callout-error, .air-callout-warn { border-color: color-mix(in srgb, #b42318 40%, transparent); background: color-mix(in srgb, #b42318 8%, transparent); }
+.air-complete { margin-block: var(--air-space-6) var(--air-space-4); display: flex; justify-content: flex-start; }
+.air-complete-done {
+  display: inline-flex; align-items: center; gap: 0.5em; margin: 0;
+  padding: 10px 16px; border-radius: var(--air-radius);
+  background: var(--air-success-soft); color: var(--air-success); font-weight: 600;
+}
+.air-debug dt { font-weight: 600; margin-top: var(--air-space-3); }
+.air-debug dd { margin: 4px 0 0; }
+.air-debug pre { padding: 12px 16px; border: 1px solid var(--air-border); border-radius: var(--air-radius); max-height: 60vh; overflow: auto; font-size: var(--sl-text-xs); }
+/* Dark brand is a light tint, so primary buttons need dark text for contrast. */
+:root[data-theme='dark'] .air-btn-primary { color: #0b1020; }

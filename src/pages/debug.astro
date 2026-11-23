@@ -1,0 +1,9 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import Debug from '@/components/islands/Debug';
+const build = new Date().toISOString();
+---
+
+<StarlightPage frontmatter={{ title: 'Debug', overview: true, tableOfContents: false, pagefind: false }}>
+  <Debug client:only="react" build={build} />
+</StarlightPage>

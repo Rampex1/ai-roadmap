@@ -1,0 +1,8 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import Settings from '@/components/islands/Settings';
+---
+
+<StarlightPage frontmatter={{ title: 'Settings', overview: true, tableOfContents: false }}>
+  <Settings client:only="react" />
+</StarlightPage>

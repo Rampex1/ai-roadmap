@@ -1,0 +1,13 @@
+---
+import Default from '@astrojs/starlight/components/Footer.astro';
+import LessonComplete from '@/components/islands/LessonComplete';
+import { courseOf } from '@/lib/sidebar';
+
+const { entry } = Astro.locals.starlightRoute;
+const data = entry.data as { module?: string; overview?: boolean; template?: string };
+const isLesson = !!data.module && !data.overview && data.template !== 'splash';
+const course = courseOf(Astro.url.pathname) ?? '';
+---
+
+{isLesson && <LessonComplete client:only="react" lessonId={entry.id} course={course} />}
+<Default />
