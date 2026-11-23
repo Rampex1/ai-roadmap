@@ -9,3 +9,47 @@ items:
         why: The gradient gives a direction; $\eta$ scales how far you move.
       - text: The number of steps
         why: The number of steps is how many times you apply the update, not $\eta$.
+      - text: The direction of the step
+        why: The direction comes from the negative gradient, not from $\eta$.
+  - id: f0-welcome-02
+    type: multi
+    prompt: "Which of these are part of every lesson in this course?"
+    explanation: "Every lesson has objectives and an end-of-lesson quiz. Homework notebooks belong to modules, not individual lessons."
+    options:
+      - text: Learning objectives
+        correct: true
+        why: Each lesson starts with 2–4 objectives.
+      - text: A quiz at the end
+        correct: true
+        why: Retrieval practice closes every lesson.
+      - text: A homework notebook
+        why: Homework is set once per module, not per lesson.
+  - id: f0-welcome-03
+    type: numeric
+    prompt: "What is the mean $\\bar{x}$ of the numbers 2, 4 and 9?"
+    explanation: "$\\bar{x} = \\frac{2 + 4 + 9}{3} = \\frac{15}{3} = 5$."
+    answer: 5
+    tol: 0.001
+  - id: f0-welcome-04
+    type: output
+    prompt: "What does this Python code print?"
+    code: |
+      steps = [1, 2, 3]
+      print(sum(steps) * 2)
+    answer: "12"
+    explanation: "`sum([1, 2, 3])` is 6, and $6 \\times 2 = 12$."
+  - id: f0-welcome-05
+    type: order
+    prompt: "Put the course stages in the order you will meet them."
+    explanation: "Lessons build understanding, the module check confirms mastery, and spaced review keeps it over time."
+    items:
+      - Read the lesson
+      - Answer the lesson quiz
+      - Pass the module mastery check
+      - Review items when they come due
+  - id: f0-welcome-06
+    type: cloze
+    prompt: "Gradient descent steps against the ____ of the loss."
+    explanation: "The gradient points uphill; stepping against it lowers the loss."
+    accept: ["gradient"]
+    regex: "^(the )?gradient$"

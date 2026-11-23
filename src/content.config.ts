@@ -51,7 +51,8 @@ const quizItem = z.discriminatedUnion('type', [
   z.object({ ...base, type: z.literal('multi'), options: z.array(option).min(2) }),
   z.object({ ...base, type: z.literal('numeric'), answer: z.number(), tol: z.number().nonnegative().optional(), rtol: z.number().nonnegative().optional() }),
   z.object({ ...base, type: z.literal('output'), code: z.string().min(1), answer: z.string() }),
-  z.object({ ...base, type: z.literal('order'), items: z.array(z.string().min(1)).min(2) }),
+  z.object({ ...base, type: z.literal('order'), items: z.array(z.string().min(1)).min(2) })
+    .refine((q) => new Set(q.items).size === q.items.length, { message: 'order items must be unique' }),
   z.object({ ...base, type: z.literal('cloze'), accept: z.array(z.string().min(1)).min(1).optional(), regex: z.string().optional() })
     .refine((q) => q.accept || q.regex, { message: 'cloze needs accept[] or regex' }),
 ]).superRefine((q, c) => {
