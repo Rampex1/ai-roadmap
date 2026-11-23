@@ -1,0 +1,18 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { getCollection } from 'astro:content';
+import MasteryCheck from '@/components/islands/MasteryCheck';
+import { quizPool } from '@/lib/pool';
+
+export async function getStaticPaths() {
+  const modules = await getCollection('modules');
+  return modules.map((m) => ({ params: { course: m.data.course, module: m.data.id }, props: { id: m.data.id, title: m.data.title } }));
+}
+const { id, title } = Astro.props as { id: string; title: string };
+const items = await quizPool((m) => m === id);
+---
+
+<StarlightPage frontmatter={{ title: `Mastery check: ${title}`, overview: true, tableOfContents: false, pagefind: false }}>
+  {items.length ? <MasteryCheck client:only="react" moduleId={id} moduleTitle={title} items={items} /> : <p>Lessons for this module are coming soon, so there is nothing to check yet.</p>}
+  <p><a href={`/${Astro.params.course}/${id}/`}>← Back to the module</a></p>
+</StarlightPage>

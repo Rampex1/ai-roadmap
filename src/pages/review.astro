@@ -1,0 +1,11 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import ReviewSession from '@/components/islands/ReviewSession';
+import { quizPool } from '@/lib/pool';
+// ponytail: ships every quiz item's HTML to this page; fine for F0–F1, split into per-module JSON once the pool reaches thousands of items.
+const items = await quizPool();
+---
+
+<StarlightPage frontmatter={{ title: 'Review', description: 'Spaced review of quiz items that are due today', overview: true, tableOfContents: false }}>
+  <ReviewSession client:only="react" items={items} />
+</StarlightPage>

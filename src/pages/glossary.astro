@@ -1,0 +1,25 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { getCollection } from 'astro:content';
+import { md } from '@/lib/markdown';
+
+const entries = (await getCollection('glossary')).sort((a, b) => a.data.term.localeCompare(b.data.term));
+const byId = new Map(entries.map((e) => [e.id, e.data.term]));
+const rendered = await Promise.all(entries.map(async (e) => ({ id: e.id, ...e.data, html: await md(e.data.body) })));
+---
+
+<StarlightPage frontmatter={{ title: 'Glossary', description: 'Every term the course defines, in one place.', overview: true }}
+  headings={rendered.map((e) => ({ depth: 2, slug: e.id, text: e.term }))}>
+  <div class="air-glossary not-content">
+    {rendered.map((e) => (
+      <section class="air-gloss" aria-labelledby={e.id}>
+        <h2 id={e.id}><a href={`#${e.id}`}>{e.term}</a></h2>
+        <p class="air-gloss-short">{e.short}</p>
+        <div class="air-gloss-body" set:html={e.html} />
+        {e.related.length > 0 && (
+          <p class="air-gloss-related">Related: {e.related.map((r, i) => <>{i > 0 && ', '}<a href={`#${r}`}>{byId.get(r) ?? r}</a></>)}</p>
+        )}
+      </section>
+    ))}
+  </div>
+</StarlightPage>

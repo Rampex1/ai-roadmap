@@ -21,6 +21,8 @@ const hasContent = (slug) => {
 export default defineConfig({
   site: 'http://localhost:4321',
   server: { port: 4321 },
+  // The Pyodide worker is an ES module worker (it dynamic-imports /pyodide/pyodide.mjs).
+  vite: { worker: { format: 'es' } },
   // Astro 7 defaults to Sätteri, which can't run remark/rehype plugins; use unified for KaTeX.
   markdown: { processor: unified({ remarkPlugins: [remarkMath], rehypePlugins: [rehypeKatex] }) },
   integrations: [
@@ -33,9 +35,17 @@ export default defineConfig({
         Search: './src/components/overrides/Search.astro',
       },
       customCss: ['katex/dist/katex.min.css', './src/styles/theme.css'],
-      sidebar: courses
-        .filter(([, slug]) => hasContent(slug))
-        .map(([label, directory]) => ({ label, items: [{ autogenerate: { directory } }] })),
+      sidebar: [
+        { label: 'Dashboard', link: '/' },
+        { label: 'Roadmap', link: '/roadmap/' },
+        { label: 'Review', link: '/review/' },
+        { label: 'Glossary', link: '/glossary/' },
+        { label: 'Resources', link: '/resources/' },
+        { label: 'Settings', link: '/settings/' },
+        ...courses
+          .filter(([, slug]) => hasContent(slug))
+          .map(([label, directory]) => ({ label, items: [{ autogenerate: { directory } }] })),
+      ],
     }),
     react(),
   ],

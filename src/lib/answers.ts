@@ -1,11 +1,8 @@
-// Single hook every quiz-like island calls after grading an item.
-// M6 connects this to FSRS scheduling; until then answers only drive feedback.
-type Listener = (itemId: string, correct: boolean) => void;
-const listeners = new Set<Listener>();
-export function onAnswer(itemId: string, correct: boolean) {
-  listeners.forEach((l) => l(itemId, correct));
-}
-export function listenAnswers(l: Listener) {
-  listeners.add(l);
-  return () => void listeners.delete(l);
+// Every quiz-like island calls onAnswer after grading an item; this feeds FSRS (design §5.5).
+import { applyAnswer, getScheduler } from './srs';
+import { progress } from './progress';
+
+export async function onAnswer(itemId: string, correct: boolean) {
+  const s = await getScheduler();
+  return progress().update((st) => applyAnswer(s, st, itemId, correct, new Date()));
 }

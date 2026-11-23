@@ -10,8 +10,8 @@ const n = ((Astro.locals as any).__termCount = ((Astro.locals as any).__termCoun
 const tipId = `term-tip-${id}-${n}`;
 ---
 
-<span class="air-term" data-term={id} tabindex="0" aria-describedby={tipId}
-  >{text ?? entry.data.term}<span class="air-term-tip" role="tooltip" id={tipId} aria-hidden="true">{entry.data.short}</span></span
+<a class="air-term" data-term={id} href={`/glossary/#${id}`} aria-describedby={tipId}
+  >{text ?? entry.data.term}<span class="air-term-tip" role="tooltip" id={tipId} aria-hidden="true">{entry.data.short}</span></a
 >
 
 <script>
@@ -31,10 +31,11 @@ const tipId = `term-tip-${id}-${n}`;
 <style>
   .air-term {
     position: relative;
+    color: inherit;
     text-decoration: underline dotted var(--air-brand);
     text-decoration-thickness: 1.5px;
     text-underline-offset: 0.2em;
-    cursor: help;
+    cursor: pointer;
     border-radius: 3px;
   }
   .air-term-tip {

@@ -3,8 +3,11 @@ import Default from '@astrojs/starlight/components/Footer.astro';
 import { getEntry } from 'astro:content';
 import LessonComplete from '@/components/islands/LessonComplete';
 import Quiz from '@/components/islands/Quiz';
+import Tutor from '@/components/islands/Tutor';
 import { prepareItems } from '@/lib/quiz-data';
 import { courseOf } from '@/lib/sidebar';
+const goDeeperId = (Astro.locals.starlightRoute.entry.data as { goDeeper?: string }).goDeeper;
+const goDeeper = goDeeperId ? await getEntry('resources', goDeeperId) : undefined;
 
 const { entry } = Astro.locals.starlightRoute;
 const data = entry.data as { module?: string; overview?: boolean; template?: string };
@@ -14,6 +17,13 @@ const quiz = isLesson ? await getEntry('quizzes', entry.id) : undefined;
 const items = quiz ? await prepareItems(quiz.data.items) : [];
 ---
 
+{goDeeper && (
+  <aside class="air-godeeper not-content" aria-labelledby="air-godeeper-title">
+    <h2 id="air-godeeper-title">Go deeper</h2>
+    <p><a href={goDeeper.data.url} rel="noopener noreferrer" target="_blank">{goDeeper.data.title}<span class="sr-only"> (opens in a new tab)</span></a>{goDeeper.data.free && ' · free'}</p>
+  </aside>
+)}
 {items.length > 0 && <Quiz client:only="react" items={items} />}
+{isLesson && <Tutor client:only="react" lessonTitle={entry.data.title} objectives={(entry.data as any).objectives ?? []} />}
 {isLesson && <LessonComplete client:only="react" lessonId={entry.id} course={course} />}
 <Default />

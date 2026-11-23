@@ -1,0 +1,16 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { getCollection, getEntry } from 'astro:content';
+import ProjectPage from '@/components/ProjectPage.astro';
+
+export async function getStaticPaths() {
+  const modules = (await getCollection('modules')).filter((m) => m.data.capstone);
+  return modules.map((m) => ({ params: { course: m.data.course, module: m.data.id }, props: { capstone: m.data.capstone! } }));
+}
+const hw = (await getEntry('homework', Astro.props.capstone))!;
+---
+
+<StarlightPage frontmatter={{ title: hw.data.title, overview: true, tableOfContents: false }}>
+  <ProjectPage hw={hw} />
+  <p><a href={`/${Astro.params.course}/${Astro.params.module}/`}>← Back to the module</a></p>
+</StarlightPage>

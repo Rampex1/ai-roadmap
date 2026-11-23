@@ -1,0 +1,26 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { getCollection } from 'astro:content';
+
+const KINDS = { course: 'Courses', book: 'Books', video: 'Videos', paper: 'Papers', tool: 'Tools' } as const;
+const all = (await getCollection('resources')).sort((a, b) => a.data.title.localeCompare(b.data.title));
+const groups = (Object.keys(KINDS) as (keyof typeof KINDS)[]).map((k) => [k, all.filter((r) => r.data.kind === k)] as const).filter(([, rs]) => rs.length);
+---
+
+<StarlightPage frontmatter={{ title: 'Resources', description: 'Hand-picked free material that goes deeper than the lessons.', overview: true }}
+  headings={groups.map(([k]) => ({ depth: 2, slug: k, text: KINDS[k] }))}>
+  {groups.map(([kind, rs]) => (
+    <section class="not-content air-res-group" aria-labelledby={kind}>
+      <h2 id={kind}>{KINDS[kind]}</h2>
+      <ul class="air-res-list">
+        {rs.map((r) => (
+          <li class="air-res" data-resource={r.id}>
+            <a href={r.data.url} rel="noopener noreferrer" target="_blank">{r.data.title}<span class="sr-only"> (opens in a new tab)</span></a>
+            {r.data.free && <> <span class="air-pill">Free</span></>}
+            {r.data.modules.length > 0 && <> <span class="air-res-mods">Used in {r.data.modules.map((m) => m.toUpperCase()).join(', ')}</span></>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+</StarlightPage>

@@ -1,6 +1,8 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { grade, type Response } from '@/lib/grading';
 import { onAnswer } from '@/lib/answers';
+import { askTutor } from '@/lib/ask-tutor';
+import { saveErrorText } from './saveError';
 import type { PreparedItem } from '@/lib/quiz-data';
 
 const SHOWN = 5;
@@ -26,16 +28,18 @@ export default function Quiz({ items, title = 'Check your understanding' }: { it
       <h2 id={titleId}>{title}</h2>
       <p className="air-quiz-sub">Answer from memory first — retrieval is what makes it stick.</p>
       {shown.map((it, n) => (
-        <QuizItemCard key={it.id} item={it} n={n + 1} />
+        <QuizItemCard key={it.id} item={it} n={n + 1} explain />
       ))}
     </section>
   );
 }
 
-export function QuizItemCard({ item, n, onGraded }: { item: PreparedItem; n: number; onGraded?: (correct: boolean) => void }) {
+/** `explain` shows the tutor button; only lesson pages mount the tutor. */
+export function QuizItemCard({ item, n, onGraded, explain = false }: { item: PreparedItem; n: number; onGraded?: (correct: boolean) => void; explain?: boolean }) {
   const [resp, setResp] = useState<Response | null>(() => initial(item));
   const [result, setResult] = useState<boolean | null>(null);
   const [live, setLive] = useState('');
+  const [saveErr, setSaveErr] = useState<string | null>(null);
   const feedbackRef = useRef<HTMLDivElement>(null);
   const answered = result !== null;
   useEffect(() => {
@@ -47,7 +51,9 @@ export function QuizItemCard({ item, n, onGraded }: { item: PreparedItem; n: num
     const ok = grade(item, resp);
     setResult(ok);
     setLive(ok ? 'Correct.' : 'Not quite.');
-    onAnswer(item.id, ok);
+    onAnswer(item.id, ok)
+      .then((r) => setSaveErr(saveErrorText(r)))
+      .catch(() => setSaveErr('Could not update your review schedule.'));
     onGraded?.(ok);
   };
 
@@ -75,6 +81,10 @@ export function QuizItemCard({ item, n, onGraded }: { item: PreparedItem; n: num
             ))}
           {!result && <CorrectAnswer item={item} />}
           <div className="air-feedback-explain" dangerouslySetInnerHTML={html(item.explanationHtml)} />
+          {saveErr && <p role="alert" className="air-callout air-callout-error">{saveErr}</p>}
+          {explain && <button type="button" className="air-btn air-btn-ghost" onClick={() => askTutor({ question: item.prompt, prompt: `Can you explain this question? "${item.prompt}"` })}>
+            Explain this with the tutor
+          </button>}
         </div>
       )}
     </fieldset>

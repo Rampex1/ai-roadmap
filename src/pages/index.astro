@@ -1,0 +1,12 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import Dashboard from '@/components/islands/Dashboard';
+import { siteData } from '@/lib/site-data';
+import { getCollection } from 'astro:content';
+const { modules, lessons } = await siteData();
+const itemIds = (await getCollection('quizzes')).flatMap((q) => q.data.items.map((i) => i.id));
+---
+
+<StarlightPage frontmatter={{ title: 'AI Roadmap', description: 'Your dashboard: continue learning, review what is due, track progress.', overview: true, tableOfContents: false }}>
+  <Dashboard client:only="react" modules={modules} lessons={lessons} itemIds={itemIds} />
+</StarlightPage>

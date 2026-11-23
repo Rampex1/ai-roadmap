@@ -1,0 +1,19 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { getCollection } from 'astro:content';
+import ProjectPage from '@/components/ProjectPage.astro';
+
+export async function getStaticPaths() {
+  const [modules, homework] = await Promise.all([getCollection('modules'), getCollection('homework')]);
+  return modules.map((m) => ({
+    params: { course: m.data.course, module: m.data.id },
+    props: { title: m.data.title, hw: homework.filter((h) => h.data.module === m.data.id && h.data.kind === 'homework') },
+  }));
+}
+const { title, hw } = Astro.props;
+---
+
+<StarlightPage frontmatter={{ title: `Homework: ${title}`, overview: true, tableOfContents: false }}>
+  {hw.length ? hw.map((h) => <><h2>{h.data.title}</h2><ProjectPage hw={h} /></>) : <p>Homework for this module is coming soon.</p>}
+  <p><a href={`/${Astro.params.course}/${Astro.params.module}/`}>← Back to the module</a></p>
+</StarlightPage>

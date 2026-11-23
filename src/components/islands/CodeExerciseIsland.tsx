@@ -1,3 +1,4 @@
+import { askTutor } from '@/lib/ask-tutor';
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import { EditorState, Prec } from '@codemirror/state';
 import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, drawSelection } from '@codemirror/view';
@@ -285,6 +286,11 @@ export default function CodeExerciseIsland({ id, title, starter, tests, hintsHtm
         <div className={`air-ex-result air-ex-${result.status}`} data-result data-status={result.status}>
           <p className="air-ex-result-head">{result.status === 'stopped' ? `${result.message}.` : STATUS_TEXT[result.status]}</p>
           {(result.status === 'failed' || result.status === 'error') && <pre className="air-ex-message">{result.message}</pre>}
+          {(result.status === 'failed' || result.status === 'error') && (
+            <button type="button" className="air-btn air-btn-ghost" onClick={() => askTutor({ error: `${result.message.slice(0, 2000)}\n\nTheir code:\n${(view.current?.state.doc.toString() ?? '').slice(0, 3000)}`, prompt: 'My code does not pass yet. Can you give me a hint (not the full answer)?' })}>
+              Explain this with the tutor
+            </button>
+          )}
           {saveError && <p className="air-ex-save-error">{saveError}</p>}
         </div>
       )}

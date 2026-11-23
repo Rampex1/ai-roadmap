@@ -1,6 +1,8 @@
 ---
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import { getCollection, type CollectionEntry } from 'astro:content';
+import PrereqBanner from '@/components/islands/PrereqBanner';
+import { COURSE_NAMES } from '@/lib/sidebar';
 
 export async function getStaticPaths() {
   const modules = await getCollection('modules');
@@ -13,12 +15,17 @@ const { id, title, objectives, prereqs } = mod.data;
 const byId = new Map(modules.map((m) => [m.data.id, m.data]));
 const lessons = (await getCollection('docs', (e) => e.data.module === id)).sort((a, b) => (a.data.order ?? 0) - (b.data.order ?? 0));
 const totalMinutes = lessons.reduce((n, l) => n + (l.data.estMinutes ?? 0), 0);
+const homework = (await getCollection('homework')).filter((h) => h.data.module === id && h.data.kind === 'homework');
+const capstone = mod.data.capstone;
+const context = `${COURSE_NAMES[mod.data.course]} · Module ${id.toUpperCase()}`;
 const summary = lessons.length
-  ? `${lessons.length} ${lessons.length === 1 ? 'lesson' : 'lessons'} · about ${totalMinutes} min`
-  : 'Lessons coming soon';
+  ? `${context} · ${lessons.length} ${lessons.length === 1 ? 'lesson' : 'lessons'} · about ${totalMinutes} min`
+  : `${context} · lessons coming soon`;
+const prereqInfo = prereqs.map((p) => ({ id: p, course: byId.get(p)?.course ?? '', title: byId.get(p)?.title ?? p }));
 ---
 
 <StarlightPage frontmatter={{ title, description: summary, overview: true, tableOfContents: false }}>
+  <PrereqBanner client:only="react" moduleId={id} course={mod.data.course} prereqs={prereqInfo} />
   <div class="mod not-content">
     <section aria-labelledby="mod-objectives">
       <h2 id="mod-objectives">What you will be able to do</h2>
@@ -64,19 +71,31 @@ const summary = lessons.length
       )}
     </section>
 
-    {lessons.length > 0 && (
+    {(lessons.length > 0 || capstone) && (
       <section aria-labelledby="mod-practice">
         <h2 id="mod-practice">Practice</h2>
-        {/* Routes arrive in later milestones; shown as disabled until then. */}
         <div class="mod-actions">
-          <div class="mod-action">
+          <a class="mod-action" href={`/${mod.data.course}/${id}/check/`}>
             <span class="mod-action-title">Mastery check</span>
-            <span class="mod-muted">Coming soon</span>
-          </div>
-          <div class="mod-action">
-            <span class="mod-action-title">Homework</span>
-            <span class="mod-muted">Coming soon</span>
-          </div>
+            <span class="mod-muted">12 mixed questions · pass at 80% · or use it to test out</span>
+          </a>
+          {homework.length ? (
+            <a class="mod-action" href={`/${mod.data.course}/${id}/homework/`}>
+              <span class="mod-action-title">Homework</span>
+              <span class="mod-muted">{homework[0].data.title}</span>
+            </a>
+          ) : (
+            <div class="mod-action">
+              <span class="mod-action-title">Homework</span>
+              <span class="mod-muted">Coming soon</span>
+            </div>
+          )}
+          {capstone && (
+            <a class="mod-action" href={`/${mod.data.course}/${id}/capstone/`}>
+              <span class="mod-action-title">Capstone project</span>
+              <span class="mod-muted">Required to complete the course</span>
+            </a>
+          )}
         </div>
       </section>
     )}

@@ -20,8 +20,9 @@ const hasLinkUnder = (e: Entry, prefix: string): boolean =>
 export function filterSidebar<T extends Entry>(sidebar: T[], pathname: string): T[] {
   const course = courseOf(pathname);
   if (!course) return sidebar;
-  const kept = sidebar.filter((e) => hasLinkUnder(e, `/${course}/`));
-  return kept.length ? kept : sidebar; // course without lessons yet: keep the full sidebar
+  const inCourse = sidebar.filter((e) => e.type !== 'link' && hasLinkUnder(e, `/${course}/`));
+  if (!inCourse.length) return sidebar; // course without lessons yet: keep the full sidebar
+  return sidebar.filter((e) => e.type === 'link' || inCourse.includes(e)); // site links always stay
 }
 
 /** Flatten links in sidebar order (for prev/next pagination). */

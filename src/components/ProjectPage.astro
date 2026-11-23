@@ -1,0 +1,23 @@
+---
+// Shared body for homework and capstone pages.
+import type { CollectionEntry } from 'astro:content';
+import ProjectChecklist from '@/components/islands/ProjectChecklist';
+import { md } from '@/lib/markdown';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+interface Props { hw: CollectionEntry<'homework'> }
+const { hw } = Astro.props;
+const brief = await md(hw.data.brief);
+// Notebooks ship with their module; until then show a note instead of a dead download link.
+const hasNotebook = existsSync(join(process.cwd(), 'public', hw.data.notebook));
+---
+
+<div class="air-project">
+  <div set:html={brief} />
+  <div class="air-row not-content air-project-links">
+    {hasNotebook ? <a class="air-btn air-btn-primary" href={hw.data.notebook} download>Download notebook</a> : <span class="air-hint">The notebook ships with this module's lessons.</span>}
+    {hw.data.colab && <a class="air-btn" href={hw.data.colab} rel="noopener">Open in Colab</a>}
+  </div>
+  <p class="air-callout not-content"><strong>Compute:</strong> {hw.data.compute}</p>
+  <ProjectChecklist client:only="react" projectId={hw.data.id} rubric={hw.data.rubric} />
+</div>

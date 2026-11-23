@@ -1,0 +1,10 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import RoadmapMap from '@/components/islands/RoadmapMap';
+import { siteData } from '@/lib/site-data';
+const { modules, lessons } = await siteData();
+---
+
+<StarlightPage frontmatter={{ title: 'Roadmap', description: 'Foundations first, then any of the three tracks. Columns follow prerequisites, left to right.', overview: true, tableOfContents: false }}>
+  <RoadmapMap client:only="react" modules={modules} lessons={lessons} />
+</StarlightPage>
