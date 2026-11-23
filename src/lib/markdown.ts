@@ -5,7 +5,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 
 let processor: ReturnType<typeof createMarkdownProcessor> | undefined;
-const get = () => (processor ??= createMarkdownProcessor({ remarkPlugins: [remarkMath], rehypePlugins: [rehypeKatex], syntaxHighlight: false }));
+const get = () => (processor ??= createMarkdownProcessor({ remarkPlugins: [remarkMath], rehypePlugins: [rehypeKatex], syntaxHighlight: false, smartypants: false }));
 
 export async function md(s: string): Promise<string> {
   return (await (await get()).render(s)).code;
