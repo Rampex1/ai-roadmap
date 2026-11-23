@@ -1,0 +1,6 @@
+id: m1
+course: demo
+title: "Module one"
+order: 2
+prereqs: ["m0"]
+capstone: demo-capstone

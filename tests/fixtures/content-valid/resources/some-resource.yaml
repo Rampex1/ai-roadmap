@@ -1,0 +1,5 @@
+title: "Some resource"
+url: https://example.com/
+kind: course
+free: true
+modules: [m1]

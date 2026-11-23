@@ -1,0 +1,8 @@
+items:
+  - id: m1-intro-01
+    type: mcq
+    prompt: "Pick one"
+    options:
+      - text: A
+        correct: true
+      - text: B
