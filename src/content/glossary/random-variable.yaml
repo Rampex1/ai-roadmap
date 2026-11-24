@@ -1,0 +1,6 @@
+term: "Random variable"
+short: "A number produced by a random experiment, such as the sum of two dice, described by its distribution."
+body: |
+  A discrete random variable has a probability mass function $p(x) = P(X = x)$; a continuous one has a
+  probability density. Its main summaries are the expected value and the variance.
+related: ["expected-value", "variance", "probability-density"]

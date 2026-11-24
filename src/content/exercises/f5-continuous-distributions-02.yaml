@@ -1,0 +1,49 @@
+id: f5-continuous-distributions-02
+lesson: foundations/f5/continuous-distributions
+title: Normal probabilities and central intervals
+prompt: |
+  Use `scipy.stats.norm` to write two functions for a normal distribution with mean `mu` and standard
+  deviation `sigma`:
+
+  - `prob_between(a, b, mu, sigma)`: $P(a < X < b)$, using the CDF.
+  - `central_interval(mu, sigma, coverage)`: the interval `(lo, hi)`, centred on `mu`, that contains a fraction
+    `coverage` of the probability. Leave `(1 - coverage) / 2` in each tail and use `stats.norm.ppf`.
+
+  For the standard normal, `prob_between(-1, 1, 0, 1)` is about `0.6827` and `central_interval(0, 1, 0.95)` is
+  about `(-1.96, 1.96)`. For heights with `mu=170, sigma=10`, `central_interval(170, 10, 0.95)` is about
+  `(150.4, 189.6)`. Remember that `scale` is the standard deviation.
+starter: |
+  from scipy import stats
+
+  def prob_between(a, b, mu, sigma):
+      return stats.norm.cdf(b) - stats.norm.cdf(a)
+
+  def central_interval(mu, sigma, coverage):
+      return (mu - sigma, mu + sigma)
+solution: |
+  from scipy import stats
+
+  def prob_between(a, b, mu, sigma):
+      return stats.norm.cdf(b, loc=mu, scale=sigma) - stats.norm.cdf(a, loc=mu, scale=sigma)
+
+  def central_interval(mu, sigma, coverage):
+      tail = (1 - coverage) / 2
+      return (stats.norm.ppf(tail, loc=mu, scale=sigma), stats.norm.ppf(1 - tail, loc=mu, scale=sigma))
+tests: |
+  import math
+  _r = prob_between(-1, 1, 0, 1)
+  assert _r is not None, "prob_between returned None: did you forget the return statement?"
+  assert abs(_r - 0.682689) < 1e-5, f"prob_between(-1, 1, 0, 1) should be about 0.6827, got {_r!r}"
+  assert abs(prob_between(160, 180, 170, 10) - 0.682689) < 1e-5, "Heights N(170, 10): P(160 < X < 180) is about 0.6827. Pass loc=mu and scale=sigma."
+  assert abs(prob_between(185, 1000, 170, 10) - 0.0668072) < 1e-5, "P(height > 185) for N(170, 10) is about 0.0668"
+  assert abs(prob_between(0, 3, 1, 2) - 0.5328072) < 1e-5, "For mu=1, sigma=2: P(0 < X < 3) is about 0.5328"
+  _iv = central_interval(0, 1, 0.95)
+  assert _iv is not None and len(_iv) == 2, "central_interval should return a tuple (lo, hi)"
+  assert abs(_iv[0] + 1.959964) < 1e-4 and abs(_iv[1] - 1.959964) < 1e-4, f"central_interval(0, 1, 0.95) should be about (-1.96, 1.96), got {_iv!r}"
+  _lo, _hi = central_interval(170, 10, 0.95)
+  assert abs(_lo - 150.40036) < 1e-3 and abs(_hi - 189.59964) < 1e-3, f"central_interval(170, 10, 0.95) should be about (150.4, 189.6), got {(_lo, _hi)!r}"
+  _lo, _hi = central_interval(5, 2, 0.5)
+  assert abs(prob_between(_lo, _hi, 5, 2) - 0.5) < 1e-9 and math.isclose(_lo + _hi, 10), "A 50% central interval must contain 50% of the probability and be centred on mu"
+hints:
+  - "stats.norm.cdf(x, loc=mu, scale=sigma) is the area to the left of x."
+  - "With tail = (1 - coverage) / 2, lo is stats.norm.ppf(tail, loc=mu, scale=sigma) and hi uses 1 - tail."

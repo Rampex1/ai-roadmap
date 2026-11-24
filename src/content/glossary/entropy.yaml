@@ -1,0 +1,5 @@
+term: "Entropy"
+short: "The average surprise of a distribution, H(p) = -sum of p log p: how uncertain its outcomes are."
+body: |
+  In bits (log base 2) it is the minimum average code length. It is 0 for a certain outcome and largest, $\log K$, for the uniform distribution over $K$ outcomes. Zero probabilities contribute nothing, since $0 \log 0 = 0$.
+related: ["cross-entropy", "kl-divergence"]

@@ -1,0 +1,40 @@
+id: f5-sampling-and-the-clt-02
+lesson: foundations/f5/sampling-and-the-clt
+title: Measure the standard error by simulation
+prompt: |
+  Write `sd_of_means(n, reps, seed)` that:
+
+  1. creates a Generator from `seed`;
+  2. draws `reps` samples, each of `n` values from **Uniform(0, 1)** (`rng.random(size=(reps, n))`);
+  3. takes the mean of each sample (one mean per row);
+  4. returns the standard deviation of those `reps` means as a float.
+
+  Uniform(0, 1) has $\sigma = \sqrt{1/12} \approx 0.2887$, so the theory predicts
+  $\sigma / \sqrt{n}$: about `0.0289` for `n = 100`. The tests compare your simulation with the theory for
+  several values of `n`.
+starter: |
+  import numpy as np
+
+  def sd_of_means(n, reps, seed):
+      rng = np.random.default_rng(seed)
+      return 0.0
+solution: |
+  import numpy as np
+
+  def sd_of_means(n, reps, seed):
+      rng = np.random.default_rng(seed)
+      means = rng.random(size=(reps, n)).mean(axis=1)
+      return float(means.std())
+tests: |
+  import numpy as np
+  _r = sd_of_means(100, 20_000, 0)
+  assert _r is not None, "sd_of_means returned None: did you forget the return statement?"
+  _sigma = np.sqrt(1 / 12)
+  for _n in [1, 4, 25, 100]:
+      _got = sd_of_means(_n, 20_000, _n)
+      _want = _sigma / np.sqrt(_n)
+      assert abs(_got - _want) / _want < 0.05, f"For n={_n} the standard error should be about {_want:.4f}, got {_got!r}. Take the mean along axis=1 (one mean per sample), then the std of those means."
+  assert sd_of_means(9, 5_000, 3) == sd_of_means(9, 5_000, 3), "The same seed should give the same answer"
+hints:
+  - "rng.random(size=(reps, n)) has one sample per row."
+  - "means = samples.mean(axis=1) gives one mean per row; return float(means.std())."

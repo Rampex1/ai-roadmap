@@ -1,0 +1,7 @@
+term: "Bootstrap"
+short: "Estimating the uncertainty of a statistic by recomputing it on many resamples of the data drawn with replacement."
+body: |
+  Resample the data (same size, with replacement) thousands of times, compute the statistic each time, and take
+  the 2.5th and 97.5th percentiles for a 95% interval. It assumes independent data points and a sample that is
+  not tiny. Bagging and random forests train models on bootstrap resamples.
+related: ["confidence-interval", "standard-error"]

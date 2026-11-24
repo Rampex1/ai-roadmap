@@ -1,0 +1,7 @@
+term: "Conditional probability"
+short: "P(A | B), the probability of A once you know that B happened: P(A and B) / P(B)."
+body: |
+  Knowing $B$ restricts attention to the outcomes in $B$. In general $P(A \mid B) \ne P(B \mid A)$; Bayes'
+  theorem converts one into the other. A classifier estimates the conditional probability of a label given the
+  features.
+related: ["probability", "bayes-theorem", "independence"]

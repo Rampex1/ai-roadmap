@@ -1,0 +1,54 @@
+id: f5-estimation-and-the-bootstrap-01
+lesson: foundations/f5/estimation-and-the-bootstrap
+title: A confidence interval for a mean
+prompt: |
+  Write `mean_ci(x, z=1.96)` that returns the approximate confidence interval `(lo, hi)` for the population
+  mean:
+
+  $$\bar{x} \pm z\,\frac{s}{\sqrt{n}}$$
+
+  where $s$ is the **sample** standard deviation (divide by $n - 1$, so `ddof=1`) and $n$ is the number of
+  values. With the default `z=1.96` this is a 95% interval.
+
+  For `x = [2, 4, 4, 4, 5, 5, 7, 9]` the mean is 5, $s \approx 2.138$ and the interval is about
+  `(3.518, 6.482)`.
+starter: |
+  import numpy as np
+
+  def mean_ci(x, z=1.96):
+      x = np.asarray(x, dtype=float)
+      m = x.mean()
+      return (m - z * x.std(), m + z * x.std())
+solution: |
+  import numpy as np
+
+  def mean_ci(x, z=1.96):
+      x = np.asarray(x, dtype=float)
+      m = x.mean()
+      se = x.std(ddof=1) / np.sqrt(len(x))
+      return (m - z * se, m + z * se)
+tests: |
+  import numpy as np
+  _r = mean_ci([2, 4, 4, 4, 5, 5, 7, 9])
+  assert _r is not None and len(_r) == 2, "mean_ci should return a tuple (lo, hi)"
+  _lo, _hi = _r
+  _se = np.std([2, 4, 4, 4, 5, 5, 7, 9], ddof=1) / np.sqrt(8)
+  assert abs(_lo - (5 - 1.96 * _se)) < 1e-9 and abs(_hi - (5 + 1.96 * _se)) < 1e-9, f"Expected about (3.518, 6.482), got {_r!r}. Use the standard error s / sqrt(n) with ddof=1."
+  _rng = np.random.default_rng(0)
+  for _n in [10, 100, 1000]:
+      _x = _rng.normal(50, 10, size=_n)
+      _se = _x.std(ddof=1) / np.sqrt(_n)
+      _lo, _hi = mean_ci(_x)
+      assert abs(_lo - (_x.mean() - 1.96 * _se)) < 1e-9 and abs(_hi - (_x.mean() + 1.96 * _se)) < 1e-9, f"Wrong interval for a sample of size {_n}"
+  _x = _rng.normal(0, 1, size=40)
+  _lo, _hi = mean_ci(_x, z=2.576)
+  assert abs((_hi - _lo) - 2 * 2.576 * _x.std(ddof=1) / np.sqrt(40)) < 1e-9, "Use the z argument for the multiplier (2.576 gives a 99% interval)"
+  _cov = 0
+  for _ in range(500):
+      _s = _rng.normal(3, 2, size=60)
+      _lo, _hi = mean_ci(_s)
+      _cov += _lo < 3 < _hi
+  assert 0.9 < _cov / 500 < 0.99, f"About 95% of intervals should contain the true mean; yours covered {_cov / 500:.1%}"
+hints:
+  - "The standard error is x.std(ddof=1) / np.sqrt(len(x))."
+  - "Return (m - z * se, m + z * se)."

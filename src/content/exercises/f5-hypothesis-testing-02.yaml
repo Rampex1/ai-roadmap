@@ -1,0 +1,38 @@
+id: f5-hypothesis-testing-02
+lesson: foundations/f5/hypothesis-testing
+title: Is this coin fair? A p-value by simulation
+prompt: |
+  Write `coin_p_value(heads, n, n_sim=100_000, seed=0)` that tests the null hypothesis "the coin is fair" for
+  `heads` heads in `n` flips:
+
+  1. simulate `n_sim` experiments of `n` fair flips with `rng.binomial(n, 0.5, size=n_sim)`;
+  2. the test statistic is the distance from the expected count, `abs(count - n / 2)`;
+  3. return the fraction of simulated experiments whose statistic is at least the observed one.
+
+  For 60 heads in 100 flips the answer is about `0.057`, close to scipy's exact `stats.binomtest(60, 100).pvalue`.
+starter: |
+  import numpy as np
+
+  def coin_p_value(heads, n, n_sim=100_000, seed=0):
+      rng = np.random.default_rng(seed)
+      return heads / n
+solution: |
+  import numpy as np
+
+  def coin_p_value(heads, n, n_sim=100_000, seed=0):
+      rng = np.random.default_rng(seed)
+      sims = rng.binomial(n, 0.5, size=n_sim)
+      return float(np.mean(np.abs(sims - n / 2) >= abs(heads - n / 2)))
+tests: |
+  from scipy import stats
+  _r = coin_p_value(60, 100)
+  assert _r is not None, "coin_p_value returned None: did you forget the return statement?"
+  assert abs(_r - 0.0569) < 0.006, f"For 60 heads in 100 the two-sided p-value is about 0.057, got {_r!r}"
+  for _h, _n in [(55, 100), (40, 100), (530, 1000), (15, 20), (7, 10)]:
+      _want = stats.binomtest(_h, _n, 0.5).pvalue
+      _got = coin_p_value(_h, _n, seed=_h)
+      assert abs(_got - _want) < 0.01, f"For {_h} heads in {_n} flips expected about {_want:.4f}, got {_got!r}. Count both tails with abs(count - n / 2)."
+  assert coin_p_value(50, 100) == 1.0, "Exactly 50 heads in 100 is as unsurprising as possible: p = 1"
+hints:
+  - "sims = rng.binomial(n, 0.5, size=n_sim) gives one head count per simulated experiment."
+  - "Compare np.abs(sims - n / 2) with abs(heads - n / 2) using >=, then take the mean."

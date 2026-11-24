@@ -1,0 +1,7 @@
+term: "Cross-entropy"
+short: "H(p, q) = -sum of p log q: the average surprise when data follow p but you predict with q; the standard classification loss."
+body: |
+  $H(p, q) \ge H(p)$, with equality only when $q = p$. With a one-hot label it reduces to $-\log q_y$, the
+  negative log-probability of the true class, so the classification loss is the average negative log-likelihood.
+  A uniform prediction over $K$ classes gives $\ln K$.
+related: ["entropy", "kl-divergence", "softmax", "maximum-likelihood-estimation"]

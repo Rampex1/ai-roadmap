@@ -1,0 +1,48 @@
+id: f5-probability-basics-02
+lesson: foundations/f5/probability-basics
+title: Estimate a probability by simulation
+prompt: |
+  Write `estimate_prob(event, n, seed)` that **simulates** `n` rolls of two fair dice and returns the
+  fraction of rolls where the event happens.
+
+  - Make a Generator with `np.random.default_rng(seed)` and draw the dice with
+    `rng.integers(1, 7, size=n)` (once for each die).
+  - `event` takes two NumPy **arrays** `d1` and `d2` and returns a boolean array, for example
+    `lambda d1, d2: d1 + d2 == 7`.
+  - Return the fraction of `True` values as a float.
+
+  With `n = 100_000` your estimate should be within about 0.01 of the exact answer. The tests check several
+  events and that the same seed gives the same answer.
+starter: |
+  import numpy as np
+
+  def estimate_prob(event, n, seed):
+      pass
+solution: |
+  import numpy as np
+
+  def estimate_prob(event, n, seed):
+      rng = np.random.default_rng(seed)
+      d1 = rng.integers(1, 7, size=n)
+      d2 = rng.integers(1, 7, size=n)
+      return float(np.mean(event(d1, d2)))
+tests: |
+  import numpy as np
+  _r = estimate_prob(lambda d1, d2: d1 + d2 == 7, 100_000, 0)
+  assert _r is not None, "estimate_prob returned None: did you forget the return statement?"
+  _cases = [
+      (lambda d1, d2: d1 + d2 == 7, 6 / 36, "sum is 7"),
+      (lambda d1, d2: d1 == d2, 6 / 36, "a double"),
+      (lambda d1, d2: (d1 == 6) | (d2 == 6), 11 / 36, "at least one six"),
+      (lambda d1, d2: d1 * d2 >= 20, 8 / 36, "product at least 20"),
+      (lambda d1, d2: d1 + d2 > 1, 1.0, "sum above 1 (certain)"),
+  ]
+  for _i, (_ev, _want, _name) in enumerate(_cases):
+      _got = estimate_prob(_ev, 100_000, _i + 1)
+      assert abs(_got - _want) < 0.01, f"For the event '{_name}' the exact answer is {_want:.4f}; your estimate {_got!r} is too far off"
+  assert estimate_prob(lambda d1, d2: d1 > d2, 20_000, 7) == estimate_prob(lambda d1, d2: d1 > d2, 20_000, 7), "The same seed should give exactly the same estimate: create the Generator from seed inside the function"
+  _small = {estimate_prob(lambda d1, d2: d1 > d2, 50, s) for s in range(10)}
+  assert len(_small) > 1, "Different seeds should usually give different estimates for a small n: use the seed argument and real random draws"
+hints:
+  - "rng = np.random.default_rng(seed), then d1 = rng.integers(1, 7, size=n) and the same for d2."
+  - "event(d1, d2) is a boolean array; np.mean of it is the fraction of True values."

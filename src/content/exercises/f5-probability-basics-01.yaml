@@ -1,0 +1,41 @@
+id: f5-probability-basics-01
+lesson: foundations/f5/probability-basics
+title: Exact probabilities by counting
+prompt: |
+  Write `exact_prob(event)` for an experiment of rolling **two fair dice**. `event` is a function that
+  takes the two values `(d1, d2)` and returns `True` or `False`. Return the exact probability of the event
+  as a float: the number of the 36 equally likely outcomes where `event` is `True`, divided by 36.
+
+  For example, `exact_prob(lambda d1, d2: d1 + d2 == 7)` is `1/6` and
+  `exact_prob(lambda d1, d2: d1 == d2)` (a double) is also `1/6`.
+starter: |
+  from itertools import product
+
+  def exact_prob(event):
+      pass
+solution: |
+  from itertools import product
+
+  def exact_prob(event):
+      omega = list(product(range(1, 7), repeat=2))
+      hits = sum(1 for d1, d2 in omega if event(d1, d2))
+      return hits / len(omega)
+tests: |
+  import math
+  _r = exact_prob(lambda d1, d2: d1 + d2 == 7)
+  assert _r is not None, "exact_prob returned None: did you forget the return statement?"
+  assert math.isclose(_r, 1 / 6), f"P(sum is 7) should be 1/6, got {_r!r}"
+  _cases = [
+      (lambda d1, d2: d1 == d2, 6 / 36, "a double"),
+      (lambda d1, d2: d1 + d2 >= 10, 6 / 36, "sum at least 10"),
+      (lambda d1, d2: d1 == 6 or d2 == 6, 11 / 36, "at least one six"),
+      (lambda d1, d2: d1 > d2, 15 / 36, "first die larger"),
+      (lambda d1, d2: d1 + d2 == 13, 0.0, "sum is 13 (impossible)"),
+      (lambda d1, d2: True, 1.0, "anything at all"),
+  ]
+  for _ev, _want, _name in _cases:
+      _got = exact_prob(_ev)
+      assert math.isclose(_got, _want, abs_tol=1e-12), f"For the event '{_name}' expected {_want:.4f}, got {_got!r}. Did you count all 36 ordered pairs?"
+hints:
+  - "list(product(range(1, 7), repeat=2)) gives all 36 ordered pairs (d1, d2)."
+  - "Count the pairs where event(d1, d2) is True, then divide by 36."

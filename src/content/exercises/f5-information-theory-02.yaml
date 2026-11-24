@@ -1,0 +1,71 @@
+id: f5-information-theory-02
+lesson: foundations/f5/information-theory
+title: Cross-entropy and KL divergence
+prompt: |
+  Write two functions for probability vectors `p` (the true distribution) and `q` (the model), using **natural
+  logs** (nats):
+
+  - `cross_entropy(p, q)`: $H(p, q) = -\sum_x p(x)\ln q(x)$
+  - `kl(p, q)`: $D_{\mathrm{KL}}(p \,\|\, q) = \sum_x p(x)\ln\frac{p(x)}{q(x)}$
+
+  Handle zeros carefully:
+
+  - outcomes with `p == 0` contribute 0 to both sums (skip them);
+  - if `q == 0` where `p > 0`, the answer is infinite: return `np.inf`.
+
+  For `p = [0.5, 0.25, 0.25]` and `q = [0.8, 0.1, 0.1]`, the cross-entropy is about `1.2629` and the KL divergence
+  about `0.2231`.
+starter: |
+  import numpy as np
+
+  def cross_entropy(p, q):
+      p, q = np.asarray(p, dtype=float), np.asarray(q, dtype=float)
+      return -np.sum(q * np.log(p))
+
+  def kl(p, q):
+      p, q = np.asarray(p, dtype=float), np.asarray(q, dtype=float)
+      return np.sum(p * np.log(p / q))
+solution: |
+  import numpy as np
+
+  def cross_entropy(p, q):
+      p, q = np.asarray(p, dtype=float), np.asarray(q, dtype=float)
+      m = p > 0
+      if np.any(q[m] == 0):
+          return np.inf
+      return float(-np.sum(p[m] * np.log(q[m])))
+
+  def kl(p, q):
+      p, q = np.asarray(p, dtype=float), np.asarray(q, dtype=float)
+      m = p > 0
+      if np.any(q[m] == 0):
+          return np.inf
+      return float(np.sum(p[m] * np.log(p[m] / q[m])))
+tests: |
+  import math
+  import warnings
+  import numpy as np
+  from scipy import stats
+  warnings.simplefilter("ignore")
+  _p = [0.5, 0.25, 0.25]
+  _q = [0.8, 0.1, 0.1]
+  _ce = cross_entropy(_p, _q)
+  assert _ce is not None, "cross_entropy returned None: did you forget the return statement?"
+  assert math.isclose(_ce, 1.2628643221541278, rel_tol=1e-9), f"cross_entropy(p, q) should be about 1.2629 nats, got {_ce!r}. It is -sum(p * log(q)): p weights, q inside the log."
+  assert math.isclose(kl(_p, _q), stats.entropy(_p, _q), rel_tol=1e-9), "kl(p, q) should be about 0.2231 nats"
+  assert math.isclose(kl(_q, _p), stats.entropy(_q, _p), rel_tol=1e-9), "kl(q, p) is a different number (KL is not symmetric)"
+  _h = -sum(x * math.log(x) for x in _p)
+  assert math.isclose(cross_entropy(_p, _q) - _h, kl(_p, _q), rel_tol=1e-9), "cross-entropy minus entropy should equal the KL divergence"
+  assert abs(kl(_p, _p)) < 1e-12, "The KL divergence of a distribution from itself is 0"
+  _a = [0.0, 0.5, 0.5]
+  _b = [0.2, 0.4, 0.4]
+  _c = cross_entropy(_a, _b)
+  assert not math.isnan(_c) and math.isclose(_c, -math.log(0.4), rel_tol=1e-9), f"Outcomes with p = 0 contribute nothing: expected -ln(0.4) = 0.9163, got {_c!r}"
+  assert math.isclose(kl(_a, _b), math.log(0.5 / 0.4), rel_tol=1e-9), "kl with a zero in p: skip that outcome"
+  assert cross_entropy([0.5, 0.5], [1.0, 0.0]) == np.inf, "If q is 0 where p is not, the cross-entropy is infinite: return np.inf"
+  assert kl([0.5, 0.5], [1.0, 0.0]) == np.inf, "If q is 0 where p is not, the KL divergence is infinite: return np.inf"
+  assert math.isclose(kl([1.0, 0.0], [0.5, 0.5]), math.log(2), rel_tol=1e-9), "q may be non-zero where p is zero: kl([1, 0], [0.5, 0.5]) is ln 2"
+hints:
+  - "Make a mask m = p > 0 and work with p[m] and q[m] only."
+  - "If np.any(q[m] == 0), return np.inf before taking any logs."
+  - "KL is sum(p * log(p / q)); cross-entropy is -sum(p * log(q))."

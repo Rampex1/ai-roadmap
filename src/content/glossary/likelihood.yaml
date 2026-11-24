@@ -1,0 +1,6 @@
+term: "Likelihood"
+short: "The probability of the observed data viewed as a function of the model's parameters, with the data held fixed."
+body: |
+  $L(\theta) = P(\text{data} \mid \theta)$. It is not a probability distribution over $\theta$. In practice one
+  works with the negative log-likelihood, which turns products into sums and avoids underflow.
+related: ["maximum-likelihood-estimation", "bayes-theorem"]

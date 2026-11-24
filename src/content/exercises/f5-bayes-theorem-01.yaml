@@ -1,0 +1,34 @@
+id: f5-bayes-theorem-01
+lesson: foundations/f5/bayes-theorem
+title: A Bayes calculator for a positive test
+prompt: |
+  Write `posterior(prior, sensitivity, specificity)` that returns $P(D \mid +)$, the probability of having
+  the condition after a **positive** test.
+
+  - `prior` is the base rate $P(D)$.
+  - `sensitivity` is $P(+ \mid D)$.
+  - `specificity` is $P(- \mid D^c)$, so the false positive rate is `1 - specificity`.
+
+  Use Bayes' theorem with the law of total probability for the bottom line. For the lesson's example,
+  `posterior(0.01, 0.90, 0.91)` is about `0.0917`.
+starter: |
+  def posterior(prior, sensitivity, specificity):
+      return sensitivity
+solution: |
+  def posterior(prior, sensitivity, specificity):
+      evidence = sensitivity * prior + (1 - specificity) * (1 - prior)
+      return sensitivity * prior / evidence
+tests: |
+  import math
+  _r = posterior(0.01, 0.90, 0.91)
+  assert _r is not None, "posterior returned None: did you forget the return statement?"
+  assert math.isclose(_r, 0.009 / (0.009 + 0.0891), rel_tol=1e-9), f"posterior(0.01, 0.90, 0.91) should be about 0.0917, got {_r!r}. Remember the false positives from the 99% who are healthy."
+  for _args in [(0.10, 0.90, 0.91), (0.5, 0.8, 0.7), (0.001, 0.99, 0.99), (0.3, 0.6, 0.95)]:
+      _p, _se, _sp = _args
+      _want = _se * _p / (_se * _p + (1 - _sp) * (1 - _p))
+      _got = posterior(*_args)
+      assert math.isclose(_got, _want, rel_tol=1e-9), f"posterior{_args} should be {_want:.6f}, got {_got!r}"
+  assert math.isclose(posterior(0.2, 0.9, 1.0), 1.0), "With specificity 1 there are no false positives, so a positive result means certainty"
+hints:
+  - "The bottom line is P(+) = sensitivity * prior + (1 - specificity) * (1 - prior)."
+  - "The top line is sensitivity * prior."

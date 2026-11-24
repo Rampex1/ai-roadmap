@@ -1,0 +1,5 @@
+term: "Expected value"
+short: "The probability-weighted average of a random variable, its long-run mean: E[X] = sum of x p(x)."
+body: |
+  For a continuous variable $\mathbb{E}[X] = \int x\,p(x)\,dx$. Expectation is linear: $\mathbb{E}[aX + b] = a\,\mathbb{E}[X] + b$ and $\mathbb{E}[X + Y] = \mathbb{E}[X] + \mathbb{E}[Y]$. A training loss averaged over data estimates an expected loss.
+related: ["random-variable", "variance", "law-of-large-numbers"]

@@ -1,0 +1,43 @@
+id: f5-random-variables-02
+lesson: foundations/f5/random-variables
+title: A numerically stable softmax
+prompt: |
+  Write `softmax(z)` that turns a 1D array of scores (logits) into a categorical distribution:
+
+  $$\operatorname{softmax}(z)_k = \frac{e^{z_k}}{\sum_j e^{z_j}}$$
+
+  It must not overflow for large scores: `softmax(np.array([1000.0, 999.0]))` should give about
+  `[0.731, 0.269]`, not `nan`. Subtract the maximum score before exponentiating.
+starter: |
+  import numpy as np
+
+  def softmax(z):
+      z = np.asarray(z, dtype=float)
+      return np.exp(z) / np.sum(np.exp(z))
+solution: |
+  import numpy as np
+
+  def softmax(z):
+      z = np.asarray(z, dtype=float)
+      e = np.exp(z - z.max())
+      return e / e.sum()
+tests: |
+  import numpy as np
+  import warnings
+  warnings.simplefilter("ignore")
+  _p = softmax(np.array([2.0, 1.0, 0.1]))
+  assert _p is not None, "softmax returned None: did you forget the return statement?"
+  np.testing.assert_allclose(_p, [0.65900114, 0.24243297, 0.09856589], rtol=1e-6, err_msg="softmax([2, 1, 0.1]) is about [0.659, 0.242, 0.099]")
+  _big = softmax(np.array([1000.0, 999.0]))
+  assert not np.any(np.isnan(_big)), "softmax([1000, 999]) gave nan: subtract z.max() before calling np.exp"
+  np.testing.assert_allclose(_big, [0.73105858, 0.26894142], rtol=1e-6, err_msg="softmax([1000, 999]) should equal softmax([1, 0])")
+  np.testing.assert_allclose(softmax(np.array([-1000.0, -1001.0, -1002.0])), softmax(np.array([0.0, -1.0, -2.0])), rtol=1e-9, err_msg="Very negative scores should also work")
+  np.testing.assert_allclose(softmax(np.zeros(4)), np.full(4, 0.25), err_msg="Equal scores give equal probabilities")
+  _rng = np.random.default_rng(0)
+  _z = _rng.normal(size=7) * 5
+  _q = softmax(_z)
+  assert abs(_q.sum() - 1) < 1e-12 and np.all(_q > 0), "The outputs must be positive and add up to 1"
+  assert np.array_equal(np.argsort(_q), np.argsort(_z)), "softmax keeps the order of the scores"
+hints:
+  - "Compute e = np.exp(z - z.max()), then divide by e.sum()."
+  - "Subtracting the same number from every score does not change the softmax, because it cancels in the fraction."

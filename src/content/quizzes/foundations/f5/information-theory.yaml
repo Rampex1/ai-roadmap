@@ -1,0 +1,110 @@
+items:
+  - id: f5-information-theory-01
+    type: numeric
+    prompt: "What is the entropy, in **bits**, of a uniform distribution over 16 outcomes?"
+    answer: 4
+    tol: 0.0001
+    explanation: "Uniform over K outcomes has entropy log2(K) = log2(16) = 4 bits."
+  - id: f5-information-theory-02
+    type: mcq
+    prompt: "Which distribution over three outcomes has the **highest** entropy?"
+    explanation: "Entropy measures uncertainty and is largest for the uniform distribution."
+    options:
+      - text: "[1/3, 1/3, 1/3]"
+        correct: true
+        why: The uniform distribution is the least predictable, with entropy log 3.
+      - text: "[0.5, 0.3, 0.2]"
+        why: Less uniform, so more predictable and lower entropy.
+      - text: "[0.9, 0.05, 0.05]"
+        why: Almost always the first outcome, so very low entropy.
+      - text: "[1, 0, 0]"
+        why: A certain outcome has entropy 0.
+  - id: f5-information-theory-03
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      p = np.array([0.5, 0.0, 0.5])
+      print(-np.sum(p * np.log2(p)))
+    answer: "nan"
+    explanation: "np.log2(0) is -inf and 0 × -inf is nan, which makes the whole sum nan. Skip zero probabilities (0 log 0 counts as 0) to get the correct 1.0 bit."
+  - id: f5-information-theory-04
+    type: numeric
+    prompt: "A classifier gives probability 0.25 to the correct class of an example. What is the cross-entropy loss for this example, in nats?"
+    answer: 1.3863
+    tol: 0.001
+    explanation: "The loss is -ln(0.25) = ln 4 ≈ 1.386."
+  - id: f5-information-theory-05
+    type: numeric
+    prompt: "A freshly initialised classifier for 100 classes predicts roughly uniform probabilities. About what cross-entropy loss (in nats) should you expect at the start of training?"
+    answer: 4.6052
+    tol: 0.01
+    explanation: "Uniform predictions give -ln(1/100) = ln 100 ≈ 4.605. A starting loss far above this suggests a bug or overconfident initial outputs."
+  - id: f5-information-theory-06
+    type: multi
+    prompt: "Which statements about the KL divergence $D_{\\mathrm{KL}}(p \\,\\|\\, q)$ are true? Select all."
+    explanation: "KL is non-negative, zero only when the distributions match, not symmetric, equal to cross-entropy minus entropy, and infinite when q gives zero probability to something p can produce."
+    options:
+      - text: It is never negative and is 0 only when p = q
+        correct: true
+        why: Using the wrong distribution never helps on average.
+      - text: It equals H(p, q) - H(p)
+        correct: true
+        why: It is the extra cost of using q instead of p.
+      - text: It is infinite if q(x) = 0 for some x with p(x) > 0
+        correct: true
+        why: The term p log(p / 0) blows up.
+      - text: "It is symmetric: KL(p || q) = KL(q || p)"
+        why: It is generally not symmetric, which is why it is called a divergence and not a distance.
+  - id: f5-information-theory-07
+    type: mcq
+    prompt: "For a single training example with a one-hot label, why does the cross-entropy reduce to $-\\log q_y$?"
+    explanation: "The one-hot p is 1 on the true class y and 0 elsewhere, so every term of -sum p_k log q_k vanishes except the one for class y."
+    options:
+      - text: The one-hot label is 0 for every class except the true one, so only that term survives
+        correct: true
+        why: Multiplying by 0 removes the other classes.
+      - text: Because the model's probabilities add up to 1
+        why: That is true but is not what removes the other terms.
+      - text: Because the log of the other probabilities is 0
+        why: The logs are negative; it is the zero label weights that remove them.
+      - text: It only applies to binary classification
+        why: It holds for any number of classes.
+  - id: f5-information-theory-08
+    type: mcq
+    prompt: "Your training log shows a loss of 0.693. In what unit is it most likely reported, and what does it equal?"
+    explanation: "Frameworks use natural logs, so losses are in nats; 0.693 = ln 2 nats, which is exactly 1 bit."
+    options:
+      - text: Nats; 0.693 nats is ln 2, which equals 1 bit
+        correct: true
+        why: Frameworks use the natural log, and dividing by ln 2 converts nats to bits.
+      - text: Bits; it equals 0.693 nats
+        why: Frameworks use natural logs, so the value is in nats.
+      - text: A percentage of examples wrong
+        why: Cross-entropy is not an error rate.
+      - text: It has no unit
+        why: Information has units set by the log base.
+  - id: f5-information-theory-09
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      probs = np.array([[0.2, 0.8], [0.6, 0.4], [0.5, 0.5]])
+      labels = np.array([1, 0, 1])
+      print(probs[np.arange(3), labels])
+    answer: "[0.8 0.6 0.5]"
+    explanation: "Fancy indexing picks row 0 column 1, row 1 column 0 and row 2 column 1: the probability each example gives to its true class."
+  - id: f5-information-theory-10
+    type: mcq
+    prompt: "Model A puts probability 0.6 on the correct class; model B puts 0.01 on it. Roughly how do their cross-entropy losses compare for this example?"
+    explanation: "-ln(0.6) ≈ 0.51 and -ln(0.01) ≈ 4.61, so B pays about 9 times as much. Cross-entropy punishes confident mistakes severely."
+    options:
+      - text: B's loss is about 9 times A's (about 4.6 against 0.5 nats)
+        correct: true
+        why: The log makes small probabilities on the true class very expensive.
+      - text: B's loss is about 60 times A's
+        why: That is the ratio of the probabilities, not of their logs.
+      - text: They are about equal because both are wrong in some sense
+        why: A puts most of its probability on the right class.
+      - text: A's loss is larger
+        why: A gives more probability to the correct class, so its loss is smaller.

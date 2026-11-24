@@ -1,0 +1,259 @@
+---
+title: "Information theory: entropy, cross-entropy and KL divergence"
+module: f5
+order: 10
+estMinutes: 19
+objectives:
+  - "Compute the entropy of a distribution in bits or nats, handling zero probabilities correctly"
+  - "Compute cross-entropy and KL divergence, and explain why KL is non-negative and not symmetric"
+  - "Compute the cross-entropy loss of a classifier's predictions and sanity-check it against the uniform baseline ln K"
+goDeeper: colah-visual-information
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Every classifier you train in this course minimises a "cross-entropy loss", and language models are compared by
+how many "bits per token" they need. These terms come from **information theory**, founded by Claude Shannon in 1948
+to study communication. Three quantities matter for ML: entropy, cross-entropy and KL divergence. All three are
+expectations of logarithms of probabilities, so you already have the tools.
+
+## Surprise
+
+An event with probability $p$ carries an amount of **information**, or **surprise**, of
+
+$$
+I(p) = -\log p = \log \frac{1}{p}
+$$
+
+A certain event ($p = 1$) carries no surprise: $-\log 1 = 0$. Rarer events are more surprising. The log makes surprise
+**add** for independent events: two independent events have probability $p_1 p_2$ and surprise
+$-\log p_1 - \log p_2$.
+
+:::note[Which log? Bits and nats]
+The base of the log only sets the unit.
+
+- **Base 2** gives **bits**: one fair coin flip carries $-\log_2 \frac{1}{2} = 1$ bit. Use `np.log2`.
+- **Base $e$** (the natural log, $\ln$) gives **nats**. Use `np.log`. ML frameworks use nats, so loss values you see
+  in training logs are in nats.
+
+To convert, divide by the log of the base: $\log_2 x = \frac{\ln x}{\ln 2}$, so 1 nat $\approx 1.443$ bits. Formulas below
+write $\log$ without a base; pick one and use it consistently.
+:::
+
+## Entropy: average surprise
+
+The <Term id="entropy" /> of a distribution $p$ over outcomes $x$ is the expected surprise:
+
+$$
+H(p) = \sum_x p(x)\,\log\frac{1}{p(x)} = -\sum_x p(x)\log p(x)
+$$
+
+It measures **uncertainty**: how unpredictable an outcome is, on average. Shannon showed it is also the smallest
+possible average number of bits per outcome needed to encode outcomes drawn from $p$ (with base 2).
+
+Outcomes with $p(x) = 0$ never happen, so they contribute nothing; by convention $0 \log 0 = 0$. But NumPy computes
+`0 * np.log(0)` as `0 * -inf = nan`, so code must skip zeros explicitly:
+
+```python
+import numpy as np
+
+def entropy(p, base=2):
+    p = np.asarray(p, dtype=float)
+    nz = p[p > 0]                        # 0 log 0 counts as 0
+    return np.sum(nz * np.log(1 / nz)) / np.log(base)
+
+print(entropy([0.5, 0.5]))
+print(round(entropy([0.9, 0.1]), 3))
+print(entropy(np.full(8, 1 / 8)))
+print(entropy([1.0, 0.0]))
+print(round(entropy([0.5, 0.5], base=np.e), 4))
+```
+
+```text title="Output"
+1.0
+0.469
+3.0
+0.0
+0.6931
+```
+
+- A fair coin has 1 bit of entropy: the most uncertain a two-outcome variable can be.
+- A 90/10 coin has only 0.469 bits: it is fairly predictable.
+- A uniform distribution over 8 outcomes has $\log_2 8 = 3$ bits. In general, the uniform distribution over $K$
+  outcomes has the **maximum** entropy, $\log K$.
+- A certain outcome has entropy 0: no uncertainty at all.
+- The same fair coin has $\ln 2 \approx 0.693$ nats.
+
+## Cross-entropy: surprise under the wrong model
+
+Now suppose the outcomes really come from $p$, but you **believe** (or your model predicts) a distribution $q$. You
+will measure your surprise with $q$, while the outcomes arrive with frequencies from $p$. Your average surprise is the
+<Term id="cross-entropy" />:
+
+$$
+H(p, q) = -\sum_x p(x)\log q(x)
+$$
+
+In coding terms, it is the average number of bits you would spend if you designed your code for $q$ but the data
+followed $p$. Using the wrong distribution always costs extra: $H(p, q) \ge H(p)$, with equality only when $q = p$.
+
+## KL divergence: the extra cost
+
+The extra cost is the <Term id="kl-divergence" /> (Kullback-Leibler divergence) of $q$ from $p$:
+
+$$
+D_{\mathrm{KL}}(p \,\|\, q) = \sum_x p(x)\log\frac{p(x)}{q(x)} = H(p, q) - H(p)
+$$
+
+It measures how different $q$ is from $p$, in bits or nats. Its key properties:
+
+- $D_{\mathrm{KL}}(p \,\|\, q) \ge 0$, and it is 0 only when $p = q$.
+- It is **not symmetric**: $D_{\mathrm{KL}}(p \,\|\, q) \ne D_{\mathrm{KL}}(q \,\|\, p)$ in general. So it is not a distance in
+  the everyday sense, which is why it is called a "divergence".
+- If $q(x) = 0$ for an outcome with $p(x) > 0$, it is **infinite**: your model said the impossible would never happen,
+  and it did.
+
+```python
+import numpy as np
+
+p = np.array([0.5, 0.25, 0.25])     # true distribution
+q = np.array([0.8, 0.1, 0.1])       # model's distribution
+H_p = -np.sum(p * np.log2(p))
+H_pq = -np.sum(p * np.log2(q))      # cross-entropy
+kl_pq = np.sum(p * np.log2(p / q))  # KL(p || q)
+kl_qp = np.sum(q * np.log2(q / p))  # KL(q || p)
+print(H_p, round(H_pq, 3), round(kl_pq, 3), round(H_pq - H_p, 3), round(kl_qp, 3))
+```
+
+```text title="Output"
+1.5 1.822 0.322 0.322 0.278
+```
+
+The entropy of $p$ is 1.5 bits; describing it with $q$ costs 1.822 bits; the difference, 0.322 bits, is
+$D_{\mathrm{KL}}(p \,\|\, q)$. Swapping the arguments gives 0.278, a different number.
+
+`scipy.stats.entropy` computes both, handles zeros, and normalises its inputs. Careful: with two arguments it returns
+the **KL divergence**, not the cross-entropy, and its default base is $e$:
+
+```python
+from scipy import stats
+
+print(round(stats.entropy(p, base=2), 3), round(stats.entropy(p, q, base=2), 3), round(stats.entropy(p, q), 3))
+```
+
+```text title="Output"
+1.5 0.322 0.223
+```
+
+## The cross-entropy loss of a classifier
+
+A classifier with $K$ classes outputs a predicted distribution $q$ for each example (usually a softmax, lesson 4). The
+"true distribution" for an example of class $y$ is **one-hot**: probability 1 on class $y$ and 0 elsewhere. Plug that
+$p$ into the cross-entropy and every term but one vanishes:
+
+$$
+H(p, q) = -\sum_k p_k \log q_k = -\log q_y
+$$
+
+The loss for one example is minus the log of the probability the model gave to the **correct** class. Averaged over a
+dataset of $n$ examples, this is the **cross-entropy loss**:
+
+$$
+\mathcal{L} = -\frac{1}{n}\sum_{i=1}^{n}\log q_{i,\,y_i}
+$$
+
+It is exactly the average negative log-likelihood of the labels from [lesson 8](/foundations/f5/maximum-likelihood/):
+minimising cross-entropy **is** maximum likelihood. And since the one-hot $p$ has entropy 0, cross-entropy equals the KL
+divergence from the true labels here, so the loss is also "how far the predictions are from the truth". With $K = 2$ it
+reduces to the binary cross-entropy you met in lesson 8.
+
+In NumPy, pick each row's probability for its true class with fancy indexing:
+
+```python
+import numpy as np
+
+probs = np.array([[0.7, 0.2, 0.1],     # predicted distribution for each example
+                  [0.1, 0.8, 0.1],
+                  [0.3, 0.3, 0.4],
+                  [0.6, 0.3, 0.1]])
+labels = np.array([0, 1, 2, 1])         # true class of each example
+p_true = probs[np.arange(len(labels)), labels]
+print(p_true)
+print(round(-np.mean(np.log(p_true)), 4))
+print(round(np.log(3), 4))
+```
+
+```text title="Output"
+[0.7 0.8 0.4 0.3]
+0.675
+1.0986
+```
+
+`probs[np.arange(4), labels]` takes row 0 column 0, row 1 column 1, row 2 column 2 and row 3 column 1. The loss is
+0.675 nats.
+
+:::tip[The ln K sanity check]
+A model that knows nothing and predicts the uniform distribution $\frac{1}{K}$ for every example has loss
+$-\ln\frac{1}{K} = \ln K$: here $\ln 3 \approx 1.099$. Two uses:
+
+- **At the start of training**, a randomly initialised classifier should have a loss close to $\ln K$ (about 2.303 for
+  10 classes). Much higher means something is wrong, often overconfident initial outputs.
+- **During training**, a loss stuck at $\ln K$ means the model has learned nothing.
+:::
+
+Cross-entropy punishes confident mistakes hard. The loss for one example as a function of the probability on the
+correct class:
+
+```python
+import numpy as np
+
+for p_correct in [0.99, 0.9, 0.5, 0.1, 0.01]:
+    print(p_correct, round(-np.log(p_correct), 3))
+```
+
+```text title="Output"
+0.99 0.01
+0.9 0.105
+0.5 0.693
+0.1 2.303
+0.01 4.605
+```
+
+Going from 0.9 to 0.99 on a correct answer saves under 0.1 nats; putting only 0.01 on the right answer costs 4.6. A
+single example with probability exactly 0 on its true class gives infinite loss, which is why implementations never
+take the log of a raw 0.
+
+:::caution[Never take log(0)]
+`np.log(0.0)` is `-inf` (with a warning), and `0 * -inf` is `nan`; one `nan` poisons a whole average. Defences:
+
+- for entropy, skip zero probabilities (`p[p > 0]`), because $0 \log 0 = 0$;
+- for cross-entropy, clip predictions away from 0 with `np.clip(q, 1e-12, 1.0)` before the log (a common trick,
+  though it hides the "infinite" answer behind a large finite one);
+- best of all, work from logits: frameworks combine softmax and log into one numerically stable step. In PyTorch,
+  for example, `cross_entropy` takes raw logits, not probabilities (F9).
+:::
+
+## Why this matters for ML
+
+- **Classification loss** is cross-entropy: average $-\log$ of the probability on the true class, in nats.
+- **Language models** are scored by cross-entropy per token, often reported as **perplexity**, $e^{\text{loss}}$: a loss of
+  $\ln 50 \approx 3.9$ nats means the model is as uncertain as a uniform choice among 50 tokens.
+- **KL divergence** appears whenever one distribution is pulled towards another: knowledge distillation (a small model
+  matching a large one's outputs), variational autoencoders (B9), and fine-tuning language models with a penalty for
+  drifting from the original model (C10).
+
+## Try it
+
+<CodeExercise id="f5-information-theory-01" />
+
+<CodeExercise id="f5-information-theory-02" />
+
+<CodeExercise id="f5-information-theory-03" />
+
+## Summary
+
+- Surprise is $-\log p$. Base 2 gives bits (`np.log2`), base $e$ gives nats (`np.log`, what frameworks use).
+- Entropy $H(p) = -\sum p \log p$ is average surprise: 0 for a certain outcome, $\log K$ for uniform over $K$. Skip zeros.
+- Cross-entropy $H(p, q) = -\sum p \log q \ge H(p)$: average surprise when the data follow $p$ but you use $q$.
+- $D_{\mathrm{KL}}(p \,\|\, q) = H(p, q) - H(p) \ge 0$, zero only when $p = q$, not symmetric, infinite if $q$ is 0 where $p$ is not.
+- Classifier loss: $-\frac{1}{n}\sum_i \log q_{i, y_i}$, the same as the negative log-likelihood; it starts near $\ln K$.

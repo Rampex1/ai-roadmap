@@ -1,0 +1,7 @@
+term: "Maximum likelihood estimation"
+short: "Choosing the parameter values under which the observed data are most probable."
+body: |
+  Equivalently, minimise the negative log-likelihood. For coin flips the estimate is the fraction of heads; for
+  a normal mean it is the sample mean. Minimising cross-entropy or mean squared error is maximum likelihood
+  under a categorical or Gaussian noise model.
+related: ["likelihood", "cross-entropy"]

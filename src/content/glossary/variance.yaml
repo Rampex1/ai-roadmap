@@ -1,0 +1,7 @@
+term: "Variance"
+short: "The expected squared distance of a random variable from its mean; its square root is the standard deviation."
+body: |
+  $\operatorname{Var}(X) = \mathbb{E}[(X - \mu)^2] = \mathbb{E}[X^2] - \mu^2$. Scaling gives
+  $\operatorname{Var}(aX + b) = a^2 \operatorname{Var}(X)$, and variances add for independent variables. The
+  sample variance divides by $n - 1$ (`ddof=1`) to be unbiased.
+related: ["expected-value", "standard-error"]

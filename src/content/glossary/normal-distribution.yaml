@@ -1,0 +1,7 @@
+term: "Normal distribution"
+short: "The bell-shaped distribution N(μ, σ²) with mean μ and standard deviation σ, also called the Gaussian."
+body: |
+  About 68%, 95% and 99.7% of its probability lies within 1, 2 and 3 standard deviations of the mean.
+  Standardising, $z = (x - \mu)/\sigma$, turns any normal into the standard normal $\mathcal{N}(0, 1)$. The
+  central limit theorem explains why it appears so often.
+related: ["probability-density", "central-limit-theorem"]

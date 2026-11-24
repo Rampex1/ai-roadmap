@@ -1,0 +1,7 @@
+term: "Permutation test"
+short: "A hypothesis test that builds the null distribution by repeatedly shuffling group labels and recomputing the statistic."
+body: |
+  If the groups do not differ, the labels are interchangeable, so shuffled differences show what chance alone
+  produces. The p-value is the fraction of shuffled statistics at least as extreme as the observed one. It needs
+  no normality assumption.
+related: ["p-value", "bootstrap"]

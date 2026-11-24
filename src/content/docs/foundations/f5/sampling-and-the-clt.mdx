@@ -1,0 +1,176 @@
+---
+title: "Sampling, the law of large numbers and the central limit theorem"
+module: f5
+order: 6
+estMinutes: 14
+objectives:
+  - "Treat a sample mean as a random variable and state the law of large numbers"
+  - "Compute the standard error of a mean, σ/√n, and confirm it by simulation"
+  - "State the central limit theorem and show by simulation that sample means become normal"
+goDeeper: seeing-theory
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import cltImg from '@/assets/diagrams/f5-clt.svg';
+
+In practice you never see a whole distribution. You see a **sample**: 500 survey answers, 10,000 test images,
+one minibatch of 64 examples. This lesson answers two questions that every later lesson relies on. Does the
+average of a sample settle on the true average? And how far off is it likely to be?
+
+## Population, sample and the sample mean
+
+The **population** (or the underlying distribution) is the full set of possible values, with a true mean
+$\mu$ and standard deviation $\sigma$ that you do not know. A **sample** is $n$ values $X_1, \dots, X_n$ drawn
+from it, which we will assume are independent and identically distributed (i.i.d., from
+[lesson 2](/foundations/f5/conditional-probability/)). Their average is the **sample mean**:
+
+$$
+\bar{X} = \frac{1}{n}\sum_{i=1}^{n} X_i
+$$
+
+The key shift in thinking: **$\bar{X}$ is itself a random variable**. Draw a different sample and you get a
+different $\bar{X}$. So it has its own distribution, with its own mean and spread, and we can study them.
+
+## The law of large numbers
+
+The <Term id="law-of-large-numbers" /> says that as $n$ grows, the sample mean gets closer and closer to the
+true mean: $\bar{X} \to \mu$. This is why long-run frequencies work as probabilities, and why simulation works
+at all. Watch the running mean of die rolls approach 3.5:
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(0)
+rolls = rng.integers(1, 7, size=100_000)
+running_mean = np.cumsum(rolls) / np.arange(1, len(rolls) + 1)
+for n in [10, 100, 1_000, 10_000, 100_000]:
+    print(f"{n:>7,}  {running_mean[n - 1]:.4f}")
+```
+
+```text title="Output"
+     10  2.8000
+    100  3.6200
+  1,000  3.6000
+ 10,000  3.5045
+100,000  3.4980
+```
+
+`np.cumsum` gives the running totals, and dividing by $1, 2, 3, \dots$ turns them into running means. Early on
+the mean jumps around; later it hardly moves.
+
+:::caution[The law of large numbers is not "the law of averages"]
+After ten tails in a row, a fair coin is **not** more likely to land heads. The coin has no memory. The running
+mean recovers because the early streak gets **diluted** by thousands of ordinary flips, not because later flips
+compensate. Believing in compensation is the **gambler's fallacy**.
+:::
+
+## How far off? The standard error
+
+Using the variance rules from [lesson 4](/foundations/f5/random-variables/): the sum of $n$ independent values
+has variance $n\sigma^2$, and dividing by $n$ divides the variance by $n^2$. So
+
+$$
+\mathbb{E}[\bar{X}] = \mu, \qquad \operatorname{Var}(\bar{X}) = \frac{\sigma^2}{n}, \qquad \operatorname{SD}(\bar{X}) = \frac{\sigma}{\sqrt{n}}
+$$
+
+The standard deviation of an estimate has a special name, the <Term id="standard-error" /> (SE). For a mean it
+is $\frac{\sigma}{\sqrt{n}}$. Check it by simulation: draw 20,000 samples of size $n$ from an **exponential**
+distribution (a skewed distribution of waiting times, here with $\mu = 1$ and $\sigma = 1$), take each
+sample's mean, and measure the spread of those means:
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(1)
+for n in [4, 16, 64, 256]:
+    samples = rng.exponential(scale=1.0, size=(20_000, n))   # 20,000 samples of size n
+    means = samples.mean(axis=1)                             # one mean per sample
+    print(f"n={n:>3}  mean of means {means.mean():.3f}  sd of means {means.std():.4f}  1/sqrt(n) {1 / np.sqrt(n):.4f}")
+```
+
+```text title="Output"
+n=  4  mean of means 0.995  sd of means 0.4966  1/sqrt(n) 0.5000
+n= 16  mean of means 0.997  sd of means 0.2490  1/sqrt(n) 0.2500
+n= 64  mean of means 1.000  sd of means 0.1255  1/sqrt(n) 0.1250
+n=256  mean of means 1.000  sd of means 0.0625  1/sqrt(n) 0.0625
+```
+
+Each row is centred on $\mu = 1$, and the spread matches $\frac{1}{\sqrt{n}}$. Notice the pattern: **four times
+the data halves the error**. That square root is why the simulation in lesson 1 needed a hundred times more runs
+for each extra decimal place.
+
+## The central limit theorem
+
+The standard error says how wide the distribution of $\bar{X}$ is. The <Term id="central-limit-theorem" />
+(CLT) says what **shape** it has:
+
+> For i.i.d. values with finite variance, the sample mean is approximately normal for large $n$, whatever the
+> shape of the original distribution: $\bar{X} \approx \mathcal{N}\!\left(\mu, \frac{\sigma^2}{n}\right)$.
+
+The exponential distribution is far from a bell curve: most values are small, with a long tail to the right. Its
+sample means start out skewed but quickly become bell-shaped:
+
+<Figure
+  src={cltImg}
+  alt="Four histograms of 20,000 sample means of exponential data, for n = 1, 2, 10 and 50, each with a normal curve drawn over it. At n = 1 the histogram is highest at 0 and has a long right tail, and the normal curve fits badly. By n = 10 it is close to bell-shaped, and at n = 50 it matches the normal curve closely and is much narrower"
+  caption="Sample means of a skewed distribution become normal as n grows (orange: the normal curve the CLT predicts)."
+/>
+
+One way to measure the remaining skew: for a symmetric distribution, half the sample means fall below the true
+mean.
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(2)
+for n in [1, 5, 30, 200]:
+    means = rng.exponential(scale=1.0, size=(20_000, n)).mean(axis=1)
+    print(f"n={n:>3}  fraction below the mean: {np.mean(means < 1):.3f}")
+```
+
+```text title="Output"
+n=  1  fraction below the mean: 0.636
+n=  5  fraction below the mean: 0.562
+n= 30  fraction below the mean: 0.523
+n=200  fraction below the mean: 0.506
+```
+
+The fraction moves towards 0.5 as $n$ grows. How large $n$ must be depends on how skewed the data are; for
+mildly skewed data, a few dozen is often enough. Strongly skewed or heavy-tailed data need more.
+
+:::note[When it fails]
+The CLT needs a finite variance. For extremely heavy-tailed distributions (the Cauchy distribution is the
+textbook example) a single huge value can dominate any average, and the sample mean never settles. Real data with
+rare, enormous values (insurance claims, viral posts) can behave badly in the same way.
+:::
+
+The CLT is why the normal distribution is everywhere: anything that is an average or a sum of many small,
+roughly independent pieces tends to look normal. It is also what makes the confidence intervals and tests of
+the next lessons work, because it tells us that $\bar{X}$ lands within about $1.96$ standard errors of $\mu$
+95% of the time.
+
+## Why this matters for ML
+
+- **Minibatch gradients are sample means.** The gradient on a batch of $B$ examples estimates the full-data
+  gradient with a standard error proportional to $\frac{1}{\sqrt{B}}$. Quadrupling the batch only halves the
+  noise, which is one reason very large batches give diminishing returns.
+- **Test-set metrics are sample means.** Accuracy on 1,000 test examples is a mean of 0/1 values. With accuracy
+  near 0.9, its standard error is $\sqrt{0.9 \times 0.1 / 1000} \approx 0.0095$, so two models at 90.2% and
+  90.8% may not really differ.
+- **Averaging over random seeds** reduces noise in experiment results the same way.
+
+## Try it
+
+<CodeExercise id="f5-sampling-and-the-clt-01" />
+
+<CodeExercise id="f5-sampling-and-the-clt-02" />
+
+## Summary
+
+- A sample mean $\bar{X}$ is a random variable: a new sample gives a new value.
+- Law of large numbers: $\bar{X} \to \mu$ as $n$ grows. Early streaks get diluted, not compensated.
+- Standard error of the mean: $\sigma / \sqrt{n}$. Four times the data halves the error.
+- Central limit theorem: for finite variance, $\bar{X}$ is approximately $\mathcal{N}(\mu, \sigma^2 / n)$ for
+  large $n$, whatever the original shape.
+- Minibatch gradients and test metrics are sample means, with the same $1 / \sqrt{n}$ noise.

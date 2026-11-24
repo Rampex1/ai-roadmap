@@ -1,0 +1,51 @@
+id: f5-bayes-theorem-02
+lesson: foundations/f5/bayes-theorem
+title: Updating after several test results
+prompt: |
+  A person takes several **independent** tests in a row. Write
+  `update(prior, sensitivity, specificity, results)` that returns the probability of having the condition
+  after seeing all of them. `results` is a list of booleans: `True` for a positive test, `False` for a
+  negative one.
+
+  Apply Bayes' theorem once per result, using the current probability as the prior each time:
+
+  - after a **positive** result the likelihoods are $P(+ \mid D) =$ `sensitivity` and $P(+ \mid D^c) =$ `1 - specificity`;
+  - after a **negative** result they are $P(- \mid D) =$ `1 - sensitivity` and $P(- \mid D^c) =$ `specificity`.
+
+  With no results, return the prior unchanged. From the lesson, `update(0.01, 0.9, 0.91, [True, True])` is
+  about `0.5025`.
+starter: |
+  def update(prior, sensitivity, specificity, results):
+      p = prior
+      return p
+solution: |
+  def update(prior, sensitivity, specificity, results):
+      p = prior
+      for positive in results:
+          if positive:
+              like_d, like_not = sensitivity, 1 - specificity
+          else:
+              like_d, like_not = 1 - sensitivity, specificity
+          p = like_d * p / (like_d * p + like_not * (1 - p))
+      return p
+tests: |
+  import math
+  def _ref(p, se, sp, res):
+      for r in res:
+          a, b = (se, 1 - sp) if r else (1 - se, sp)
+          p = a * p / (a * p + b * (1 - p))
+      return p
+  _r = update(0.01, 0.9, 0.91, [True, True])
+  assert _r is not None, "update returned None: did you forget the return statement?"
+  assert math.isclose(_r, _ref(0.01, 0.9, 0.91, [True, True]), rel_tol=1e-9), f"Two positives from a 1% prior should give about 0.5025, got {_r!r}"
+  assert math.isclose(update(0.01, 0.9, 0.91, []), 0.01), "With no results the probability stays at the prior"
+  assert math.isclose(update(0.01, 0.9, 0.91, [True]), _ref(0.01, 0.9, 0.91, [True]), rel_tol=1e-9), "One positive from a 1% prior should give about 0.0917"
+  _neg = update(0.01, 0.9, 0.91, [False])
+  assert math.isclose(_neg, _ref(0.01, 0.9, 0.91, [False]), rel_tol=1e-9), f"One negative from a 1% prior should drop to about 0.0011, got {_neg!r}. A negative result uses 1 - sensitivity and specificity."
+  for _case in [(0.2, 0.8, 0.85, [True, False, True]), (0.5, 0.7, 0.9, [False, False]), (0.05, 0.95, 0.9, [True, True, True, False])]:
+      _want = _ref(*_case)
+      _got = update(*_case)
+      assert math.isclose(_got, _want, rel_tol=1e-9), f"update{_case} should be {_want:.6f}, got {_got!r}"
+hints:
+  - "Loop over results, and inside the loop replace p with the posterior computed from p."
+  - "Pick the two likelihoods with an if: positive uses sensitivity and 1 - specificity; negative uses 1 - sensitivity and specificity."

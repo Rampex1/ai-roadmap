@@ -1,0 +1,7 @@
+term: "Standard error"
+short: "The standard deviation of an estimate across samples; for a sample mean it is σ / √n."
+body: |
+  It measures how far an estimate is likely to be from the truth. Because it shrinks like $1/\sqrt{n}$, four
+  times the data halves it. Estimated with the sample standard deviation $s$, it gives the confidence interval
+  $\bar{x} \pm 1.96\,s/\sqrt{n}$.
+related: ["confidence-interval", "variance", "central-limit-theorem"]

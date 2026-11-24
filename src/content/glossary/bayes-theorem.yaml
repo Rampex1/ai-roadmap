@@ -1,0 +1,7 @@
+term: "Bayes' theorem"
+short: "P(A | B) = P(B | A) P(A) / P(B): how to update a prior belief into a posterior after seeing evidence."
+body: |
+  The prior $P(A)$ is the belief before the evidence, the likelihood $P(B \mid A)$ says how expected the
+  evidence is under the hypothesis, and $P(B)$ usually comes from the law of total probability. Ignoring the
+  prior when the hypothesis is rare is the base-rate fallacy.
+related: ["conditional-probability", "likelihood"]

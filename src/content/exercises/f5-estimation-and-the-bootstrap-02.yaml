@@ -1,0 +1,58 @@
+id: f5-estimation-and-the-bootstrap-02
+lesson: foundations/f5/estimation-and-the-bootstrap
+title: A bootstrap confidence interval for any statistic
+prompt: |
+  Write `bootstrap_ci(x, stat, n_boot=10_000, seed=0)` that returns a 95% percentile bootstrap interval
+  `(lo, hi)` for the statistic `stat` (a function such as `np.mean` or `np.median`):
+
+  1. make a Generator from `seed`;
+  2. `n_boot` times, draw a resample of `x` of the same size **with replacement** and compute `stat` on it;
+  3. return the 2.5th and 97.5th percentiles of those values (`np.percentile`).
+
+  You can loop, or draw all indices at once with `rng.integers(0, n, size=(n_boot, n))`, in which case call
+  `stat(x[idx], axis=1)` (`np.mean`, `np.median` and `np.std` all accept `axis`). The tests use all three.
+  The loop-free version runs many times faster.
+starter: |
+  import numpy as np
+
+  def bootstrap_ci(x, stat, n_boot=10_000, seed=0):
+      x = np.asarray(x, dtype=float)
+      rng = np.random.default_rng(seed)
+      s = stat(x)
+      return (s, s)
+solution: |
+  import numpy as np
+
+  def bootstrap_ci(x, stat, n_boot=10_000, seed=0):
+      x = np.asarray(x, dtype=float)
+      rng = np.random.default_rng(seed)
+      idx = rng.integers(0, len(x), size=(n_boot, len(x)))
+      values = stat(x[idx], axis=1)
+      lo, hi = np.percentile(values, [2.5, 97.5])
+      return (float(lo), float(hi))
+tests: |
+  import numpy as np
+  _rng = np.random.default_rng(123)
+  _x = _rng.normal(100, 15, size=200)
+  _r = bootstrap_ci(_x, np.mean)
+  assert _r is not None and len(_r) == 2, "bootstrap_ci should return a tuple (lo, hi)"
+  _lo, _hi = _r
+  _m = _x.mean()
+  _se = _x.std(ddof=1) / np.sqrt(len(_x))
+  assert _lo < _m < _hi, f"The interval {_r} should contain the sample mean {_m:.2f}"
+  assert abs(_lo - (_m - 1.96 * _se)) < 0.4 and abs(_hi - (_m + 1.96 * _se)) < 0.4, f"For a normal sample of 200 the bootstrap CI of the mean should be close to mean +- 1.96 SE = ({_m - 1.96 * _se:.2f}, {_m + 1.96 * _se:.2f}); got ({_lo:.2f}, {_hi:.2f}). Resample WITH replacement, the same size as x."
+  _y = _rng.exponential(10, size=80)
+  _lo, _hi = bootstrap_ci(_y, np.median)
+  assert _lo < np.median(_y) < _hi, "The median CI should contain the sample median"
+  assert _lo > _y.min() and _hi < _y.max(), "A median CI should lie well inside the range of the data"
+  _w_small = np.subtract(*bootstrap_ci(_rng.normal(0, 1, 30), np.mean)[::-1])
+  _w_big = np.subtract(*bootstrap_ci(_rng.normal(0, 1, 1200), np.mean)[::-1])
+  assert _w_big < _w_small / 3, "With 40 times more data the interval should be much narrower (about sqrt(40), over 6 times)"
+  _a = bootstrap_ci(_x, np.std, seed=5)
+  _b = bootstrap_ci(_x, np.std, seed=5)
+  assert _a == _b, "The same seed should give the same interval"
+  assert _a[0] < _x.std() < _a[1], "The interval for np.std should contain the sample standard deviation"
+hints:
+  - "idx = rng.integers(0, len(x), size=(n_boot, len(x))) gives one resample of indices per row; x[idx] is the resamples."
+  - "stat(x[idx], axis=1) computes the statistic for every row."
+  - "lo, hi = np.percentile(values, [2.5, 97.5])"

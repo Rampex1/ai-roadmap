@@ -1,0 +1,7 @@
+term: "Softmax"
+short: "The function that turns a vector of scores (logits) into probabilities: exponentiate each, then divide by the total."
+body: |
+  $\operatorname{softmax}(z)_k = e^{z_k} / \sum_j e^{z_j}$. The outputs are positive, add to 1 and keep the
+  order of the scores, forming a categorical distribution. Subtract the largest score before exponentiating to
+  avoid overflow; the result is unchanged.
+related: ["sigmoid", "cross-entropy"]

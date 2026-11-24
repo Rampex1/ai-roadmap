@@ -1,0 +1,58 @@
+id: f5-maximum-likelihood-01
+lesson: foundations/f5/maximum-likelihood
+title: Coin-flip MLE by grid search
+prompt: |
+  `flips` is an array of 0s (tails) and 1s (heads). Write two functions:
+
+  - `coin_nll(p, flips)`: the **average** negative log-likelihood of the flips for a coin with
+    $P(\text{heads}) = p$, that is $-\frac{1}{n}\left[k \ln p + (n - k)\ln(1 - p)\right]$ with $k$ heads out of
+    $n$ flips.
+  - `coin_mle(flips)`: the value of `p` on the grid `np.linspace(0.001, 0.999, 999)` with the **smallest**
+    `coin_nll`. Use `np.argmin`.
+
+  For 7 heads in 10 flips, `coin_nll(0.5, flips)` is $\ln 2 \approx 0.6931$ and `coin_mle(flips)` is `0.7`.
+  Do not just return `flips.mean()`: the tests check that the answer is a grid value.
+starter: |
+  import numpy as np
+
+  def coin_nll(p, flips):
+      flips = np.asarray(flips)
+      return 0.0
+
+  def coin_mle(flips):
+      grid = np.linspace(0.001, 0.999, 999)
+      return 0.5
+solution: |
+  import numpy as np
+
+  def coin_nll(p, flips):
+      flips = np.asarray(flips)
+      k, n = flips.sum(), len(flips)
+      return -(k * np.log(p) + (n - k) * np.log(1 - p)) / n
+
+  def coin_mle(flips):
+      grid = np.linspace(0.001, 0.999, 999)
+      nll = np.array([coin_nll(p, flips) for p in grid])
+      return float(grid[np.argmin(nll)])
+tests: |
+  import math
+  import numpy as np
+  _f = np.array([1, 0, 1, 1, 0, 1, 1, 1, 0, 1])
+  _r = coin_nll(0.5, _f)
+  assert _r is not None, "coin_nll returned None: did you forget the return statement?"
+  assert math.isclose(float(_r), math.log(2), rel_tol=1e-9), f"For a fair coin every flip has probability 0.5, so the average NLL is ln 2 = 0.6931; got {_r!r}"
+  _want = -(7 * math.log(0.7) + 3 * math.log(0.3)) / 10
+  assert math.isclose(float(coin_nll(0.7, _f)), _want, rel_tol=1e-9), f"coin_nll(0.7, flips) should be {_want:.6f}. Remember to divide by n (the average)."
+  assert coin_nll(0.7, _f) < coin_nll(0.5, _f) < coin_nll(0.2, _f), "The NLL should be lowest near the observed fraction of heads"
+  assert math.isclose(coin_mle(_f), 0.7, abs_tol=1e-9), f"7 heads in 10 flips: the MLE is 0.7, got {coin_mle(_f)!r}"
+  _rng = np.random.default_rng(0)
+  for _p in [0.123, 0.5, 0.88]:
+      _g = (_rng.random(4000) < _p).astype(int)
+      _m = coin_mle(_g)
+      _grid = np.linspace(0.001, 0.999, 999)
+      assert np.any(np.isclose(_grid, _m)), f"coin_mle should return a value from the grid, got {_m!r}"
+      assert abs(_m - _g.mean()) <= 0.0006, f"The MLE should be the grid point nearest the fraction of heads {_g.mean():.4f}, got {_m!r}"
+  assert math.isclose(coin_mle(np.ones(20, dtype=int)), 0.999), "All heads: the best grid value is the largest, 0.999"
+hints:
+  - "k = flips.sum() and n = len(flips); the NLL is -(k * np.log(p) + (n - k) * np.log(1 - p)) / n."
+  - "Compute the NLL for every grid value, then grid[np.argmin(nll)]."

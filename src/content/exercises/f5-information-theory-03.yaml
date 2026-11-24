@@ -1,0 +1,53 @@
+id: f5-information-theory-03
+lesson: foundations/f5/information-theory
+title: The cross-entropy loss of a classifier
+prompt: |
+  `probs` is an `(n, K)` array: row `i` is the predicted distribution over `K` classes for example `i`. `labels` is
+  an array of `n` true class indices. Write `ce_loss(probs, labels, eps=1e-12)` that returns the average
+  cross-entropy loss in nats:
+
+  $$\mathcal{L} = -\frac{1}{n}\sum_{i} \ln q_{i,\,y_i}$$
+
+  - Pick each row's probability for its true class with `probs[np.arange(n), labels]`.
+  - Clip those probabilities to `[eps, 1]` with `np.clip` before the log, so a 0 gives a large finite loss instead
+    of `inf`.
+
+  For the lesson's 4 examples the loss is about `0.675`, and a uniform prediction over `K` classes gives $\ln K$.
+starter: |
+  import numpy as np
+
+  def ce_loss(probs, labels, eps=1e-12):
+      probs = np.asarray(probs, dtype=float)
+      labels = np.asarray(labels)
+      return -np.mean(np.log(probs))
+solution: |
+  import numpy as np
+
+  def ce_loss(probs, labels, eps=1e-12):
+      probs = np.asarray(probs, dtype=float)
+      labels = np.asarray(labels)
+      p_true = probs[np.arange(len(labels)), labels]
+      return float(-np.mean(np.log(np.clip(p_true, eps, 1.0))))
+tests: |
+  import math
+  import warnings
+  import numpy as np
+  warnings.simplefilter("ignore")
+  _probs = np.array([[0.7, 0.2, 0.1], [0.1, 0.8, 0.1], [0.3, 0.3, 0.4], [0.6, 0.3, 0.1]])
+  _labels = np.array([0, 1, 2, 1])
+  _r = ce_loss(_probs, _labels)
+  assert _r is not None, "ce_loss returned None: did you forget the return statement?"
+  _want = -np.mean(np.log([0.7, 0.8, 0.4, 0.3]))
+  assert math.isclose(_r, _want, rel_tol=1e-9), f"Expected about {_want:.4f} for the lesson's example, got {_r!r}. Use only the probability of the TRUE class in each row."
+  _l2 = np.array([2, 0, 1, 0])
+  assert math.isclose(ce_loss(_probs, _l2), -np.mean(np.log([0.1, 0.1, 0.3, 0.6])), rel_tol=1e-9), "Wrong loss for different labels"
+  for _K in [2, 10, 1000]:
+      _u = np.full((5, _K), 1 / _K)
+      assert math.isclose(ce_loss(_u, np.arange(5) % _K), math.log(_K), rel_tol=1e-9), f"Uniform predictions over {_K} classes should give ln {_K} = {math.log(_K):.4f}"
+  _perfect = np.eye(3)
+  assert abs(ce_loss(_perfect, np.array([0, 1, 2]))) < 1e-12, "Probability 1 on every true class gives loss 0"
+  _bad = ce_loss(_perfect, np.array([1, 2, 0]))
+  assert np.isfinite(_bad) and math.isclose(_bad, -math.log(1e-12), rel_tol=1e-9), f"Probability 0 on the true class should be clipped to eps, giving -ln(1e-12) = 27.63, got {_bad!r}"
+hints:
+  - "p_true = probs[np.arange(len(labels)), labels] picks one probability per row."
+  - "Return -np.mean(np.log(np.clip(p_true, eps, 1.0)))."

@@ -1,0 +1,195 @@
+---
+title: "Conditional probability and independence"
+module: f5
+order: 2
+estMinutes: 14
+objectives:
+  - "Compute a conditional probability from counts, from a formula and from a simulation"
+  - "Use the multiplication rule and the law of total probability"
+  - "Test whether two events are independent, and tell independence apart from being disjoint"
+goDeeper: seeing-theory
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+New information changes probabilities. The chance that an email is spam is one number; the chance that
+it is spam *given that it contains the word "free"* is another, and that second number is what a spam
+filter actually uses. This lesson is about probabilities that depend on what you already know.
+
+## Conditional probability: shrink the world
+
+The <Term id="conditional-probability" /> of $A$ given $B$, written $P(A \mid B)$ and read "the probability
+of $A$ given $B$", is the probability of $A$ once you know that $B$ happened. Knowing $B$ throws away every
+outcome outside $B$. Among the outcomes that are left, you ask how many are also in $A$:
+
+$$
+P(A \mid B) = \frac{P(A \cap B)}{P(B)} \qquad \text{(defined when } P(B) > 0\text{)}
+$$
+
+Dividing by $P(B)$ rescales so that the new, smaller world has total probability 1.
+
+### From a table of counts
+
+Take 1,000 emails: 200 are spam, and 120 of those contain "free"; of the 800 that are not spam, 40
+contain "free". pandas can lay the counts out as a **contingency table** with `pd.crosstab`:
+
+```python
+import numpy as np
+import pandas as pd
+
+# 1,000 emails: 200 spam (120 contain "free"), 800 not spam (40 contain "free")
+spam = np.array([True] * 200 + [False] * 800)
+free = np.array([True] * 120 + [False] * 80 + [True] * 40 + [False] * 760)
+emails = pd.DataFrame({"spam": spam, "free": free})
+
+print(pd.crosstab(emails["spam"], emails["free"], margins=True))
+print(emails["spam"][emails["free"]].mean())   # P(spam | free)
+print(emails["free"][emails["spam"]].mean())   # P(free | spam)
+```
+
+```text title="Output"
+free   False  True   All
+spam
+False    760    40   800
+True      80   120   200
+All      840   160  1000
+0.75
+0.6
+```
+
+To get $P(\text{spam} \mid \text{free})$, keep only the 160 emails that contain "free" (the `True`
+column) and ask what fraction are spam: $\frac{120}{160} = 0.75$. In code, the boolean mask
+`emails["free"]` selects those rows, and `.mean()` of the `spam` column gives the fraction.
+
+Now look at the last line: $P(\text{free} \mid \text{spam}) = \frac{120}{200} = 0.6$. **The order matters.**
+$P(A \mid B)$ and $P(B \mid A)$ answer different questions and are usually different numbers. Mixing them up
+is so common it has a name, the *confusion of the inverse*, and the next lesson shows how to convert one into
+the other.
+
+### From a simulation
+
+The same masking idea works on simulated outcomes. With two dice, what is $P(\text{sum} = 8 \mid \text{first} = 3)$,
+and what is $P(\text{first} = 3 \mid \text{sum} = 8)$?
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(0)
+d1 = rng.integers(1, 7, size=200_000)
+d2 = rng.integers(1, 7, size=200_000)
+first_is_3 = d1 == 3
+sum_is_8 = d1 + d2 == 8
+print(round(sum_is_8[first_is_3].mean(), 3))   # P(sum = 8 | first = 3)
+print(round(first_is_3[sum_is_8].mean(), 3))   # P(first = 3 | sum = 8)
+```
+
+```text title="Output"
+0.166
+0.201
+```
+
+Check them by counting. If the first die is 3, the sum is 8 only when the second die is 5: $\frac{1}{6}$.
+If the sum is 8, the outcomes are (2, 6), (3, 5), (4, 4), (5, 3) and (6, 2), and one of those five starts
+with 3: $\frac{1}{5}$. Again, swapping the condition changes the answer.
+
+`array_a[mask_b].mean()` is the pattern to remember: **filter to the condition, then take the fraction**.
+
+## The multiplication rule
+
+Rearranging the definition gives a way to compute "both" probabilities step by step:
+
+$$
+P(A \cap B) = P(A \mid B)\,P(B) = P(B \mid A)\,P(A)
+$$
+
+Example: draw two cards from a shuffled 52-card deck without putting the first back. The chance the first is
+an ace is $\frac{4}{52}$. *Given* that it was, 3 aces remain among 51 cards, so
+
+$$
+P(\text{two aces}) = \frac{4}{52} \times \frac{3}{51} \approx 0.0045
+$$
+
+The rule chains to any number of steps: $P(A \cap B \cap C) = P(A)\,P(B \mid A)\,P(C \mid A \cap B)$.
+Language models use exactly this chain: the probability of a sentence is the probability of the first word,
+times the probability of the second word given the first, and so on.
+
+## The law of total probability
+
+Sometimes $P(A)$ is easiest to get by splitting the world into cases. If every email is either spam or not
+spam (written $\neg\text{spam}$),
+
+$$
+P(\text{free}) = P(\text{free} \mid \text{spam})\,P(\text{spam}) + P(\text{free} \mid \neg\text{spam})\,P(\neg\text{spam})
+$$
+
+With the numbers above: $0.6 \times 0.2 + 0.05 \times 0.8 = 0.12 + 0.04 = 0.16$, matching the 160 out of
+1,000 in the table. ($P(\text{free} \mid \neg\text{spam}) = \frac{40}{800} = 0.05$.) In general, if the cases
+$B_1, \dots, B_k$ are disjoint and cover every outcome,
+$P(A) = \sum_{i} P(A \mid B_i)\,P(B_i)$. You will need this in the next lesson for the bottom of Bayes' theorem.
+
+## Independence
+
+Two events are <Term id="independence">independent</Term> when knowing one tells you nothing about the other:
+
+$$
+P(A \mid B) = P(A) \quad\Longleftrightarrow\quad P(A \cap B) = P(A)\,P(B)
+$$
+
+The second form is the usual test, and it also works when $P(B) = 0$. Two separate dice, or two separate
+coin flips, are independent by design, which is why we multiplied $\frac{5}{6}$ four times in lesson 1.
+
+Independence is not always obvious. Let $A$ = "the first die is even". Is $A$ independent of "the sum is 7"?
+Of "the sum is 8"?
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(0)
+d1 = rng.integers(1, 7, size=200_000)
+d2 = rng.integers(1, 7, size=200_000)
+A = d1 % 2 == 0          # first die even
+B = d1 + d2 == 7
+C = d1 + d2 == 8
+print(round((A & B).mean(), 4), round(A.mean() * B.mean(), 4))
+print(round((A & C).mean(), 4), round(A.mean() * C.mean(), 4))
+```
+
+```text title="Output"
+0.0843 0.0835
+0.0834 0.0691
+```
+
+By counting: $P(A \cap B) = \frac{3}{36} = \frac{1}{12}$ and $P(A)\,P(B) = \frac{1}{2} \times \frac{1}{6} = \frac{1}{12}$, so
+$A$ and "sum is 7" **are** independent. Whatever the first die shows, exactly one value of the second makes 7.
+But $P(A \cap C) = \frac{3}{36} \approx 0.083$ while $P(A)\,P(C) = \frac{1}{2} \times \frac{5}{36} \approx 0.069$,
+so $A$ and "sum is 8" are **dependent**: an even first die makes a sum of 8 a little more likely.
+
+:::caution[Independent is not the same as disjoint]
+Disjoint events cannot happen together: $P(A \cap B) = 0$. If both have positive probability, they are
+strongly **dependent**: learning that $A$ happened tells you for certain that $B$ did not. "Heads" and
+"tails" on one flip are disjoint, not independent.
+:::
+
+## Why this matters for ML
+
+- A classifier estimates a conditional probability, $P(\text{label} \mid \text{features})$: the chance of
+  "spam" given this email's words.
+- Training data are usually assumed **independent and identically distributed** (i.i.d.): each example is
+  drawn independently from the same distribution. Many results, including the ones in lessons 6 to 9, rely on it,
+  and leaking near-duplicates between training and test data breaks it.
+- The naive Bayes classifier assumes the features are independent *given the class*. The assumption is
+  usually false, yet the classifier often works well enough to be a strong baseline for text.
+
+## Try it
+
+<CodeExercise id="f5-conditional-probability-01" />
+
+<CodeExercise id="f5-conditional-probability-02" />
+
+## Summary
+
+- $P(A \mid B) = P(A \cap B) / P(B)$: restrict to the outcomes where $B$ happened, then ask how many are in $A$.
+- In NumPy, `a[b].mean()` estimates $P(A \mid B)$ from boolean arrays.
+- $P(A \mid B)$ and $P(B \mid A)$ are different questions with usually different answers.
+- Multiplication rule: $P(A \cap B) = P(A \mid B)\,P(B)$. Total probability: $P(A) = \sum_i P(A \mid B_i)\,P(B_i)$.
+- Independent means $P(A \cap B) = P(A)\,P(B)$; disjoint events with positive probability are dependent.

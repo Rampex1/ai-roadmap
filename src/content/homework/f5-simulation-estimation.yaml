@@ -1,0 +1,36 @@
+id: f5-simulation-estimation
+module: f5
+kind: homework
+title: "Simulate, estimate, test: four small studies with uncertainty"
+brief: |
+  Put error bars on everything. You will estimate a probability by simulation, build bootstrap confidence intervals,
+  decide whether an A/B difference is real with a permutation test, and score a toy classifier with cross-entropy.
+  Download the notebook and open it in local Jupyter (as set up in F0, with numpy, matplotlib and scipy installed) or
+  in [Google Colab](https://colab.research.google.com/) (File > Upload notebook), which already has them.
+
+  Each task has a `TODO` cell and a check cell that prints `OK` when your code is right. Some tasks also ask for a
+  short written answer.
+
+  1. **The birthday problem**: `p_shared_birthday(k, n_sim, rng)` by simulation and `p_shared_exact(k)` with the
+     complement rule. Then measure how the simulation's error shrinks with `n_sim` across 20 seeds and compare it with
+     $\sqrt{p(1 - p)/n}$ on a log-log plot.
+  2. **Bootstrap confidence intervals**: `normal_ci(x)` and `bootstrap_ci(x, stat)` for skewed delivery times, for the
+     mean and the median. Then check the method: repeat the study 1,000 times and measure how often the interval
+     contains the true mean.
+  3. **A permutation A/B test**: `perm_test(a, b)` for a checkout-page experiment, a histogram of the shuffled
+     differences, and a bootstrap CI for the difference in conversion rates. Report the result in plain words,
+     including what the p-value does not tell you.
+  4. **Cross-entropy of a toy classifier**: a row-wise stable `softmax`, `ce_loss(probs, labels)`, the accuracy and the
+     $\ln 3$ baseline. Then turn one narrow mistake into a confident one and explain why the loss jumps while the
+     accuracy does not move.
+
+  A stretch task shows the central limit theorem with histograms of sample means.
+notebook: /homework/f5-simulation-estimation.ipynb
+rubric:
+  - "Every check cell prints OK after restarting the kernel and running all cells"
+  - "The Task 1 log-log plot shows the simulation spread falling in line with sqrt(p(1 - p) / n), and the written answer says that 100 times more simulations give 10 times more precision"
+  - "The Task 2 written answer interprets 95% confidence as the long-run success rate of the method, not as a probability about one interval"
+  - "The Task 3 report gives the observed difference with its confidence interval and the p-value, and says that the p-value is not the probability that the new page makes no difference"
+  - "The Task 4 answer explains that cross-entropy grows like -ln of the probability on the true class, so confident mistakes cost far more than narrow ones"
+  - "No cell reads files or downloads data; every random number comes from a seeded Generator"
+compute: "Any laptop or free Colab (CPU); every cell runs in a few seconds, about 1 to 2 hours of work including the written answers"

@@ -1,0 +1,7 @@
+term: "Confidence interval"
+short: "A range computed from data by a method that captures the true value in a stated share (say 95%) of repeated studies."
+body: |
+  For a mean, $\bar{x} \pm 1.96\,s/\sqrt{n}$ is an approximate 95% interval. The 95% describes the procedure,
+  not one interval: it is not a 95% probability that the fixed true value lies inside this particular range. The
+  bootstrap gives intervals for any statistic.
+related: ["standard-error", "bootstrap"]

@@ -1,0 +1,54 @@
+id: f5-random-variables-01
+lesson: foundations/f5/random-variables
+title: Expected value and variance from a pmf
+prompt: |
+  Write `mean_var(values, probs)` for a discrete random variable that takes `values[i]` with probability
+  `probs[i]`. Return a tuple `(mean, variance)`:
+
+  - $\mu = \sum_i x_i\,p_i$
+  - $\operatorname{Var}(X) = \sum_i (x_i - \mu)^2\,p_i$
+
+  If the probabilities do not add up to 1 (allow a tolerance of `1e-9`) or any is negative, raise a
+  `ValueError`: that is not a valid pmf.
+
+  For a fair die, `mean_var([1, 2, 3, 4, 5, 6], [1/6] * 6)` is `(3.5, 2.9166...)`.
+starter: |
+  import numpy as np
+
+  def mean_var(values, probs):
+      x = np.asarray(values, dtype=float)
+      p = np.asarray(probs, dtype=float)
+      return x.mean(), x.var()
+solution: |
+  import numpy as np
+
+  def mean_var(values, probs):
+      x = np.asarray(values, dtype=float)
+      p = np.asarray(probs, dtype=float)
+      if np.any(p < 0) or abs(p.sum() - 1) > 1e-9:
+          raise ValueError("probs must be non-negative and add up to 1")
+      mu = np.sum(x * p)
+      return float(mu), float(np.sum((x - mu) ** 2 * p))
+tests: |
+  import math
+  _r = mean_var([1, 2, 3, 4, 5, 6], [1 / 6] * 6)
+  assert _r is not None, "mean_var returned None: did you forget the return statement?"
+  _m, _v = _r
+  assert math.isclose(_m, 3.5) and math.isclose(_v, 35 / 12), f"For a fair die expected (3.5, 2.9167), got {_r!r}"
+  _m, _v = mean_var([0, 1], [0.7, 0.3])
+  assert math.isclose(_m, 0.3) and math.isclose(_v, 0.21), f"Bernoulli(0.3) should have mean 0.3 and variance 0.3 x 0.7 = 0.21, got ({_m}, {_v}). Weight by probs, not equally."
+  _m, _v = mean_var([-10, 0, 50], [0.5, 0.4, 0.1])
+  assert math.isclose(_m, 0.0, abs_tol=1e-12) and math.isclose(_v, 300.0), f"For values [-10, 0, 50] with probs [0.5, 0.4, 0.1] expected (0, 300), got ({_m}, {_v})"
+  _m, _v = mean_var([7], [1.0])
+  assert math.isclose(_m, 7) and math.isclose(_v, 0.0, abs_tol=1e-12), "A value that is certain has variance 0"
+  for _bad in ([0.5, 0.4], [0.6, 0.6], [1.2, -0.2]):
+      try:
+          mean_var([1, 2], _bad)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError(f"probs = {_bad} is not a valid pmf: raise ValueError")
+hints:
+  - "Turn both inputs into arrays, then mu = np.sum(x * p)."
+  - "The variance is np.sum((x - mu) ** 2 * p), not x.var(), which weights every value equally."
+  - "Check np.any(p < 0) and abs(p.sum() - 1) > 1e-9 before computing anything."

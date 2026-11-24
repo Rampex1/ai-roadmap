@@ -1,0 +1,58 @@
+id: f5-maximum-likelihood-02
+lesson: foundations/f5/maximum-likelihood
+title: The Gaussian mean by maximum likelihood
+prompt: |
+  Model the data `x` as normal with unknown mean $\mu$ and known standard deviation `sigma`. Write:
+
+  - `gaussian_nll(mu, x, sigma)`: the (total) negative log-likelihood
+
+    $$\sum_{i} \frac{(x_i - \mu)^2}{2\sigma^2} + n \ln\!\big(\sigma\sqrt{2\pi}\big)$$
+
+  - `gaussian_mle(x, sigma)`: grid search for $\mu$ over `np.linspace(x.min(), x.max(), 2001)`, returning the grid
+    value with the smallest NLL.
+
+  The tests check your NLL against `scipy.stats.norm` and check that the MLE lands next to the sample mean, as
+  the lesson derived.
+starter: |
+  import numpy as np
+
+  def gaussian_nll(mu, x, sigma):
+      x = np.asarray(x, dtype=float)
+      return np.sum(np.abs(x - mu))
+
+  def gaussian_mle(x, sigma):
+      x = np.asarray(x, dtype=float)
+      grid = np.linspace(x.min(), x.max(), 2001)
+      return float(np.median(x))
+solution: |
+  import numpy as np
+
+  def gaussian_nll(mu, x, sigma):
+      x = np.asarray(x, dtype=float)
+      return np.sum((x - mu) ** 2) / (2 * sigma ** 2) + len(x) * np.log(sigma * np.sqrt(2 * np.pi))
+
+  def gaussian_mle(x, sigma):
+      x = np.asarray(x, dtype=float)
+      grid = np.linspace(x.min(), x.max(), 2001)
+      nll = np.array([gaussian_nll(m, x, sigma) for m in grid])
+      return float(grid[np.argmin(nll)])
+tests: |
+  import numpy as np
+  from scipy import stats
+  _x = np.array([4.0, 7.0, 5.5, 3.0, 9.5])
+  _r = gaussian_nll(5.0, _x, 2.0)
+  assert _r is not None, "gaussian_nll returned None: did you forget the return statement?"
+  _want = -stats.norm.logpdf(_x, 5.0, 2.0).sum()
+  assert abs(float(_r) - _want) < 1e-9, f"gaussian_nll(5, x, 2) should be {_want:.6f}, got {_r!r}"
+  for _mu, _s in [(0.0, 1.0), (6.2, 0.5), (-3.0, 4.0)]:
+      _want = -stats.norm.logpdf(_x, _mu, _s).sum()
+      assert abs(float(gaussian_nll(_mu, _x, _s)) - _want) < 1e-9, f"Wrong NLL for mu={_mu}, sigma={_s}"
+  _rng = np.random.default_rng(0)
+  for _true in [5.0, -12.0, 100.0]:
+      _d = _rng.exponential(3.0, size=30) + _true
+      _m = gaussian_mle(_d, 2.0)
+      _step = (_d.max() - _d.min()) / 2000
+      assert abs(_m - _d.mean()) <= _step / 2 + 1e-9, f"The MLE should be the grid point nearest the sample mean {_d.mean():.4f}, got {_m!r}. (The median is a different estimate.)"
+hints:
+  - "The NLL is np.sum((x - mu) ** 2) / (2 * sigma ** 2) + len(x) * np.log(sigma * np.sqrt(2 * np.pi))."
+  - "Evaluate it for every value in the grid and return grid[np.argmin(nll)]."

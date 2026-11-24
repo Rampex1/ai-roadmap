@@ -1,0 +1,104 @@
+items:
+  - id: f5-maximum-likelihood-01
+    type: numeric
+    prompt: "A coin gives 12 heads in 40 flips. What is the maximum likelihood estimate of $P(\\text{heads})$?"
+    answer: 0.3
+    tol: 0.0001
+    explanation: "The MLE for coin flips is k / n = 12 / 40 = 0.3."
+  - id: f5-maximum-likelihood-02
+    type: mcq
+    prompt: "For 7 heads in 10 flips, $L(0.7) \\approx 0.0022$. What does this number mean?"
+    explanation: "The likelihood is the probability of the observed data (this exact sequence) if p were 0.7. It is not a probability about p."
+    options:
+      - text: If p were 0.7, this exact sequence of flips would have probability about 0.0022
+        correct: true
+        why: The likelihood is P(data | p), read as a function of p.
+      - text: There is a 0.22% chance that p equals 0.7
+        why: The likelihood is not a probability distribution over p.
+      - text: The coin will land heads 0.22% of the time
+        why: That confuses the likelihood with p itself.
+      - text: The estimate 0.7 has an error of 0.0022
+        why: The likelihood value says nothing directly about the error.
+  - id: f5-maximum-likelihood-03
+    type: multi
+    prompt: "Why do we minimise the negative log-likelihood instead of maximising the likelihood directly? Select all that apply."
+    explanation: "The log turns products into sums and avoids underflow; since ln is increasing, the optimum is unchanged; and the minus sign fits optimisers that minimise."
+    options:
+      - text: The product of many probabilities underflows to 0, while the sum of their logs does not
+        correct: true
+        why: Thousands of factors below 1 fall below the smallest float.
+      - text: The log is increasing, so the best parameter is the same
+        correct: true
+        why: Maximising ln L and maximising L give the same answer.
+      - text: Optimisers are written to minimise, so we flip the sign
+        correct: true
+        why: Gradient descent minimises a loss.
+      - text: The log changes which parameter is best, giving a better estimate
+        why: The maximiser is unchanged; the log only makes the computation easier.
+  - id: f5-maximum-likelihood-04
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      grid = np.array([0.2, 0.4, 0.6, 0.8])
+      nll = np.array([1.9, 0.8, 0.7, 1.1])
+      print(grid[np.argmin(nll)])
+    answer: "0.6"
+    explanation: "np.argmin gives the position of the smallest NLL (index 2), and grid[2] is 0.6."
+  - id: f5-maximum-likelihood-05
+    type: mcq
+    prompt: "Minimising mean squared error in regression is equivalent to maximum likelihood under which assumption about the targets?"
+    explanation: "The Gaussian NLL is squared error divided by 2σ² plus a constant, so MSE corresponds to normal noise with constant variance."
+    options:
+      - text: Each target is the model's prediction plus normally distributed noise with constant variance
+        correct: true
+        why: The Gaussian log-density contains exactly the squared error.
+      - text: The targets are 0 or 1
+        why: That leads to binary cross-entropy.
+      - text: The noise is uniformly distributed
+        why: A uniform noise model does not give squared error.
+      - text: There is no noise at all
+        why: With no noise the likelihood would not be defined this way; MSE assumes Gaussian noise.
+  - id: f5-maximum-likelihood-06
+    type: numeric
+    prompt: "A binary classifier predicts $P(y = 1) = 0.8$ for an example whose true label is $y = 0$. What is the binary cross-entropy for this example (natural log)?"
+    answer: 1.6094
+    tol: 0.001
+    explanation: "For y = 0 the loss is -ln(1 - q) = -ln(0.2) ≈ 1.609."
+  - id: f5-maximum-likelihood-07
+    type: order
+    prompt: "Put the steps of finding the coin MLE with calculus in order."
+    items:
+      - "Write the likelihood p^k (1 - p)^(n - k)"
+      - "Take the log to get k ln p + (n - k) ln(1 - p)"
+      - "Differentiate with respect to p and set the derivative to 0"
+      - "Solve to get p = k / n"
+    explanation: "Likelihood, log-likelihood, derivative set to zero, solve."
+  - id: f5-maximum-likelihood-08
+    type: mcq
+    prompt: "For data modelled as normal with unknown mean $\\mu$ (and known $\\sigma$), what is the maximum likelihood estimate of $\\mu$?"
+    explanation: "Minimising the sum of squared deviations gives the sample mean."
+    options:
+      - text: The sample mean
+        correct: true
+        why: Setting the derivative of the sum of squares to zero gives the average.
+      - text: The sample median
+        why: The median minimises the sum of absolute deviations, which corresponds to Laplace noise.
+      - text: The midpoint between the minimum and the maximum
+        why: That is not what squared error picks.
+      - text: The most common value
+        why: For continuous data there may be no repeated value; this is not the MLE.
+  - id: f5-maximum-likelihood-09
+    type: output
+    prompt: "What does this print? (It multiplies 2,000 probabilities of 0.5.)"
+    code: |
+      import numpy as np
+      p = np.full(2000, 0.5)
+      print(np.prod(p), round(np.sum(np.log(p)), 1))
+    answer: "0.0 -1386.3"
+    explanation: "0.5^2000 is far below the smallest float, so the product underflows to 0.0. The sum of logs, 2000 × ln 0.5 ≈ -1386.3, is perfectly usable."
+  - id: f5-maximum-likelihood-10
+    type: cloze
+    prompt: "Training a classifier with binary cross-entropy is the same as minimising the average negative ________ of the labels."
+    accept: ["log-likelihood", "log likelihood", "loglikelihood"]
+    explanation: "Binary cross-entropy is the average negative log-likelihood of Bernoulli labels."

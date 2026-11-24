@@ -1,0 +1,7 @@
+term: "Central limit theorem"
+short: "The mean of many independent values is approximately normally distributed, whatever the shape of the original distribution."
+body: |
+  For i.i.d. values with finite variance, $\bar{X} \approx \mathcal{N}(\mu, \sigma^2/n)$ for large $n$. It
+  underlies confidence intervals and many tests, and fails for extremely heavy-tailed distributions with
+  infinite variance.
+related: ["normal-distribution", "standard-error", "law-of-large-numbers"]

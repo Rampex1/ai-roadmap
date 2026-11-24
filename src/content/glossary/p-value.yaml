@@ -1,0 +1,7 @@
+term: "p-value"
+short: "The probability, assuming the null hypothesis is true, of a result at least as extreme as the one observed."
+body: |
+  A small p-value means the data would be surprising if nothing were going on. It is not the probability that
+  the null hypothesis is true, not an effect size, and not a replication probability. Running many tests
+  produces false positives at the rate of the threshold.
+related: ["permutation-test", "conditional-probability"]

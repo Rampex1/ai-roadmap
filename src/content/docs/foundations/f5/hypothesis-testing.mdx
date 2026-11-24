@@ -1,0 +1,181 @@
+---
+title: "Hypothesis testing: p-values and A/B tests by permutation"
+module: f5
+order: 9
+estMinutes: 15
+objectives:
+  - "Define a null hypothesis, a test statistic and a p-value, and compute a p-value by simulation"
+  - "Run a two-group A/B test with a permutation test"
+  - "State what a p-value does and does not mean, and recognise multiple testing and the gap between statistical and practical significance"
+goDeeper: seeing-theory
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A new web page converts 12.3% of visitors against the old page's 9.2%. A new model scores 0.6 points higher than the
+baseline. Is the difference real, or could random noise alone have produced it? Hypothesis testing gives a
+disciplined way to ask that question. It is also one of the most misunderstood tools in science, so this lesson
+spends as much time on what the answer does **not** mean as on how to compute it.
+
+## The logic: could chance explain it?
+
+A coin lands heads 60 times in 100 flips. Is it biased? The test works by contradiction:
+
+1. **Null hypothesis** $H_0$: the boring explanation, "nothing is going on". Here, the coin is fair, $p = 0.5$.
+2. **Test statistic**: a number that measures how far the data are from what $H_0$ predicts. Here,
+   $|\text{heads} - 50| = 10$.
+3. **Null distribution**: how the statistic would behave if $H_0$ were true. We can simulate it.
+4. **<Term id="p-value" />**: the probability, **assuming $H_0$ is true**, of a statistic at least as extreme as
+   the one observed.
+
+```python
+import numpy as np
+from scipy import stats
+
+rng = np.random.default_rng(0)
+heads_if_fair = rng.binomial(n=100, p=0.5, size=100_000)   # 100,000 experiments under H0
+p_value = np.mean(np.abs(heads_if_fair - 50) >= 10)        # at least as extreme as 60
+print(round(p_value, 4))
+print(round(stats.binomtest(60, n=100, p=0.5).pvalue, 4))
+```
+
+```text title="Output"
+0.0566
+0.0569
+```
+
+A fair coin produces a result at least this lopsided (60 or more heads, or 40 or fewer) about 5.7% of the time. The
+simulation agrees with scipy's exact binomial test. We counted both directions ("two-sided") because a coin biased
+towards tails would be just as interesting as one biased towards heads.
+
+A small p-value means the data would be surprising if $H_0$ were true. By a common convention, $p < 0.05$ is called
+**statistically significant** and leads to "rejecting $H_0$". At $p = 0.057$ the coin result is suggestive but
+would not pass that bar.
+
+## An A/B test with a permutation test
+
+An online shop shows its old page to 1,000 visitors (group A) and a new page to 1,000 others (group B), assigned at
+random. Each visitor either buys (1) or not (0):
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(1)
+a = (rng.random(1000) < 0.10).astype(int)   # old page: 1 = converted
+b = (rng.random(1000) < 0.13).astype(int)   # new page
+observed = b.mean() - a.mean()
+print(a.mean(), b.mean(), round(observed, 3))
+```
+
+```text title="Output"
+0.092 0.123 0.031
+```
+
+(We simulated the data, so we know the new page really is better, 13% against 10%. In real life you would not
+know, which is the whole point.) The new page converted 3.1 percentage points more. Could that be luck?
+
+The null hypothesis is "the page makes no difference". If that were true, the labels A and B would be meaningless:
+each visitor would have bought or not regardless of the page. So we can **shuffle the labels** and see what
+differences arise by chance alone. That is a <Term id="permutation-test" />:
+
+1. Pool both groups together.
+2. Shuffle, then split into a fake "A" and a fake "B" of the original sizes.
+3. Record the difference in means.
+4. Repeat thousands of times. The p-value is the fraction of shuffled differences at least as extreme as the real
+   one.
+
+```python
+pooled = np.concatenate([a, b])
+n_a = len(a)
+diffs = np.empty(10_000)
+for i in range(10_000):
+    shuffled = rng.permutation(pooled)                  # forget who saw which page
+    diffs[i] = shuffled[n_a:].mean() - shuffled[:n_a].mean()
+p_value = np.mean(np.abs(diffs) >= abs(observed))
+print(round(diffs.std(), 4), round(p_value, 4))
+```
+
+```text title="Output"
+0.0138 0.0292
+```
+
+By chance alone, differences have a standard deviation of about 1.4 points, and a difference of 3.1 points or more
+(in either direction) shows up about 2.9% of the time. So $p \approx 0.03$: evidence that the page matters.
+`rng.permutation` returns a shuffled copy, and comparing absolute values makes the test two-sided.
+
+The permutation test needs no formula and few assumptions: only that, under $H_0$, the labels are exchangeable,
+which random assignment guarantees. Formula-based tests such as the two-sample **t-test** (`scipy.stats.ttest_ind`)
+give similar answers for large samples and are faster, but the permutation test shows plainly what a p-value is.
+
+## What a p-value means, and what it does not
+
+A p-value is $P(\text{data at least this extreme} \mid H_0)$. That conditional probability is easy to flip around
+by mistake, and lesson 2 showed that flipping a conditional changes it completely.
+
+:::caution[A p-value is NOT...]
+- **...the probability that $H_0$ is true.** $p = 0.03$ does not mean a 3% chance that the page makes no difference.
+  That would be $P(H_0 \mid \text{data})$, which needs a prior (Bayes' theorem again). If most ideas you test are
+  duds, many "significant" results are still false positives: the base-rate fallacy from lesson 3.
+- **...the size or importance of an effect.** With a million visitors per group, a 0.05-point difference can have a
+  tiny p-value and still be worthless. Always report the effect size, ideally with a confidence interval
+  (lesson 7).
+- **...the probability that the result will replicate.** A result with $p = 0.04$ often fails to reach $p < 0.05$
+  when repeated.
+- **...proof of no effect when it is large.** $p = 0.3$ means the data are consistent with no effect, not that the
+  effect is zero. A small study may simply be too small to tell.
+:::
+
+### Multiple testing
+
+If $H_0$ is true, p-values are spread evenly between 0 and 1, so $p < 0.05$ happens 5% of the time by chance. Run
+2,000 tests where nothing is going on:
+
+```python
+import numpy as np
+from scipy import stats
+
+rng = np.random.default_rng(2)
+p_values = []
+for _ in range(2000):
+    x = rng.normal(0, 1, size=50)
+    y = rng.normal(0, 1, size=50)          # same distribution: H0 is true
+    p_values.append(stats.ttest_ind(x, y).pvalue)
+p_values = np.array(p_values)
+print(round(np.mean(p_values < 0.05), 3))
+print(round(1 - 0.95 ** 20, 3))
+```
+
+```text title="Output"
+0.058
+0.642
+```
+
+About 5% come out "significant" with no real effect at all. Test 20 independent things (20 metrics, 20 user
+segments, 20 random seeds until one works) and the chance of at least one false positive is
+$1 - 0.95^{20} \approx 64\%$. Trying many analyses and reporting the one that worked is called **p-hacking**. The
+simplest defence is to decide your main comparison before looking at the data. If you must run $m$ tests, the
+**Bonferroni correction** requires $p < 0.05/m$ for each.
+
+## Why this matters for ML
+
+- **Comparing models.** A 0.6-point accuracy gain on a small test set may be noise. A permutation or bootstrap test
+  on per-example results, or several random seeds, tells you whether it is real.
+- **Leaderboard and benchmark chasing** is multiple testing: try enough variants against one test set and some will
+  look better by luck. This is why a held-out test set should be used rarely.
+- **A/B tests** decide whether a new model actually helps users once deployed (Track A covers this in depth).
+
+## Try it
+
+<CodeExercise id="f5-hypothesis-testing-01" />
+
+<CodeExercise id="f5-hypothesis-testing-02" />
+
+## Summary
+
+- A test assumes a null hypothesis, measures a test statistic, and asks how often chance alone would give a value at
+  least as extreme: that probability is the p-value.
+- A permutation test builds the null distribution by shuffling group labels; it needs only random assignment.
+- A p-value is not the probability that $H_0$ is true, not an effect size, and not a replication probability.
+- Many tests produce false positives at the rate of the threshold; decide the comparison in advance or correct for
+  multiple tests.
+- Report the effect size with a confidence interval alongside any p-value.

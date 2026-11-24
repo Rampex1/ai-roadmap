@@ -1,0 +1,219 @@
+---
+title: "Probability basics: outcomes, events and simulation"
+module: f5
+order: 1
+estMinutes: 15
+objectives:
+  - "Describe an experiment with a sample space and events, and compute probabilities of equally likely outcomes by counting"
+  - "Apply the complement and addition rules"
+  - "Estimate a probability by simulation with a NumPy Generator and explain why more runs give a better estimate"
+goDeeper: seeing-theory
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Machine learning is full of uncertainty. Data are noisy, a model's prediction is a guess, and a
+classifier that says "cat" really means "probably cat". <Term id="probability" /> is the language
+for reasoning about that uncertainty precisely. This module builds it from the ground up, with
+NumPy simulations alongside the maths so you can check every formula by experiment.
+
+## Experiments, outcomes and events
+
+An **experiment** is anything with an uncertain result: rolling a die, flipping a coin, picking a
+random email from an inbox. Three words describe it:
+
+- An **outcome** is one possible result, such as rolling a 4.
+- The **sample space** $\Omega$ (the Greek capital omega) is the set of all possible outcomes. For one
+  die, $\Omega = \{1, 2, 3, 4, 5, 6\}$.
+- An **event** is a set of outcomes you care about, such as "the roll is even", $A = \{2, 4, 6\}$. An event
+  *happens* if the outcome lands inside it.
+
+A probability $P(A)$ is a number between 0 and 1 attached to each event: 0 means it never happens, 1
+means it always happens. One useful way to read it is as a **long-run frequency**: if you repeated the
+experiment many times, $P(A)$ is the fraction of runs in which $A$ happens.
+
+### Counting equally likely outcomes
+
+When every outcome is equally likely (a fair die, a well-shuffled deck), probability is counting:
+
+$$
+P(A) = \frac{\text{number of outcomes in } A}{\text{number of outcomes in } \Omega} = \frac{|A|}{|\Omega|}
+$$
+
+The bars $|\cdot|$ mean "how many elements". For a fair die, $P(\text{even}) = \frac{3}{6} = 0.5$.
+
+Two dice are more interesting. The sample space is every (first, second) pair, so it has $6 \times 6 = 36$
+equally likely outcomes. Python can list them for us with `itertools.product`:
+
+```python
+from itertools import product
+
+omega = list(product(range(1, 7), repeat=2))   # all (first, second) pairs
+print(len(omega))
+seven = [w for w in omega if w[0] + w[1] == 7]
+print(seven)
+print(len(seven) / len(omega))
+```
+
+```text title="Output"
+36
+[(1, 6), (2, 5), (3, 4), (4, 3), (5, 2), (6, 1)]
+0.16666666666666666
+```
+
+So $P(\text{sum} = 7) = \frac{6}{36} = \frac{1}{6}$. Notice that (1, 6) and (6, 1) are different outcomes.
+Treating "a 1 and a 6" as one outcome is a classic mistake: the sums would no longer be equally likely.
+
+## The rules every probability obeys
+
+Whatever the experiment, probabilities follow three basic rules (the **axioms**):
+
+1. $0 \le P(A) \le 1$ for every event $A$.
+2. $P(\Omega) = 1$: something in the sample space always happens.
+3. If $A$ and $B$ are **disjoint** (they cannot both happen), $P(A \text{ or } B) = P(A) + P(B)$.
+
+Two rules you will use constantly follow from these.
+
+**The complement rule.** "Not $A$", written $A^c$, happens exactly when $A$ does not, so
+
+$$
+P(A^c) = 1 - P(A)
+$$
+
+This is often the easy way in. What is the chance of **at least one six** in four rolls of a die? Listing
+every way to get one, two, three or four sixes is painful. The complement, "no six at all", needs each roll
+to miss, with probability $\frac{5}{6}$ each time, so $P(\text{at least one six}) = 1 - \left(\frac{5}{6}\right)^4 \approx 0.518$.
+(Multiplying the $\frac{5}{6}$ factors is allowed because the rolls are independent, which the next lesson
+makes precise.)
+
+**The addition rule.** For any two events, write $A \cap B$ ("$A$ and $B$", the intersection) and
+$A \cup B$ ("$A$ or $B$", the union, meaning at least one of them). Then
+
+$$
+P(A \cup B) = P(A) + P(B) - P(A \cap B)
+$$
+
+Adding $P(A)$ and $P(B)$ counts the outcomes in both events twice, so you subtract them once. With two
+dice, let $A$ = "the first die is a six" and $B$ = "the total is at least 10". $A$ has 6 outcomes, $B$ has
+6 ((4, 6), (5, 5), (6, 4), (5, 6), (6, 5), (6, 6)), and 3 of those are in both. So
+$P(A \cup B) = \frac{6 + 6 - 3}{36} = \frac{9}{36} = 0.25$, not $\frac{12}{36}$. When $A$ and $B$ are
+disjoint, $P(A \cap B) = 0$ and you get axiom 3 back.
+
+## Estimating probabilities by simulation
+
+Counting works for dice. For most real questions the sample space is too large or too messy to count.
+Then you **simulate**: run the experiment many times with random numbers and count how often the event
+happens. That is the long-run frequency idea, made literal.
+
+In [F2](/foundations/f2/reshape-and-random/) you met NumPy's random number **Generator**. Each row below
+is one experiment of two dice:
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(0)
+rolls = rng.integers(1, 7, size=(100_000, 2))   # 100,000 rows, one per experiment
+total = rolls.sum(axis=1)
+is_seven = total == 7
+print(is_seven[:8])
+print(is_seven.mean())
+```
+
+```text title="Output"
+[False False False False  True False False False]
+0.16775
+```
+
+The trick on the last line is worth remembering: **the mean of a boolean array is the fraction of `True`
+values**, because `True` counts as 1 and `False` as 0. So `(event).mean()` is a probability estimate.
+
+The answer, 0.168, is close to the exact $\frac{1}{6} \approx 0.1667$ but not equal. A simulation gives an
+**estimate**, and the estimate has error. How big? Try different numbers of runs:
+
+```python
+import numpy as np
+
+for n in [100, 1_000, 10_000, 100_000, 1_000_000]:
+    rng = np.random.default_rng(1)
+    rolls = rng.integers(1, 7, size=(n, 2))
+    est = (rolls.sum(axis=1) == 7).mean()
+    print(f"{n:>9,}  {est:.4f}  error {abs(est - 1/6):.4f}")
+```
+
+```text title="Output"
+      100  0.1900  error 0.0233
+    1,000  0.1530  error 0.0137
+   10,000  0.1652  error 0.0015
+  100,000  0.1662  error 0.0005
+1,000,000  0.1665  error 0.0002
+```
+
+The error shrinks as $n$ grows, but slowly: roughly, 100 times more runs buy one more correct decimal
+place. Lesson 6 shows why the error falls like $\frac{1}{\sqrt{n}}$. For now, the rule of thumb is that
+100,000 runs give you about two to three reliable decimal places.
+
+:::tip[Seed your experiments]
+Always create a Generator with a seed, `np.random.default_rng(seed)`, and pass it around. The same seed
+gives the same numbers, so your results are reproducible, and you can still change the seed to check
+that a conclusion does not depend on one lucky draw.
+:::
+
+Simulation also checks your algebra. Here are the two results from the rules section:
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(2)
+rolls = rng.integers(1, 7, size=(200_000, 4))
+at_least_one_six = (rolls == 6).any(axis=1)
+print(round(at_least_one_six.mean(), 4))
+print(round(1 - (5 / 6) ** 4, 4))
+
+rng = np.random.default_rng(3)
+rolls = rng.integers(1, 7, size=(200_000, 2))
+A = rolls[:, 0] == 6           # first die is a six
+B = rolls.sum(axis=1) >= 10    # total is at least 10
+print(round((A | B).mean(), 4))
+```
+
+```text title="Output"
+0.5178
+0.5177
+0.2489
+```
+
+`.any(axis=1)` asks "is any entry in this row `True`?", which is exactly "at least one". For boolean
+arrays, `|` is "or" and `&` is "and", applied element by element, so `(A | B).mean()` estimates
+$P(A \cup B)$. It lands near 0.25, as the addition rule predicted.
+
+:::caution[Simulation is not proof]
+A simulation that agrees with your formula is strong evidence, and a simulation that disagrees means one
+of them has a bug. But an estimate is never exact, so compare with a tolerance (two or three decimal
+places at 100,000 runs), not with `==`.
+:::
+
+## Why this matters for ML
+
+- A classifier's output, "0.92 cat", is a probability. Its training loss (lesson 10) is built from these
+  numbers.
+- Training data are treated as random samples from some unknown process. Everything you will learn about
+  estimation and uncertainty starts from that view.
+- Simulation is a working tool, not just a teaching device. Monte Carlo methods (simulation by random
+  sampling) are used to estimate quantities that have no closed form, and random choices (shuffling, dropout,
+  initialisation) are everywhere in training.
+
+## Try it
+
+<CodeExercise id="f5-probability-basics-01" />
+
+<CodeExercise id="f5-probability-basics-02" />
+
+## Summary
+
+- A sample space $\Omega$ lists all outcomes; an event is a set of outcomes; $P(A)$ is between 0 and 1,
+  readable as a long-run frequency.
+- With equally likely outcomes, $P(A) = |A| / |\Omega|$: count carefully, treating (1, 6) and (6, 1) as
+  different.
+- Complement: $P(A^c) = 1 - P(A)$. Addition: $P(A \cup B) = P(A) + P(B) - P(A \cap B)$.
+- Simulate with `rng = np.random.default_rng(seed)`; the mean of a boolean array estimates a probability.
+- Simulation error shrinks slowly as runs increase, so compare estimates with a tolerance.

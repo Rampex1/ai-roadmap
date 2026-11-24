@@ -1,0 +1,99 @@
+items:
+  - id: f5-probability-basics-01
+    type: numeric
+    prompt: "Two fair dice are rolled. What is $P(\\text{sum} = 9)$? Give a decimal."
+    answer: 0.1111
+    tol: 0.001
+    explanation: "The ordered pairs (3, 6), (4, 5), (5, 4) and (6, 3) give 9, so 4 of the 36 equally likely outcomes: 4/36 ≈ 0.1111."
+  - id: f5-probability-basics-02
+    type: mcq
+    prompt: "A friend says: \"With two dice, a sum of 2 and a sum of 7 are equally likely, because each is just one combination.\" What is wrong?"
+    explanation: "The 36 equally likely outcomes are ordered pairs. A sum of 2 needs (1, 1) only, but a sum of 7 has six ordered pairs, so it is six times as likely."
+    options:
+      - text: The equally likely outcomes are ordered pairs, and 7 has six of them while 2 has one
+        correct: true
+        why: Counting unordered combinations hides that (1, 6) and (6, 1) are different outcomes.
+      - text: Nothing, both have probability 1/11
+        why: There are 11 possible sums, but they are not equally likely.
+      - text: A sum of 2 is impossible
+        why: Two ones give a sum of 2.
+      - text: Dice are not random enough for probability to apply
+        why: Fair dice are the standard example of equally likely outcomes.
+  - id: f5-probability-basics-03
+    type: numeric
+    prompt: "A fair coin is flipped 5 times. Using the complement rule, what is the probability of **at least one** head?"
+    answer: 0.96875
+    tol: 0.0001
+    explanation: "The complement is \"no heads\", all five tails: (1/2)^5 = 1/32. So the answer is 1 - 1/32 = 0.96875."
+  - id: f5-probability-basics-04
+    type: numeric
+    prompt: "In a class, $P(\\text{plays football}) = 0.4$, $P(\\text{plays chess}) = 0.3$ and $P(\\text{both}) = 0.1$. What is the probability a random student plays football **or** chess (or both)?"
+    answer: 0.6
+    tol: 0.0001
+    explanation: "Addition rule: 0.4 + 0.3 - 0.1 = 0.6. Subtracting the overlap stops the students who do both from being counted twice."
+  - id: f5-probability-basics-05
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      hits = np.array([True, False, True, True, False])
+      print(hits.mean())
+    answer: "0.6"
+    explanation: "True counts as 1 and False as 0, so the mean is 3/5 = 0.6, the fraction of True values. This is how a simulation turns outcomes into a probability estimate."
+  - id: f5-probability-basics-06
+    type: mcq
+    prompt: "You estimate a probability by simulation with 1,000 runs and get 0.153. The exact answer is 1/6 ≈ 0.167. What is the best conclusion?"
+    explanation: "A simulation estimate has random error. With 1,000 runs an error of about 0.01 is normal, and more runs shrink it."
+    options:
+      - text: The estimate has ordinary simulation error; more runs would bring it closer
+        correct: true
+        why: The error shrinks as the number of runs grows, though slowly.
+      - text: The simulation code must have a bug
+        why: An error of 0.014 at 1,000 runs is typical; it is not evidence of a bug.
+      - text: The exact answer must be wrong
+        why: 1/6 comes from counting; a single noisy estimate cannot overturn it.
+      - text: Changing the seed until you get 0.167 fixes the problem
+        why: Picking the seed that gives the answer you want hides the error instead of reducing it.
+  - id: f5-probability-basics-07
+    type: multi
+    prompt: "Which of these are valid probabilities for events in the same experiment? Select all that are consistent with the rules."
+    explanation: "Probabilities lie in [0, 1], the whole sample space has probability 1, and P(not A) = 1 - P(A)."
+    options:
+      - text: P(A) = 0.3 and P(not A) = 0.7
+        correct: true
+        why: They add to 1, as a complement must.
+      - text: P(sample space) = 1
+        correct: true
+        why: Some outcome always happens.
+      - text: P(A) = 1.2
+        why: No probability can exceed 1.
+      - text: P(A) = 0.5, P(B) = 0.4 and P(A and B) = 0.6
+        why: Both A and B together cannot be more likely than A alone.
+  - id: f5-probability-basics-08
+    type: cloze
+    prompt: "In NumPy, the modern way to make random numbers is to create a Generator with `np.random.________(42)`."
+    accept: ["default_rng"]
+    explanation: "`rng = np.random.default_rng(42)` creates a seeded Generator; then call `rng.integers`, `rng.random`, `rng.normal` and so on."
+  - id: f5-probability-basics-09
+    type: mcq
+    prompt: "A simulation with 10,000 runs has an error of about 0.004. Roughly how many runs would you need to make the typical error about ten times smaller (0.0004)?"
+    explanation: "The error shrinks like 1 over the square root of the number of runs, so ten times less error needs a hundred times more runs."
+    options:
+      - text: About 1,000,000
+        correct: true
+        why: A hundred times more runs gives ten times less error.
+      - text: About 100,000
+        why: Ten times more runs only reduces the error by about the square root of 10, roughly 3.2 times.
+      - text: About 20,000
+        why: Doubling the runs reduces the error by only about 30 percent.
+      - text: No number of runs can reduce it
+        why: The error does keep shrinking as runs increase, just slowly.
+  - id: f5-probability-basics-10
+    type: output
+    prompt: "Each row is one experiment of three dice. What does this print?"
+    code: |
+      import numpy as np
+      rolls = np.array([[1, 6, 3], [2, 2, 5], [6, 6, 1], [4, 3, 2]])
+      print((rolls == 6).any(axis=1).mean())
+    answer: "0.5"
+    explanation: "`(rolls == 6).any(axis=1)` asks, for each row, whether at least one die shows a six: True, False, True, False. The mean is 2/4 = 0.5."

@@ -1,0 +1,7 @@
+term: "KL divergence"
+short: "D_KL(p || q) = sum of p log(p / q): how much extra surprise comes from using q in place of the true p."
+body: |
+  It equals cross-entropy minus entropy, is never negative, is zero only when $p = q$, is not symmetric, and is
+  infinite when $q$ gives zero probability to something $p$ can produce. It appears in distillation, VAEs and
+  fine-tuning penalties.
+related: ["entropy", "cross-entropy"]

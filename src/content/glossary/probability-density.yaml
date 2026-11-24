@@ -1,0 +1,5 @@
+term: "Probability density"
+short: "A curve p(x) for a continuous random variable whose area over an interval is the probability of landing there."
+body: |
+  A density is never negative and has total area 1, but its value at a point can exceed 1. $P(a < X < b) = \int_a^b p(x)\,dx$, and any single value has probability 0.
+related: ["integral", "normal-distribution", "random-variable"]

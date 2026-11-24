@@ -1,0 +1,40 @@
+id: f5-random-variables-03
+lesson: foundations/f5/random-variables
+title: The binomial pmf
+prompt: |
+  Write `binom_pmf(k, n, p)`: the probability of exactly `k` successes in `n` independent trials, each a
+  success with probability `p`:
+
+  $$P(X = k) = \binom{n}{k}\,p^k\,(1 - p)^{n - k}$$
+
+  Use `math.comb(n, k)` for $\binom{n}{k}$ (do not use scipy here). Return `0.0` when `k` is below 0 or above
+  `n`. For example `binom_pmf(3, 10, 0.3)` is about `0.2668`. The tests also check that your pmf adds to 1
+  and has mean $np$.
+starter: |
+  from math import comb
+
+  def binom_pmf(k, n, p):
+      return p ** k
+solution: |
+  from math import comb
+
+  def binom_pmf(k, n, p):
+      if k < 0 or k > n:
+          return 0.0
+      return comb(n, k) * p ** k * (1 - p) ** (n - k)
+tests: |
+  import math
+  _r = binom_pmf(3, 10, 0.3)
+  assert _r is not None, "binom_pmf returned None: did you forget the return statement?"
+  assert math.isclose(_r, 0.266827932, rel_tol=1e-6), f"binom_pmf(3, 10, 0.3) should be about 0.2668, got {_r!r}"
+  assert math.isclose(binom_pmf(0, 5, 0.5), 1 / 32), "No heads in 5 fair flips has probability 1/32"
+  assert math.isclose(binom_pmf(2, 4, 0.5), 6 / 16), "2 heads in 4 fair flips: 6 orderings out of 16, so 0.375. Did you include comb(n, k)?"
+  assert binom_pmf(-1, 5, 0.5) == 0 and binom_pmf(6, 5, 0.5) == 0, "k outside 0..n is impossible: return 0.0"
+  for _n, _p in [(10, 0.3), (20, 0.75), (7, 0.05)]:
+      _pmf = [binom_pmf(_k, _n, _p) for _k in range(_n + 1)]
+      assert math.isclose(sum(_pmf), 1.0, rel_tol=1e-9), f"The pmf for n={_n}, p={_p} should add to 1, got {sum(_pmf)}"
+      _mean = sum(_k * _q for _k, _q in enumerate(_pmf))
+      assert math.isclose(_mean, _n * _p, rel_tol=1e-9), f"The mean for n={_n}, p={_p} should be np = {_n * _p}, got {_mean}"
+hints:
+  - "comb(n, k) * p ** k * (1 - p) ** (n - k)"
+  - "Check for k < 0 or k > n first and return 0.0."

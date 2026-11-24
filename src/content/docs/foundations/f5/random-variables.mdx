@@ -1,0 +1,243 @@
+---
+title: "Random variables, discrete distributions, expectation and variance"
+module: f5
+order: 4
+estMinutes: 18
+objectives:
+  - "Describe a discrete random variable by its probability mass function"
+  - "Recognise the Bernoulli, binomial and categorical distributions, and connect softmax outputs to a categorical distribution"
+  - "Compute the expected value, variance and standard deviation from a pmf, and check them by simulation"
+goDeeper: blitzstein-hwang-probability
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+So far we have asked about events: did the sum come up 7 or not? Usually we care about a **number** that the
+experiment produces: the total of the dice, the number of customers who click, the predicted class. A random
+variable is that number, and its distribution tells you how likely each value is. Two summaries of a
+distribution, its expected value and its variance, will appear in nearly every lesson from here on.
+
+## Random variables
+
+A <Term id="random-variable" /> is a rule that assigns a number to each outcome of an experiment. Roll two
+dice, and $X$ = "the sum" assigns 7 to (3, 4) and 2 to (1, 1). By convention random variables get capital
+letters ($X$, $Y$) and the values they take get lower case ($x$).
+
+A random variable is **discrete** if its values can be listed: 0, 1, 2, ... or a set of class labels. (The
+next lesson handles **continuous** ones, such as heights.) A discrete random variable is described by its
+**probability mass function** (pmf):
+
+$$
+p(x) = P(X = x)
+$$
+
+A pmf is never negative and its values add up to 1: $\sum_x p(x) = 1$. For a fair die, $p(x) = \frac{1}{6}$
+for $x = 1, \dots, 6$. In code, a pmf is just two arrays: the values and their probabilities.
+
+## Expected value: the long-run average
+
+The <Term id="expected-value" /> (or **mean**, or **expectation**) of $X$ is the average of its values, each
+weighted by its probability:
+
+$$
+\mathbb{E}[X] = \sum_x x\,p(x)
+$$
+
+It is often written $\mu$ (the Greek letter mu). It is the average you would get over very many repetitions,
+not necessarily a value $X$ can take: a die has $\mathbb{E}[X] = 3.5$.
+
+## Variance: how spread out
+
+The expected value says where the distribution is centred. The <Term id="variance" /> says how far values
+typically land from that centre. It is the expected **squared** distance from the mean:
+
+$$
+\operatorname{Var}(X) = \mathbb{E}\big[(X - \mu)^2\big] = \sum_x (x - \mu)^2\,p(x)
+$$
+
+Squaring makes every distance positive and punishes large ones more. Because the units are squared too
+(dice points squared), we often report the **standard deviation** $\sigma = \sqrt{\operatorname{Var}(X)}$
+(sigma), which is back in the original units. A handy equivalent formula is
+$\operatorname{Var}(X) = \mathbb{E}[X^2] - \mu^2$.
+
+```python
+import numpy as np
+
+x = np.array([1, 2, 3, 4, 5, 6])      # values of a die roll
+p = np.full(6, 1 / 6)                 # their probabilities (the pmf)
+
+mean = np.sum(x * p)
+var = np.sum((x - mean) ** 2 * p)
+print(round(mean, 4), round(var, 4), round(np.sqrt(var), 4))
+
+rng = np.random.default_rng(0)
+rolls = rng.integers(1, 7, size=100_000)
+print(round(rolls.mean(), 4), round(rolls.var(), 4))
+```
+
+```text title="Output"
+3.5 2.9167 1.7078
+3.498 2.9103
+```
+
+The first line is the exact mean, variance and standard deviation from the pmf. The second line measures the
+same quantities from 100,000 simulated rolls (`.var()` of data, which F2 introduced), and they land close.
+
+### Rules that save work
+
+For any numbers $a$ and $b$ and random variables $X$ and $Y$:
+
+- **Linearity of expectation:** $\mathbb{E}[aX + b] = a\,\mathbb{E}[X] + b$ and
+  $\mathbb{E}[X + Y] = \mathbb{E}[X] + \mathbb{E}[Y]$, always, even when $X$ and $Y$ are dependent.
+- **Variance and scaling:** $\operatorname{Var}(aX + b) = a^2 \operatorname{Var}(X)$. Shifting by $b$ does not
+  change the spread; scaling by $a$ scales the standard deviation by $|a|$.
+- **Variance of a sum:** $\operatorname{Var}(X + Y) = \operatorname{Var}(X) + \operatorname{Var}(Y)$ when $X$ and $Y$
+  are **independent** (not in general).
+
+So the sum of two dice has mean $3.5 + 3.5 = 7$ and variance $2.9167 + 2.9167 \approx 5.83$, with no new
+calculation.
+
+## Three distributions you will use constantly
+
+### Bernoulli: one yes-or-no trial
+
+A **Bernoulli**($p$) random variable is 1 with probability $p$ and 0 with probability $1 - p$: one coin flip,
+one click or no click, one email that is spam or not. Using the formulas above:
+
+$$
+\mathbb{E}[X] = 0 \cdot (1 - p) + 1 \cdot p = p, \qquad \operatorname{Var}(X) = p(1 - p)
+$$
+
+The variance is largest at $p = 0.5$ (most uncertain) and zero at $p = 0$ or $1$ (no uncertainty).
+
+### Binomial: counting successes
+
+Run $n$ independent Bernoulli($p$) trials and count the successes. That count has a **binomial**($n$, $p$)
+distribution:
+
+$$
+P(X = k) = \binom{n}{k} p^k (1 - p)^{n - k}, \qquad k = 0, 1, \dots, n
+$$
+
+$p^k (1 - p)^{n - k}$ is the probability of one particular sequence with $k$ successes, and
+$\binom{n}{k}$ ("$n$ choose $k$", `math.comb(n, k)`) counts how many such sequences there are. Because the count
+is a sum of $n$ independent Bernoullis, linearity gives $\mathbb{E}[X] = np$ and independence gives
+$\operatorname{Var}(X) = np(1 - p)$.
+
+```python
+from math import comb
+
+def binom_pmf(k, n, p):
+    return comb(n, k) * p ** k * (1 - p) ** (n - k)
+
+probs = [binom_pmf(k, 10, 0.3) for k in range(11)]
+print([round(q, 3) for q in probs])
+print(round(sum(probs), 6))
+```
+
+```text title="Output"
+[0.028, 0.121, 0.233, 0.267, 0.2, 0.103, 0.037, 0.009, 0.001, 0.0, 0.0]
+1.0
+```
+
+With 10 trials at $p = 0.3$, three successes is the most likely count, and the pmf adds to 1 as it must.
+You rarely need to code a pmf yourself: `scipy.stats` has the standard distributions, and the Generator can
+sample them.
+
+```python
+import numpy as np
+from scipy import stats
+
+print(round(stats.binom.pmf(3, 10, 0.3), 4), round(stats.binom.mean(10, 0.3), 4), round(stats.binom.var(10, 0.3), 4))
+rng = np.random.default_rng(1)
+heads = rng.binomial(n=10, p=0.3, size=100_000)
+print(round(heads.mean(), 3), round(heads.var(), 3))
+```
+
+```text title="Output"
+0.2668 3.0 2.1
+2.999 2.096
+```
+
+$np = 3$ and $np(1 - p) = 2.1$, confirmed by simulation.
+
+### Categorical: one of $K$ classes
+
+A **categorical** distribution picks one of $K$ classes, class $k$ with probability $p_k$, where
+$p_1 + \dots + p_K = 1$. It is a loaded die with $K$ faces. Bernoulli is the special case $K = 2$.
+
+This is exactly what a classifier outputs. A network that sorts images into $K$ classes ends with $K$ raw
+scores $z_1, \dots, z_K$ (called **logits**), which can be any real numbers. The <Term id="softmax" /> function
+turns them into a categorical distribution:
+
+$$
+\operatorname{softmax}(z)_k = \frac{e^{z_k}}{\sum_{j=1}^{K} e^{z_j}}
+$$
+
+The exponential makes every score positive ([F4](/foundations/f4/derivative-rules/)) and dividing by the total
+makes them add to 1, while keeping their order: the largest score gets the largest probability.
+
+```python
+import numpy as np
+
+z = np.array([2.0, 1.0, 0.1])          # raw scores (logits) for 3 classes
+probs = np.exp(z) / np.sum(np.exp(z))  # softmax
+print(probs.round(3), probs.sum())
+rng = np.random.default_rng(2)
+draws = rng.choice(3, size=100_000, p=probs)
+print(np.bincount(draws) / len(draws))
+```
+
+```text title="Output"
+[0.659 0.242 0.099] 1.0
+[0.65678 0.2441  0.09912]
+```
+
+`rng.choice(K, p=probs)` samples class labels from the categorical distribution, and `np.bincount` counts how
+often each label came up. Sampling from a softmax like this is how a language model picks its next token.
+
+:::caution[Overflow in softmax]
+`np.exp(1000.0)` is too big for a float and becomes `inf`, and `inf / inf` is `nan`. Because softmax gives the
+same answer if you subtract the same number from every score, subtract the maximum first:
+
+```python
+import numpy as np
+
+z = np.array([1000.0, 999.0])
+s = np.exp(z - z.max())
+print(s / s.sum())
+```
+
+```text title="Output"
+[0.73105858 0.26894142]
+```
+
+Now the largest exponent is $e^0 = 1$ and nothing overflows. Every serious softmax implementation does this.
+:::
+
+## Why this matters for ML
+
+- A classifier's output is a categorical distribution, usually produced by softmax. Lesson 10 turns it into
+  the cross-entropy loss.
+- A loss averaged over a dataset is an estimate of an **expected** loss. Linearity of expectation is why
+  averaging per-example losses makes sense.
+- Variance measures uncertainty and noise: the variance of a gradient estimate, of a model's predictions, of a
+  metric across random seeds.
+
+## Try it
+
+<CodeExercise id="f5-random-variables-01" />
+
+<CodeExercise id="f5-random-variables-02" />
+
+<CodeExercise id="f5-random-variables-03" />
+
+## Summary
+
+- A random variable assigns a number to each outcome; a discrete one is described by its pmf
+  $p(x) = P(X = x)$, which is non-negative and adds to 1.
+- $\mathbb{E}[X] = \sum_x x\,p(x)$; $\operatorname{Var}(X) = \sum_x (x - \mu)^2 p(x)$; $\sigma = \sqrt{\operatorname{Var}(X)}$.
+- Expectation is linear; $\operatorname{Var}(aX + b) = a^2\operatorname{Var}(X)$; variances add for independent variables.
+- Bernoulli($p$): mean $p$, variance $p(1 - p)$. Binomial($n$, $p$): mean $np$, variance $np(1 - p)$.
+- A categorical distribution over $K$ classes is what softmax produces; subtract the maximum score before
+  exponentiating.

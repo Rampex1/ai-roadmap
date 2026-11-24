@@ -1,0 +1,62 @@
+id: f5-hypothesis-testing-01
+lesson: foundations/f5/hypothesis-testing
+title: A permutation test for two groups
+prompt: |
+  Write `perm_test(a, b, n_perm=5000, seed=0)` that returns the **two-sided** permutation-test p-value for the
+  difference in means between groups `a` and `b`:
+
+  1. `observed = mean(b) - mean(a)`;
+  2. pool the two arrays; `n_perm` times, shuffle the pool with `rng.permutation`, split it into a fake `a` (the
+     first `len(a)` values) and a fake `b` (the rest), and record the difference of their means;
+  3. return the fraction of shuffled differences whose absolute value is **at least** `abs(observed)`.
+
+  Use `rng = np.random.default_rng(seed)`. The groups may have different sizes.
+starter: |
+  import numpy as np
+
+  def perm_test(a, b, n_perm=5000, seed=0):
+      a = np.asarray(a, dtype=float)
+      b = np.asarray(b, dtype=float)
+      rng = np.random.default_rng(seed)
+      observed = b.mean() - a.mean()
+      return 0.05
+solution: |
+  import numpy as np
+
+  def perm_test(a, b, n_perm=5000, seed=0):
+      a = np.asarray(a, dtype=float)
+      b = np.asarray(b, dtype=float)
+      rng = np.random.default_rng(seed)
+      observed = b.mean() - a.mean()
+      pooled = np.concatenate([a, b])
+      n_a = len(a)
+      diffs = np.empty(n_perm)
+      for i in range(n_perm):
+          s = rng.permutation(pooled)
+          diffs[i] = s[n_a:].mean() - s[:n_a].mean()
+      return float(np.mean(np.abs(diffs) >= abs(observed)))
+tests: |
+  import numpy as np
+  _rng = np.random.default_rng(42)
+  _a = _rng.normal(0, 1, size=40)
+  _b = _rng.normal(2, 1, size=40)
+  _r = perm_test(_a, _b)
+  assert _r is not None, "perm_test returned None: did you forget the return statement?"
+  assert 0 <= _r <= 1, f"A p-value lies between 0 and 1, got {_r!r}"
+  assert _r < 0.001, f"Groups whose means differ by 2 standard deviations should give a tiny p-value, got {_r!r}"
+  _same = np.array([1.0, 2.0, 3.0, 4.0])
+  assert perm_test(_same, _same[::-1].copy()) == 1.0, "Two groups with exactly equal means: every shuffled difference is at least 0 in size, so p = 1"
+  _x = np.array([0.0] * 50 + [1.0] * 10)
+  _y = np.array([0.0] * 40 + [1.0] * 20)
+  _p = perm_test(_x, _y, n_perm=5000, seed=1)
+  assert 0.035 < _p < 0.08, f"For 10/60 against 20/60 conversions the two-sided p-value is about 0.055, got {_p!r}. Count differences in BOTH directions with np.abs."
+  _p2 = perm_test(_y, _x, n_perm=5000, seed=2)
+  assert abs(_p - _p2) < 0.03, "A two-sided test should give about the same p-value when the groups are swapped"
+  _u = np.array([0.0] * 20 + [1.0] * 5)
+  _v = np.array([0.0] * 50 + [1.0] * 25)
+  _pu = perm_test(_u, _v, n_perm=4000, seed=3)
+  assert 0.27 < _pu < 0.36, f"For 5/25 against 25/75 the p-value is about 0.31, got {_pu!r}. Split the shuffled pool at len(a)."
+hints:
+  - "pooled = np.concatenate([a, b]); inside the loop s = rng.permutation(pooled)."
+  - "The fake groups are s[:len(a)] and s[len(a):]."
+  - "Return np.mean(np.abs(diffs) >= abs(observed))."

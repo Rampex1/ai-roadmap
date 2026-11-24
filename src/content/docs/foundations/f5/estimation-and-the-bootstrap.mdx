@@ -1,0 +1,228 @@
+---
+title: "Describing data and estimating with uncertainty: confidence intervals and the bootstrap"
+module: f5
+order: 7
+estMinutes: 15
+objectives:
+  - "Choose between the mean and the median, and explain why the sample variance divides by n - 1"
+  - "Build a 95% confidence interval for a mean and interpret it correctly"
+  - "Compute a bootstrap confidence interval for any statistic by resampling"
+goDeeper: blitzstein-hwang-probability
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A number without an error bar is half an answer. "The new model is 2% better" means something very different
+if the uncertainty is ±0.3% or ±5%. This lesson turns the theory of the last lesson into practical tools: summaries
+that describe a dataset, and intervals that say how far an estimate could reasonably be from the truth.
+
+## Describing data
+
+**Descriptive statistics** summarise a sample. In [F2](/foundations/f2/aggregations/) you met the main ones in
+NumPy; here is what they are for.
+
+- **Centre:** the **mean** (the average) and the **median** (the middle value once sorted).
+- **Spread:** the **variance**, the **standard deviation**, and **percentiles** (the 25th percentile has 25% of
+  the values below it; the 25th to 75th percentile range is the **interquartile range**).
+
+The mean and median answer different questions, and the difference matters when data are skewed or contain
+errors:
+
+```python
+import numpy as np
+
+minutes = np.array([12, 15, 14, 13, 16, 15, 90])   # delivery times; one order got lost
+print(minutes.mean(), np.median(minutes))
+print(np.percentile(minutes, [25, 50, 75]))
+print(round(minutes.std(), 2), round(minutes.std(ddof=1), 2))
+```
+
+```text title="Output"
+25.0 15.0
+[13.5 15.  15.5]
+26.57 28.69
+```
+
+One lost order drags the mean to 25 minutes, longer than every other delivery. The median, 15, ignores how
+extreme the outlier is; it is **robust**. Report the median for "a typical customer's wait" and the mean when the
+total matters (the mean times the number of orders is the total delivery time). Quoting both, as here, is often
+the most honest summary.
+
+### Why divide by n − 1?
+
+F2 left a puzzle: NumPy's `.std()` divides by $n$, while `ddof=1` (and pandas) divide by $n - 1$. The **sample
+variance** with $n - 1$ is
+
+$$
+s^2 = \frac{1}{n - 1}\sum_{i=1}^{n} (x_i - \bar{x})^2
+$$
+
+The reason: the deviations are measured from the **sample** mean $\bar{x}$, which is fitted to these very data
+and so sits closer to them than the true mean $\mu$ does. Dividing by $n$ therefore underestimates the true
+variance on average. Dividing by $n - 1$ exactly corrects this (it is called **Bessel's correction**). An estimate
+that is right on average is called **unbiased**. A simulation with true variance 1 and tiny samples of 5 makes the
+bias visible:
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(0)
+samples = rng.normal(0, 1, size=(100_000, 5))      # many samples of size 5, true variance 1
+print(round(samples.var(axis=1).mean(), 3))          # divide by n
+print(round(samples.var(axis=1, ddof=1).mean(), 3))  # divide by n - 1
+```
+
+```text title="Output"
+0.802
+1.003
+```
+
+Dividing by $n$ is off by the factor $\frac{n - 1}{n} = 0.8$. For large datasets the difference is negligible;
+for small samples, use `ddof=1` when you want to estimate the population's spread.
+
+## Estimates and confidence intervals
+
+A sample mean $\bar{x}$ is an **estimate** of the unknown population mean $\mu$. From the last lesson, it is
+approximately normal with standard error $\frac{\sigma}{\sqrt{n}}$. We do not know $\sigma$, so we plug in the
+sample standard deviation $s$, giving the estimated standard error $\frac{s}{\sqrt{n}}$. Since $\bar{x}$ lands
+within 1.96 standard errors of $\mu$ about 95% of the time, the interval
+
+$$
+\bar{x} \pm 1.96\,\frac{s}{\sqrt{n}}
+$$
+
+is an approximate 95% <Term id="confidence-interval" /> (CI) for $\mu$. Here are 50 delivery times from a
+distribution whose true mean is 30 minutes:
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(1)
+x = rng.exponential(scale=30, size=50)     # 50 delivery times, true mean 30 minutes
+mean = x.mean()
+se = x.std(ddof=1) / np.sqrt(len(x))
+print(round(mean, 2), round(se, 2))
+print(round(mean - 1.96 * se, 2), round(mean + 1.96 * se, 2))
+```
+
+```text title="Output"
+37.07 6.18
+24.97 49.18
+```
+
+The estimate is 37.1 minutes, with a 95% CI from about 25 to 49. This sample happened to run high, and the
+interval is wide enough to cover the true value of 30.
+
+### What "95%" means
+
+The 95% describes the **procedure**, not this one interval. If you repeated the whole study many times, each time
+drawing a new sample and building a new interval, about 95% of those intervals would contain $\mu$. Let us check by
+doing exactly that 10,000 times:
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(2)
+covered = 0
+for _ in range(10_000):
+    s = rng.exponential(scale=30, size=50)
+    m, se = s.mean(), s.std(ddof=1) / np.sqrt(50)
+    covered += (m - 1.96 * se < 30 < m + 1.96 * se)
+print(covered / 10_000)
+```
+
+```text title="Output"
+0.9268
+```
+
+About 93%, a little short of 95%. The CLT approximation is not perfect for skewed data at $n = 50$; with larger
+samples, or less skewed data, the coverage gets closer to 95%. Approximate methods are approximate, and simulation
+is how you find out how good the approximation is.
+
+:::caution[A common misreading]
+"There is a 95% probability that $\mu$ is between 25 and 49" is not what a confidence interval says. $\mu$ is a
+fixed number; this particular interval either contains it or not. The 95% is the success rate of the method.
+In practice, read a CI as "the range of values consistent with the data", and pay attention to its **width**: a
+wide interval means you do not know much yet.
+:::
+
+## The bootstrap
+
+The formula $\bar{x} \pm 1.96\,s/\sqrt{n}$ works for means. What about a median, a ratio, a correlation or a
+model's F1 score? Each would need its own formula, if one exists at all. The <Term id="bootstrap" /> replaces the
+formula with computation.
+
+The idea: the sample is our best picture of the population. So to imitate "drawing new samples from the
+population", draw new samples **from the sample**, of the same size, **with replacement** (so some values appear
+twice and others not at all). Compute the statistic on each such **resample**, and the spread of those values
+estimates the statistic's sampling variability.
+
+1. Draw a resample of size $n$ from the data, with replacement.
+2. Compute the statistic on it.
+3. Repeat thousands of times (10,000 is typical).
+4. The 2.5th and 97.5th percentiles of the results form a 95% **percentile bootstrap interval**.
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(3)
+boot_means = np.empty(10_000)
+for b in range(10_000):
+    resample = rng.choice(x, size=len(x), replace=True)
+    boot_means[b] = resample.mean()
+print(np.round(np.percentile(boot_means, [2.5, 97.5]), 2))
+```
+
+```text title="Output"
+[26.44 50.52]
+```
+
+Close to the formula's 25.0 to 49.2, but shifted to the right: the bootstrap picks up the skew of the data, which
+the symmetric formula cannot. The same code works for any statistic. A faster, loop-free version draws all the
+resample **indices** at once and uses fancy indexing:
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(4)
+idx = rng.integers(0, len(x), size=(10_000, len(x)))   # 10,000 resamples at once
+boot_medians = np.median(x[idx], axis=1)
+print(round(np.median(x), 2), np.round(np.percentile(boot_medians, [2.5, 97.5]), 2))
+```
+
+```text title="Output"
+25.64 [16.97 34.21]
+```
+
+`x[idx]` is a 10,000 by 50 array, one resample per row, and `np.median(..., axis=1)` takes each row's median.
+(The true median of this distribution is $30 \ln 2 \approx 20.8$, inside the interval.)
+
+:::note[Limits of the bootstrap]
+The bootstrap cannot invent information the sample lacks. With very small samples (say under 15) or statistics
+that depend on extremes (the maximum), it can be badly off. And it assumes the data points are independent:
+resampling individual time steps of a time series, or individual images when several come from the same patient,
+underestimates the uncertainty.
+:::
+
+## Why this matters for ML
+
+- Report evaluation metrics with intervals. Bootstrapping the test set (resample test examples, recompute the
+  metric) gives a CI for accuracy, F1 or any other metric, with no formula needed.
+- Bagging and random forests (F8) train each model on a bootstrap resample of the training data.
+- Robust summaries such as the median help when data contain outliers or logging errors, which real datasets
+  usually do.
+
+## Try it
+
+<CodeExercise id="f5-estimation-and-the-bootstrap-01" />
+
+<CodeExercise id="f5-estimation-and-the-bootstrap-02" />
+
+## Summary
+
+- The median is robust to outliers; the mean is not but relates to totals. Percentiles describe spread and shape.
+- The sample variance divides by $n - 1$ (`ddof=1`) to be unbiased; dividing by $n$ underestimates on average.
+- An approximate 95% CI for a mean is $\bar{x} \pm 1.96\,s/\sqrt{n}$. The 95% is the long-run success rate of the
+  procedure; check coverage by simulation when unsure.
+- The bootstrap resamples the data with replacement, recomputes the statistic, and takes percentiles: a CI for any
+  statistic, as long as the data points are independent and the sample is not tiny.

@@ -1,0 +1,112 @@
+items:
+  - id: f5-estimation-and-the-bootstrap-01
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      x = np.array([3, 1, 2, 100, 4])
+      print(x.mean(), np.median(x))
+    answer: "22.0 3.0"
+    explanation: "The mean is 110 / 5 = 22, pulled up by the outlier 100. The median is the middle sorted value (1, 2, 3, 4, 100), which is 3."
+  - id: f5-estimation-and-the-bootstrap-02
+    type: mcq
+    prompt: "House prices in a city are strongly right-skewed (a few mansions). Which summary best describes a **typical** house price?"
+    explanation: "The median is robust to the few extreme values, so it reflects a typical house; the mean is pulled up by the mansions."
+    options:
+      - text: The median
+        correct: true
+        why: Half the houses cost less and half more, regardless of how expensive the mansions are.
+      - text: The mean
+        why: A few very high prices drag the mean above what most houses cost.
+      - text: The maximum
+        why: The maximum describes the most extreme house, not a typical one.
+      - text: The standard deviation
+        why: That measures spread, not a typical value.
+  - id: f5-estimation-and-the-bootstrap-03
+    type: mcq
+    prompt: "Why does the sample variance divide by $n - 1$ instead of $n$?"
+    explanation: "Deviations are measured from the sample mean, which is fitted to the same data and sits closer to them than the true mean. Dividing by n underestimates on average; n - 1 corrects the bias."
+    options:
+      - text: Deviations from the sample mean are too small on average, and n - 1 corrects that underestimate
+        correct: true
+        why: This is Bessel's correction, which makes the estimate unbiased.
+      - text: To avoid dividing by zero when n = 1
+        why: "The opposite: dividing by n - 1 is what divides by zero when n = 1."
+      - text: Because one data point is always an outlier
+        why: The correction has nothing to do with outliers.
+      - text: It is a NumPy convention with no statistical reason
+        why: NumPy actually defaults to n; n - 1 is the statistical choice for estimating population variance.
+  - id: f5-estimation-and-the-bootstrap-04
+    type: numeric
+    prompt: "A sample of $n = 100$ has mean 50 and sample standard deviation $s = 20$. What is the **upper** end of the approximate 95% confidence interval for the population mean?"
+    answer: 53.92
+    tol: 0.01
+    explanation: "SE = 20 / √100 = 2, so the interval is 50 ± 1.96 × 2 = 50 ± 3.92, from 46.08 to 53.92."
+  - id: f5-estimation-and-the-bootstrap-05
+    type: mcq
+    prompt: "A study reports a 95% confidence interval of (12, 18) for a mean. Which interpretation is correct?"
+    explanation: "The 95% is the long-run success rate of the method: about 95% of intervals built this way contain the true mean. The true mean is fixed; this interval either contains it or not."
+    options:
+      - text: The method that produced it captures the true mean in about 95% of repeated studies
+        correct: true
+        why: Confidence describes the procedure over many repetitions.
+      - text: 95% of the data values lie between 12 and 18
+        why: A CI is about the mean, not about individual values; the data usually spread much wider.
+      - text: If the study were repeated, the new sample mean would be between 12 and 18 with probability 0.95
+        why: The new mean varies around the true mean, not around this interval; that probability is generally lower.
+      - text: The true mean is certainly between 12 and 18
+        why: About 5% of such intervals miss.
+  - id: f5-estimation-and-the-bootstrap-06
+    type: order
+    prompt: "Put the steps of a percentile bootstrap confidence interval in order."
+    items:
+      - "Draw a resample of the same size as the data, with replacement"
+      - "Compute the statistic on the resample"
+      - "Repeat the first two steps thousands of times"
+      - "Take the 2.5th and 97.5th percentiles of the collected statistics"
+    explanation: "Resample, compute, repeat, then read off percentiles of the bootstrap distribution."
+  - id: f5-estimation-and-the-bootstrap-07
+    type: mcq
+    prompt: "In the bootstrap, why do resamples have to be drawn **with replacement**?"
+    explanation: "Without replacement, a resample of size n is just the original data reordered, so every statistic would come out identical and show no variability."
+    options:
+      - text: Without replacement, every resample of size n is the original data shuffled, so the statistic would never vary
+        correct: true
+        why: Replacement lets some points repeat and others drop out, imitating a new sample.
+      - text: Drawing with replacement is faster
+        why: Speed is not the reason; it is about producing variation.
+      - text: It removes outliers from the data
+        why: Outliers can appear zero, one or several times in a resample.
+      - text: It makes the resamples larger than the data
+        why: Resamples have the same size as the data.
+  - id: f5-estimation-and-the-bootstrap-08
+    type: multi
+    prompt: "In which situations is a plain bootstrap (resampling individual rows) likely to give **misleading** intervals? Select all."
+    explanation: "The bootstrap assumes independent data points and enough data; it struggles with tiny samples, extreme-value statistics, and dependent data like time series or grouped records."
+    options:
+      - text: Daily temperatures from one city, resampled day by day
+        correct: true
+        why: Consecutive days are dependent, so resampling single days understates the uncertainty.
+      - text: Ten images per patient for 50 patients, resampled image by image
+        correct: true
+        why: Images from the same patient are not independent; resample patients instead.
+      - text: The maximum of a sample
+        correct: true
+        why: A resample can never exceed the sample maximum, so intervals for extremes are poor.
+      - text: The median of 2,000 independent survey answers
+        why: Large, independent samples and a smooth statistic are where the bootstrap works well.
+  - id: f5-estimation-and-the-bootstrap-09
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      x = np.array([10, 20, 30])
+      idx = np.array([[0, 0, 2], [1, 2, 2]])
+      print(x[idx].mean(axis=1))
+    answer: "[16.66666667 26.66666667]"
+    explanation: "Row 0 picks x[0], x[0], x[2] = 10, 10, 30 (mean 16.67); row 1 picks 20, 30, 30 (mean 26.67). Each row is one bootstrap resample."
+  - id: f5-estimation-and-the-bootstrap-10
+    type: cloze
+    prompt: "In NumPy, `x.std(________=1)` divides by $n - 1$ instead of $n$."
+    accept: ["ddof"]
+    explanation: "ddof stands for delta degrees of freedom: the divisor is n - ddof."

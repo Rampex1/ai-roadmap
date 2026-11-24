@@ -1,0 +1,108 @@
+items:
+  - id: f5-bayes-theorem-01
+    type: mcq
+    prompt: "In Bayes' theorem $P(A \\mid B) = \\dfrac{P(B \\mid A)\\,P(A)}{P(B)}$, with $A$ a hypothesis and $B$ the evidence, which part is the **prior**?"
+    explanation: "The prior P(A) is how plausible the hypothesis was before seeing the evidence."
+    options:
+      - text: P(A)
+        correct: true
+        why: The belief in the hypothesis before the evidence.
+      - text: P(B | A)
+        why: That is the likelihood, how expected the evidence is if A is true.
+      - text: P(A | B)
+        why: That is the posterior, the belief after the evidence.
+      - text: P(B)
+        why: That is the evidence term, the overall probability of B.
+  - id: f5-bayes-theorem-02
+    type: numeric
+    prompt: "A condition affects 2% of people. A test has sensitivity 95% and a false positive rate of 5%. What is $P(\\text{condition} \\mid \\text{positive})$? Give a decimal."
+    answer: 0.2794
+    tol: 0.001
+    explanation: "0.95 × 0.02 = 0.019 true positives and 0.05 × 0.98 = 0.049 false positives, so 0.019 / (0.019 + 0.049) = 0.019 / 0.068 ≈ 0.279."
+  - id: f5-bayes-theorem-03
+    type: numeric
+    prompt: "Out of 1,000 people, 50 have a disease. A test catches 40 of them, and also flags 95 of the 950 healthy people. Among everyone who tests positive, what fraction have the disease?"
+    answer: 0.2963
+    tol: 0.001
+    explanation: "Positives: 40 + 95 = 135. Of these, 40 have the disease: 40 / 135 ≈ 0.296. Natural frequencies make Bayes a matter of counting."
+  - id: f5-bayes-theorem-04
+    type: mcq
+    prompt: "A security scanner flags 99% of real threats and only 1% of harmless bags. Real threats are 1 in 100,000 bags. An alarm sounds. What is the best description?"
+    explanation: "Out of 10 million bags, about 100 are threats (99 flagged) and about 100,000 harmless bags are flagged. So an alarm is almost always a false alarm: P(threat | alarm) is about 0.1%."
+    options:
+      - text: The bag is almost certainly harmless, because false alarms vastly outnumber real threats
+        correct: true
+        why: The tiny base rate dominates; roughly 1 alarm in 1,000 is real.
+      - text: The bag is a threat with 99% probability
+        why: That reads P(alarm | threat) as P(threat | alarm), the base-rate fallacy.
+      - text: The bag is a threat with 50% probability
+        why: There is no reason for 50%; the numbers give far less.
+      - text: Nothing can be said without testing the bag again
+        why: Bayes gives a definite answer from the numbers you have.
+  - id: f5-bayes-theorem-05
+    type: multi
+    prompt: "Which changes would **raise** $P(\\text{disease} \\mid \\text{positive})$ for a test? Select all."
+    explanation: "The posterior rises when true positives grow relative to false positives: a higher prior, a higher sensitivity, or a higher specificity (fewer false positives)."
+    options:
+      - text: Testing a group where the disease is more common
+        correct: true
+        why: A higher prior means more of the positives are true positives.
+      - text: Raising the specificity (fewer false positives)
+        correct: true
+        why: Fewer false positives leaves the true ones as a larger share.
+      - text: Raising the sensitivity
+        correct: true
+        why: More true positives with the same false positives raises the share.
+      - text: Testing more people from the same group
+        why: More people scales both counts equally; the fraction stays the same.
+  - id: f5-bayes-theorem-06
+    type: output
+    prompt: "What does this print?"
+    code: |
+      prior, sens, spec = 0.5, 0.8, 0.8
+      post = sens * prior / (sens * prior + (1 - spec) * (1 - prior))
+      print(round(post, 2))
+    answer: "0.8"
+    explanation: "0.8 × 0.5 = 0.4 on top and 0.4 + 0.2 × 0.5 = 0.5 below, so 0.4 / 0.5 = 0.8. With a 50% prior and equal sensitivity and specificity, the posterior equals the sensitivity."
+  - id: f5-bayes-theorem-07
+    type: mcq
+    prompt: "The base rate is 1%. After one positive test your probability of disease is 9%. You take a second, independent test and it is also positive. What do you use as the prior for the second update?"
+    explanation: "Posteriors chain: the belief after the first test, 9%, is the starting belief for the second."
+    options:
+      - text: The 9% posterior from the first test
+        correct: true
+        why: Today's posterior is tomorrow's prior.
+      - text: The original 1% base rate
+        why: That ignores what the first test already told you.
+      - text: The test's sensitivity
+        why: The sensitivity is a likelihood, not a prior.
+      - text: 50%, because you know nothing
+        why: "You do know something: the base rate and the first result."
+  - id: f5-bayes-theorem-08
+    type: cloze
+    prompt: "Ignoring how common a condition is and treating $P(+ \\mid D)$ as if it were $P(D \\mid +)$ is called the ________ fallacy."
+    accept: ["base-rate", "base rate", "base-rate fallacy", "base rate fallacy"]
+    explanation: "The base-rate fallacy: the prior (base rate) matters a great deal when the condition is rare."
+  - id: f5-bayes-theorem-09
+    type: order
+    prompt: "Put the steps for computing $P(D \\mid +)$ with natural frequencies in order."
+    items:
+      - "Imagine a large group, such as 10,000 people"
+      - "Split them into those with and without the condition using the base rate"
+      - "Within each group, count the positives using the sensitivity and the false positive rate"
+      - "Divide the true positives by all positives"
+    explanation: "Start with a population, split by the base rate, count positives in each branch, then take the share of positives that are true positives."
+  - id: f5-bayes-theorem-10
+    type: mcq
+    prompt: "A fraud model catches 95% of fraud and flags 2% of legitimate transactions. Fraud is 1 transaction in 1,000. About what fraction of the model's alerts are actually fraud?"
+    explanation: "Per 100,000 transactions: 100 frauds, 95 caught; 99,900 legitimate, about 1,998 flagged. So 95 / (95 + 1,998) ≈ 4.5%."
+    options:
+      - text: About 5%
+        correct: true
+        why: About 95 true alerts against about 2,000 false ones.
+      - text: About 95%
+        why: That is the sensitivity, P(alert | fraud), not P(fraud | alert).
+      - text: About 98%
+        why: That is the specificity, which says nothing directly about the alerts.
+      - text: About 50%
+        why: The base rate of 0.1% pulls it far lower.

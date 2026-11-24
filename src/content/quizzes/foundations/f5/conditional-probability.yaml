@@ -1,0 +1,100 @@
+items:
+  - id: f5-conditional-probability-01
+    type: numeric
+    prompt: "Of 500 students, 200 study maths. Of the maths students, 50 also study music. What is $P(\\text{music} \\mid \\text{maths})$?"
+    answer: 0.25
+    tol: 0.0001
+    explanation: "Restrict to the 200 maths students; 50 of them study music: 50/200 = 0.25."
+  - id: f5-conditional-probability-02
+    type: mcq
+    prompt: "In the lesson's emails, $P(\\text{spam} \\mid \\text{free}) = 0.75$. What can you say about $P(\\text{free} \\mid \\text{spam})$ without more information?"
+    explanation: "Swapping the condition asks a different question. It was 0.6 for that data, but you cannot get it from 0.75 alone: you also need P(spam) and P(free)."
+    options:
+      - text: Nothing definite; it is a different question and needs more information
+        correct: true
+        why: Converting one into the other needs the base rates, which is what Bayes' theorem does.
+      - text: It is also 0.75
+        why: Conditional probabilities are not symmetric; assuming so is the confusion of the inverse.
+      - text: It is 0.25
+        why: 1 - 0.75 is P(not spam | free), which is a different quantity.
+      - text: It must be smaller than 0.75
+        why: It could be larger or smaller depending on the base rates.
+  - id: f5-conditional-probability-03
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      a = np.array([True, False, True, False, True])
+      b = np.array([True, True, True, False, False])
+      print(round(a[b].mean(), 3))
+    answer: "0.667"
+    explanation: "`a[b]` keeps a at the positions where b is True (0, 1, 2): [True, False, True]. Two of three are True, so this estimates P(A | B) = 0.667."
+  - id: f5-conditional-probability-04
+    type: numeric
+    prompt: "Two cards are drawn from a shuffled 52-card deck without replacement. What is the probability that **both are hearts**? (There are 13 hearts.)"
+    answer: 0.0588
+    tol: 0.0005
+    explanation: "Multiplication rule: P(first heart) = 13/52 and P(second heart | first heart) = 12/51. The product is 156/2652 ≈ 0.0588."
+  - id: f5-conditional-probability-05
+    type: numeric
+    prompt: "A factory has two machines. Machine 1 makes 70% of the parts and 2% of its parts are faulty; machine 2 makes 30% and 5% of its parts are faulty. What fraction of all parts are faulty?"
+    answer: 0.029
+    tol: 0.0001
+    explanation: "Law of total probability: 0.02 × 0.7 + 0.05 × 0.3 = 0.014 + 0.015 = 0.029."
+  - id: f5-conditional-probability-06
+    type: mcq
+    prompt: "Events A and B have $P(A) = 0.3$ and $P(B) = 0.5$, and they are disjoint. Are they independent?"
+    explanation: "Disjoint means P(A and B) = 0, but independence would need P(A and B) = 0.3 × 0.5 = 0.15. They are dependent: knowing A happened tells you B did not."
+    options:
+      - text: No, because P(A and B) = 0 but P(A)P(B) = 0.15
+        correct: true
+        why: The independence test fails, so they are dependent.
+      - text: Yes, because they have nothing to do with each other
+        why: Not overlapping is a strong relationship; one rules the other out.
+      - text: Yes, disjoint and independent mean the same thing
+        why: They are different ideas; disjoint events with positive probability are always dependent.
+      - text: It cannot be decided from this information
+        why: P(A), P(B) and P(A and B) = 0 are all you need for the test.
+  - id: f5-conditional-probability-07
+    type: multi
+    prompt: "Which statements say that A and B are independent (assume $P(A) > 0$ and $P(B) > 0$)? Select all."
+    explanation: "Independence means knowing one event does not change the probability of the other, which is the same as the product rule P(A and B) = P(A)P(B)."
+    options:
+      - text: P(A and B) = P(A) P(B)
+        correct: true
+        why: This is the standard test.
+      - text: P(A | B) = P(A)
+        correct: true
+        why: Learning B does not change the probability of A.
+      - text: P(B | A) = P(B)
+        correct: true
+        why: The relationship is symmetric.
+      - text: P(A and B) = 0
+        why: That says A and B are disjoint, which makes them dependent.
+  - id: f5-conditional-probability-08
+    type: mcq
+    prompt: "With two fair dice, is \"the first die is even\" independent of \"the sum is 8\"?"
+    explanation: "P(first even and sum 8) = 3/36 (pairs (2, 6), (4, 4), (6, 2)), but P(first even) × P(sum 8) = 1/2 × 5/36 = 5/72 ≈ 0.069. They differ, so the events are dependent."
+    options:
+      - text: No, P(both) is 3/36 but the product of the probabilities is 5/72
+        correct: true
+        why: The product rule fails, so they are dependent.
+      - text: Yes, dice are always independent
+        why: The two dice are independent of each other, but events built from the sum can depend on the first die.
+      - text: Yes, exactly as for a sum of 7
+        why: A sum of 7 is independent of the first die; a sum of 8 is not, because a first die of 1 makes 8 impossible.
+      - text: No, because they are disjoint
+        why: They can happen together, for example (2, 6).
+  - id: f5-conditional-probability-09
+    type: cloze
+    prompt: "Training examples assumed to be drawn independently from the same distribution are called i.i.d., short for independent and ________ distributed."
+    accept: ["identically"]
+    explanation: "i.i.d. means independent and identically distributed: every example comes from the same distribution, and knowing one tells you nothing about another."
+  - id: f5-conditional-probability-10
+    type: output
+    prompt: "What does this print?"
+    code: |
+      p_a, p_b, p_ab = 0.4, 0.5, 0.2
+      print(p_ab / p_b, p_ab == p_a * p_b)
+    answer: "0.4 True"
+    explanation: "P(A | B) = 0.2 / 0.5 = 0.4, which equals P(A), and 0.4 × 0.5 = 0.2 = P(A and B), so A and B are independent."

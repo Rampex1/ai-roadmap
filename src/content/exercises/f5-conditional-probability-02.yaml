@@ -1,0 +1,44 @@
+id: f5-conditional-probability-02
+lesson: foundations/f5/conditional-probability
+title: Are two events independent?
+prompt: |
+  Write `independent(a, b, tol=0.01)` for two boolean arrays of observations. Estimate $P(A)$, $P(B)$ and
+  $P(A \cap B)$ as fractions, and return `True` if
+  $|P(A \cap B) - P(A)\,P(B)| \le$ `tol`, otherwise `False`.
+
+  The lesson showed that, for two dice, "first die even" is independent of "sum is 7" but not of "sum is 8".
+  The tests use exact small arrays and simulated dice.
+starter: |
+  import numpy as np
+
+  def independent(a, b, tol=0.01):
+      a = np.asarray(a)
+      b = np.asarray(b)
+      return False
+solution: |
+  import numpy as np
+
+  def independent(a, b, tol=0.01):
+      a = np.asarray(a)
+      b = np.asarray(b)
+      p_ab = (a & b).mean()
+      return bool(abs(p_ab - a.mean() * b.mean()) <= tol)
+tests: |
+  import numpy as np
+  _a = np.array([True, True, False, False] * 25)
+  _b = np.array([True, False, True, False] * 25)
+  _r = independent(_a, _b)
+  assert _r is not None, "independent returned None: did you forget the return statement?"
+  assert _r is True or _r == True, "P(A)=0.5, P(B)=0.5 and P(A and B)=0.25 = 0.5 x 0.5: these are independent"
+  assert independent(_a, _a) == False, "An event and itself are not independent (unless the probability is 0 or 1): P(A and A) = 0.5 but P(A)P(A) = 0.25"
+  assert independent(_a, ~_a) == False, "A and not-A are disjoint, so strongly dependent"
+  _rng = np.random.default_rng(0)
+  _d1 = _rng.integers(1, 7, size=200_000)
+  _d2 = _rng.integers(1, 7, size=200_000)
+  _even = _d1 % 2 == 0
+  assert independent(_even, _d1 + _d2 == 7) == True, "First die even and sum is 7 are independent (both are 1/12 when computed exactly)"
+  assert independent(_even, _d1 + _d2 == 8) == False, "First die even and sum is 8 are dependent: P(both) is about 0.083 but the product is about 0.069"
+  assert independent(_even, _d1 + _d2 == 8, tol=0.02) == True, "With tol=0.02 the difference of about 0.014 is within tolerance: use the tol argument"
+hints:
+  - "a & b is True where both events happened, so (a & b).mean() estimates P(A and B)."
+  - "Compare abs(p_ab - a.mean() * b.mean()) with tol."

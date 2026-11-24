@@ -1,0 +1,6 @@
+term: "Law of large numbers"
+short: "As a sample grows, its average gets closer and closer to the true mean of the distribution."
+body: |
+  It is why long-run frequencies work as probabilities and why simulation works. It acts by dilution: early
+  streaks are swamped by later data, not compensated (believing otherwise is the gambler's fallacy).
+related: ["expected-value", "central-limit-theorem"]

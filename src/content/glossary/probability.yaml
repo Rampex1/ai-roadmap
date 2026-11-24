@@ -1,0 +1,7 @@
+term: "Probability"
+short: "A number from 0 to 1 measuring how likely an event is; readable as its long-run frequency."
+body: |
+  For equally likely outcomes, $P(A) = |A| / |\Omega|$, the share of outcomes in the event. Probabilities obey
+  the complement rule $P(A^c) = 1 - P(A)$ and the addition rule $P(A \cup B) = P(A) + P(B) - P(A \cap B)$. A
+  simulation estimates one as the fraction of runs in which the event happens.
+related: ["conditional-probability", "random-variable"]

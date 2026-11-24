@@ -1,0 +1,47 @@
+id: f5-conditional-probability-01
+lesson: foundations/f5/conditional-probability
+title: Conditional probability from boolean arrays
+prompt: |
+  Each position in the boolean arrays `a` and `b` is one observation (one email, one roll, one patient).
+  `a[i]` says whether event A happened and `b[i]` whether event B happened.
+
+  Write `cond_prob(a, b)` that returns the estimate of $P(A \mid B)$: among the observations where B
+  happened, the fraction where A also happened. If B never happens, return `float("nan")` (the conditional
+  probability is undefined).
+
+  For `a = [True, False, True, True]` and `b = [True, True, False, True]`, B happens at positions 0, 1 and 3,
+  and A happens at 2 of those, so the answer is `2/3`.
+starter: |
+  import numpy as np
+
+  def cond_prob(a, b):
+      a = np.asarray(a)
+      b = np.asarray(b)
+      return a.mean()
+solution: |
+  import numpy as np
+
+  def cond_prob(a, b):
+      a = np.asarray(a)
+      b = np.asarray(b)
+      if not b.any():
+          return float("nan")
+      return float(a[b].mean())
+tests: |
+  import math
+  import numpy as np
+  _r = cond_prob([True, False, True, True], [True, True, False, True])
+  assert _r is not None, "cond_prob returned None: did you forget the return statement?"
+  assert math.isclose(_r, 2 / 3), f"Expected 2/3 for the example in the prompt, got {_r!r}"
+  assert math.isclose(cond_prob([True, True, False, False], [False, False, True, True]), 0.0), "When A never happens inside B, P(A | B) is 0"
+  assert math.isclose(cond_prob(np.array([1, 0, 0, 1, 1], dtype=bool), np.array([1, 0, 1, 1, 0], dtype=bool)), 2 / 3), "Check: B is True at positions 0, 2, 3; A is True at 0 and 3"
+  _spam = np.array([True] * 200 + [False] * 800)
+  _free = np.array([True] * 120 + [False] * 80 + [True] * 40 + [False] * 760)
+  assert math.isclose(cond_prob(_spam, _free), 0.75), "For the emails in the lesson, P(spam | free) is 120/160 = 0.75"
+  assert math.isclose(cond_prob(_free, _spam), 0.6), "For the emails in the lesson, P(free | spam) is 120/200 = 0.6; the order of the arguments matters"
+  _n = cond_prob([True, False], [False, False])
+  assert isinstance(_n, float) and math.isnan(_n), f"When B never happens, return float('nan'), got {_n!r}"
+hints:
+  - "a[b] keeps only the entries of a where b is True."
+  - "The mean of a boolean array is the fraction of True values."
+  - "Check b.any() first: if B never happens there is nothing to average."

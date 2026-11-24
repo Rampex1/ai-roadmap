@@ -1,0 +1,45 @@
+id: f5-information-theory-01
+lesson: foundations/f5/information-theory
+title: Entropy that survives zeros
+prompt: |
+  Write `entropy(p, base=2)` that returns $H(p) = -\sum_x p(x)\log p(x)$ for a probability vector `p`, in the given
+  base (2 gives bits, `np.e` gives nats).
+
+  Zero probabilities contribute nothing ($0 \log 0 = 0$), but `0 * np.log(0)` is `nan` in NumPy, so leave them
+  out before taking logs. Return a float that is never `nan`.
+
+  Examples: `entropy([0.5, 0.5])` is `1.0`, `entropy([0.25] * 4)` is `2.0`, `entropy([1, 0, 0])` is `0.0` and
+  `entropy([0.5, 0.5], base=np.e)` is about `0.6931`.
+starter: |
+  import numpy as np
+
+  def entropy(p, base=2):
+      p = np.asarray(p, dtype=float)
+      return -np.sum(p * np.log(p)) / np.log(base)
+solution: |
+  import numpy as np
+
+  def entropy(p, base=2):
+      p = np.asarray(p, dtype=float)
+      nz = p[p > 0]
+      return float(-np.sum(nz * np.log(nz)) / np.log(base))
+tests: |
+  import math
+  import warnings
+  import numpy as np
+  warnings.simplefilter("ignore")
+  _r = entropy([0.5, 0.5])
+  assert _r is not None, "entropy returned None: did you forget the return statement?"
+  assert math.isclose(_r, 1.0), f"A fair coin has 1 bit of entropy, got {_r!r}"
+  assert math.isclose(entropy([0.25] * 4), 2.0), "Uniform over 4 outcomes: 2 bits"
+  assert math.isclose(entropy(np.full(10, 0.1)), math.log2(10)), "Uniform over 10 outcomes: log2(10) bits"
+  assert math.isclose(entropy([0.9, 0.1]), 0.4689955935892812), "A 90/10 coin has about 0.469 bits"
+  _z = entropy([1.0, 0.0, 0.0])
+  assert not math.isnan(_z), "entropy([1, 0, 0]) gave nan: drop the zero probabilities before taking logs"
+  assert abs(_z) < 1e-12, f"A certain outcome has entropy 0, got {_z!r}"
+  assert math.isclose(entropy([0.5, 0.0, 0.5]), 1.0), "Zeros must not change the entropy: [0.5, 0, 0.5] still has 1 bit"
+  assert math.isclose(entropy([0.5, 0.5], base=np.e), math.log(2)), "In nats (base e) a fair coin has ln 2 = 0.6931"
+  assert math.isclose(entropy([0.2, 0.3, 0.5], base=10), -sum(q * math.log10(q) for q in [0.2, 0.3, 0.5])), "Use the base argument: divide natural logs by np.log(base)"
+hints:
+  - "nz = p[p > 0] keeps only the non-zero probabilities."
+  - "Natural logs divided by np.log(base) give logs in any base."

@@ -1,0 +1,7 @@
+term: "Independence"
+short: "Two events are independent when knowing one does not change the probability of the other: P(A and B) = P(A) P(B)."
+body: |
+  Equivalently $P(A \mid B) = P(A)$. Independent is not the same as disjoint: disjoint events with positive
+  probability are dependent, because one rules the other out. Training data are usually assumed i.i.d.,
+  independent and identically distributed.
+related: ["conditional-probability", "probability"]

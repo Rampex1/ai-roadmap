@@ -8,10 +8,15 @@ if (!entry) throw new Error(`<Term id="${id}">: no glossary entry "${id}"`);
 // Deterministic per-page id: count Term renders on this request.
 const n = ((Astro.locals as any).__termCount = ((Astro.locals as any).__termCount ?? 0) + 1);
 const tipId = `term-tip-${id}-${n}`;
+// Glossary names are capitalised headings ("Entropy"); inline they read as normal words ("entropy").
+// Keep proper nouns and words with inner capitals or acronyms (Bayes, Adam, DataFrame, NumPy, ReLU).
+const PROPER = /^(Bayes|Adam|Jupyter|Gauss|Gaussian|Laplace|Markov|Python|Git|GitHub|Bernoulli|Poisson|Euclid|Euclidean|Fourier|Kullback|Shannon|Transformer)\b/;
+const inline = (s: string) => (PROPER.test(s) || /^\S*[A-Z]\S*[A-Z]|^[A-Z]{2}|^\S[A-Z]/.test(s) ? s : s.charAt(0).toLowerCase() + s.slice(1));
+const label = text ?? inline(entry.data.term);
 ---
 
 <a class="air-term" data-term={id} href={`/glossary/#${id}`} aria-describedby={tipId}
-  >{Astro.slots.has('default') ? <slot /> : (text ?? entry.data.term)}<span class="air-term-tip" role="tooltip" id={tipId} aria-hidden="true">{entry.data.short}</span></a
+  >{Astro.slots.has('default') ? <slot /> : label}<span class="air-term-tip" role="tooltip" id={tipId} aria-hidden="true">{entry.data.short}</span></a
 >
 
 <script>
