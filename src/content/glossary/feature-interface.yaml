@@ -1,0 +1,4 @@
+term: "Feature interface"
+short: "The named fields, types and ordering a model input expects."
+body: "The agreed mapping from named input fields to the model's positional vector: which fields, their types, their order and how missing values are handled. Changing any of these requires a new interface version."
+related: ["data-contract","schema"]

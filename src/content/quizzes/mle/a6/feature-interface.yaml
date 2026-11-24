@@ -1,0 +1,93 @@
+items:
+  - id: a6-feature-interface-01
+    type: mcq
+    prompt: What defines vector order?
+    explanation: The model expects specific positions.
+    options:
+      - text: The declared column list
+        why: The model expects specific positions.
+        correct: true
+      - text: Dictionary insertion order
+        why: Caller construction order can differ.
+      - text: Alphabetical ordering always
+        why: Order comes from the interface.
+  - id: a6-feature-interface-02
+    type: mcq
+    prompt: What should a missing required value do here?
+    explanation: The contract requires the field.
+    options:
+      - text: Randomly choose a replacement
+        why: That changes semantics.
+      - text: Drop a vector column
+        why: Array alignment would change.
+      - text: Raise a clear missing-key error
+        why: The contract requires the field.
+        correct: true
+  - id: a6-feature-interface-03
+    type: mcq
+    prompt: Why separate projection from I/O?
+    explanation: Pure logic can be reused.
+    options:
+      - text: The same transformation is testable in each entry point
+        why: Pure logic can be reused.
+        correct: true
+      - text: It removes the need for schemas
+        why: A transform still needs a contract.
+      - text: It automatically trains the model
+        why: Projection is preprocessing.
+  - id: a6-feature-interface-04
+    type: mcq
+    prompt: Does equal width establish compatibility?
+    explanation: Shape alone can hide swapped inputs.
+    options:
+      - text: Yes, widths determine semantics
+        why: Array slots carry no names.
+      - text: Only for dictionaries with extras
+        why: Extras do not fix ordering.
+      - text: No, feature order and meaning matter
+        why: Shape alone can hide swapped inputs.
+        correct: true
+  - id: a6-feature-interface-05
+    type: multi
+    prompt: Which belong in the input contract?
+    explanation: They define positional inputs. These determine accepted values.
+    options:
+      - text: Feature names and order
+        why: They define positional inputs.
+        correct: true
+      - text: Types and missing-value policy
+        why: These determine accepted values.
+        correct: true
+      - text: Only the model accuracy
+        why: Accuracy does not specify inputs.
+  - id: a6-feature-interface-06
+    type: cloze
+    prompt: Project fields using the declared ______ order.
+    accept:
+      - schema
+      - feature
+      - column
+      - field
+      - fields
+      - features
+      - columns
+    explanation: The contract supplies stable column order.
+  - id: a6-feature-interface-07
+    type: order
+    prompt: Order feature projection.
+    items:
+      - Read the versioned field list
+      - Validate input presence and types
+      - Project in declared order
+      - Pass the vector to inference
+    explanation: The model receives an already checked vector.
+  - id: a6-feature-interface-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def feature_vector(row, columns):
+          return [row[column] for column in columns]
+
+      print(feature_vector({"x":1,"y":2}, ["y","x"]))
+    answer: "[2, 1]"
+    explanation: The declared order puts y first.

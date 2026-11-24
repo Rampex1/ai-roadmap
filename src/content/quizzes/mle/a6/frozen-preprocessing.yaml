@@ -1,0 +1,92 @@
+items:
+  - id: a6-frozen-preprocessing-01
+    type: mcq
+    prompt: Where do the scaler statistics come from?
+    explanation: Fit without inspecting held-out inputs.
+    options:
+      - text: The final test labels
+        why: That leaks evaluation information.
+      - text: Training data
+        why: Fit without inspecting held-out inputs.
+        correct: true
+      - text: Each single request
+        why: That changes numeric meaning.
+  - id: a6-frozen-preprocessing-02
+    type: mcq
+    prompt: What can an unequal vector silently do with zip?
+    explanation: An explicit check prevents hidden omissions.
+    options:
+      - text: Automatically resize the model
+        why: zip does not affect the model.
+      - text: Infer missing means correctly
+        why: It has no imputation semantics.
+      - text: Truncate to the shortest input
+        why: An explicit check prevents hidden omissions.
+        correct: true
+  - id: a6-frozen-preprocessing-03
+    type: mcq
+    prompt: Why keep the same scaler in serving?
+    explanation: A different scaler shifts model inputs.
+    options:
+      - text: Serving always has more rows
+        why: Requests can be single examples.
+      - text: Weights learned under its feature meaning
+        why: A different scaler shifts model inputs.
+        correct: true
+      - text: A scaler changes ground truth
+        why: Labels are separate.
+  - id: a6-frozen-preprocessing-04
+    type: mcq
+    prompt: How can you compare feature paths?
+    explanation: Compare their resulting features.
+    options:
+      - text: Run shared golden inputs through both
+        why: Compare their resulting features.
+        correct: true
+      - text: Check only endpoint availability
+        why: A response can still be wrong.
+      - text: Compare only model file names
+        why: Names do not validate transform parity.
+  - id: a6-frozen-preprocessing-05
+    type: multi
+    prompt: Which should be persisted?
+    explanation: Inference needs them to center features. They define normalization.
+    options:
+      - text: Chosen scales
+        why: They define normalization.
+        correct: true
+      - text: Statistics recomputed on every request
+        why: Those violate the frozen contract.
+      - text: Training means
+        why: Inference needs them to center features.
+        correct: true
+  - id: a6-frozen-preprocessing-06
+    type: cloze
+    prompt: Applying training constants at inference uses ______ preprocessing.
+    accept:
+      - frozen
+      - fitted
+      - fixed
+      - persisted
+    explanation: Previously fitted state is reused.
+  - id: a6-frozen-preprocessing-07
+    type: order
+    prompt: Order fitted preprocessing.
+    items:
+      - Split the data
+      - Fit statistics on training
+      - Persist the transform with the model
+      - Reuse its state in serving
+    explanation: The serving path does not learn new constants.
+  - id: a6-frozen-preprocessing-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def apply_scaler(values, centers, scales):
+          if not (len(values) == len(centers) == len(scales)) or any(scale <= 0 for scale in scales):
+              raise ValueError("invalid fitted scaler")
+          return [(value-center)/scale for value,center,scale in zip(values,centers,scales)]
+
+      print(apply_scaler([2], [4], [2]))
+    answer: "[-1.0]"
+    explanation: Two minus four divided by two is minus one.

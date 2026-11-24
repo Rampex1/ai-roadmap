@@ -1,0 +1,4 @@
+term: "Validated configuration"
+short: "An explicit, checked set of run options that can be recorded and reproduced."
+body: "Run options that are parsed into declared types, checked against allowed keys and ranges, filled in with defaults, and saved as the resolved settings before training starts."
+related: ["experiment-run","data-contract"]

@@ -1,0 +1,42 @@
+---
+title: Reuse fitted preprocessing at inference
+module: a6
+order: 2
+estMinutes: 8
+objectives:
+  - Distinguish fitted state from transform logic
+  - Detect inconsistencies between offline and online features
+goDeeper: sklearn-pipeline-reference
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Learn scale, vocabulary and imputation values on training data. Use the fitted state for validation, holdout and serving. Recomputing it per request changes feature meaning. Computing it on holdout can also expose information about the evaluation population.
+
+<Term id="frozen-preprocessing" /> keeps the learned constants alongside the model. For a standardized feature, subtract the training mean and divide by the recorded scale. Choose a convention for constant columns when fitting, such as replacing a zero standard deviation with one, and persist that convention.
+
+Use paired examples to assert that offline and online paths produce equal vectors. If implementations differ, share golden cases and tolerances. The fixture accepts an already chosen positive scale for each feature and rejects mismatched vectors.
+
+## Worked example
+
+The recorded means and scales are reused.
+
+```python
+def apply_scaler(values, centers, scales):
+    if not (len(values) == len(centers) == len(scales)) or any(scale <= 0 for scale in scales):
+        raise ValueError("invalid fitted scaler")
+    return [(value-center)/scale for value,center,scale in zip(values,centers,scales)]
+
+print(apply_scaler([9,5], [5,5], [2,1]))
+```
+
+```text title="Output"
+[2.0, 0.0]
+```
+
+Version fitted preprocessing and model weights as one compatible bundle.
+
+## Try it
+
+<CodeExercise id="a6-frozen-preprocessing-01" />

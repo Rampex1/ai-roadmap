@@ -1,0 +1,23 @@
+id: a6-feature-interface-01
+lesson: mle/a6/feature-interface
+title: Project model features
+prompt: Implement feature_vector(row, columns). Return values in columns order. Ignore extra fields. Raise KeyError for required fields that are absent.
+starter: |
+  def feature_vector(row, columns):
+      raise NotImplementedError
+solution: |
+  def feature_vector(row, columns):
+      return [row[column] for column in columns]
+tests: |
+  assert feature_vector({"b":2,"a":1,"c":5},["a","b"]) == [1,2]
+  assert feature_vector({"a":None},["a"]) == [None]
+  assert feature_vector({},[]) == []
+  assert feature_vector({"a":1,"b":2},["b","a"]) == [2,1], "Follow the order of columns, not the order of the row"
+  try:
+      feature_vector({},["missing"])
+  except KeyError:
+      pass
+  else:
+      raise AssertionError("Require declared fields")
+hints:
+  - Index the input using column names in schema order.

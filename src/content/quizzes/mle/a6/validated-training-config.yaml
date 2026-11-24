@@ -1,0 +1,96 @@
+items:
+  - id: a6-validated-training-config-01
+    type: mcq
+    prompt: Why reject unknown option keys?
+    explanation: Strict keys expose incorrect configuration.
+    options:
+      - text: It makes all options required
+        why: Known defaults can still apply.
+      - text: It forces learning rates to be strings
+        why: Validation can require numbers.
+      - text: A typo should not silently change the experiment
+        why: Strict keys expose incorrect configuration.
+        correct: true
+  - id: a6-validated-training-config-02
+    type: mcq
+    prompt: What belongs in the run record?
+    explanation: They describe what actually ran.
+    options:
+      - text: Plaintext service secrets
+        why: Credentials should be kept separate.
+      - text: Resolved options including defaults
+        why: They describe what actually ran.
+        correct: true
+      - text: Only the options provided by hand
+        why: Implicit defaults can later change.
+  - id: a6-validated-training-config-03
+    type: mcq
+    prompt: "A training config receives `rate: \"0.01\"` (a string). What should the validator do?"
+    explanation: Parsing must be explicit elsewhere.
+    options:
+      - text: Reject it at the typed configuration boundary
+        why: Parsing must be explicit elsewhere.
+        correct: true
+      - text: Accept it through lexicographic comparisons
+        why: Those do not implement numeric bounds.
+      - text: Use it as the epoch count
+        why: The key and type still matter.
+  - id: a6-validated-training-config-04
+    type: mcq
+    prompt: When should validation run?
+    explanation: Failing early saves work.
+    options:
+      - text: Before costly training starts
+        why: Failing early saves work.
+        correct: true
+      - text: After publishing artifacts only
+        why: Bad data may already be promoted.
+      - text: Only after holdout evaluation
+        why: The run would already be complete.
+  - id: a6-validated-training-config-05
+    type: multi
+    prompt: Which support reproducibility?
+    explanation: They determine effective behaviour. The same options can run on different data.
+    options:
+      - text: Record the resolved defaults
+        why: They determine effective behaviour.
+        correct: true
+      - text: Record code and dataset identity
+        why: The same options can run on different data.
+        correct: true
+      - text: Rely on undocumented environment differences
+        why: They cannot be reproduced reliably.
+  - id: a6-validated-training-config-06
+    type: cloze
+    prompt: Options after defaults and overrides are the ______ configuration.
+    accept:
+      - resolved
+      - effective
+      - final
+      - merged
+    explanation: It describes what actually runs.
+  - id: a6-validated-training-config-07
+    type: order
+    prompt: Order configuration handling.
+    items:
+      - Read approved inputs
+      - Reject unknown keys and resolve defaults
+      - Validate resolved types and bounds
+      - Record settings and start training
+    explanation: Validation comes before the run.
+  - id: a6-validated-training-config-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def training_config(options):
+          unknown = options.keys() - {"epochs","rate"}
+          if unknown:
+              raise ValueError("unknown options")
+          epochs, rate = options.get("epochs",10), options.get("rate",0.01)
+          if type(epochs) is not int or epochs <= 0 or type(rate) not in (int,float) or not 0 < rate <= 1:
+              raise ValueError("invalid training options")
+          return {"epochs":epochs,"rate":float(rate)}
+
+      print(training_config({"rate": 0.25})["epochs"])
+    answer: "10"
+    explanation: The explicit rate leaves the default epoch count.

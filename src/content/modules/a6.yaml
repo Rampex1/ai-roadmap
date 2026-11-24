@@ -4,5 +4,7 @@ title: "Software engineering for ML"
 order: 6
 prereqs: ["a5"]
 objectives:
-  - "Explain the core ideas of software engineering for ML"
-  - "Apply software engineering for ML to a working ML project"
+  - Separate training, feature transformation and serving code
+  - Reuse fitted transformations consistently at inference
+  - Validate configuration and artifact compatibility
+  - Preserve a deterministic feature contract

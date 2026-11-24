@@ -1,0 +1,40 @@
+---
+title: Define a stable feature interface
+module: a6
+order: 1
+estMinutes: 8
+objectives:
+  - Project a named row to ordered values
+  - Protect model inputs from dictionary and schema changes
+goDeeper: sklearn-pipeline-reference
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A model often accepts positional arrays, while applications work with named fields. A <Term id="feature-interface" /> makes their boundary explicit. Two rows with identical field names but different insertion order should produce the same vector. Otherwise a serving adapter can swap features without changing array width.
+
+Handle missing values according to the contract. Required columns should fail clearly rather than default to zero by accident. An allowed nullable feature needs a specified missing representation and a fitted policy in the pipeline. Extra fields can be ignored if the contract permits it.
+
+Keep the feature transform apart from I/O and model invocation. Pure transforms are easy to test in training, batch scoring and online serving. This fixture only projects names to values. It leaves numeric validation to the caller.
+
+## Worked example
+
+The declared order differs from insertion order.
+
+```python
+def feature_vector(row, columns):
+    return [row[column] for column in columns]
+
+print(feature_vector({"tenure":3,"visits":9}, ["visits","tenure"]))
+```
+
+```text title="Output"
+[9, 3]
+```
+
+Keep the transform and field order in the versioned contract.
+
+## Try it
+
+<CodeExercise id="a6-feature-interface-01" />

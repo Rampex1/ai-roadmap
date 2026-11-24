@@ -1,0 +1,22 @@
+id: a6-package-a-classifier
+module: a6
+kind: homework
+title: Package a model-facing feature pipeline
+brief: |-
+  Build the pure, inspectable layer that sits in front of a model: feature projection, frozen preprocessing, validated training options and artifact compatibility checks. No model is trained here. Use the same feature code in training and serving.
+
+  1. Project fields in schema order.
+  2. Apply a frozen transform.
+  3. Validate explicit training options.
+  4. Check an artifact against its consumer.
+  5. Transform a serving row from a compatible fitted artifact.
+
+  Sketch the modules and call boundaries. Explain where learned state lives and how an older incompatible artifact would be handled.
+notebook: /homework/a6-package-a-classifier.ipynb
+rubric:
+  - Feature order is deterministic.
+  - Inference does not refit transforms.
+  - Invalid configuration fails early.
+  - Consumers check compatibility before inference.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

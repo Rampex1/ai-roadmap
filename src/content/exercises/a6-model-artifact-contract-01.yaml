@@ -1,0 +1,17 @@
+id: a6-model-artifact-contract-01
+lesson: mle/a6/model-artifact-contract
+title: Check artifact compatibility
+prompt: Implement compatible_artifact(manifest, schema, features). Return true only when the schema version equals the expected version and the stored feature list equals the expected ordered list. Extra fields are allowed.
+starter: |
+  def compatible_artifact(manifest, schema, features):
+      raise NotImplementedError
+solution: |
+  def compatible_artifact(manifest, schema, features):
+      return manifest.get("schema") == schema and manifest.get("features") == features
+tests: |
+  assert compatible_artifact({"schema":1,"features":["a","b"],"version":"v1"},1,["a","b"])
+  assert not compatible_artifact({"schema":1,"features":["b","a"]},1,["a","b"])
+  assert not compatible_artifact({"schema":2,"features":["a"]},1,["a"])
+  assert not compatible_artifact({},1,[])
+hints:
+  - Compare the ordered list instead of converting it to a set.

@@ -1,0 +1,87 @@
+items:
+  - id: a6-model-artifact-contract-01
+    type: mcq
+    prompt: What can break without changing feature count?
+    explanation: Slots can be mapped to the wrong meaning.
+    options:
+      - text: The order of input columns
+        why: Slots can be mapped to the wrong meaning.
+        correct: true
+      - text: Only the file size
+        why: Semantic mismatches do not require size changes.
+      - text: The number of models deployed
+        why: That is separate from feature order.
+  - id: a6-model-artifact-contract-02
+    type: mcq
+    prompt: Why use an immutable artifact identity?
+    explanation: It supports repeatable deployment.
+    options:
+      - text: The same identity should resolve to the same bytes
+        why: It supports repeatable deployment.
+        correct: true
+      - text: A digest makes every model accurate
+        why: Identity does not prove accuracy.
+      - text: It lets training silently rewrite release data
+        why: Immutability prevents replacement by convention.
+  - id: a6-model-artifact-contract-03
+    type: mcq
+    prompt: When should compatibility be checked?
+    explanation: Startup should reject incorrect bundles.
+    options:
+      - text: Before receiving prediction traffic
+        why: Startup should reject incorrect bundles.
+        correct: true
+      - text: After collecting complaints only
+        why: Incorrect results could already be served.
+      - text: Only before training labels exist
+        why: Serving compatibility is separate.
+  - id: a6-model-artifact-contract-04
+    type: mcq
+    prompt: Why avoid untrusted executable serialization?
+    explanation: Artifact origin is a trust boundary.
+    options:
+      - text: Loading it can run code
+        why: Artifact origin is a trust boundary.
+        correct: true
+      - text: Its feature length is always wrong
+        why: Shape is not the concern.
+      - text: It necessarily contains no model weights
+        why: An artifact may contain both.
+  - id: a6-model-artifact-contract-05
+    type: multi
+    prompt: Which belong with an artifact?
+    explanation: The consumer needs matching features. It determines served decisions.
+    options:
+      - text: Preprocessor and feature schema identity
+        why: The consumer needs matching features.
+        correct: true
+      - text: The threshold or decision policy
+        why: It determines served decisions.
+        correct: true
+      - text: Only a mutable filename
+        why: It may be repointed.
+  - id: a6-model-artifact-contract-06
+    type: cloze
+    prompt: The metadata rule governing loading is an artifact ______.
+    accept:
+      - contract
+    explanation: It documents compatibility requirements.
+  - id: a6-model-artifact-contract-07
+    type: order
+    prompt: Order a model startup.
+    items:
+      - Resolve the approved immutable version
+      - Verify bytes and compatibility
+      - Load the matching preprocessing and model
+      - Mark the service ready
+    explanation: Readiness follows successful loading.
+  - id: a6-model-artifact-contract-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def compatible_artifact(manifest, schema, features):
+          return manifest.get("schema") == schema and manifest.get("features") == features
+
+      print(compatible_artifact({"schema": 3, "features": []}, 3, []))
+    answer: "True"
+    explanation: Both required fields match the expected values.

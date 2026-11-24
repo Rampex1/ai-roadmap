@@ -1,0 +1,4 @@
+term: "Frozen preprocessing"
+short: "Applying a previously fitted feature transformation without updating its learned state."
+body: "Statistics such as means, scales, vocabularies and imputation values are learned once on training data, saved, and reused unchanged for evaluation and serving, so features mean the same thing everywhere."
+related: ["feature-interface","point-in-time-join"]

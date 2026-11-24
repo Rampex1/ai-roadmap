@@ -1,0 +1,4 @@
+term: "Artifact contract"
+short: "Metadata and compatibility rules that tell a consumer how to load a trained model artifact."
+body: "A manifest stored with a model that records its immutable identity (digest), schema version, feature order, preprocessing state and decision threshold. A consumer checks it before serving."
+related: ["dataset-manifest","feature-interface"]

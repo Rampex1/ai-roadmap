@@ -1,0 +1,46 @@
+---
+title: Validate configuration before a run
+module: a6
+order: 3
+estMinutes: 8
+objectives:
+  - Reject ambiguous configuration and unsupported keys
+  - Record normalized inputs for reproducibility
+goDeeper: sklearn-pipeline-reference
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="validated-training-config" /> describes settings independently of executable code. Declare defaults, valid ranges and precedence. Fail on unknown keys so a misspelled option does not silently run a different experiment. Record the resolved configuration rather than relying on local environment variables or implicit defaults.
+
+Validate before starting a costly job. A numeric-looking string from an environment variable must be explicitly parsed at the edge. In the fixture the parsed configuration must already contain numbers. A boolean epoch count is invalid even though Python treats bool as a subtype of int.
+
+Capture the effective settings in the run log alongside seeds, artifact identity and data manifest. Secrets should be referenced by an approved mechanism rather than serialized with public run metadata.
+
+## Worked example
+
+The run overrides epochs and records the default rate.
+
+```python
+def training_config(options):
+    unknown = options.keys() - {"epochs","rate"}
+    if unknown:
+        raise ValueError("unknown options")
+    epochs, rate = options.get("epochs",10), options.get("rate",0.01)
+    if type(epochs) is not int or epochs <= 0 or type(rate) not in (int,float) or not 0 < rate <= 1:
+        raise ValueError("invalid training options")
+    return {"epochs":epochs,"rate":float(rate)}
+
+print(training_config({"epochs":3}))
+```
+
+```text title="Output"
+{'epochs': 3, 'rate': 0.01}
+```
+
+Log resolved configuration so later comparisons can reproduce the actual run.
+
+## Try it
+
+<CodeExercise id="a6-validated-training-config-01" />
