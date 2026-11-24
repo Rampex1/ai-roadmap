@@ -1,0 +1,4 @@
+term: "Timestamped transcript"
+short: "Transcribed text associated with start and end times in the original audio."
+body: "Speech-to-text output split into segments, each with start and end offsets (usually half-open) into a named recording. The offsets let a citation point to the exact clip a reviewer can replay. They do not prove the words were transcribed correctly."
+related: ["citation-grounding","multimodal-input"]

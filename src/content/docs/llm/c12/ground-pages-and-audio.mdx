@@ -1,0 +1,43 @@
+---
+title: Ground answers in page regions and audio segments
+module: c12
+order: 3
+estMinutes: 8
+objectives:
+  - Preserve source and time offsets for extracted evidence
+  - Find a half-open transcript interval for a timestamp
+goDeeper: clip-paper
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="timestamped-transcript" /> can be searched without sending the full recording to the model. Keep the original media ID with each segment. A question about a quote can cite the time range, while a question about layout can cite the original page and its bounding region. Retrieved text is easier to verify when the evidence links back to these coordinates.
+
+Define coordinate conventions. Speech segments can use half-open intervals: start is included and end is excluded. This avoids assigning a shared boundary to two adjoining segments. OCR systems may represent boxes in pixels or normalized coordinates. Keep the page dimensions or units with the boxes, and track how rotation and resizing alter positions.
+
+Time or bounding-box metadata shows where to look; it does not confirm the transcript itself. Inspect the source when speech is unclear, columns are ambiguous or extraction confidence is low. A pipeline should abstain if the claim needs evidence the available media cannot support.
+
+## Worked example
+
+At the shared boundary, the timestamp belongs only to the following segment.
+
+```python
+def transcript_segment(segments, time):
+    for start, end, text in segments:
+        if start <= time < end:
+            return text
+    return None
+
+print(transcript_segment([(0, 4, "Agenda"), (4, 8, "Opening hours")], 4))
+```
+
+```text title="Output"
+Opening hours
+```
+
+Record coordinate units and source identity so a reader can reproduce the evidence lookup.
+
+## Try it
+
+<CodeExercise id="c12-ground-pages-and-audio-01" />

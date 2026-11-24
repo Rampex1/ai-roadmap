@@ -1,0 +1,28 @@
+id: c12-rank-across-modalities-01
+lesson: llm/c12/rank-across-modalities
+title: Rank aligned image vectors
+prompt: Implement rank_images(query, images). Each image has a distinct ID and a unit embedding from the aligned space. Sort by decreasing dot product then ascending ID. Reject dimension mismatch.
+starter: |
+  def rank_images(query, images):
+      raise NotImplementedError
+solution: |
+  def rank_images(query, images):
+      scores = []
+      for image_id, vector in images:
+          if len(query) != len(vector):
+              raise ValueError("incompatible vector dimensions")
+          score = sum(a * b for a, b in zip(query, vector))
+          scores.append((image_id, score))
+      return [image_id for image_id, _ in sorted(scores, key=lambda row: (-row[1], row[0]))]
+tests: |
+  assert rank_images([1,0],[("z",[1,0]),("a",[1,0]),("map",[0,1])]) == ["a","z","map"]
+  assert rank_images([0,1],[("z",[1,0]),("map",[0,1])]) == ["map","z"]
+  assert rank_images([1],[]) == []
+  try:
+      rank_images([1,0],[("bad",[1])])
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("Reject mismatched dimensions")
+hints:
+  - Sort the tuples by negative score followed by ID.

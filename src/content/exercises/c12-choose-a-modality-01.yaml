@@ -1,0 +1,30 @@
+id: c12-choose-a-modality-01
+lesson: llm/c12/choose-a-modality
+title: Route a media request
+prompt: Implement choose_input(media, need_layout, has_transcript). Text always uses text. For image and audio, use transcript if available and need_layout is false, otherwise use the original modality. Here need_layout means the task needs spatial, temporal or other nontext evidence. Reject unknown media.
+starter: |
+  def choose_input(media, need_layout, has_transcript):
+      raise NotImplementedError
+solution: |
+  def choose_input(media, need_layout, has_transcript):
+      if media == "text":
+          return "text"
+      if media not in {"image", "audio"}:
+          raise ValueError("unsupported media")
+      if not need_layout and has_transcript:
+          return "transcript"
+      return media
+tests: |
+  assert choose_input("text",True,False) == "text"
+  assert choose_input("text",False,True) == "text", "Text always uses text"
+  assert choose_input("image",False,True) == "transcript"
+  assert choose_input("image",True,True) == "image"
+  assert choose_input("audio",False,False) == "audio"
+  try:
+      choose_input("other",False,True)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("Reject unrecognized media")
+hints:
+  - Decide whether extracted text preserves what the question requires.

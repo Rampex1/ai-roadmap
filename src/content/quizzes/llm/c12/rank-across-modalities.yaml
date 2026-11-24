@@ -1,0 +1,96 @@
+items:
+  - id: c12-rank-across-modalities-01
+    type: mcq
+    prompt: What makes text/image similarity meaningful?
+    explanation: Their training aligns the two representations.
+    options:
+      - text: Only the same filename
+        why: Filenames do not define embeddings.
+      - text: Compatible aligned encoders
+        why: Their training aligns the two representations.
+        correct: true
+      - text: Only equal vector lengths
+        why: Dimension does not align coordinate meanings.
+  - id: c12-rank-across-modalities-02
+    type: mcq
+    prompt: What is dot product for two unit embeddings?
+    explanation: The lengths multiply to one.
+    options:
+      - text: Their cosine similarity
+        why: The lengths multiply to one.
+        correct: true
+      - text: Always zero
+        why: Their directions can align.
+      - text: A calibrated probability
+        why: A dot product is not a probability by default.
+  - id: c12-rank-across-modalities-03
+    type: mcq
+    prompt: Which is a useful hard negative?
+    explanation: It probes whether the relevant detail is captured.
+    options:
+      - text: Two lookalike schedules for different dates
+        why: It probes whether the relevant detail is captured.
+        correct: true
+      - text: An unrelated blank row only
+        why: Unrelated cases are often easier to separate.
+      - text: A duplicated correct answer labelled correct
+        why: That does not test confusion.
+  - id: c12-rank-across-modalities-04
+    type: mcq
+    prompt: How does this fixture resolve a score tie?
+    explanation: The sort uses a deterministic secondary key.
+    options:
+      - text: Ascending ID
+        why: The sort uses a deterministic secondary key.
+        correct: true
+      - text: Random order
+        why: That would destabilize the baseline.
+      - text: Shortest vector dimension
+        why: All compared vectors have the same length.
+  - id: c12-rank-across-modalities-05
+    type: multi
+    prompt: Which should stay fixed for a cross-modal evaluation?
+    explanation: A changed representation changes the search. A shared dataset supports comparison.
+    options:
+      - text: Encoder settings
+        why: A changed representation changes the search.
+        correct: true
+      - text: Labelled test queries
+        why: A shared dataset supports comparison.
+        correct: true
+      - text: The answer before retrieval runs
+        why: It should be measured independently.
+  - id: c12-rank-across-modalities-06
+    type: cloze
+    prompt: The text and image encoders must share an ______ space.
+    accept:
+      - "aligned"
+      - "embedding"
+      - "aligned embedding"
+      - "shared embedding"
+    explanation: A shared representation makes cross-modal comparisons meaningful.
+  - id: c12-rank-across-modalities-07
+    type: order
+    prompt: Order a cross-modal lookup where the image index is built before users submit queries.
+    items:
+      - Encode images with the image encoder
+      - Encode the query with the paired text encoder
+      - Score pairs in the aligned space
+      - Return the highest-ranked image IDs
+    explanation: Scores need both representations.
+  - id: c12-rank-across-modalities-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def rank_images(query, images):
+          scores = []
+          for image_id, vector in images:
+              if len(query) != len(vector):
+                  raise ValueError("incompatible vector dimensions")
+              score = sum(a * b for a, b in zip(query, vector))
+              scores.append((image_id, score))
+          return [image_id for image_id, _ in sorted(scores, key=lambda row: (-row[1], row[0]))]
+
+      print(rank_images([0,1], [("a",[1,0]),("b",[0,1])]))
+    answer: "['b', 'a']"
+    explanation: b aligns with the text query vector and ranks first.

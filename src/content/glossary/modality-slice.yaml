@@ -1,0 +1,4 @@
+term: "Modality slice"
+short: "An evaluation subset defined by media type or input condition, such as low-contrast scans or noisy audio."
+body: "An evaluation subset grouped by media type or condition (clean scan, rotated, low contrast, noisy audio). It is scored separately so that a pooled average can't hide where extraction or grounding breaks down."
+related: ["evaluation-slice","timestamped-transcript"]

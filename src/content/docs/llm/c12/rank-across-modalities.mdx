@@ -1,0 +1,46 @@
+---
+title: Search images with text queries
+module: c12
+order: 2
+estMinutes: 8
+objectives:
+  - Explain why cross-modal matching needs aligned encoders
+  - Use unit-vector scores with deterministic ranking
+goDeeper: clip-paper
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="cross-modal-embedding" /> lets a text query retrieve an image when both encoders map related inputs to nearby vectors. Contrastive training can align paired images and captions while separating unrelated examples. A model such as CLIP illustrates this idea with separate image and text encoders trained on matched pairs.
+
+Matching vector length is insufficient. The encoders must have compatible coordinates and preprocessing. A text encoder trained independently can return the same dimension without sharing the same geometry. Similarity measures how closely representations match under the chosen model, rather than how likely a caption is to be factually correct.
+
+The fixture uses unit vectors and dot products, so its ranking is equivalent to cosine ranking. Use deterministic tie-breaking when computing baseline recall. With real images, inspect broad categories and hard negatives such as two similar timetable photos with different dates.
+
+## Worked example
+
+The top-score tie is resolved by image ID.
+
+```python
+def rank_images(query, images):
+    scores = []
+    for image_id, vector in images:
+        if len(query) != len(vector):
+            raise ValueError("incompatible vector dimensions")
+        score = sum(a * b for a, b in zip(query, vector))
+        scores.append((image_id, score))
+    return [image_id for image_id, _ in sorted(scores, key=lambda row: (-row[1], row[0]))]
+
+print(rank_images([1,0], [("z",[1,0]),("map",[0,1]),("a",[1,0])]))
+```
+
+```text title="Output"
+['a', 'z', 'map']
+```
+
+Test whether the aligned space improves search on labelled cross-modal queries.
+
+## Try it
+
+<CodeExercise id="c12-rank-across-modalities-01" />

@@ -1,0 +1,95 @@
+items:
+  - id: c12-choose-a-modality-01
+    type: mcq
+    prompt: What does OCR often lose from a table?
+    explanation: Linear text can lose row and column alignment.
+    options:
+      - text: Spatial relationships between fields
+        why: Linear text can lose row and column alignment.
+        correct: true
+      - text: The identity of every word by definition
+        why: OCR aims to recover words.
+      - text: The model checkpoint
+        why: The checkpoint is separate from document content.
+  - id: c12-choose-a-modality-02
+    type: mcq
+    prompt: Which representation suits an icon-only map question?
+    explanation: The answer depends on visual evidence.
+    options:
+      - text: The map image
+        why: The answer depends on visual evidence.
+        correct: true
+      - text: Only a plain title transcript
+        why: The title may omit icon locations.
+      - text: Only the request latency
+        why: Latency is not map evidence.
+  - id: c12-choose-a-modality-03
+    type: mcq
+    prompt: Why retain source identity after transcription?
+    explanation: The extracted text can contain errors.
+    options:
+      - text: It lets a reviewer inspect uncertain segments
+        why: The extracted text can contain errors.
+        correct: true
+      - text: It makes all text correct
+        why: Provenance does not guarantee correctness.
+      - text: It turns audio into a model checkpoint
+        why: Source identity is metadata.
+  - id: c12-choose-a-modality-04
+    type: mcq
+    prompt: What should happen when an accepted transcript omits a required cue?
+    explanation: The cue is necessary to answer.
+    options:
+      - text: Use the original media or abstain
+        why: The cue is necessary to answer.
+        correct: true
+      - text: Guess based on fluent text
+        why: Fluency does not restore missing evidence.
+      - text: Remove the question from the trace
+        why: That hides a failure.
+  - id: c12-choose-a-modality-05
+    type: multi
+    prompt: Which are valid representation choices?
+    explanation: It supports retrieval over speech. It retains spatial evidence.
+    options:
+      - text: The source image for layout reasoning
+        why: It retains spatial evidence.
+        correct: true
+      - text: A fabricated transcript for unreadable media
+        why: Invented evidence does not support an answer.
+      - text: Timestamped text for spoken-word search
+        why: It supports retrieval over speech.
+        correct: true
+  - id: c12-choose-a-modality-06
+    type: cloze
+    prompt: An input that combines media types is ______.
+    accept:
+      - multimodal
+      - multi-modal
+      - "multi modal"
+    explanation: Multiple modalities can supply complementary information.
+  - id: c12-choose-a-modality-07
+    type: order
+    prompt: Order representation selection.
+    items:
+      - Identify the evidence the task needs
+      - Check which representations preserve it
+      - Choose an available representation
+      - Retain provenance for inspection
+    explanation: The required evidence determines the choice.
+  - id: c12-choose-a-modality-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def choose_input(media, need_layout, has_transcript):
+          if media == "text":
+              return "text"
+          if media not in {"image", "audio"}:
+              raise ValueError("unsupported media")
+          if not need_layout and has_transcript:
+              return "transcript"
+          return media
+
+      print(choose_input("audio", False, True))
+    answer: transcript
+    explanation: The available transcript suffices under the given requirements.

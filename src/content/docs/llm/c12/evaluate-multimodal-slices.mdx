@@ -1,0 +1,44 @@
+---
+title: Evaluate multimodal failure slices
+module: c12
+order: 4
+estMinutes: 8
+objectives:
+  - Compare quality on clean and degraded media
+  - Separate extraction failures from grounded answer failures
+goDeeper: clip-paper
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="modality-slice" /> shows whether a system still works when inputs degrade. Use examples with clean images, rotation, low contrast and missing crops, and audio with quiet speech, noise or overlapping speakers. Define a task-specific rubric and label relevant source evidence. A model may answer common questions from memory while missing the actual image or recording.
+
+Score extraction separately from final answers. If OCR missed a time, the answer generator never had a chance to use it. If extraction correctly preserved the time but the answer cited the wrong row, inspect context assembly and generation. Pair altered media with the corresponding clean source when possible so the comparison isolates the quality change.
+
+Include cases where the system should abstain, and report unsupported answers separately from misses. This exercise counts outcomes by modality condition. A supported answer and a correct abstention are distinct statuses, so readers can see changes in both.
+
+## Worked example
+
+The clean media cases include both a supported and unsupported answer.
+
+```python
+def modality_outcomes(rows):
+    counts = {}
+    for condition, outcome in rows:
+        histogram = counts.setdefault(condition, {})
+        histogram[outcome] = histogram.get(outcome, 0) + 1
+    return counts
+
+print(modality_outcomes([("clean","supported"),("noisy","abstained"),("clean","unsupported")]))
+```
+
+```text title="Output"
+{'clean': {'supported': 1, 'unsupported': 1}, 'noisy': {'abstained': 1}}
+```
+
+Inspect extraction and final answer evidence alongside slice counts.
+
+## Try it
+
+<CodeExercise id="c12-evaluate-multimodal-slices-01" />

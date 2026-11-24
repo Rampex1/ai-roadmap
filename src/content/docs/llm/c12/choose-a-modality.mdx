@@ -1,0 +1,46 @@
+---
+title: Choose representations for multimodal inputs
+module: c12
+order: 1
+estMinutes: 8
+objectives:
+  - Compare native multimodal inputs with extracted text
+  - Select representations based on which evidence matters
+goDeeper: clip-paper
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="multimodal-input" /> can combine a user question with an image or an audio clip. The system may process the media directly or first extract text. An OCR transcript can preserve words from a schedule but omit which column a time belonged to. Audio transcription captures speech while discarding speaker cues unless timestamps and speaker annotations are retained.
+
+Pick the smallest representation that supports the task. A printed title may need only OCR. A question about the layout of a map needs the image. A recorded board meeting may be easier to search as timestamped text, while an uncertain transcription can be checked against the source clip.
+
+Record the representation and original source identity. Preserve enough accessible evidence to inspect doubtful outputs, subject to retention and consent requirements. The example routes declared requirements to an available representation. It does not inspect image pixels or audio samples.
+
+## Worked example
+
+A layout-dependent request keeps the image even when a transcript is available.
+
+```python
+def choose_input(media, need_layout, has_transcript):
+    if media == "text":
+        return "text"
+    if media not in {"image", "audio"}:
+        raise ValueError("unsupported media")
+    if not need_layout and has_transcript:
+        return "transcript"
+    return media
+
+print(choose_input("image", True, True))
+```
+
+```text title="Output"
+image
+```
+
+Keep a link from each derived representation to the source evidence it came from.
+
+## Try it
+
+<CodeExercise id="c12-choose-a-modality-01" />

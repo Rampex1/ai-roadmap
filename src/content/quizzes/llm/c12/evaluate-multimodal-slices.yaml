@@ -1,0 +1,92 @@
+items:
+  - id: c12-evaluate-multimodal-slices-01
+    type: mcq
+    prompt: Why evaluate clean and noisy audio separately?
+    explanation: Different input conditions can fail at different rates.
+    options:
+      - text: Aggregate scores can hide degradation
+        why: Different input conditions can fail at different rates.
+        correct: true
+      - text: Noisy audio always has correct transcripts
+        why: Noise can reduce transcription quality.
+      - text: Only noise changes the labels automatically
+        why: Labels follow the task evidence.
+  - id: c12-evaluate-multimodal-slices-02
+    type: mcq
+    prompt: What should you check first when the transcript lacks a required quote?
+    explanation: The evidence was lost before the answer stage.
+    options:
+      - text: Only the answer typography
+        why: Formatting cannot recover missed audio.
+      - text: Only the retrieval score threshold if no transcript exists
+        why: A threshold cannot recover absent text.
+      - text: The extraction stage
+        why: The evidence was lost before the answer stage.
+        correct: true
+  - id: c12-evaluate-multimodal-slices-03
+    type: mcq
+    prompt: Why pair clean media and its degraded copy?
+    explanation: This isolates media conditions more clearly.
+    options:
+      - text: To compare on the same underlying task
+        why: This isolates media conditions more clearly.
+        correct: true
+      - text: To force both outputs to match regardless of evidence
+        why: Degradation can make abstention appropriate.
+      - text: To leak test answers into training
+        why: Evaluation pairs need not be used for training.
+  - id: c12-evaluate-multimodal-slices-04
+    type: mcq
+    prompt: What is a supported answer?
+    explanation: Support depends on actual media or verified extraction.
+    options:
+      - text: An abstention under every condition
+        why: Abstention is a distinct outcome.
+      - text: An answer grounded in the cited source evidence
+        why: Support depends on actual media or verified extraction.
+        correct: true
+      - text: Any answer with a timestamp string
+        why: A timestamp can point to irrelevant content.
+  - id: c12-evaluate-multimodal-slices-05
+    type: multi
+    prompt: Which should be reported separately?
+    explanation: They may sound plausible while lacking evidence. Declining can be the expected behaviour.
+    options:
+      - text: Only a pooled average with no counts
+        why: That can mask failures on small groups.
+      - text: Unsupported answers
+        why: They may sound plausible while lacking evidence.
+        correct: true
+      - text: Correct abstentions
+        why: Declining can be the expected behaviour.
+        correct: true
+  - id: c12-evaluate-multimodal-slices-06
+    type: cloze
+    prompt: A subset grouped by image quality or audio noise is an evaluation ______.
+    accept:
+      - slice
+      - modality slice
+    explanation: Slices expose condition-specific behaviour.
+  - id: c12-evaluate-multimodal-slices-07
+    type: order
+    prompt: Order a paired multimodal evaluation that labels the original media before producing degraded copies around the annotated evidence.
+    items:
+      - Label evidence in source media
+      - Prepare clean and degraded versions
+      - Score extraction and answer behaviour
+      - Compare per-condition outcomes
+    explanation: The original evidence provides a common reference.
+  - id: c12-evaluate-multimodal-slices-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def modality_outcomes(rows):
+          counts = {}
+          for condition, outcome in rows:
+              histogram = counts.setdefault(condition, {})
+              histogram[outcome] = histogram.get(outcome, 0) + 1
+          return counts
+
+      print(modality_outcomes([("dark","abstained"),("dark","abstained")]))
+    answer: "{'dark': {'abstained': 2}}"
+    explanation: Both rows contribute to the same condition and outcome.

@@ -1,0 +1,20 @@
+id: c12-evaluate-multimodal-slices-01
+lesson: llm/c12/evaluate-multimodal-slices
+title: Count outcomes by media condition
+prompt: Implement modality_outcomes(rows). Rows are (condition, outcome) pairs. Return a nested count dictionary with only observed conditions and outcomes.
+starter: |
+  def modality_outcomes(rows):
+      raise NotImplementedError
+solution: |
+  def modality_outcomes(rows):
+      counts = {}
+      for condition, outcome in rows:
+          histogram = counts.setdefault(condition, {})
+          histogram[outcome] = histogram.get(outcome, 0) + 1
+      return counts
+tests: |
+  assert modality_outcomes([("scan","pass"),("scan","fail"),("scan","pass"),("audio","fail")]) == {"scan":{"pass":2,"fail":1},"audio":{"fail":1}}
+  assert modality_outcomes(iter([("scan","abstained")])) == {"scan":{"abstained":1}}
+  assert modality_outcomes([]) == {}
+hints:
+  - Each condition has its own independent histogram.

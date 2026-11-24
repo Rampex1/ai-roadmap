@@ -1,0 +1,4 @@
+term: "Multimodal input"
+short: "Input that combines distinct kinds of information such as text, images or audio."
+body: "A request whose evidence spans more than one modality, such as text with an image or audio clip. A system can pass the media to a model that reads it natively or convert it to text first (OCR, transcription). Conversion is cheaper and searchable but can drop layout, speaker or visual cues."
+related: ["embedding","context-window"]

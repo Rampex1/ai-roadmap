@@ -1,0 +1,22 @@
+id: c12-ground-pages-and-audio-01
+lesson: llm/c12/ground-pages-and-audio
+title: Locate a transcript segment
+prompt: Implement transcript_segment(segments, time) for ordered, nonoverlapping (start, exclusive_end, text) rows in seconds. Return the matching text or None. Preserve empty segment text.
+starter: |
+  def transcript_segment(segments, time):
+      raise NotImplementedError
+solution: |
+  def transcript_segment(segments, time):
+      for start, end, text in segments:
+          if start <= time < end:
+              return text
+      return None
+tests: |
+  segments = [(0,2,"one"),(2,4,"two"),(6,7,"")]
+  assert transcript_segment(segments,0) == "one"
+  assert transcript_segment(segments,2) == "two"
+  assert transcript_segment(segments,4) is None
+  assert transcript_segment(segments,6) == ""
+  assert transcript_segment(segments,7) is None
+hints:
+  - Include the start and exclude the end when checking the time.

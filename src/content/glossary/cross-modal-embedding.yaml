@@ -1,0 +1,4 @@
+term: "Cross-modal embedding"
+short: "A representation in an aligned space where inputs from different modalities can be compared."
+body: "Vectors from separate encoders (e.g. CLIP's image and text towers) trained contrastively so that matching pairs land close together in one shared space. Similarity is only meaningful between encoders trained together. Having the same dimension is not enough."
+related: ["embedding","cosine-similarity"]

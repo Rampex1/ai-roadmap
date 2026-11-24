@@ -4,6 +4,9 @@ title: "Multimodal"
 order: 12
 prereqs: ["c11"]
 objectives:
-  - "Explain the core ideas of multimodal"
-  - "Build and evaluate an application using multimodal"
+  - Choose a text, image or audio representation based on required evidence
+  - Rank aligned text and image embeddings
+  - Locate supporting media evidence by coordinate or timestamp
+  - Evaluate degradation and unsupported answers by modality slice
+
 capstone: llm-capstone
