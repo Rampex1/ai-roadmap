@@ -4,5 +4,7 @@ title: "LLMOps, security and safety"
 order: 11
 prereqs: ["c10"]
 objectives:
-  - "Explain the core ideas of LLMOps, security and safety"
-  - "Build and evaluate an application using LLMOps, security and safety"
+  - Instrument model requests with bounded, privacy-aware metadata
+  - Budget token use and operations before execution
+  - Enforce application authorization independently of model output
+  - Use canary metrics to stop or roll back a release

@@ -1,0 +1,89 @@
+items:
+  - id: c11-enforce-read-boundaries-01
+    type: mcq
+    prompt: Where should identity come from?
+    explanation: The session supplies verified identity and scope.
+    options:
+      - text: Words in a retrieved document
+        why: A document is untrusted input.
+      - text: The generated tool arguments
+        why: Model text cannot authenticate the caller.
+      - text: Trusted application context
+        why: The session supplies verified identity and scope.
+        correct: true
+  - id: c11-enforce-read-boundaries-02
+    type: mcq
+    prompt: Why check a collection after confirming tool scope?
+    explanation: Operation and object access are different checks.
+    options:
+      - text: A scope may permit a read only inside a specific boundary
+        why: Operation and object access are different checks.
+        correct: true
+      - text: It changes the tool name
+        why: Collection is a separate input.
+      - text: Matching collection bypasses the scope check
+        why: Both checks are required.
+  - id: c11-enforce-read-boundaries-03
+    type: mcq
+    prompt: What should happen to an unknown operation?
+    explanation: Unknown operations are outside the allowlist.
+    options:
+      - text: Deny it before execution
+        why: Unknown operations are outside the allowlist.
+        correct: true
+      - text: Send it to the nearest recognized handler
+        why: That can create unauthorized effects.
+      - text: Let generated prose authorize it
+        why: The model has no authority to expand permissions.
+  - id: c11-enforce-read-boundaries-04
+    type: mcq
+    prompt: What is a useful audit record for a denial?
+    explanation: That supports investigation without raw data.
+    options:
+      - text: A fabricated successful result
+        why: That hides the denial.
+      - text: All private tool inputs
+        why: They may expose sensitive values.
+      - text: A redacted decision and reason category
+        why: That supports investigation without raw data.
+        correct: true
+  - id: c11-enforce-read-boundaries-05
+    type: multi
+    prompt: Which reduce the impact of an untrusted document?
+    explanation: Fewer operations can be affected. A document cannot change the session scope.
+    options:
+      - text: Trusted authorization at the execution boundary
+        why: A document cannot change the session scope.
+        correct: true
+      - text: Narrow tool capabilities
+        why: Fewer operations can be affected.
+        correct: true
+      - text: Treating all document instructions as commands
+        why: That gives data unintended authority.
+  - id: c11-enforce-read-boundaries-06
+    type: cloze
+    prompt: Granting only the access an operation needs is least ______.
+    accept:
+      - privilege
+    explanation: Reduced authority limits unintended effects.
+  - id: c11-enforce-read-boundaries-07
+    type: order
+    prompt: Order a protected read whose dispatcher rejects malformed proposals before loading policy inputs.
+    items:
+      - Validate the proposal shape
+      - Load trusted session scope and collection
+      - Check operation and object permission
+      - Execute and return only permitted data
+    explanation: Authorization must precede access.
+  - id: c11-enforce-read-boundaries-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def may_read(tool, requested_collection, trusted_collection, scopes):
+          required = {"catalogue_search": "catalogue:read", "hours_lookup": "hours:read"}
+          scope = required.get(tool)
+          return scope is not None and scope in scopes and requested_collection == trusted_collection
+
+      print(may_read("hours_lookup", "a", "a", {"catalogue:read"}))
+    answer: "False"
+    explanation: The hours tool requires its own scope.

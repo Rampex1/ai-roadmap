@@ -1,0 +1,22 @@
+id: c11-safe-rollout
+module: c11
+kind: homework
+title: Operate a library assistant rollout
+brief: |-
+  An offline fixture represents a library assistant rollout. Build trace, cost, permission and release checks using synthetic data. All exercises run on a laptop CPU.
+
+  1. Project logs to selected non-content fields.
+  2. Calculate a request cost estimate.
+  3. Enforce scoped read permissions.
+  4. Apply a canary gate using paired thresholds.
+  5. Combine redacted traces with a canary decision.
+
+  Write an incident note for a canary with a rising error rate and a single denied access attempt. Give the denominator, decision, rollback target and two trace fields that help diagnose the event.
+notebook: /homework/c11-safe-rollout.ipynb
+rubric:
+  - Trace omits raw text.
+  - Unit conversions are correct.
+  - Permission uses trusted scope.
+  - Canary rules distinguish rollback, hold and promotion.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

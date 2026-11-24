@@ -1,0 +1,41 @@
+---
+title: Trace latency, availability and usage
+module: c11
+order: 1
+estMinutes: 8
+objectives:
+  - Choose useful trace fields without recording content
+  - Distinguish request latency from model and tool spans
+goDeeper: otel-genai-conventions
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+<Term id="inference-telemetry" /> follows a request across the application, model provider, retriever and tools. A trace ID groups spans, while each span describes an operation and its timing. Record wall time from a monotonic clock, count errors with their denominator and distinguish first visible text from total latency for streaming. Spans can overlap, so adding their durations may overcount wall time.
+
+Use low-cardinality labels such as deployment version and status for metrics. Store request-specific IDs in traces where they are useful for debugging. Raw prompts, completions and tool results can contain personal information. An allowlist of validated metadata is easier to inspect than a blacklist of known secret fields. A safe schema still needs retention and access controls.
+
+Watch the failed and missing requests as well as successful ones. Report latency percentiles with the observation count and define which requests contribute. A fall in p95 that coincides with more timeouts can mean the slowest work disappeared from the successful sample.
+
+## Worked example
+
+Only selected fields reach the trace store.
+
+```python
+def trace_metadata(event):
+    fields = ("trace_id", "operation", "status", "duration_ms", "input_tokens", "output_tokens")
+    return {field: event[field] for field in fields if field in event}
+
+print(trace_metadata({"trace_id":"r7","status":"ok","prompt":"sample text","output_tokens":0}))
+```
+
+```text title="Output"
+{'trace_id': 'r7', 'status': 'ok', 'output_tokens': 0}
+```
+
+Combine request-level signals with component spans and make raw content collection an explicit policy decision.
+
+## Try it
+
+<CodeExercise id="c11-trace-latency-and-usage-01" />

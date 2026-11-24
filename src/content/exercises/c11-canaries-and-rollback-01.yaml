@@ -1,0 +1,22 @@
+id: c11-canaries-and-rollback-01
+lesson: llm/c11/canaries-and-rollback
+title: Apply a canary gate
+prompt: Implement rollout_decision for valid counts and thresholds. A critical event rolls back immediately. Otherwise hold on zero attempts or insufficient sample. With enough attempts, roll back above the maximum error rate and promote at or below it.
+starter: |
+  def rollout_decision(attempts, failed, critical, min_attempts, max_error):
+      raise NotImplementedError
+solution: |
+  def rollout_decision(attempts, failed, critical, min_attempts, max_error):
+      if critical:
+          return "rollback"
+      if attempts < min_attempts or attempts == 0:
+          return "hold"
+      return "rollback" if failed / attempts > max_error else "promote"
+tests: |
+  assert rollout_decision(2,0,True,100,0.02) == "rollback"
+  assert rollout_decision(40,0,False,100,0.02) == "hold"
+  assert rollout_decision(0,0,False,0,0.02) == "hold"
+  assert rollout_decision(100,2,False,100,0.02) == "promote"
+  assert rollout_decision(100,3,False,100,0.02) == "rollback"
+hints:
+  - The critical condition must be evaluated before the sample threshold.

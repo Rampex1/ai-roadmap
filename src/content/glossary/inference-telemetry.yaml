@@ -1,0 +1,4 @@
+term: "Inference telemetry"
+short: "Measurements and event metadata that help explain how a model-backed request behaved."
+body: "The traces, metrics and logs a model-backed service records about each request. That includes span timing, status, token counts and deployment version, linked by a trace ID across the application, provider, retriever and tools. It is used to explain latency, errors and cost. Whether raw prompts or completions are captured is a separate privacy decision."
+related: ["agent-trace","latency"]

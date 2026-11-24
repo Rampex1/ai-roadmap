@@ -1,0 +1,94 @@
+items:
+  - id: c11-canaries-and-rollback-01
+    type: mcq
+    prompt: Why keep a rollback bundle?
+    explanation: Rolling back a single component can leave an incompatible configuration.
+    options:
+      - text: Older versions never have errors
+        why: Rollback targets a known configuration, not perfection.
+      - text: Model, prompt, tools and index can be coupled
+        why: Rolling back a single component can leave an incompatible configuration.
+        correct: true
+      - text: Rollback deletes all traces
+        why: Diagnostics should be retained according to policy.
+  - id: c11-canaries-and-rollback-02
+    type: mcq
+    prompt: What should happen with no attempts and no critical event?
+    explanation: The rate has no denominator.
+    options:
+      - text: Hold
+        why: The rate has no denominator.
+        correct: true
+      - text: Always roll back
+        why: The fixture uses hold for insufficient data.
+      - text: Promote because there are no observed failures
+        why: Zero observations provide no rate evidence.
+  - id: c11-canaries-and-rollback-03
+    type: mcq
+    prompt: Why define the gate before the canary?
+    explanation: Choosing thresholds after seeing results biases decisions.
+    options:
+      - text: To keep release criteria distinct from outcomes
+        why: Choosing thresholds after seeing results biases decisions.
+        correct: true
+      - text: To increase model tokens
+        why: A gate decides exposure.
+      - text: To eliminate the need for metrics
+        why: The gate consumes metrics.
+  - id: c11-canaries-and-rollback-04
+    type: mcq
+    prompt: Which event can stop a small run immediately?
+    explanation: The rule treats it independently of sample size.
+    options:
+      - text: A predefined critical incident
+        why: The rule treats it independently of sample size.
+        correct: true
+      - text: Only a measured rate calculated from a large sample
+        why: Critical stops can occur earlier.
+      - text: Any metric label change by itself
+        why: A label change alone does not show the stated risk.
+  - id: c11-canaries-and-rollback-05
+    type: multi
+    prompt: Which belong in release preparation?
+    explanation: The previous state can be restored. Operators can interpret signals consistently.
+    options:
+      - text: A versioned rollback configuration
+        why: The previous state can be restored.
+        correct: true
+      - text: Predefined stop rules
+        why: Operators can interpret signals consistently.
+        correct: true
+      - text: Deleting every baseline measurement
+        why: Comparison needs reference evidence.
+  - id: c11-canaries-and-rollback-06
+    type: cloze
+    prompt: A limited release for observing production behaviour is a ______.
+    accept:
+      - canary
+      - canary release
+      - "canary deployment"
+      - "canary rollout"
+    explanation: A canary limits initial exposure.
+  - id: c11-canaries-and-rollback-07
+    type: order
+    prompt: Order a rollout.
+    items:
+      - Record rollback target and gates
+      - Start limited exposure
+      - Measure rates and critical outcomes
+      - Promote, hold or roll back
+    explanation: Monitoring informs the predefined decision.
+  - id: c11-canaries-and-rollback-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def rollout_decision(attempts, failed, critical, min_attempts, max_error):
+          if critical:
+              return "rollback"
+          if attempts < min_attempts or attempts == 0:
+              return "hold"
+          return "rollback" if failed / attempts > max_error else "promote"
+
+      print(rollout_decision(50, 2, False, 50, 0.04))
+    answer: promote
+    explanation: The rate equals the cap and is permitted.

@@ -1,0 +1,4 @@
+term: "Request budget"
+short: "Limits enforced by the application on the time, compute or spend a request can consume."
+body: "A per-request set of hard limits the host checks before and during execution, such as a wall-clock deadline, maximum model calls, a token cap and a spend limit. Capacity is reserved up front using conservative estimates, then reconciled against the provider's measured usage. A budget is enforced by application code and is never left to the model."
+related: ["latency","exponential-backoff"]

@@ -1,0 +1,4 @@
+term: "Adapter version"
+short: "A recorded adapter identity with the base checkpoint and configuration needed to reproduce deployment."
+body: "Use both compatibility evidence and held-out outcomes before promoting an adapter."
+related: ["lora","evaluation-slice"]

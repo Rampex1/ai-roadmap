@@ -1,0 +1,6 @@
+title: OpenTelemetry generative AI conventions
+url: https://github.com/open-telemetry/semantic-conventions-genai/tree/main/docs/gen-ai
+kind: tool
+free: true
+modules:
+  - c11

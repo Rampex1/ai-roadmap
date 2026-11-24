@@ -1,0 +1,4 @@
+term: "Canary release"
+short: "A limited production rollout used to observe a candidate before giving it more traffic."
+body: "A release strategy that sends a small, controlled share of production traffic to a candidate version while the current version keeps serving the rest. Stop, hold and promote rules are set in advance, and a known rollback target is kept ready. Exposure is increased only when the canary's metrics pass those rules."
+related: ["evaluation-slice","adapter-version"]

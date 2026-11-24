@@ -1,0 +1,20 @@
+id: c11-enforce-read-boundaries-01
+lesson: llm/c11/enforce-read-boundaries
+title: Authorize a read-only tool
+prompt: Implement may_read(tool, requested_collection, trusted_collection, scopes). Allow catalogue_search only with catalogue:read and hours_lookup only with hours:read. Also require the requested collection to equal the trusted collection. Deny unknown tools.
+starter: |
+  def may_read(tool, requested_collection, trusted_collection, scopes):
+      raise NotImplementedError
+solution: |
+  def may_read(tool, requested_collection, trusted_collection, scopes):
+      required = {"catalogue_search": "catalogue:read", "hours_lookup": "hours:read"}
+      scope = required.get(tool)
+      return scope is not None and scope in scopes and requested_collection == trusted_collection
+tests: |
+  assert may_read("catalogue_search","a","a",{"catalogue:read"})
+  assert may_read("hours_lookup","a","a",{"hours:read"})
+  assert not may_read("catalogue_search","b","a",{"catalogue:read"})
+  assert not may_read("hours_lookup","a","a",{"catalogue:read"})
+  assert not may_read("unknown","a","a",{"catalogue:read","hours:read"})
+hints:
+  - Both the tool-specific scope and collection match are required.

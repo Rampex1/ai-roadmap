@@ -1,0 +1,42 @@
+---
+title: Enforce tool permissions outside the model
+module: c11
+order: 3
+estMinutes: 8
+objectives:
+  - Authorize calls using trusted ownership and scopes
+  - Treat retrieved instructions as data
+goDeeper: otel-genai-conventions
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+<Term id="least-privilege" /> matters when an assistant has tools or retrieval. A model response can propose a tool name and query. The application derives the user identity, allowed operations and authorized collection from trusted context and checks them before invoking a tool. A search result, attachment or generated message cannot expand that authority.
+
+Untrusted text can contain instructions directed at the assistant. This is the boundary relevant to indirect prompt injection. Use application-side permission checks and restrict tool effects. Keep sensitive data out of contexts where it is not required. Labels and delimiters can help the model interpret content, while permission enforcement remains outside the prompt.
+
+In this exercise the tool must be a recognized read, the session must contain its scope and the requested collection must match the session's trusted collection. The fixture accepts a typed request. A production adapter first validates shape and types, then logs a redacted decision rather than the sensitive arguments.
+
+## Worked example
+
+The session has a read scope, but the proposed collection is outside the trusted boundary.
+
+```python
+def may_read(tool, requested_collection, trusted_collection, scopes):
+    required = {"catalogue_search": "catalogue:read", "hours_lookup": "hours:read"}
+    scope = required.get(tool)
+    return scope is not None and scope in scopes and requested_collection == trusted_collection
+
+print(may_read("catalogue_search", "east", "north", {"catalogue:read"}))
+```
+
+```text title="Output"
+False
+```
+
+Enforce authorization before data access and give every tool the narrowest effect it needs.
+
+## Try it
+
+<CodeExercise id="c11-enforce-read-boundaries-01" />

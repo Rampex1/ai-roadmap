@@ -1,0 +1,44 @@
+---
+title: Canary rollout and rollback
+module: c11
+order: 4
+estMinutes: 8
+objectives:
+  - Separate small-sample hold decisions from critical stops
+  - Use explicit release gates and a rollback target
+goDeeper: otel-genai-conventions
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="canary-release" /> sends a controlled fraction of eligible traffic to a candidate while the known version stays available. Stage offline evaluation and synthetic checks first. Define expected exposure, sample size, duration and metrics before inspecting the run. Segment results by route and workload to avoid mistaking a traffic mix shift for a regression.
+
+Use a known rollback target with versioned model, prompt, tool registry and retrieval index. Restoring only the model can leave a failing tool or incompatible index active. Test the rollback path before releasing. Keep traces and record what triggered a stop so follow-up does not depend on memory.
+
+This exercise defines an illustrative gate. Any critical incident requests rollback immediately. Otherwise hold while the sample is too small, roll back above the maximum allowed error rate and promote at or below that rate. Real decisions can require uncertainty bounds, a baseline comparison and explicit evidence that monitoring worked.
+
+## Worked example
+
+The critical signal outweighs the small sample.
+
+```python
+def rollout_decision(attempts, failed, critical, min_attempts, max_error):
+    if critical:
+        return "rollback"
+    if attempts < min_attempts or attempts == 0:
+        return "hold"
+    return "rollback" if failed / attempts > max_error else "promote"
+
+print(rollout_decision(20, 0, True, 100, 0.02))
+```
+
+```text title="Output"
+rollback
+```
+
+Predefine the gate, measure outcomes and retain a compatible rollback bundle.
+
+## Try it
+
+<CodeExercise id="c11-canaries-and-rollback-01" />

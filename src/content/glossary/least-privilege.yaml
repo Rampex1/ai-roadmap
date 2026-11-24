@@ -1,0 +1,4 @@
+term: "Least privilege"
+short: "Granting an operation only the access and authority needed to perform its intended task."
+body: "A security principle: every user, process or tool gets only the permissions its task needs, for only as long as it needs them. For LLM tools, the host checks operation scope and object boundaries from trusted session context. Text the model writes, or text it retrieves, cannot widen that authority."
+related: ["metadata-filter","tool-registry"]
