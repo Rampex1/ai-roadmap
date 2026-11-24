@@ -1,0 +1,4 @@
+term: "ONNX input contract"
+short: "Expected tensor names, types, dimensions and layout for an exported ONNX graph."
+body: "The interface of an exported ONNX graph: the input and output names, dtype (usually float32), rank, which axes are dynamic, the opset, and the feature layout. Callers must match it before calling `InferenceSession.run`."
+related: ["prediction-parity-tests","feature-interface"]

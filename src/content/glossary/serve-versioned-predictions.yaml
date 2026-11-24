@@ -1,0 +1,4 @@
+term: "Versioned prediction response"
+short: "A response that identifies the artifact responsible for its score and action."
+body: "An inference response that returns the decision, an optional score and the identifier of the model artifact that produced it. Clients and monitors can then trace each outcome to a specific version."
+related: ["endpoint-integration-fixtures","human-review"]

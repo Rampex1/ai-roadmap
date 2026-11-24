@@ -1,0 +1,43 @@
+---
+title: Validate a typed prediction request
+module: a8
+order: 1
+estMinutes: 8
+objectives:
+  - Define accepted fields and ranges
+  - Keep HTTP transport separate from inference logic
+goDeeper: fastapi-request-body
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="typed-serving-requests" /> is the public interface of an inference service. Give each named feature documented units and bounds. A FastAPI route can accept a Pydantic model that checks incoming shape and types before calling a shared inference function. Specify strictness, because some validators coerce values by default.
+
+Keep field validation and schema errors out of model internals. Bound request sizes, validate artifact compatibility at startup and return the model version with each prediction. The pure Python fixture checks two exact integer fields so it can run without a server.
+
+## Worked example
+
+The named input order differs from the model order.
+
+```python
+def parse_serving_request(payload):
+    if not isinstance(payload,dict) or set(payload) != {"visits","tenure_days"}:
+        raise ValueError("unexpected request shape")
+    visits, tenure = payload["visits"], payload["tenure_days"]
+    if type(visits) is not int or not 0 <= visits <= 1000 or type(tenure) is not int or not 0 <= tenure <= 36500:
+        raise ValueError("invalid feature value")
+    return [visits,tenure]
+
+print(parse_serving_request({"tenure_days":30,"visits":5}))
+```
+
+```text title="Output"
+[5, 30]
+```
+
+Exercise the pure request function and the HTTP adapter separately.
+
+## Try it
+
+<CodeExercise id="a8-typed-serving-requests-01" />

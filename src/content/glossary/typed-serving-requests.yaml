@@ -1,0 +1,4 @@
+term: "Prediction request schema"
+short: "The accepted input shape, types and limits at a model-serving endpoint."
+body: "The documented contract for an inference request: which named fields are allowed, their types, units and ranges, and whether values may be coerced. Requests that break it are rejected with a client error before inference runs."
+related: ["schema","feature-interface"]

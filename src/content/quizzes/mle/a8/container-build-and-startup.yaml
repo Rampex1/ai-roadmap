@@ -1,0 +1,89 @@
+items:
+  - id: a8-container-build-and-startup-01
+    type: mcq
+    prompt: What does readiness add to liveness?
+    explanation: Traffic should wait for the artifact.
+    options:
+      - text: Evidence the model is initialised and compatible
+        why: Traffic should wait for the artifact.
+        correct: true
+      - text: A guarantee that every future prediction is correct
+        why: Readiness is a health check.
+      - text: The deployed dataset labels
+        why: Those may be unavailable.
+  - id: a8-container-build-and-startup-02
+    type: mcq
+    prompt: Why pin the base image and libraries?
+    explanation: Reproducibility needs stable dependencies.
+    options:
+      - text: A mutable tag can resolve to different runtime contents
+        why: Reproducibility needs stable dependencies.
+        correct: true
+      - text: Pinned versions remove the need for checks
+        why: Verification still matters.
+      - text: They guarantee smaller output probabilities
+        why: Build versions do not define scores.
+  - id: a8-container-build-and-startup-03
+    type: mcq
+    prompt: When should model digest verification happen?
+    explanation: The instance must not serve wrong bytes.
+    options:
+      - text: On the first user request after routing
+        why: That can delay or expose failure to users.
+      - text: Only after a rollback
+        why: Verification applies to each load.
+      - text: Before readiness
+        why: The instance must not serve wrong bytes.
+        correct: true
+  - id: a8-container-build-and-startup-04
+    type: mcq
+    prompt: Where should build credentials live?
+    explanation: Do not embed secrets in image layers.
+    options:
+      - text: In an approved secret mechanism
+        why: Do not embed secrets in image layers.
+        correct: true
+      - text: In the published container metadata
+        why: That can expose them.
+      - text: In sample model weights
+        why: Weights are not a secret store.
+  - id: a8-container-build-and-startup-05
+    type: multi
+    prompt: Which affect serving reproducibility?
+    explanation: They describe the execution environment. It identifies the loaded model.
+    options:
+      - text: Pinned runtime and dependencies
+        why: They describe the execution environment.
+        correct: true
+      - text: Immutable model artifact identity
+        why: It identifies the loaded model.
+        correct: true
+      - text: A floating filename only
+        why: Its contents can change.
+  - id: a8-container-build-and-startup-06
+    type: cloze
+    prompt: A probe that decides whether an instance may receive traffic is a ______ probe.
+    accept:
+      - readiness
+    explanation: Readiness gates incoming traffic.
+  - id: a8-container-build-and-startup-07
+    type: order
+    prompt: Order startup for a container that initialises its model runtime from verified artifact bytes.
+    items:
+      - Start the pinned image
+      - Read and verify the intended artifact bytes
+      - Initialise the model runtime from the verified artifact
+      - Expose readiness and accept traffic
+    explanation: Compatibility precedes ready status.
+  - id: a8-container-build-and-startup-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def startup_status(process_alive, loaded_digest, expected_digest, schema_valid):
+          live = bool(process_alive)
+          ready = live and schema_valid and loaded_digest is not None and loaded_digest == expected_digest
+          return {"live":live,"ready":ready}
+
+      print(startup_status(True, "same", "same", False)["ready"])
+    answer: "False"
+    explanation: A matching digest does not override schema failure.

@@ -1,0 +1,6 @@
+title: Docker build best practices
+url: https://docs.docker.com/build/building/best-practices/
+kind: tool
+free: true
+modules:
+  - a8

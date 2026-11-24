@@ -1,0 +1,41 @@
+---
+title: Serve explicit, versioned prediction responses
+module: a8
+order: 4
+estMinutes: 8
+objectives:
+  - Separate request failures from available fallback outcomes
+  - Return bounded outputs with model identity
+goDeeper: fastapi-request-body
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="serve-versioned-predictions" /> gives clients a decision, an optional score and the model identity. A legitimate review outcome can be a successful 200 response. An unready model or unavailable required dependency instead needs a defined service error. An invalid client request should be handled before inference starts.
+
+Return only fields consumers need, and log request IDs and latency independently of raw content. Use A7 fixtures to exercise invalid, review and successful branches. When converting to a different runtime, compare the response contract as well as model scores.
+
+## Worked example
+
+The service is ready and returns a valid review decision.
+
+```python
+def prediction_response(ready, score, threshold, version):
+    if not ready:
+        return 503, {"error":"model_unavailable"}
+    decision = "review" if score is None else "urgent" if score >= threshold else "standard"
+    return 200, {"decision":decision,"score":score,"model_version":version}
+
+print(prediction_response(True, None, 0.7, "v2"))
+```
+
+```text title="Output"
+(200, {'decision': 'review', 'score': None, 'model_version': 'v2'})
+```
+
+Preserve model identity on successful responses, including review.
+
+## Try it
+
+<CodeExercise id="a8-serve-versioned-predictions-01" />

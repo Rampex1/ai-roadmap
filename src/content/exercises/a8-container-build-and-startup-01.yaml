@@ -1,0 +1,20 @@
+id: a8-container-build-and-startup-01
+lesson: mle/a8/container-build-and-startup
+title: Separate readiness from liveness
+prompt: Implement startup_status used by a deployment probe. Ready requires a live process, valid schema, and a nonmissing loaded digest equal to the expected digest.
+starter: |
+  def startup_status(process_alive, loaded_digest, expected_digest, schema_valid):
+      raise NotImplementedError
+solution: |
+  def startup_status(process_alive, loaded_digest, expected_digest, schema_valid):
+      live = bool(process_alive)
+      ready = live and schema_valid and loaded_digest is not None and loaded_digest == expected_digest
+      return {"live":live,"ready":ready}
+tests: |
+  assert startup_status(True,"x","x",True) == {"live":True,"ready":True}
+  assert startup_status(True,"x","y",True) == {"live":True,"ready":False}
+  assert startup_status(True,None,None,True) == {"live":True,"ready":False}
+  assert startup_status(False,"x","x",True) == {"live":False,"ready":False}
+  assert not startup_status(True,"x","x",False)["ready"]
+hints:
+  - Compute readiness only after liveness and verified model identity.

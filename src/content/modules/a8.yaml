@@ -4,5 +4,7 @@ title: "Serving with FastAPI, Docker and ONNX"
 order: 8
 prereqs: ["a7"]
 objectives:
-  - "Explain the core ideas of serving with FastAPI, Docker and ONNX"
-  - "Apply serving with FastAPI, Docker and ONNX to a working ML project"
+  - Implement typed request validation and versioned replies
+  - Build and identify compatible container artifacts
+  - Check ONNX tensor contracts and exported prediction parity
+  - Distinguish readiness, unavailability and intentional review

@@ -1,0 +1,93 @@
+items:
+  - id: a8-typed-serving-requests-01
+    type: mcq
+    prompt: What should invalid client fields trigger?
+    explanation: They violate the serving contract.
+    options:
+      - text: An artifact rebuild
+        why: Invalid input does not change model files.
+      - text: A documented client validation error
+        why: They violate the serving contract.
+        correct: true
+      - text: An arbitrary prediction
+        why: The model should not receive invalid inputs.
+  - id: a8-typed-serving-requests-02
+    type: mcq
+    prompt: Should boolean visits count as integer here?
+    explanation: True is not a visit count in this schema.
+    options:
+      - text: No, the contract uses strict integers
+        why: True is not a visit count in this schema.
+        correct: true
+      - text: Yes, all Python booleans represent measured counts
+        why: Subtype behaviour does not define the API contract.
+      - text: Only if tenure is zero
+        why: Both feature types are independently constrained.
+  - id: a8-typed-serving-requests-03
+    type: mcq
+    prompt: Why return model version?
+    explanation: Version enables comparisons and rollback diagnostics.
+    options:
+      - text: It automatically calibrates scores
+        why: Metadata does not change logits.
+      - text: It makes input bounds unnecessary
+        why: The request still needs validation.
+      - text: Clients and monitors can trace the decision to an artifact
+        why: Version enables comparisons and rollback diagnostics.
+        correct: true
+  - id: a8-typed-serving-requests-04
+    type: mcq
+    prompt: Which part should not depend on HTTP?
+    explanation: A pure function can be reused and tested.
+    options:
+      - text: Feature projection and prediction logic
+        why: A pure function can be reused and tested.
+        correct: true
+      - text: HTTP status encoding
+        why: That belongs to transport.
+      - text: Parsing transport headers
+        why: Dependency on HTTP is intrinsic there.
+  - id: a8-typed-serving-requests-05
+    type: multi
+    prompt: Which belong in a public schema?
+    explanation: Clients can build valid requests. These affect adapter behaviour.
+    options:
+      - text: A secret environment variable value
+        why: Credentials do not belong in the API contract.
+      - text: Named fields and ranges
+        why: Clients can build valid requests.
+        correct: true
+      - text: Shape and type policy
+        why: These affect adapter behaviour.
+        correct: true
+  - id: a8-typed-serving-requests-06
+    type: cloze
+    prompt: A documented input shape and types form a request ______.
+    accept:
+      - schema
+      - contract
+    explanation: The schema states the expected request representation.
+  - id: a8-typed-serving-requests-07
+    type: order
+    prompt: Order one prediction request.
+    items:
+      - Receive request body
+      - Validate shape and types
+      - Transform and predict
+      - Return versioned response
+    explanation: Only valid input reaches inference.
+  - id: a8-typed-serving-requests-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def parse_serving_request(payload):
+          if not isinstance(payload,dict) or set(payload) != {"visits","tenure_days"}:
+              raise ValueError("unexpected request shape")
+          visits, tenure = payload["visits"], payload["tenure_days"]
+          if type(visits) is not int or not 0 <= visits <= 1000 or type(tenure) is not int or not 0 <= tenure <= 36500:
+              raise ValueError("invalid feature value")
+          return [visits,tenure]
+
+      print(parse_serving_request({"visits": 10, "tenure_days": 50})[1])
+    answer: "50"
+    explanation: Index one is tenure_days.

@@ -1,0 +1,132 @@
+---
+title: Check ONNX inputs and output parity
+module: a8
+order: 2
+estMinutes: 8
+objectives:
+  - Explain the ONNX graph and execution provider boundary
+  - Validate shape, version and before-after scores
+goDeeper: onnxruntime-python-api
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Exporting a model to ONNX describes a computation graph and its tensors. ONNX Runtime can load an exported graph and run it with a selected execution provider. Record the opset, runtime version and provider. A valid graph may still fail startup if an operator is unsupported by a deployment configuration.
+
+Check the <Term id="onnx-export-contract" /> before passing tensors to a session. Shapes can designate dynamic batch dimensions while retaining a fixed feature width. Names, layout and dtype must agree with the model. Preprocessing external to the graph needs its own parity check.
+
+Verify aligned golden inputs in both runtimes and check tolerance and downstream decisions. Dynamic and empty batches are governed by the contract. The fixture asserts a nonempty dynamic batch with a fixed width and does not allocate an ONNX session.
+
+## Worked example
+
+The concrete batch has three rows, each with two features.
+
+```python
+def valid_tensor_contract(name, dtype, shape, width):
+    return name == "features" and dtype == "float32" and len(shape) == 2 and shape[0] > 0 and shape[1] == width
+
+print(valid_tensor_contract("features","float32",(3,2),2))
+```
+
+```text title="Output"
+True
+```
+
+Validate export contract and parity before deploying a converted model.
+
+## Try it
+
+<CodeExercise id="a8-onnx-export-contract-01" />
+
+## Optional runnable FastAPI and ONNX example
+
+Use an isolated Python environment with FastAPI, Pydantic 2, NumPy, ONNX, ONNX Runtime, HTTPX
+and Uvicorn installed. Save this as `serving_demo.py` and run `python serving_demo.py`.
+The HTTP client runs in-process. No port is opened. The checked-in weight values define a
+synthetic graph with a dynamic batch dimension and fixed feature width. The app verifies
+the graph digest before creating the runtime session.
+
+```python title="serving_demo.py"
+from hashlib import sha256
+from math import exp
+
+import numpy as np
+import onnx
+import onnxruntime as ort
+from fastapi import FastAPI
+from onnx import TensorProto, helper
+from pydantic import BaseModel, ConfigDict, Field
+
+def model_bytes():
+    features = helper.make_tensor_value_info("features", TensorProto.FLOAT, ["batch", 2])
+    score = helper.make_tensor_value_info("score", TensorProto.FLOAT, ["batch", 1])
+    weights = helper.make_tensor("weight", TensorProto.FLOAT, [2, 1], [2.0, -1.0])
+    graph = helper.make_graph(
+        [helper.make_node("MatMul", ["features", "weight"], ["logit"]),
+         helper.make_node("Sigmoid", ["logit"], ["score"])],
+        "routing-demo", [features], [score], [weights],
+    )
+    model = helper.make_model(graph, ir_version=8, opset_imports=[helper.make_opsetid("", 13)])
+    onnx.checker.check_model(model)
+    return model.SerializeToString()
+
+def create_app(contents, expected_digest):
+    if sha256(contents).hexdigest() != expected_digest:
+        raise ValueError("artifact digest mismatch")
+    options = ort.SessionOptions()
+    options.intra_op_num_threads = 1
+    session = ort.InferenceSession(contents, sess_options=options, providers=["CPUExecutionProvider"])
+    app = FastAPI()
+
+    class PredictionRequest(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        visits: int = Field(strict=True, ge=0, le=1000)
+        tenure_days: int = Field(strict=True, ge=0, le=36500)
+
+    @app.get("/ready")
+    def ready():
+        return {"ready": True, "model_version": expected_digest}
+
+    @app.post("/predict")
+    def predict(body: PredictionRequest):
+        row = np.array([[body.visits / 1000, body.tenure_days / 36500]], dtype=np.float32)
+        score = float(session.run(["score"], {"features": row})[0][0, 0])
+        return {"score": score, "decision": "urgent" if score >= 0.5 else "standard",
+                "model_version": expected_digest}
+
+    return app
+
+artifact = model_bytes()
+version = sha256(artifact).hexdigest()
+app = create_app(artifact, version)
+
+def smoke_test():
+    from fastapi.testclient import TestClient
+
+    with TestClient(app) as client:
+        assert client.get("/ready").json() == {"ready": True, "model_version": version}
+        for visits, tenure_days in [(0, 0), (1000, 36500), (0, 36500), (25, 200)]:
+            response = client.post("/predict", json={"visits": visits, "tenure_days": tenure_days})
+            assert response.status_code == 200
+            result = response.json()
+            reference = 1 / (1 + exp(-(2 * visits / 1000 - tenure_days / 36500)))
+            assert abs(result["score"] - reference) < 1e-6
+            assert result["decision"] == ("urgent" if reference >= 0.5 else "standard")
+            assert result["model_version"] == version
+        assert client.post("/predict", json={"visits": True, "tenure_days": 0}).status_code == 422
+    try:
+        create_app(artifact, "wrong")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("Reject a mismatched artifact before startup")
+
+if __name__ == "__main__":
+    smoke_test()
+    print("FastAPI/ONNX contract and parity checks passed")
+```
+
+For a manual local request, run `uvicorn serving_demo:app --host 127.0.0.1 --port 8000`.
+In a real deployment the expected digest should come from trusted release metadata.
+This self-contained example derives it from the generated fixture to keep the setup offline.

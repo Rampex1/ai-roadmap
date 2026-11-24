@@ -1,0 +1,28 @@
+id: a8-typed-serving-requests-01
+lesson: mle/a8/typed-serving-requests
+title: Validate and order input features
+prompt: Implement parse_serving_request. Require exactly visits and tenure_days with strict integer values in [0,1000] and [0,36500]. Output them in that order. Reject invalid requests with ValueError.
+starter: |
+  def parse_serving_request(payload):
+      raise NotImplementedError
+solution: |
+  def parse_serving_request(payload):
+      if not isinstance(payload,dict) or set(payload) != {"visits","tenure_days"}:
+          raise ValueError("unexpected request shape")
+      visits, tenure = payload["visits"], payload["tenure_days"]
+      if type(visits) is not int or not 0 <= visits <= 1000 or type(tenure) is not int or not 0 <= tenure <= 36500:
+          raise ValueError("invalid feature value")
+      return [visits,tenure]
+tests: |
+  assert parse_serving_request({"tenure_days":30,"visits":5}) == [5,30]
+  assert parse_serving_request({"visits":0,"tenure_days":36500}) == [0,36500]
+  assert parse_serving_request({"visits":1000,"tenure_days":0}) == [1000,0]
+  for bad in ([],{},{"visits":True,"tenure_days":30},{"visits":1001,"tenure_days":1},{"visits":2,"tenure_days":-1},{"visits":2,"tenure_days":1,"extra":0},{"visits":2,"tenure_days":True},{"visits":2.0,"tenure_days":1},{"visits":2,"tenure_days":36501}):
+      try:
+          parse_serving_request(bad)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError("Reject malformed requests")
+hints:
+  - Validate type, range and feature order explicitly.

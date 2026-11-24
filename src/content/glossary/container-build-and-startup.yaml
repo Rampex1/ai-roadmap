@@ -1,0 +1,4 @@
+term: "Inference image"
+short: "A versioned container image that packages the serving runtime and its required dependencies."
+body: "A container image built from a pinned base image and pinned dependencies. It runs the serving process as a non-root user, holds no credentials, and reports ready only after the model artifact has been verified and loaded."
+related: ["model-artifact-contract","experiment-run"]

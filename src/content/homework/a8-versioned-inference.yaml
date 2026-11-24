@@ -1,0 +1,22 @@
+id: a8-versioned-inference
+module: a8
+kind: homework
+title: Build a versioned inference service boundary
+brief: |-
+  Use standard-library fixtures for request, startup, graph-signature and response contracts. The optional lab demonstrates the same boundaries with FastAPI and ONNX Runtime.
+
+  1. Validate named features.
+  2. Decide liveness and readiness.
+  3. Verify an exported shape.
+  4. Return consistent response statuses.
+  5. Wire an injectable inference boundary.
+
+  Identify which checks run once at startup and which run on every request. Explain how to verify score and threshold parity before a runtime change.
+notebook: /homework/a8-versioned-inference.ipynb
+rubric:
+  - Requests preserve positional meaning.
+  - Wrong digests remain unready.
+  - Tensor shapes and types are checked.
+  - The response distinguishes review from unavailability.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

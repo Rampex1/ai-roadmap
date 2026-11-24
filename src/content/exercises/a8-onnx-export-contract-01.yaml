@@ -1,0 +1,21 @@
+id: a8-onnx-export-contract-01
+lesson: mle/a8/onnx-export-contract
+title: Validate the exported input signature
+prompt: Implement valid_tensor_contract. Require input name features, dtype float32 and rank two with positive batch size and exact feature width. Shape values are concrete integers.
+starter: |
+  def valid_tensor_contract(name, dtype, shape, width):
+      raise NotImplementedError
+solution: |
+  def valid_tensor_contract(name, dtype, shape, width):
+      return name == "features" and dtype == "float32" and len(shape) == 2 and shape[0] > 0 and shape[1] == width
+tests: |
+  assert valid_tensor_contract("features","float32",(1,2),2)
+  assert valid_tensor_contract("features","float32",(12,2),2)
+  assert not valid_tensor_contract("features","float64",(12,2),2)
+  assert not valid_tensor_contract("features","float32",(0,2),2)
+  assert not valid_tensor_contract("features","float32",(12,3),2)
+  assert not valid_tensor_contract("other","float32",(2,),2)
+  assert not valid_tensor_contract("features","float32",(2,),2)
+  assert not valid_tensor_contract("features","float32",(2,1,2),2)
+hints:
+  - Check rank before accessing dimension indices.

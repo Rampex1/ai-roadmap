@@ -1,0 +1,87 @@
+items:
+  - id: a8-onnx-export-contract-01
+    type: mcq
+    prompt: What can remain fixed with a dynamic batch dimension?
+    explanation: Only the row count is dynamic.
+    options:
+      - text: Feature width
+        why: Only the row count is dynamic.
+        correct: true
+      - text: Every concrete batch size forever
+        why: The dynamic axis permits varying batch sizes.
+      - text: The batch size alone when width is declared fixed
+        why: This fixture permits the opposite.
+  - id: a8-onnx-export-contract-02
+    type: mcq
+    prompt: Why verify tensor dtype?
+    explanation: Shape alone is insufficient.
+    options:
+      - text: Dtype determines model version automatically
+        why: Versions are metadata.
+      - text: A type can replace feature order
+        why: Positional meaning still matters.
+      - text: Runtimes and exported inputs expect compatible types
+        why: Shape alone is insufficient.
+        correct: true
+  - id: a8-onnx-export-contract-03
+    type: mcq
+    prompt: What should be compared after export?
+    explanation: Export can change numerics or mapping.
+    options:
+      - text: Only the filename suffix
+        why: A suffix cannot prove parity.
+      - text: Only random output sizes without reference
+        why: Aligned references are needed.
+      - text: Scores and decisions on shared golden inputs
+        why: Export can change numerics or mapping.
+        correct: true
+  - id: a8-onnx-export-contract-04
+    type: mcq
+    prompt: Why record the execution provider?
+    explanation: Deployment runtime choices affect behaviour.
+    options:
+      - text: It gives test labels
+        why: The provider is not a data set.
+      - text: It replaces artifact verification
+        why: The right provider can still run wrong bytes.
+      - text: Support and numerical performance can vary by backend
+        why: Deployment runtime choices affect behaviour.
+        correct: true
+  - id: a8-onnx-export-contract-05
+    type: multi
+    prompt: Which belong in an export report?
+    explanation: They affect runtime compatibility. They define the graph interface.
+    options:
+      - text: Only the container port
+        why: Networking does not describe tensors.
+      - text: Opset and execution provider
+        why: They affect runtime compatibility.
+        correct: true
+      - text: Input and output names and dtypes
+        why: They define the graph interface.
+        correct: true
+  - id: a8-onnx-export-contract-06
+    type: cloze
+    prompt: An axis whose size is supplied at runtime is ______.
+    accept:
+      - dynamic
+    explanation: A dynamic dimension can accept more than one concrete size.
+  - id: a8-onnx-export-contract-07
+    type: order
+    prompt: Order an export check that prespecifies the reference samples before producing the export.
+    items:
+      - Freeze reference samples
+      - Export the trained graph
+      - Load it in the target runtime
+      - Compare outputs and decisions
+    explanation: Parity uses the actual exported implementation.
+  - id: a8-onnx-export-contract-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def valid_tensor_contract(name, dtype, shape, width):
+          return name == "features" and dtype == "float32" and len(shape) == 2 and shape[0] > 0 and shape[1] == width
+
+      print(valid_tensor_contract("features", "float32", (2, 3), 2))
+    answer: "False"
+    explanation: The feature width is three and the expected width is two.

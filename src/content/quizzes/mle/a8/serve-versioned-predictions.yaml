@@ -1,0 +1,92 @@
+items:
+  - id: a8-serve-versioned-predictions-01
+    type: mcq
+    prompt: What status represents a ready service returning a review decision here?
+    explanation: Review is a documented outcome.
+    options:
+      - text: "200"
+        why: Review is a documented outcome.
+        correct: true
+      - text: "503"
+        why: That indicates unavailability.
+      - text: "400"
+        why: The request is valid.
+  - id: a8-serve-versioned-predictions-02
+    type: mcq
+    prompt: Why distinguish 503 from review?
+    explanation: They require different follow-up.
+    options:
+      - text: Clients must tell unavailable service from an intentional policy decision
+        why: They require different follow-up.
+        correct: true
+      - text: Both statuses always mean the same thing
+        why: One is an error and one is an outcome.
+      - text: Review requires returning false probability estimates
+        why: Score can be absent.
+  - id: a8-serve-versioned-predictions-03
+    type: mcq
+    prompt: Why avoid echoing raw request fields?
+    explanation: Limit the response contract to needed fields.
+    options:
+      - text: They may include unnecessary or sensitive data
+        why: Limit the response contract to needed fields.
+        correct: true
+      - text: The model cannot handle text anywhere
+        why: Response content is separate.
+      - text: A version requires every input value
+        why: Identity is independent of request content.
+  - id: a8-serve-versioned-predictions-04
+    type: mcq
+    prompt: What should parity cover after export?
+    explanation: Scores alone miss interface changes.
+    options:
+      - text: Client-visible decisions and version contract
+        why: Scores alone miss interface changes.
+        correct: true
+      - text: Only HTTP response bytes count
+        why: Size does not establish correctness.
+      - text: Only service boot duration
+        why: Startup is a different metric.
+  - id: a8-serve-versioned-predictions-05
+    type: multi
+    prompt: Which are reasonable success fields?
+    explanation: It is what the client needs. It identifies the artifact used.
+    options:
+      - text: Decision
+        why: It is what the client needs.
+        correct: true
+      - text: Model version
+        why: It identifies the artifact used.
+        correct: true
+      - text: Every private model input
+        why: That exceeds the output contract.
+  - id: a8-serve-versioned-predictions-06
+    type: cloze
+    prompt: An intentional human fallback is a ______ decision here.
+    accept:
+      - review
+      - manual review
+      - human review
+    explanation: Review is a successful business outcome in the fixture.
+  - id: a8-serve-versioned-predictions-07
+    type: order
+    prompt: Order successful response handling.
+    items:
+      - Validate the request body (FastAPI does this before the handler)
+      - Check readiness and run inference
+      - Apply decision policy
+      - Return outcome with artifact identity
+    explanation: Return only after the relevant checks.
+  - id: a8-serve-versioned-predictions-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def prediction_response(ready, score, threshold, version):
+          if not ready:
+              return 503, {"error":"model_unavailable"}
+          decision = "review" if score is None else "urgent" if score >= threshold else "standard"
+          return 200, {"decision":decision,"score":score,"model_version":version}
+
+      print(prediction_response(False, None, 0.5, "v3")[0])
+    answer: "503"
+    explanation: The unready service returns 503.

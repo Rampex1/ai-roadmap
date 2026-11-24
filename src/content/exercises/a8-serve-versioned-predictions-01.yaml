@@ -1,0 +1,21 @@
+id: a8-serve-versioned-predictions-01
+lesson: mle/a8/serve-versioned-predictions
+title: Produce a versioned response
+prompt: Implement prediction_response for valid scores or None and a valid threshold. Return 503 with model_unavailable if not ready. Otherwise return 200, decision, score and model_version. Use review for missing score and urgent at or above threshold.
+starter: |
+  def prediction_response(ready, score, threshold, version):
+      raise NotImplementedError
+solution: |
+  def prediction_response(ready, score, threshold, version):
+      if not ready:
+          return 503, {"error":"model_unavailable"}
+      decision = "review" if score is None else "urgent" if score >= threshold else "standard"
+      return 200, {"decision":decision,"score":score,"model_version":version}
+tests: |
+  assert prediction_response(False,0.9,0.7,"v1") == (503,{"error":"model_unavailable"})
+  assert prediction_response(True,None,0.7,"v2") == (200,{"decision":"review","score":None,"model_version":"v2"})
+  assert prediction_response(True,0.7,0.7,"v2")[1]["decision"] == "urgent"
+  assert prediction_response(True,0.0,0.7,"v2")[1]["decision"] == "standard"
+  assert prediction_response(True,0.9,0.7,"v3") == (200,{"decision":"urgent","score":0.9,"model_version":"v3"})
+hints:
+  - An unavailable model differs from an available review path.

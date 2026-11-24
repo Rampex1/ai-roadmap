@@ -1,0 +1,66 @@
+---
+title: Build a versioned container and startup checks
+module: a8
+order: 3
+estMinutes: 8
+objectives:
+  - Distinguish build inputs from runtime state
+  - Use readiness to protect model startup
+goDeeper: docker-build-practices
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+The <Term id="container-build-and-startup" /> packages code and dependencies for repeatable startup. Pin dependencies and the base image for reproducible builds. Copy the training artifact or load a separately verified immutable artifact at startup. Avoid mutable model downloads during a request. Keep credentials out of build layers.
+
+Use a small runtime image and run the process with limited privileges. Liveness says the process can respond. Readiness additionally requires a verified artifact and initialised model. Startup probes can allow time for initialisation. A container that starts successfully can still be unready to serve predictions.
+
+The fixture reduces artifact verification to a digest comparison. In a real service compute the digest over the bytes and validate the schema before installing the model in memory.
+
+## Worked example
+
+The process is alive, but loaded an unexpected artifact.
+
+```python
+def startup_status(process_alive, loaded_digest, expected_digest, schema_valid):
+    live = bool(process_alive)
+    ready = live and schema_valid and loaded_digest is not None and loaded_digest == expected_digest
+    return {"live":live,"ready":ready}
+
+print(startup_status(True, "old", "new", True))
+```
+
+```text title="Output"
+{'live': True, 'ready': False}
+```
+
+Use a readiness gate to keep incomplete model startup out of traffic.
+
+## Try it
+
+<CodeExercise id="a8-container-build-and-startup-01" />
+
+## Package the optional serving demo
+
+Put the `serving_demo.py` from the ONNX lesson and a verified, pinned `requirements.txt`
+in a fresh directory. Use a clean virtual environment to install the demo dependencies,
+run its smoke test and capture the tested dependency versions. The example below uses
+a readable base tag for the exercise. Pin the approved image digest for a real release.
+
+```dockerfile
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN python -m pip install --no-cache-dir -r requirements.txt
+COPY serving_demo.py .
+USER 10001:10001
+EXPOSE 8000
+CMD ["uvicorn", "serving_demo:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+Build locally with `docker build -t routing-demo .` and publish the container port only
+to loopback with `docker run --rm -p 127.0.0.1:8000:8000 routing-demo`. Inspect
+`http://127.0.0.1:8000/ready` for the graph identity before testing predictions.
+The image's internal bind address lets the container receive mapped requests. The host
+mapping keeps this exercise local.

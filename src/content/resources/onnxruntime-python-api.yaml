@@ -1,0 +1,6 @@
+title: ONNX Runtime Python API
+url: https://onnxruntime.ai/docs/api/python/api_summary.html
+kind: tool
+free: true
+modules:
+  - a8
