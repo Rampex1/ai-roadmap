@@ -1,0 +1,45 @@
+---
+title: Stop repeated work and escalate
+module: c7
+order: 3
+estMinutes: 8
+objectives:
+  - Detect repeat proposals using a canonical operation key
+  - Distinguish repeat, budget and successful completion states
+goDeeper: anthropic-effective-agents
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="termination-condition" /> is part of the loop's execution contract. A final answer, exhausted budget, repeated work, tool outage or ambiguous request can each motivate a stop. Set a default for unresolved cases, such as asking one clarification question or handing the case to a human.
+
+A repeat detector looks for a proposed operation equivalent to an already executed one. Compare the tool name and normalized arguments rather than a fresh call ID. For a read-only case, repeating the same lookup under unchanged observable state gives little new information. Include meaningful context such as corpus revision where results can change. Equality is domain-specific: normalize case only if the search semantics ignore it.
+
+Set a policy for competing conditions. The fixture checks the read cap before repeat membership, so exhaustion wins when the budget is already spent. A valid finish is evaluated separately from read proposals. Production systems should distinguish repeat prevention within one task from any business requirement to refresh stale data.
+
+Provide a fallback message with the known information and the missing next step. Avoid stating that all lookups succeeded when the agent was stopped by a guard.
+
+## Worked example
+
+Case and extra whitespace do not create a new operation for this catalogue.
+
+```python
+def read_permission(name, query, seen, used, max_reads):
+    if used >= max_reads:
+        return "budget_exhausted"
+    key = (name, " ".join(query.casefold().split()))
+    return "repeated" if key in seen else "allowed"
+
+print(read_permission("catalogue", "  MAPS ", {("catalogue", "maps")}, 1, 4))
+```
+
+```text title="Output"
+repeated
+```
+
+A repeated guard should classify the operation before any additional execution occurs.
+
+## Try it
+
+<CodeExercise id="c7-stop-repeated-work-01" />

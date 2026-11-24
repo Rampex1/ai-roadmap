@@ -1,0 +1,94 @@
+items:
+  - id: c7-stop-repeated-work-01
+    type: mcq
+    prompt: Which value should a repeat detector ignore here?
+    explanation: The operation can be identical despite an ID change.
+    options:
+      - text: The normalized query
+        why: It identifies the lookup content.
+      - text: The selected tool name
+        why: Different tools may have different effects.
+      - text: A newly assigned call ID
+        why: The operation can be identical despite an ID change.
+        correct: true
+  - id: c7-stop-repeated-work-02
+    type: mcq
+    prompt: When might revision belong in the operation key?
+    explanation: A newer observation can make a repeat meaningful.
+    options:
+      - text: When a call ID is already unique
+        why: That is unrelated to freshness.
+      - text: When changed data can change results
+        why: A newer observation can make a repeat meaningful.
+        correct: true
+      - text: Whenever the application hides the tool name
+        why: The name remains relevant.
+  - id: c7-stop-repeated-work-03
+    type: mcq
+    prompt: In the lesson's read_permission, which status wins if a repeat is proposed at the cap?
+    explanation: The fixture checks the cap first.
+    options:
+      - text: allowed
+        why: No read slots remain.
+      - text: repeated
+        why: Repeat is checked only after budget.
+      - text: budget_exhausted
+        why: The fixture checks the cap first.
+        correct: true
+  - id: c7-stop-repeated-work-04
+    type: mcq
+    prompt: What should happen after a guard stops a loop?
+    explanation: The user should know which part stays unresolved.
+    options:
+      - text: Report the stop and use the defined fallback
+        why: The user should know which part stays unresolved.
+        correct: true
+      - text: Hide the stop and assert success
+        why: That overstates completion.
+      - text: Reset the counter and keep going
+        why: That defeats the budget.
+  - id: c7-stop-repeated-work-05
+    type: multi
+    prompt: Which can be legitimate terminal conditions?
+    explanation: The task reached completion. The app must stop further actions.
+    options:
+      - text: A final answer
+        why: The task reached completion.
+        correct: true
+      - text: An exhausted execution budget
+        why: The app must stop further actions.
+        correct: true
+      - text: A more verbose intermediate result
+        why: Message length alone does not imply a stop.
+  - id: c7-stop-repeated-work-06
+    type: cloze
+    prompt: A normalized lookup key helps detect ______ proposals.
+    accept:
+      - repeat
+      - repeated
+      - duplicate
+      - duplicated
+      - redundant
+    explanation: Equivalent requests share a key.
+  - id: c7-stop-repeated-work-07
+    type: order
+    prompt: Order one guard check in the lesson's fixture, where the budget takes priority.
+    items:
+      - Receive a proposed read
+      - Check the remaining budget
+      - Check its normalized key against prior reads
+      - Dispatch only if allowed
+    explanation: The fixture gives the budget check priority.
+  - id: c7-stop-repeated-work-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def read_permission(name, query, seen, used, max_reads):
+          if used >= max_reads:
+              return "budget_exhausted"
+          key = (name, " ".join(query.casefold().split()))
+          return "repeated" if key in seen else "allowed"
+
+      print(read_permission("schedule", "NORTH", {("catalogue", "north")}, 0, 1))
+    answer: allowed
+    explanation: The normalized query matches, but the tool name differs.

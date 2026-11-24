@@ -1,0 +1,22 @@
+id: c7-bounded-library-agent
+module: c7
+kind: homework
+title: Test a bounded library assistant
+brief: |-
+  Replay a library assistant that can read a public catalogue and a library schedule. Its model decisions are scripted so all learners can reproduce the same traces. No network, credentials or external actions are needed.
+
+  1. Route known requests to fixed paths and ambiguous requests to clarification.
+  2. Execute only preapproved read actions and stop on an answer or failure.
+  3. Recognize repeated proposals and exhausted budgets.
+  4. Group trace events and interpret final statuses.
+  5. Add a repeat guard to an agent replay.
+
+  Compare a fixed route and a bounded loop for the same library question. Identify what genuinely requires a second lookup and which stop status should be shown if the second lookup repeats the first proposal.
+notebook: /homework/c7-bounded-library-agent.ipynb
+rubric:
+  - The router distinguishes single-intent and mixed-intent questions.
+  - The loop cannot exceed its read budget or execute an unknown action.
+  - Repeated proposals terminate without an extra read.
+  - The trace identifies the terminal reason for each replay.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

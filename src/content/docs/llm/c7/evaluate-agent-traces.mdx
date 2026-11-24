@@ -1,0 +1,47 @@
+---
+title: Evaluate outcomes and traces
+module: c7
+order: 4
+estMinutes: 8
+objectives:
+  - Summarize statuses and work across replayed runs
+  - Diagnose trajectory errors separately from final answer errors
+goDeeper: anthropic-effective-agents
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+An <Term id="agent-trace" /> tells you how a result was reached. Record the run ID, model and prompt version, authorized tool names, call statuses, step count, elapsed time and terminal reason. Use IDs and redacted diagnostics rather than retaining sensitive prompt or tool data unnecessarily.
+
+Score the final outcome with a task rubric: correct answer, appropriate clarification or justified handoff. Then inspect the path for unnecessary calls, invalid arguments and repeated work. Two trajectories may reach the same answer but differ in time, cost or reliability. A high completion rate can also hide wrong final answers, so judge factual success separately.
+
+Replay deterministic decisions to reproduce control-flow failures. Include fixtures that finish directly, require two reads, use an unknown tool and exhaust the budget. Later, use live model runs on the same question set to measure behavioural variation. A status summary helps find common failure modes and decide which traces to inspect first.
+
+The example counts runs by terminal status and sums completed reads. It excludes per-step content. This minimal summary is useful for comparison when all candidates run the same fixture set.
+
+## Worked example
+
+A repeated run already used two reads before the guard stopped it.
+
+```python
+def summarize_traces(runs):
+    counts = {}
+    reads = 0
+    for status, completed_reads in runs:
+        counts[status] = counts.get(status, 0) + 1
+        reads += completed_reads
+    return counts, reads
+
+print(summarize_traces([("completed", 1), ("repeated", 2), ("completed", 0)]))
+```
+
+```text title="Output"
+({'completed': 2, 'repeated': 1}, 3)
+```
+
+Pair final-answer scoring with execution metrics and enough trace context to reproduce failures.
+
+## Try it
+
+<CodeExercise id="c7-evaluate-agent-traces-01" />

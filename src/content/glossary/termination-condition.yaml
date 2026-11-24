@@ -1,0 +1,4 @@
+term: "Termination condition"
+short: "A rule that stops an iterative process when a defined outcome or limit is reached."
+body: "A repeated guard should classify the operation before any additional execution occurs."
+related: ["agent-loop","exponential-backoff"]

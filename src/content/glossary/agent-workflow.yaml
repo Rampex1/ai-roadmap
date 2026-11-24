@@ -1,0 +1,4 @@
+term: "Agent workflow"
+short: "An application-controlled sequence or graph of steps that can include model calls and tools."
+body: "A workflow is often easier to test. Choose adaptive control only where observations change the next necessary step."
+related: ["tool-call","tool-registry"]

@@ -1,0 +1,21 @@
+id: c7-evaluate-agent-traces-01
+lesson: llm/c7/evaluate-agent-traces
+title: Report outcome counts and executed reads
+prompt: Implement summarize_traces(runs). Given an iterable of (terminal_status, completed_read_count) pairs, return (dictionary of counts by status, total completed reads). Include reads performed before a stopped run.
+starter: |
+  def summarize_traces(runs):
+      raise NotImplementedError
+solution: |
+  def summarize_traces(runs):
+      counts = {}
+      reads = 0
+      for status, completed_reads in runs:
+          counts[status] = counts.get(status, 0) + 1
+          reads += completed_reads
+      return counts, reads
+tests: |
+  assert summarize_traces(iter([("completed",1),("completed",0),("budget_exhausted",3)])) == ({"completed":2,"budget_exhausted":1},4)
+  assert summarize_traces([]) == ({},0)
+  assert summarize_traces([("unavailable_action",0)]) == ({"unavailable_action":1},0)
+hints:
+  - Increment status frequencies and total completed reads in one pass.

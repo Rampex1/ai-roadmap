@@ -1,0 +1,97 @@
+items:
+  - id: c7-bounded-read-loop-01
+    type: mcq
+    prompt: Who owns the action budget?
+    explanation: It enforces limits before dispatch.
+    options:
+      - text: The application loop
+        why: It enforces limits before dispatch.
+        correct: true
+      - text: The model’s prose
+        why: Prose cannot enforce execution limits.
+      - text: The catalogue title
+        why: A result field is data.
+  - id: c7-bounded-read-loop-02
+    type: mcq
+    prompt: What does the loop do when it sees finish?
+    explanation: Finish is a terminal decision.
+    options:
+      - text: Returns a completed result
+        why: Finish is a terminal decision.
+        correct: true
+      - text: Calls a tool named finish
+        why: It is a reserved control action.
+      - text: Always performs another lookup
+        why: The flow is complete.
+  - id: c7-bounded-read-loop-03
+    type: mcq
+    prompt: Can a fixture finish after its final permitted read?
+    explanation: Only further reads hit the read budget.
+    options:
+      - text: Yes, a finish is not a read
+        why: Only further reads hit the read budget.
+        correct: true
+      - text: No, every decision is a read
+        why: A finish performs no external operation.
+      - text: Only by resetting the budget
+        why: No additional read is needed.
+  - id: c7-bounded-read-loop-04
+    type: mcq
+    prompt: Why return observations with the status?
+    explanation: A caller can inspect completed reads.
+    options:
+      - text: They explain what happened before termination
+        why: A caller can inspect completed reads.
+        correct: true
+      - text: They authorize future actions automatically
+        why: Authorization remains in the application.
+      - text: They guarantee the final answer is factual
+        why: The answer still needs an evidence check.
+  - id: c7-bounded-read-loop-05
+    type: multi
+    prompt: Which should bound an actual loop?
+    explanation: It caps external work. It limits time across calls.
+    options:
+      - text: Maximum tool executions
+        why: It caps external work.
+        correct: true
+      - text: A total deadline
+        why: It limits time across calls.
+        correct: true
+      - text: Unlimited retries after failure
+        why: Unbounded retries defeat the limits.
+  - id: c7-bounded-read-loop-06
+    type: cloze
+    prompt: A repeated cycle in which observations inform the next action is an agent ______.
+    accept:
+      - loop
+      - cycle
+    explanation: The cycle stops at an explicit terminal condition.
+  - id: c7-bounded-read-loop-07
+    type: order
+    prompt: Order one successful step.
+    items:
+      - Read the current state
+      - Receive the next proposed action
+      - Validate and perform the permitted read
+      - Append its observation
+    explanation: The following decision sees the new observation.
+  - id: c7-bounded-read-loop-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def run_reads(decisions, tools, max_reads):
+          observations = []
+          for action, value in decisions:
+              if action == "finish":
+                  return "completed", value, observations
+              if action not in tools:
+                  return "unavailable_action", None, observations
+              if len(observations) >= max_reads:
+                  return "budget_exhausted", None, observations
+              observations.append((action, tools[action](value)))
+          return "no_final_answer", None, observations
+
+      print(run_reads([("finish", "done")], {}, 0))
+    answer: ('completed', 'done', [])
+    explanation: Finishing consumes no read budget and appends no observations.

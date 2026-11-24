@@ -1,0 +1,47 @@
+---
+title: Choose a workflow or an agent
+module: c7
+order: 1
+estMinutes: 8
+objectives:
+  - Distinguish a fixed control path from a model-selected path
+  - Choose the simplest design that matches the uncertainty
+goDeeper: anthropic-effective-agents
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+An <Term id="agent-workflow" /> fixes how control moves between steps. A library assistant can classify a request, run the catalogue lookup for titles or the schedule lookup for opening hours, then render the result. Known input categories make the route easy to inspect and test.
+
+An agent instead chooses what to do next based on a goal and observations. For example, it might list branches carrying a title, then consult opening hours for one of those branches. The result of the first lookup determines the next useful query. A fixed workflow can still handle common combinations when their decision logic is known.
+
+Start with a single call or simple workflow and measure where it fails. An adaptive loop incurs extra model calls, latency and failure modes. Use it when the path genuinely needs to depend on observations and the operations fit a bounded task. An ambiguous request may call for clarification rather than another step.
+
+The example dispatches preclassified intent tags. A real classifier is separately evaluated, and unrecognized intent belongs in a safe fallback. The route chooses a path, while the application still enforces which lookups are permitted.
+
+## Worked example
+
+This router treats a mixed-intent request as a clarification case.
+
+```python
+def choose_route(intents):
+    labels = set(intents)
+    if labels == {"title"}:
+        return "catalogue"
+    if labels == {"hours"}:
+        return "schedule"
+    return "clarify"
+
+print(choose_route(["title", "hours"]))
+```
+
+```text title="Output"
+clarify
+```
+
+A workflow is often easier to test. Choose adaptive control only where observations change the next necessary step.
+
+## Try it
+
+<CodeExercise id="c7-workflows-versus-agents-01" />

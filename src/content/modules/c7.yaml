@@ -4,5 +4,7 @@ title: "Agents"
 order: 7
 prereqs: ["c6"]
 objectives:
-  - "Explain the core ideas of agents"
-  - "Build and evaluate an application using agents"
+  - Choose between a single call, a fixed workflow and a bounded agent
+  - Drive an observe-decide-act loop with explicit completion and failure states
+  - Stop repeated actions and enforce step budgets outside the model
+  - Record replayable traces and hand off unresolved cases

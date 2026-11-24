@@ -1,0 +1,23 @@
+id: c7-workflows-versus-agents-01
+lesson: llm/c7/workflows-versus-agents
+title: Route a single-intent request
+prompt: Implement choose_route(intents). Return catalogue when all supplied labels are title, schedule when all supplied labels are hours, and clarify for mixed, empty or unknown labels.
+starter: |
+  def choose_route(intents):
+      raise NotImplementedError
+solution: |
+  def choose_route(intents):
+      labels = set(intents)
+      if labels == {"title"}:
+          return "catalogue"
+      if labels == {"hours"}:
+          return "schedule"
+      return "clarify"
+tests: |
+  assert choose_route(["title","title"]) == "catalogue"
+  assert choose_route(["hours"]) == "schedule"
+  assert choose_route(["hours","title"]) == "clarify"
+  assert choose_route(["location"]) == "clarify"
+  assert choose_route([]) == "clarify"
+hints:
+  - A set of known labels makes repeated intents count once.

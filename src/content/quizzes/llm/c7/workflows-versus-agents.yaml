@@ -1,0 +1,95 @@
+items:
+  - id: c7-workflows-versus-agents-01
+    type: mcq
+    prompt: Which example most needs adaptive control?
+    explanation: The appropriate second query is not known initially.
+    options:
+      - text: The next branch lookup depends on catalogue results
+        why: The appropriate second query is not known initially.
+        correct: true
+      - text: An exact hours query where the branch is supplied
+        why: That already has an explicit route.
+      - text: Formatting a known record as a sentence
+        why: The operation is fixed.
+  - id: c7-workflows-versus-agents-02
+    type: mcq
+    prompt: Why measure a simpler baseline?
+    explanation: Extra steps should improve outcomes enough to justify cost.
+    options:
+      - text: To see whether adaptation adds value
+        why: Extra steps should improve outcomes enough to justify cost.
+        correct: true
+      - text: To prove all agents fail
+        why: Results depend on the task.
+      - text: To skip testing intent classification
+        why: Classification still affects routing.
+  - id: c7-workflows-versus-agents-03
+    type: mcq
+    prompt: What authorizes a lookup?
+    explanation: The router proposes a path but policy grants access.
+    options:
+      - text: Application policy for the current request
+        why: The router proposes a path but policy grants access.
+        correct: true
+      - text: The presence of a recognized tag
+        why: Tags do not carry permissions.
+      - text: Only the number of steps
+        why: A step count does not establish authorization.
+  - id: c7-workflows-versus-agents-04
+    type: mcq
+    prompt: What does the router do for an unknown intent?
+    explanation: The routing contract reserves an explicit fallback.
+    options:
+      - text: Ask for clarification
+        why: The routing contract reserves an explicit fallback.
+        correct: true
+      - text: Try all tools indefinitely
+        why: The route does not run adaptive searches.
+      - text: Select catalogue automatically
+        why: Unknown intent does not imply a title request.
+  - id: c7-workflows-versus-agents-05
+    type: multi
+    prompt: Which favour a fixed route?
+    explanation: The app can encode explicit transition rules. Fixed logic is easier to trace.
+    options:
+      - text: The possible paths are known
+        why: The app can encode explicit transition rules.
+        correct: true
+      - text: Deterministic inspection is important
+        why: Fixed logic is easier to trace.
+        correct: true
+      - text: Every next action requires observing a novel intermediate result
+        why: This may favour a bounded adaptive loop.
+  - id: c7-workflows-versus-agents-06
+    type: cloze
+    prompt: A task with a predetermined control path is a ______.
+    accept:
+      - workflow
+      - fixed workflow
+      - fixed route
+      - pipeline
+    explanation: The application controls the order of steps.
+  - id: c7-workflows-versus-agents-07
+    type: order
+    prompt: Order an incremental design process.
+    items:
+      - Define the task and success criteria
+      - Build and measure a simple baseline
+      - Identify cases needing adaptive steps
+      - Compare a bounded loop against the baseline
+    explanation: Use measured failures to justify additional control complexity.
+  - id: c7-workflows-versus-agents-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def choose_route(intents):
+          labels = set(intents)
+          if labels == {"title"}:
+              return "catalogue"
+          if labels == {"hours"}:
+              return "schedule"
+          return "clarify"
+
+      print(choose_route(["hours", "hours"]))
+    answer: schedule
+    explanation: Duplicate labels collapse to one schedule intent.

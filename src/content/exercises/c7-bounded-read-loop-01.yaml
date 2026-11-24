@@ -1,0 +1,33 @@
+id: c7-bounded-read-loop-01
+lesson: llm/c7/bounded-read-loop
+title: Replay a read-only agent loop
+prompt: Implement run_reads(decisions, tools, max_reads). Consume (action, input) decisions. Return (status, answer_or_None, observations). Finish is reserved. Reject unknown actions and any read after max_reads. If decisions end without finish, return no_final_answer. Append (action, result) for each completed read.
+starter: |
+  def run_reads(decisions, tools, max_reads):
+      raise NotImplementedError
+solution: |
+  def run_reads(decisions, tools, max_reads):
+      observations = []
+      for action, value in decisions:
+          if action == "finish":
+              return "completed", value, observations
+          if action not in tools:
+              return "unavailable_action", None, observations
+          if len(observations) >= max_reads:
+              return "budget_exhausted", None, observations
+          observations.append((action, tools[action](value)))
+      return "no_final_answer", None, observations
+tests: |
+  observed = []
+  def lookup(value):
+      observed.append(value)
+      return value.upper()
+  tools = {"catalogue":lookup}
+  assert run_reads([("catalogue","map"),("finish","found")], tools, 1) == ("completed","found",[("catalogue","MAP")])
+  assert run_reads([("catalogue","a"),("catalogue","b")], tools, 1) == ("budget_exhausted",None,[("catalogue","A")])
+  assert run_reads([("unknown","a")], tools, 3) == ("unavailable_action",None,[])
+  assert run_reads([], tools, 0) == ("no_final_answer",None,[])
+  assert run_reads([("catalogue","x")], tools, 2) == ("no_final_answer",None,[("catalogue","X")]), "Keep completed observations when decisions run out"
+  assert observed == ["map","a","x"], "Rejected reads must never call the tool"
+hints:
+  - Check finish, registry membership and the read limit before executing a read.

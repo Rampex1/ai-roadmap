@@ -1,0 +1,23 @@
+id: c7-stop-repeated-work-01
+lesson: llm/c7/stop-repeated-work
+title: Classify a proposed read before execution
+prompt: Implement read_permission(name, query, seen, used, max_reads). Return budget_exhausted first when no reads remain. Otherwise compare (name, case-folded query with whitespace collapsed) against seen and return repeated or allowed. Do not modify seen.
+starter: |
+  def read_permission(name, query, seen, used, max_reads):
+      raise NotImplementedError
+solution: |
+  def read_permission(name, query, seen, used, max_reads):
+      if used >= max_reads:
+          return "budget_exhausted"
+      key = (name, " ".join(query.casefold().split()))
+      return "repeated" if key in seen else "allowed"
+tests: |
+  seen = {("catalogue","open map")}
+  assert read_permission("catalogue"," Open  MAP ",seen,1,3) == "repeated"
+  assert read_permission("schedule","open map",seen,1,3) == "allowed"
+  assert read_permission("catalogue","open map",seen,3,3) == "budget_exhausted"
+  assert read_permission("catalogue","new",seen,0,1) == "allowed"
+  assert read_permission("catalogue","Straße",{("catalogue","strasse")},0,1) == "repeated", "Use casefold, not lower"
+  assert seen == {("catalogue","open map")}, "Permission checks do not mutate history"
+hints:
+  - Build the normalized key only after checking the budget.

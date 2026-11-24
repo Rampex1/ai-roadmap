@@ -1,0 +1,4 @@
+term: "Agent trace"
+short: "An ordered record of decisions, tool calls, observations and termination within a run."
+body: "Pair final-answer scoring with execution metrics and enough trace context to reproduce failures."
+related: ["agent-loop","termination-condition"]

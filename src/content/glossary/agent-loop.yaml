@@ -1,0 +1,4 @@
+term: "Agent loop"
+short: "A repeated cycle in which observations inform the next proposed action or final response."
+body: "Return a terminal status and observations so callers can distinguish a finished answer from a stopped replay."
+related: ["agent-workflow","tool-call"]

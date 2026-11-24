@@ -1,0 +1,97 @@
+---
+title: Build a bounded observe-decide-act loop
+module: c7
+order: 2
+estMinutes: 8
+objectives:
+  - Separate model decisions from execution
+  - Stop on final answers, unavailable actions and exhausted budgets
+goDeeper: anthropic-effective-agents
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+An <Term id="agent-loop" /> observes state, proposes a next action and reads the result. State can include the original question, prior actions, observations and remaining budget. Keep the state in application code. The model sees an appropriate view of it but does not own the budget counter.
+
+In a library assistant, the two available operations can be read-only catalogue and schedule queries. The app checks a proposed action against its registry, performs the read on bounded data, appends an observation and asks what is next. A final response ends the loop. Unknown actions also have an explicit terminal state in this fixture.
+
+Distinguish action budget from model turn budget. A final decision can be accepted after the last permitted read, but any further read is rejected. Real services also bound model calls, elapsed time, tokens and retry attempts. Keep tool results short so the prompt stays within its context window.
+
+This example consumes scripted model decisions. It deliberately returns structured status rather than inventing an answer when the read budget runs out. The tool functions receive and return ordinary fixture values. A scripted finish stands in for what a real API returns as the final answer: an assistant message without `tool_calls`, as in [C6](/llm/c6/tool-call-contract/).
+
+## Worked example
+
+A final message is allowed after the one permitted read.
+
+```python
+def run_reads(decisions, tools, max_reads):
+    observations = []
+    for action, value in decisions:
+        if action == "finish":
+            return "completed", value, observations
+        if action not in tools:
+            return "unavailable_action", None, observations
+        if len(observations) >= max_reads:
+            return "budget_exhausted", None, observations
+        observations.append((action, tools[action](value)))
+    return "no_final_answer", None, observations
+
+print(run_reads([("schedule","north"), ("finish","Open at 9")],
+                {"schedule":lambda branch: 9}, 1))
+```
+
+```text title="Output"
+('completed', 'Open at 9', [('schedule', 9)])
+```
+
+Return a terminal status and observations so callers can distinguish a finished answer from a stopped replay.
+
+## Try it
+
+<CodeExercise id="c7-bounded-read-loop-01" />
+
+## Let an observation determine the next read
+
+A replay lists decisions in advance. To test the adaptive path itself, replace that list with a
+decision function that receives the current observations. In this library fixture, the catalogue
+returns a branch. The schedule lookup uses that branch instead of a hard-coded location. A different
+catalogue result therefore changes the second query without changing the application loop.
+
+```python
+def decide_library(observations):
+    if not observations:
+        return "catalogue", "maps"
+    if len(observations) == 1:
+        branches = observations[0][1]
+        if not branches:
+            return "finish", "No branch has the title."
+        return "schedule", branches[0]
+    return "finish", "Opening time: " + observations[-1][1]
+
+def run_library(decide, tools, max_reads):
+    observations = []
+    for step in range(max_reads + 1):
+        action, value = decide(tuple(observations))
+        if action == "finish":
+            return "completed", value
+        if action not in tools:
+            return "unavailable_action", None
+        if step == max_reads:
+            return "budget_exhausted", None
+        observations.append((action, tools[action](value)))
+
+opening_hours = {"north": "09:00", "south": "10:00"}
+for branch in ["north", "south"]:
+    tools = {"catalogue": lambda title: (branch,), "schedule": opening_hours.__getitem__}
+    print(run_library(decide_library, tools, 2))
+```
+
+```text title="Output"
+('completed', 'Opening time: 09:00')
+('completed', 'Opening time: 10:00')
+```
+
+The decision function is deterministic here, which makes control flow testable. If a model supplies
+decisions in a real application, validate the action name and arguments and enforce the same limits
+around the tool call. This example assumes a nonnegative read budget and successful tools.

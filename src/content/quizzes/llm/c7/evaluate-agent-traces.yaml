@@ -1,0 +1,95 @@
+items:
+  - id: c7-evaluate-agent-traces-01
+    type: mcq
+    prompt: What does a completed status establish?
+    explanation: The final text still needs task scoring.
+    options:
+      - text: The control flow reached its final state
+        why: The final text still needs task scoring.
+        correct: true
+      - text: The answer is factually correct
+        why: Completion does not verify content.
+      - text: Every required tool ran
+        why: Some answers require no tools.
+  - id: c7-evaluate-agent-traces-02
+    type: mcq
+    prompt: Why replay scripted decisions?
+    explanation: The input sequence is known and repeatable.
+    options:
+      - text: To measure all live model variability
+        why: Scripted decisions remove model variation.
+      - text: To reproduce control-flow bugs deterministically
+        why: The input sequence is known and repeatable.
+        correct: true
+      - text: To guarantee factual accuracy
+        why: A replay tests program behaviour.
+  - id: c7-evaluate-agent-traces-03
+    type: mcq
+    prompt: What should a trace record for a stopped run?
+    explanation: That distinguishes a partial trajectory from success.
+    options:
+      - text: Its terminal reason and completed steps
+        why: That distinguishes a partial trajectory from success.
+        correct: true
+      - text: Raw confidential result fields
+        why: Redact unnecessary sensitive data.
+      - text: Only the first user phrase
+        why: That does not explain termination.
+  - id: c7-evaluate-agent-traces-04
+    type: mcq
+    prompt: Why compare runs on the same fixtures?
+    explanation: Task difficulty stays fixed.
+    options:
+      - text: Differences are easier to attribute to the design
+        why: Task difficulty stays fixed.
+        correct: true
+      - text: It guarantees the design generalizes
+        why: Unseen workloads still need evaluation.
+      - text: It makes latency measurements identical
+        why: Execution choices can change elapsed time.
+  - id: c7-evaluate-agent-traces-05
+    type: multi
+    prompt: Which can reveal a poor trajectory even when the answer is correct?
+    explanation: They can waste work and signal a loop. They raise latency and cost.
+    options:
+      - text: A correct terminal message by itself
+        why: Outcome alone does not describe the path.
+      - text: Unnecessary reads
+        why: They raise latency and cost.
+        correct: true
+      - text: Repeated lookup proposals
+        why: They can waste work and signal a loop.
+        correct: true
+  - id: c7-evaluate-agent-traces-06
+    type: cloze
+    prompt: An ordered record of agent decisions and outcomes is a ______.
+    accept:
+      - trace
+      - agent trace
+      - trajectory
+      - agent trajectory
+    explanation: A trace captures the run trajectory.
+  - id: c7-evaluate-agent-traces-07
+    type: order
+    prompt: Order a repeatable evaluation.
+    items:
+      - Choose fixture questions and expected outcomes
+      - Replay decision sequences
+      - Record terminal statuses and executed work
+      - Inspect failed or costly traces
+    explanation: Debugging relies on recorded trajectory data.
+  - id: c7-evaluate-agent-traces-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def summarize_traces(runs):
+          counts = {}
+          reads = 0
+          for status, completed_reads in runs:
+              counts[status] = counts.get(status, 0) + 1
+              reads += completed_reads
+          return counts, reads
+
+      print(summarize_traces([("completed", 2), ("repeated", 1), ("repeated", 0)]))
+    answer: "({'completed': 1, 'repeated': 2}, 3)"
+    explanation: One run completed, two repeated, and all runs together used three reads.
