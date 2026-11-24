@@ -1,0 +1,4 @@
+term: "Receptive field"
+short: "The structural region of original input that can affect an output activation."
+body: "For a stack of layers, the width grows as r ← r+(k−1)·d·j and then the jump updates as j ← j·s, where j is the product of all earlier strides. This gives the largest possible span. The effective influence within it is usually concentrated near the centre."
+related: ["convolution-shapes","shared-kernel-cross-correlation"]

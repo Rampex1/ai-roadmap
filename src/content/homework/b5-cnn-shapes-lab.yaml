@@ -1,0 +1,22 @@
+id: b5-cnn-shapes-lab
+module: b5
+kind: homework
+title: Audit convolution shapes and residual paths
+brief: |-
+  Build and check a tiny convolution pipeline using plain Python fixtures.
+
+  1. Calculate output sizes.
+  2. Apply a shared unflipped filter.
+  3. Trace receptive spans and jumps.
+  4. Validate residual sums.
+  5. Audit a two-stage convolution and projected skip.
+
+  Explain how padding, stride and residual projections affect spatial resolution. Propose a controlled comparison for a small vision task.
+notebook: /homework/b5-cnn-shapes-lab.ipynb
+rubric:
+  - Shape arithmetic includes dilation and padding.
+  - Correlation uses stored tap order.
+  - The receptive field uses the old jump.
+  - Mismatched skip branches are rejected.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

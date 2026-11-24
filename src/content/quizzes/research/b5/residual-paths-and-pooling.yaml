@@ -1,0 +1,90 @@
+items:
+  - id: b5-residual-paths-and-pooling-01
+    type: mcq
+    prompt: What does the identity skip add in backpropagation?
+    explanation: The gradient includes identity and learned branch terms.
+    options:
+      - text: A direct derivative path
+        why: The gradient includes identity and learned branch terms.
+        correct: true
+      - text: A guarantee that every gradient has magnitude one
+        why: The learned branch still contributes.
+      - text: A separate dataset label
+        why: The skip is an activation path.
+  - id: b5-residual-paths-and-pooling-02
+    type: mcq
+    prompt: What if the main branch changes spatial size?
+    explanation: A projection or downsampling may be needed.
+    options:
+      - text: Match the skip path before addition
+        why: A projection or downsampling may be needed.
+        correct: true
+      - text: Add the old tensor unchanged regardless of size
+        why: Shapes can be incompatible.
+      - text: Delete the main branch output
+        why: That changes the architecture.
+  - id: b5-residual-paths-and-pooling-03
+    type: mcq
+    prompt: What does global average pooling output?
+    explanation: Spatial axes are reduced.
+    options:
+      - text: One spatial mean per channel
+        why: Spatial axes are reduced.
+        correct: true
+      - text: One value for every original location
+        why: Pooling removes the spatial grid.
+      - text: One new label per image pixel
+        why: This is a feature reduction.
+  - id: b5-residual-paths-and-pooling-04
+    type: mcq
+    prompt: Why check exact tensor shapes?
+    explanation: Activation coordinate meaning matters.
+    options:
+      - text: Broadcasting or equal flattened lengths can hide a mismatch
+        why: Activation coordinate meaning matters.
+        correct: true
+      - text: Shape validation improves training labels directly
+        why: It checks wiring instead.
+      - text: Every shape mismatch always raises automatically
+        why: Broadcasting can succeed.
+  - id: b5-residual-paths-and-pooling-05
+    type: multi
+    prompt: Which can help verify a residual block?
+    explanation: Addition expects compatible activations. The shortcut must remain aligned.
+    options:
+      - text: Check projection behaviour on a shape change
+        why: The shortcut must remain aligned.
+        correct: true
+      - text: Validate main and skip shapes
+        why: Addition expects compatible activations.
+        correct: true
+      - text: Silently accept truncated additions
+        why: That can drop activations.
+  - id: b5-residual-paths-and-pooling-06
+    type: cloze
+    prompt: The identity connection that bypasses the learned branch is called a ______ connection.
+    accept:
+      - skip
+      - shortcut
+      - residual
+    explanation: It bypasses the learned transform.
+  - id: b5-residual-paths-and-pooling-07
+    type: order
+    prompt: Order a residual forward pass.
+    items:
+      - Compute both learned and skip branch activations
+      - Verify branch alignment
+      - Add matching activations
+    explanation: Addition only follows alignment.
+  - id: b5-residual-paths-and-pooling-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def residual_add(main,skip):
+          if len(main)!=len(skip):
+              raise ValueError("incompatible branches")
+          return [a+b for a,b in zip(main,skip)]
+
+      print(residual_add([1, 2], [-1, 5]))
+    answer: "[0, 7]"
+    explanation: The matching sums are zero and seven.

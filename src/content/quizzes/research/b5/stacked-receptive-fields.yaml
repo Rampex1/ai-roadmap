@@ -1,0 +1,96 @@
+items:
+  - id: b5-stacked-receptive-fields-01
+    type: mcq
+    prompt: Why use the old jump for width growth?
+    explanation: Its taps are spaced at the existing jump.
+    options:
+      - text: It always equals the current layer stride
+        why: Previous layers can already downsample.
+      - text: The next kernel samples the incoming feature grid
+        why: Its taps are spaced at the existing jump.
+        correct: true
+      - text: The new jump is always one
+        why: Stride can increase it.
+  - id: b5-stacked-receptive-fields-02
+    type: mcq
+    prompt: What can dilation create within the span?
+    explanation: Width measures the outer extent.
+    options:
+      - text: Holes in structural support
+        why: Width measures the outer extent.
+        correct: true
+      - text: An automatic increase in output channels
+        why: Channel count is separate.
+      - text: More trainable weights for fixed kernel width
+        why: Dilation changes spacing.
+  - id: b5-stacked-receptive-fields-03
+    type: mcq
+    prompt: What is the jump after strides two and three?
+    explanation: The strides multiply.
+    options:
+      - text: Six
+        why: The strides multiply.
+        correct: true
+      - text: One
+        why: Both stages downsample.
+      - text: Five
+        why: The recurrence multiplies rather than adds.
+  - id: b5-stacked-receptive-fields-04
+    type: mcq
+    prompt: Does maximum span imply uniform influence?
+    explanation: The structural field is an upper bound.
+    options:
+      - text: No, weights and activations determine influence
+        why: The structural field is an upper bound.
+        correct: true
+      - text: Yes, every position contributes equally
+        why: Learned weights need not be equal.
+      - text: Only if stride is one
+        why: Unit stride is insufficient.
+  - id: b5-stacked-receptive-fields-05
+    type: multi
+    prompt: Which describe an output unit geometrically?
+    explanation: It shows possible original input range. It gives output sampling spacing.
+    options:
+      - text: Receptive span
+        why: It shows possible original input range.
+        correct: true
+      - text: Jump between output locations
+        why: It gives output sampling spacing.
+        correct: true
+      - text: Only the number of training labels
+        why: That does not locate spatial support.
+  - id: b5-stacked-receptive-fields-06
+    type: cloze
+    prompt: Spacing between neighboring output centers in original input units is the ______.
+    accept:
+      - jump
+      - effective stride
+      - cumulative stride
+      - total stride
+    explanation: The jump multiplies across strides.
+  - id: b5-stacked-receptive-fields-07
+    type: order
+    prompt: Order an update through one layer.
+    items:
+      - Read the incoming span and jump
+      - Calculate kernel extent at the incoming spacing
+      - Expand the receptive span and multiply the jump by stride
+      - Pass the updated span and jump to the next layer
+    explanation: Width growth uses the previous jump.
+  - id: b5-stacked-receptive-fields-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def receptive_span(layers):
+          width,jump = 1,1
+          for kernel,stride,dilation in layers:
+              if min(kernel,stride,dilation)<1:
+                  raise ValueError("invalid layer")
+              width += (kernel-1)*dilation*jump
+              jump *= stride
+          return width,jump
+
+      print(receptive_span([(1, 2, 1), (3, 1, 1)]))
+    answer: (5, 2)
+    explanation: The first layer only changes jump; the second adds four to the width.

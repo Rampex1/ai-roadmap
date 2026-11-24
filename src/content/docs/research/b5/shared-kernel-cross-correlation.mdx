@@ -1,0 +1,43 @@
+---
+title: Apply a shared convolution kernel
+module: b5
+order: 2
+estMinutes: 8
+objectives:
+  - Compute deep-learning cross-correlation without flipping taps
+  - Explain local connectivity and parameter sharing
+goDeeper: d2l-padding-strides
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Most deep-learning layers called convolutions use <Term id="shared-kernel-cross-correlation" />, a sliding dot product with no reversal of the filter. A mathematical convolution flips its kernel. A learned filter can absorb that flip, but the convention matters when reproducing a hand calculation or importing fixed weights.
+
+With signal [1,2,4] and kernel [2,−1], the first output is 2·1−2 = 0 and the second is 2·2−4 = 0. Every position shares the same two weights. A layer with multiple input channels sums filter responses over those channels. Each output channel may also have its own bias.
+
+Weight sharing reduces parameter count compared with learning a different filter at each position. Translation equivariance is affected by boundary padding, stride and the sampling grid; it is not a universal promise of translation invariance. This fixture performs one-channel, valid cross-correlation.
+
+## Worked example
+
+The asymmetric filter stays in its stored order.
+
+```python
+def correlate(signal,kernel,stride=1):
+    if not kernel or len(kernel)>len(signal) or stride<1:
+        raise ValueError("invalid correlation settings")
+    return [sum(tap*signal[start+i] for i,tap in enumerate(kernel))
+            for start in range(0,len(signal)-len(kernel)+1,stride)]
+
+print(correlate([1,2,4], [2,-1]))
+```
+
+```text title="Output"
+[0, 0]
+```
+
+Document filter orientation when checking a framework against a reference implementation.
+
+## Try it
+
+<CodeExercise id="b5-shared-kernel-cross-correlation-01" />

@@ -1,0 +1,24 @@
+id: b5-residual-paths-and-pooling-01
+lesson: research/b5/residual-paths-and-pooling
+title: Add aligned residual branches
+prompt: Implement residual_add for flat vectors of equal length. Return pairwise sums and reject mismatched lengths rather than broadcasting or truncating.
+starter: |
+  def residual_add(main,skip):
+      raise NotImplementedError
+solution: |
+  def residual_add(main,skip):
+      if len(main)!=len(skip):
+          raise ValueError("incompatible branches")
+      return [a+b for a,b in zip(main,skip)]
+tests: |
+  assert residual_add([2,-1],[3,4])==[5,3]
+  assert residual_add([],[])==[]
+  assert residual_add([1],[0])==[1]
+  try:
+      residual_add([1,2],[1])
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject mismatched shapes")
+hints:
+  - Check sizes before zip can discard values.

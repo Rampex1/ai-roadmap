@@ -1,0 +1,45 @@
+---
+title: Compute convolution output dimensions
+module: b5
+order: 1
+estMinutes: 8
+objectives:
+  - Include padding, dilation and stride in shape calculations
+  - Track spatial axes independently of channels
+goDeeper: d2l-padding-strides
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A convolution-like layer slides a filter over local input neighborhoods. For one axis of input size n, symmetric padding p, stride s, kernel width k and dilation d, the <Term id="convolution-shapes" /> is 1+d(k−1). Count the starting positions whose entire kernel fits: floor((n+2p−effective)/s)+1. Compute height and width separately in 2D.
+
+For n=8, k=3, d=2, p=1 and s=2, the effective kernel is 5 and the padded input is 10. Origins 0, 2 and 4 fit. The output size is 3, even though the original kernel has only three weights. Dilation spaces those weights without adding taps.
+
+Output channel count depends on the number of filters, not the spatial formula. Verify both axes and channel layout before flattening or connecting a residual branch. This fixture assumes symmetric explicit padding and rejects inputs with no valid window.
+
+## Worked example
+
+Dilation gives an effective width of five.
+
+```python
+def convolution_size(n,k,stride=1,padding=0,dilation=1):
+    if min(n,k,stride,dilation)<1 or padding<0:
+        raise ValueError("invalid convolution settings")
+    remaining = n+2*padding-(1+dilation*(k-1))
+    if remaining<0:
+        raise ValueError("kernel does not fit")
+    return remaining//stride+1
+
+print(convolution_size(8,3,2,1,2))
+```
+
+```text title="Output"
+3
+```
+
+Check spatial dimensions and channels at architecture boundaries.
+
+## Try it
+
+<CodeExercise id="b5-convolution-shapes-01" />

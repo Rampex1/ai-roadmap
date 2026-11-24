@@ -1,0 +1,92 @@
+items:
+  - id: b5-convolution-shapes-01
+    type: mcq
+    prompt: How does dilation change the number of kernel weights?
+    explanation: It changes spacing between taps.
+    options:
+      - text: It does not change that number
+        why: It changes spacing between taps.
+        correct: true
+      - text: It removes weights at the edges
+        why: Existing taps move farther apart.
+      - text: It always doubles the weights
+        why: Spacing does not add taps.
+  - id: b5-convolution-shapes-02
+    type: mcq
+    prompt: In the lesson’s symmetric padding formula, what does p encode?
+    explanation: The input gains 2p positions.
+    options:
+      - text: p positions on each side
+        why: The input gains 2p positions.
+        correct: true
+      - text: p positions total
+        why: The formula assumes symmetric padding.
+      - text: An additional output channel
+        why: Padding operates on spatial axes.
+  - id: b5-convolution-shapes-03
+    type: mcq
+    prompt: Which setting controls spacing between consecutive origins?
+    explanation: The origin advances by s.
+    options:
+      - text: Number of output channels
+        why: Channels do not set origin spacing.
+      - text: Dilation
+        why: That spaces taps within one filter.
+      - text: Stride
+        why: The origin advances by s.
+        correct: true
+  - id: b5-convolution-shapes-04
+    type: mcq
+    prompt: Why use floor division?
+    explanation: A final partial window is excluded.
+    options:
+      - text: To preserve output equality with input always
+        why: Output size can change.
+      - text: Only complete kernel windows fit
+        why: A final partial window is excluded.
+        correct: true
+      - text: To choose the number of learned weights
+        why: Kernel width sets that count.
+  - id: b5-convolution-shapes-05
+    type: multi
+    prompt: Which enter the per-axis shape formula?
+    explanation: They define available space. They determine valid origins.
+    options:
+      - text: Input width and padding
+        why: They define available space.
+        correct: true
+      - text: Effective kernel width and stride
+        why: They determine valid origins.
+        correct: true
+      - text: The names of the labels
+        why: Label names do not affect shape.
+  - id: b5-convolution-shapes-06
+    type: cloze
+    prompt: The distance between a kernel’s consecutive origins is its ______.
+    accept:
+      - stride
+    explanation: Stride sets the output sampling grid.
+  - id: b5-convolution-shapes-07
+    type: order
+    prompt: Order shape calculation.
+    items:
+      - Compute the effective kernel span and padded input width
+      - Subtract the span from the padded width to find the maximum origin
+      - Divide the maximum origin by the stride and round down
+      - Add one to include the origin at zero
+    explanation: Only full padded windows count.
+  - id: b5-convolution-shapes-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def convolution_size(n,k,stride=1,padding=0,dilation=1):
+          if min(n,k,stride,dilation)<1 or padding<0:
+              raise ValueError("invalid convolution settings")
+          remaining = n+2*padding-(1+dilation*(k-1))
+          if remaining<0:
+              raise ValueError("kernel does not fit")
+          return remaining//stride+1
+
+      print(convolution_size(5, 3, 2, 1))
+    answer: "3"
+    explanation: The padded size is seven; origins zero, two and four fit.

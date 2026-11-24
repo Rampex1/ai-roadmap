@@ -1,0 +1,42 @@
+---
+title: Combine residual branches without invalid broadcasting
+module: b5
+order: 4
+estMinutes: 8
+objectives:
+  - Check skip and main-path shapes
+  - Explain residual addition and later global average pooling
+goDeeper: resnet-original-paper
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="residual-connection" /> computes a sum such as F(x)+x. The identity gives the backward pass a direct route, in addition to the derivative through F. This can help train deep stacks. If the learned branch changes channel count or spatial resolution, the skip path needs a corresponding projection or downsampling before addition.
+
+Require shape equality for branch addition unless the architecture explicitly specifies broadcasting. NumPy can add a single channel to several channels without error, which may hide an unintended implementation. The exercise checks one flattened activation pair. A tensor implementation should check all dimensions, not just total element count.
+
+Near the classifier, global average pooling can replace a large flatten-and-dense input with one mean per feature channel. It removes spatial position detail from that representation. Compare this choice on tasks where precise location matters rather than assuming pooling is always appropriate.
+
+## Worked example
+
+The skip branch contributes to each matching activation.
+
+```python
+def residual_add(main,skip):
+    if len(main)!=len(skip):
+        raise ValueError("incompatible branches")
+    return [a+b for a,b in zip(main,skip)]
+
+print(residual_add([2,-1],[3,4]))
+```
+
+```text title="Output"
+[5, 3]
+```
+
+Verify branch dimensions and distinguish dense classification heads from location-sensitive heads.
+
+## Try it
+
+<CodeExercise id="b5-residual-paths-and-pooling-01" />

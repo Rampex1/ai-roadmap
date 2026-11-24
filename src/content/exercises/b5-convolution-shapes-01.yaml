@@ -1,0 +1,29 @@
+id: b5-convolution-shapes-01
+lesson: research/b5/convolution-shapes
+title: Implement convolution shapes
+prompt: Implement convolution_size for positive integer size, kernel, stride and dilation, with nonnegative integer symmetric padding. Reject invalid settings or no valid window.
+starter: |
+  def convolution_size(n,k,stride=1,padding=0,dilation=1):
+      raise NotImplementedError
+solution: |
+  def convolution_size(n,k,stride=1,padding=0,dilation=1):
+      if min(n,k,stride,dilation)<1 or padding<0:
+          raise ValueError("invalid convolution settings")
+      remaining = n+2*padding-(1+dilation*(k-1))
+      if remaining<0:
+          raise ValueError("kernel does not fit")
+      return remaining//stride+1
+tests: |
+  assert convolution_size(8,3,2,1,2)==3
+  assert convolution_size(5,3)==3
+  assert convolution_size(7,3,1,1)==7
+  assert convolution_size(1,1)==1
+  for args in [(1,3),(5,2,0),(5,2,1,-1),(5,3,1,0,0)]:
+      try:
+          convolution_size(*args)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError("reject impossible settings")
+hints:
+  - Count from the first valid origin, so add one after floor division.

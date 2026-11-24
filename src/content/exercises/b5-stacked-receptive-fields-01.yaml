@@ -1,0 +1,30 @@
+id: b5-stacked-receptive-fields-01
+lesson: research/b5/stacked-receptive-fields
+title: Implement stacked receptive fields
+prompt: Implement receptive_span(layers) for (kernel, stride, dilation) positive integer triples. Return (width, jump) in original input units. Reject nonpositive inputs.
+starter: |
+  def receptive_span(layers):
+      raise NotImplementedError
+solution: |
+  def receptive_span(layers):
+      width,jump = 1,1
+      for kernel,stride,dilation in layers:
+          if min(kernel,stride,dilation)<1:
+              raise ValueError("invalid layer")
+          width += (kernel-1)*dilation*jump
+          jump *= stride
+      return width,jump
+tests: |
+  assert receptive_span([(3,2,1),(3,1,1)])==(7,2)
+  assert receptive_span([(3,1,2)])==(5,1)
+  assert receptive_span([(1,4,1),(3,1,1)])==(9,4)
+  assert receptive_span([])==(1,1)
+  for bad in ([(0,1,1)],[(3,0,1)],[(3,1,0)]):
+      try:
+          receptive_span(bad)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError("reject nonpositive kernel, stride or dilation")
+hints:
+  - Use the incoming jump to compute width growth.

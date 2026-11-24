@@ -4,5 +4,7 @@ title: "CNN architectures"
 order: 6
 prereqs: ["b4"]
 objectives:
-  - "Explain the core ideas of cNN architectures"
-  - "Derive or implement the key methods of cNN architectures"
+  - Compute CNN output shapes and implement shared filters
+  - Track receptive fields through stacked CNN layers
+  - Handle residual connections and understand global pooling
+  - Justify architectural choices using shape and locality

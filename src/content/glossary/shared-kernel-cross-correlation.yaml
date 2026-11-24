@@ -1,0 +1,4 @@
+term: "Cross-correlation"
+short: "A sliding dot product that uses the kernel in its stored order."
+body: "Output i is the sum over j of w[j]·x[i+j], with the kernel kept in its stored order. True convolution reverses the kernel, using w[j]·x[i−j]. Most deep-learning 'convolution' layers compute cross-correlation."
+related: ["convolution-shapes","gradient"]

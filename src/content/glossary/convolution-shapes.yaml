@@ -1,0 +1,4 @@
+term: "Effective kernel width"
+short: "The span covered by a dilated kernel, equal to 1 + dilation × (kernel width − 1)."
+body: "A kernel of k taps with dilation d spans 1+d(k−1) input positions, but it still has only k weights per channel. Use this span, not k, in the output-size formula floor((n+2p−span)/s)+1."
+related: ["shared-kernel-cross-correlation","stacked-receptive-fields"]

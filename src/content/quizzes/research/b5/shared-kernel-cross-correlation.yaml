@@ -1,0 +1,90 @@
+items:
+  - id: b5-shared-kernel-cross-correlation-01
+    type: mcq
+    prompt: Does the cross-correlation used in deep-learning convolution layers flip the kernel?
+    explanation: That defines cross-correlation.
+    options:
+      - text: No, it uses stored tap order
+        why: That defines cross-correlation.
+        correct: true
+      - text: Only for stride one
+        why: Stride does not determine tap orientation.
+      - text: Yes, by reversing the output values
+        why: Output reversal does not implement kernel flipping.
+  - id: b5-shared-kernel-cross-correlation-02
+    type: mcq
+    prompt: What is shared across positions?
+    explanation: Every origin uses the same coefficients.
+    options:
+      - text: The filter weights
+        why: Every origin uses the same coefficients.
+        correct: true
+      - text: All observed windows
+        why: Different origins can see different inputs.
+      - text: The output scalar only
+        why: Each origin produces its own scalar.
+  - id: b5-shared-kernel-cross-correlation-03
+    type: mcq
+    prompt: Where do additional input channels contribute?
+    explanation: One filter combines local input channels.
+    options:
+      - text: They replace the stride
+        why: Channel aggregation and origins are separate.
+      - text: Their weighted responses are summed
+        why: One filter combines local input channels.
+        correct: true
+      - text: They are ignored universally
+        why: Filters can span several channels.
+  - id: b5-shared-kernel-cross-correlation-04
+    type: mcq
+    prompt: Why use an asymmetric test kernel?
+    explanation: Symmetric taps would hide reversal.
+    options:
+      - text: Asymmetry guarantees every output is zero
+        why: It depends on the signal.
+      - text: It can detect an unintended flip
+        why: Symmetric taps would hide reversal.
+        correct: true
+      - text: It prevents sharing
+        why: Weights can still be reused.
+  - id: b5-shared-kernel-cross-correlation-05
+    type: multi
+    prompt: Which properties describe the lesson's correlate fixture?
+    explanation: Only fully valid origins are evaluated. The kernel is not reversed.
+    options:
+      - text: No padding
+        why: Only fully valid origins are evaluated.
+        correct: true
+      - text: Stored tap order
+        why: The kernel is not reversed.
+        correct: true
+      - text: Independent weights at each position
+        why: Each origin instead shares weights.
+  - id: b5-shared-kernel-cross-correlation-06
+    type: cloze
+    prompt: An unflipped sliding dot product is cross-______.
+    accept:
+      - correlation
+    explanation: The stored kernel order is retained.
+  - id: b5-shared-kernel-cross-correlation-07
+    type: order
+    prompt: Order one output calculation.
+    items:
+      - Choose a valid origin
+      - Pair kernel taps with signal entries
+      - Multiply each pair
+      - Sum local products
+    explanation: The dot product uses only the chosen window.
+  - id: b5-shared-kernel-cross-correlation-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def correlate(signal,kernel,stride=1):
+          if not kernel or len(kernel)>len(signal) or stride<1:
+              raise ValueError("invalid correlation settings")
+          return [sum(tap*signal[start+i] for i,tap in enumerate(kernel))
+                  for start in range(0,len(signal)-len(kernel)+1,stride)]
+
+      print(correlate([1, 2, 3], [1, 0]))
+    answer: "[1, 2]"
+    explanation: It reads the first element of each valid window.

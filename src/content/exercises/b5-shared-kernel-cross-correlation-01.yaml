@@ -1,0 +1,32 @@
+id: b5-shared-kernel-cross-correlation-01
+lesson: research/b5/shared-kernel-cross-correlation
+title: Implement shared kernel cross correlation
+prompt: Implement correlate(signal,kernel,stride=1). Slide the unflipped kernel with no padding or dilation. Reject a missing or oversized kernel or a nonpositive stride.
+starter: |
+  def correlate(signal,kernel,stride=1):
+      raise NotImplementedError
+solution: |
+  def correlate(signal,kernel,stride=1):
+      if not kernel or len(kernel)>len(signal) or stride<1:
+          raise ValueError("invalid correlation settings")
+      return [sum(tap*signal[start+i] for i,tap in enumerate(kernel))
+              for start in range(0,len(signal)-len(kernel)+1,stride)]
+tests: |
+  assert correlate([1,2,4],[2,-1])==[0,0]
+  assert correlate([2,4,8,16],[1,-1],2)==[-2,-8]
+  assert correlate([1,2],[3])==[3,6]
+  try:
+      correlate([1],[])
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject empty kernel")
+  for a in [([1],[1,2]),([1,2],[1],-1)]:
+      try:
+          correlate(*a)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError("reject invalid settings")
+hints:
+  - Multiply each tap with the signal value at origin plus tap index.
