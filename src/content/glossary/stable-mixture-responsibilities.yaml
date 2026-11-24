@@ -1,0 +1,4 @@
+term: "Responsibility"
+short: "The posterior probability that a latent mixture component generated an observation."
+body: "r_ik = π_k p(x_i|k) / Σ_j π_j p(x_i|j), the posterior probability that component k generated x_i. Each observation's responsibilities sum to one."
+related: ["log-probability","bayes-theorem"]

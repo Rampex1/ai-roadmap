@@ -1,0 +1,42 @@
+---
+title: Compare MLE, MAP and posterior means
+module: b2
+order: 2
+estMinutes: 8
+objectives:
+  - Derive the interior Beta posterior mode
+  - Recognise where a point estimate loses information
+goDeeper: cs229-bayesian-notes
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+[Maximum likelihood](/foundations/f5/maximum-likelihood/) maximises the likelihood alone. A <Term id="point-and-distribution-estimates" /> maximises the posterior density, equivalently likelihood times prior density up to a fixed normaliser. For Bernoulli observations with a positive total count the MLE is the observed fraction of successes, which can be zero or one.
+
+Write the posterior as $\text{Beta}(a, b)$. The log-density derivative is $(a-1)/\theta - (b-1)/(1-\theta)$; if $a, b > 1$, setting it to zero gives the interior mode $(a-1)/(a+b-2)$. When a shape is at or below one, that formula cannot be used blindly. For example, a $\text{Beta}(1,1)$ posterior is flat and has no unique mode.
+
+The posterior mean is a different summary and the predictive distribution integrates uncertainty. Credible intervals describe posterior mass under assumptions about the model and prior. Equal means alone do not imply equal concentration. This fixture deliberately rejects boundary cases rather than claiming to implement every possible Beta mode.
+
+## Worked example
+
+The skewed Beta creates different point summaries.
+
+```python
+def beta_interior_summaries(a,b):
+    if not (a > 1 and b > 1):
+        raise ValueError("require an interior Beta mode")
+    return (a-1)/(a+b-2), a/(a+b)
+
+print([round(value,3) for value in beta_interior_summaries(2,5)])
+```
+
+```text title="Output"
+[0.2, 0.286]
+```
+
+Choose the posterior summary that matches the prediction or decision being made.
+
+## Try it
+
+<CodeExercise id="b2-point-and-distribution-estimates-01" />

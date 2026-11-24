@@ -1,0 +1,46 @@
+---
+title: Normalise mixture responsibilities safely
+module: b2
+order: 3
+estMinutes: 8
+objectives:
+  - Compute component posteriors from log-joint scores
+  - Explain why shifting log scores avoids underflow
+goDeeper: cs229-em-notes
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+In a mixture, the joint score for component $k$ and observation $x$ is the weight $\pi_k$ times the component likelihood $p(x \mid k)$. A <Term id="stable-mixture-responsibilities" /> is that score divided by the sum over components. It is a soft assignment, so a point can contribute to more than one component update.
+
+Products of small probabilities can underflow. Compute the log weight plus the log likelihood, $\log \pi_k + \log p(x \mid k)$. Subtract the largest finite log-joint score before exponentiating. The common factor cancels during normalisation, and the largest exponent becomes one. This is the same log-space normalisation as `logsumexp` in [reading the maths in papers](/research/b0/reading-math-in-papers/). A log score of negative infinity means a component has zero mass for that observation.
+
+An observation with all joint probabilities zero (every log-joint score is $-\infty$) has undefined responsibilities. Inspect model support or inputs rather than dividing by zero. This exercise works directly with one vector of log-joint scores.
+
+## Worked example
+
+Exponentiating the raw scores would lose both weights.
+
+```python
+def responsibilities(log_joint):
+    from math import exp
+    if not log_joint or max(log_joint) == float("-inf"):
+        raise ValueError("observation has no supported component")
+    high = max(log_joint)
+    weights = [exp(value-high) for value in log_joint]
+    total = sum(weights)
+    return [weight/total for weight in weights]
+
+print(responsibilities([-1000,-1000]))
+```
+
+```text title="Output"
+[0.5, 0.5]
+```
+
+Keep mixture weight and component likelihood together in each posterior score.
+
+## Try it
+
+<CodeExercise id="b2-stable-mixture-responsibilities-01" />

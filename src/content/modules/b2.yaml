@@ -4,5 +4,7 @@ title: "Probabilistic ML"
 order: 3
 prereqs: ["b1"]
 objectives:
-  - "Explain the core ideas of probabilistic ML"
-  - "Derive or implement the key methods of probabilistic ML"
+  - Derive a Beta–Bernoulli posterior and predictive probability
+  - Distinguish likelihood, posterior mode and posterior mean
+  - Compute stable latent-state responsibilities
+  - Derive and implement weighted Gaussian mixture updates

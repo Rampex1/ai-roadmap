@@ -1,0 +1,89 @@
+items:
+  - id: b2-point-and-distribution-estimates-01
+    type: mcq
+    prompt: What does MAP maximise?
+    explanation: It incorporates likelihood and prior.
+    options:
+      - text: Likelihood alone
+        why: That defines MLE.
+      - text: Posterior density
+        why: It incorporates likelihood and prior.
+        correct: true
+      - text: Posterior mean
+        why: The mean is not a mode calculation.
+  - id: b2-point-and-distribution-estimates-02
+    type: mcq
+    prompt: What happens with Beta(1,1) density?
+    explanation: All valid θ have the same density.
+    options:
+      - text: It has a unique mode at one half
+        why: The mean is one half without a unique mode.
+      - text: It is flat
+        why: All valid θ have the same density.
+        correct: true
+      - text: It concentrates at zero
+        why: Uniform density spreads mass across the interval.
+  - id: b2-point-and-distribution-estimates-03
+    type: mcq
+    prompt: When does the interior formula in this lesson apply?
+    explanation: Then the log-density maximum is interior.
+    options:
+      - text: Both shape parameters exceed one
+        why: Then the log-density maximum is interior.
+        correct: true
+      - text: Only after every trial succeeds
+        why: Counts do not define this condition alone.
+      - text: Whenever a + b equals two
+        why: That makes the formula singular.
+  - id: b2-point-and-distribution-estimates-04
+    type: mcq
+    prompt: What does an equal posterior mean fail to tell us?
+    explanation: Distributions with the same mean can have different variance.
+    options:
+      - text: Whether the means match
+        why: They are given as equal.
+      - text: The one-step predictive probability here
+        why: That equals the posterior mean.
+      - text: Whether uncertainty is equally concentrated
+        why: Distributions with the same mean can have different variance.
+        correct: true
+  - id: b2-point-and-distribution-estimates-05
+    type: multi
+    prompt: Which should be documented when reporting MAP?
+    explanation: It affects posterior density. Densities and their modes depend on it.
+    options:
+      - text: Prior choice
+        why: It affects posterior density.
+        correct: true
+      - text: Parameterisation
+        why: Densities and their modes depend on it.
+        correct: true
+      - text: Only who ran the notebook
+        why: That does not identify the model.
+  - id: b2-point-and-distribution-estimates-06
+    type: cloze
+    prompt: The maximiser of posterior density is the posterior ______.
+    accept:
+      - mode
+    explanation: MAP reports a posterior-density maximiser.
+  - id: b2-point-and-distribution-estimates-07
+    type: order
+    prompt: Order the interior-mode calculation. Verify the posterior shape conditions before writing and differentiating the log density.
+    items:
+      - Form posterior parameters
+      - Check the interior-mode assumptions
+      - Write log density up to a constant
+      - Set derivative to zero within support
+    explanation: The stationary point is meaningful under the stated conditions.
+  - id: b2-point-and-distribution-estimates-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def beta_interior_summaries(a,b):
+          if not (a > 1 and b > 1):
+              raise ValueError("require an interior Beta mode")
+          return (a-1)/(a+b-2), a/(a+b)
+
+      print(beta_interior_summaries(3, 3))
+    answer: (0.5, 0.5)
+    explanation: Symmetry gives both summaries equal to one half.

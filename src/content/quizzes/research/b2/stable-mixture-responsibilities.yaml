@@ -1,0 +1,93 @@
+items:
+  - id: b2-stable-mixture-responsibilities-01
+    type: mcq
+    prompt: What belongs in each log-joint component score?
+    explanation: Logs turn the joint product into a sum.
+    options:
+      - text: Only the component mean
+        why: A mean is not probability evidence.
+      - text: Log mixture weight plus log component likelihood
+        why: Logs turn the joint product into a sum.
+        correct: true
+      - text: The log sum over all components only
+        why: That is the normaliser.
+  - id: b2-stable-mixture-responsibilities-02
+    type: mcq
+    prompt: Why does shifting all scores preserve ratios?
+    explanation: Normalisation divides by the same total factor.
+    options:
+      - text: Exponentiation applies a common multiplier that cancels
+        why: Normalisation divides by the same total factor.
+        correct: true
+      - text: Shifting forces all scores to match
+        why: Relative differences remain.
+      - text: Shifting makes the data independent
+        why: It is a numeric representation change.
+  - id: b2-stable-mixture-responsibilities-03
+    type: mcq
+    prompt: What does negative infinity for one score mean?
+    explanation: Its shifted exponential is zero.
+    options:
+      - text: The observation has no support if any one score is infinite negative
+        why: Other components may support it.
+      - text: The component responsibility is negative
+        why: Probabilities cannot be negative.
+      - text: That component gets zero responsibility when others have mass
+        why: Its shifted exponential is zero.
+        correct: true
+  - id: b2-stable-mixture-responsibilities-04
+    type: mcq
+    prompt: What if every score is negative infinity?
+    explanation: There is no positive mass to normalise.
+    options:
+      - text: Always use a uniform answer
+        why: That invents posterior mass.
+      - text: Every component gets one
+        why: The probabilities would not sum to one.
+      - text: Responsibilities are undefined
+        why: There is no positive mass to normalise.
+        correct: true
+  - id: b2-stable-mixture-responsibilities-05
+    type: multi
+    prompt: Which properties should be tested?
+    explanation: They define one conditional distribution. The computation should be stable.
+    options:
+      - text: Normalised probabilities sum to one
+        why: They define one conditional distribution.
+        correct: true
+      - text: Large common log offsets preserve proportions
+        why: The computation should be stable.
+        correct: true
+      - text: A negative responsibility when a score is negative
+        why: Log scores and probabilities use different scales.
+  - id: b2-stable-mixture-responsibilities-06
+    type: cloze
+    prompt: A soft posterior component assignment is a ______.
+    accept:
+      - responsibility
+    explanation: It measures component membership conditional on the observation.
+  - id: b2-stable-mixture-responsibilities-07
+    type: order
+    prompt: Order stable normalisation.
+    items:
+      - Compute log-joint scores
+      - Subtract a common maximum
+      - Exponentiate shifted values
+      - Divide by their sum
+    explanation: The maximum shift keeps the calculation numerically stable.
+  - id: b2-stable-mixture-responsibilities-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def responsibilities(log_joint):
+          from math import exp
+          if not log_joint or max(log_joint) == float("-inf"):
+              raise ValueError("observation has no supported component")
+          high = max(log_joint)
+          weights = [exp(value-high) for value in log_joint]
+          total = sum(weights)
+          return [weight/total for weight in weights]
+
+      print(responsibilities([0, float("-inf"), 0]))
+    answer: "[0.5, 0.0, 0.5]"
+    explanation: Only the two finite components carry mass, equally.

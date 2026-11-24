@@ -1,0 +1,93 @@
+items:
+  - id: b2-em-weighted-updates-01
+    type: mcq
+    prompt: What is fixed during the M-step?
+    explanation: They weight the complete-data objective.
+    options:
+      - text: Observed likelihood values for all runs
+        why: They can change with parameters.
+      - text: Every model parameter
+        why: The M-step updates parameters.
+      - text: Responsibilities computed in the E-step
+        why: They weight the complete-data objective.
+        correct: true
+  - id: b2-em-weighted-updates-02
+    type: mcq
+    prompt: What is a component effective count?
+    explanation: Soft memberships contribute fractional counts.
+    options:
+      - text: Sum of its responsibilities across observations
+        why: Soft memberships contribute fractional counts.
+        correct: true
+      - text: Number of mixture features
+        why: That is unrelated.
+      - text: Only observations with responsibility exactly one
+        why: Soft assignments would be ignored.
+  - id: b2-em-weighted-updates-03
+    type: mcq
+    prompt: What if that count is zero?
+    explanation: The denominator is zero.
+    options:
+      - text: The component mean update is undefined
+        why: The denominator is zero.
+        correct: true
+      - text: Use the global mean by mathematical necessity
+        why: A recovery policy must be chosen, not inferred.
+      - text: The mean must be zero
+        why: No observations identify it.
+  - id: b2-em-weighted-updates-04
+    type: mcq
+    prompt: What does exact EM monotonicity guarantee?
+    explanation: Local progress does not imply global optimality.
+    options:
+      - text: Observed likelihood does not decrease at valid steps
+        why: Local progress does not imply global optimality.
+        correct: true
+      - text: The global optimum is reached from every initialisation
+        why: Different runs can reach different optima.
+      - text: All covariances remain bounded automatically
+        why: Degeneracy can occur.
+  - id: b2-em-weighted-updates-05
+    type: multi
+    prompt: Which help debug EM?
+    explanation: They reveal collapsed or unused components. The result can depend on the start point.
+    options:
+      - text: Inspect effective component counts
+        why: They reveal collapsed or unused components.
+        correct: true
+      - text: Assume the first solution is globally optimal
+        why: Monotonicity does not establish that.
+      - text: Compare likelihood from multiple initialisations
+        why: The result can depend on the start point.
+        correct: true
+  - id: b2-em-weighted-updates-06
+    type: cloze
+    prompt: Computing latent posterior probabilities is the ______ step.
+    accept:
+      - e
+      - e-step
+      - e step
+      - expectation
+    explanation: The E-step takes an expectation over latent assignments.
+  - id: b2-em-weighted-updates-07
+    type: order
+    prompt: Order one EM iteration.
+    items:
+      - Start with current parameters
+      - Compute responsibilities
+      - Update using the weighted objective
+      - Evaluate observed likelihood at the updated parameters
+    explanation: The objective checks progress after updating.
+  - id: b2-em-weighted-updates-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def weighted_component_mean(values,weights):
+          if len(values) != len(weights) or any(weight < 0 for weight in weights):
+              raise ValueError("misaligned values or invalid weights")
+          mass = sum(weights)
+          return sum(value*weight for value,weight in zip(values,weights))/mass if mass else None
+
+      print(weighted_component_mean([1, 10], [0, 2]))
+    answer: "10.0"
+    explanation: Only the second value contributes.

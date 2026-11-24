@@ -1,0 +1,4 @@
+term: "MAP estimate"
+short: "A parameter value maximising posterior density under the chosen parameterisation."
+body: "The MAP estimate is argmax_θ p(x|θ)p(θ), the posterior mode. Unlike the posterior mean, it changes under reparameterisation. With a flat prior it equals the MLE."
+related: ["maximum-likelihood-estimation","beta-bernoulli-prediction"]

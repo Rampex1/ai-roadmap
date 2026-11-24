@@ -1,0 +1,43 @@
+---
+title: Update a conjugate prior and predict
+module: b2
+order: 1
+estMinutes: 8
+objectives:
+  - Derive posterior parameters from Bernoulli counts
+  - Use the posterior predictive probability for one new draw
+goDeeper: cs229-bayesian-notes
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A Beta prior for a Bernoulli probability $\theta$ has density proportional to $\theta^{\alpha-1}(1-\theta)^{\beta-1}$, where $\alpha$ and $\beta$ are positive. For $s$ successes and $f$ failures the likelihood contributes $\theta^s(1-\theta)^f$. By [Bayes' theorem](/foundations/f5/bayes-theorem/) the posterior is proportional to likelihood times prior, and multiplying adds exponents: the posterior is $\text{Beta}(\alpha+s, \beta+f)$. The Beta prior is a <Term id="beta-bernoulli-prediction" /> for the Bernoulli likelihood.
+
+A predictive probability integrates the probability of the next success against the posterior. For one Bernoulli draw it is the posterior mean, $(\alpha+s)/(\alpha+\beta+s+f)$. For a sequence of future draws, their outcomes share uncertainty about $\theta$. Do not generally treat them as independent with the same marginal predictive probability.
+
+An all-success sample does not force the predictive probability to one with positive prior shape parameters. The prior has more influence with few observations than with a large sample. State the prior and the conditional independence assumption when reporting the result.
+
+## Worked example
+
+Three successes and one failure update each prior shape.
+
+```python
+def beta_predictive(alpha,beta,successes,failures):
+    if alpha <= 0 or beta <= 0 or successes < 0 or failures < 0:
+        raise ValueError("invalid prior or observation counts")
+    posterior = (alpha+successes,beta+failures)
+    return posterior,posterior[0]/sum(posterior)
+
+print(beta_predictive(2,2,3,1))
+```
+
+```text title="Output"
+((5, 3), 0.625)
+```
+
+Record the prior, posterior and prediction as distinct objects.
+
+## Try it
+
+<CodeExercise id="b2-beta-bernoulli-prediction-01" />

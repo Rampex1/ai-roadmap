@@ -1,0 +1,27 @@
+id: b2-em-weighted-updates-01
+lesson: research/b2/em-weighted-updates
+title: Update a Gaussian component mean
+prompt: Implement weighted_component_mean(values,weights) for aligned lists of finite observations and finite nonnegative responsibilities. Reject unequal lengths or negative weights. Return None if the effective count is zero.
+starter: |
+  def weighted_component_mean(values,weights):
+      raise NotImplementedError
+solution: |
+  def weighted_component_mean(values,weights):
+      if len(values) != len(weights) or any(weight < 0 for weight in weights):
+          raise ValueError("misaligned values or invalid weights")
+      mass = sum(weights)
+      return sum(value*weight for value,weight in zip(values,weights))/mass if mass else None
+tests: |
+  assert weighted_component_mean([2,10],[0.75,0.25]) == 4
+  assert weighted_component_mean([1,3],[2,2]) == 2
+  assert weighted_component_mean([1,3],[0,0]) is None
+  assert weighted_component_mean([],[]) is None
+  for args in (([1],[]),([1],[-1])):
+      try:
+          weighted_component_mean(*args)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError("reject invalid summary")
+hints:
+  - Divide the weighted sum by effective membership mass.

@@ -1,0 +1,90 @@
+items:
+  - id: b2-beta-bernoulli-prediction-01
+    type: mcq
+    prompt: What changes after a success?
+    explanation: Success contributes one power of θ.
+    options:
+      - text: Posterior alpha increases by one
+        why: Success contributes one power of θ.
+        correct: true
+      - text: Both shapes multiply by two
+        why: Conjugate updating adds counts.
+      - text: Posterior beta alone increases
+        why: β tracks the failure exponent.
+  - id: b2-beta-bernoulli-prediction-02
+    type: mcq
+    prompt: Why is the next success probability the posterior mean?
+    explanation: The conditional success chance is θ.
+    options:
+      - text: Integrating Bernoulli success probability integrates θ
+        why: The conditional success chance is θ.
+        correct: true
+      - text: The mean equals the mode for every Beta
+        why: These differ in general.
+      - text: The prior disappears exactly
+        why: The posterior can retain prior influence.
+  - id: b2-beta-bernoulli-prediction-03
+    type: mcq
+    prompt: What happens if no outcomes are observed?
+    explanation: There is no likelihood update.
+    options:
+      - text: The posterior is the prior
+        why: There is no likelihood update.
+        correct: true
+      - text: Both shapes become zero
+        why: No counts are subtracted.
+      - text: The predictive probability is always zero
+        why: The prior determines it.
+  - id: b2-beta-bernoulli-prediction-04
+    type: mcq
+    prompt: Are future draws marginally independent under a shared uncertain θ?
+    explanation: Their dependence follows from the shared random parameter.
+    options:
+      - text: Generally no
+        why: Their dependence follows from the shared random parameter.
+        correct: true
+      - text: Always yes
+        why: They are independent only conditional on θ in this setup.
+      - text: Only with one draw per sample ever
+        why: The relevant distinction is conditioning.
+  - id: b2-beta-bernoulli-prediction-05
+    type: multi
+    prompt: Which assumptions justify the conjugate update?
+    explanation: Its two exponents pair with the likelihood. The likelihood becomes a product.
+    options:
+      - text: Bernoulli draws conditionally independent given θ
+        why: The likelihood becomes a product.
+        correct: true
+      - text: Beta prior
+        why: Its two exponents pair with the likelihood.
+        correct: true
+      - text: Direct observation of the true θ
+        why: The parameter is unknown.
+  - id: b2-beta-bernoulli-prediction-06
+    type: cloze
+    prompt: A prior that stays in the same family is ______.
+    accept:
+      - conjugate
+    explanation: The posterior remains Beta after a Bernoulli likelihood.
+  - id: b2-beta-bernoulli-prediction-07
+    type: order
+    prompt: Order the predictive calculation.
+    items:
+      - Specify the prior and likelihood
+      - Add observed counts to shape parameters
+      - Compute the posterior mean
+      - Use it for a single future success probability
+    explanation: The prediction integrates against the updated posterior.
+  - id: b2-beta-bernoulli-prediction-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def beta_predictive(alpha,beta,successes,failures):
+          if alpha <= 0 or beta <= 0 or successes < 0 or failures < 0:
+              raise ValueError("invalid prior or observation counts")
+          posterior = (alpha+successes,beta+failures)
+          return posterior,posterior[0]/sum(posterior)
+
+      print(beta_predictive(1, 3, 0, 0)[1])
+    answer: "0.25"
+    explanation: Without data the predictive probability is 1 divided by 4.

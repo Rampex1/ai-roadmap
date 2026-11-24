@@ -1,0 +1,43 @@
+---
+title: Update mixture parameters with EM
+module: b2
+order: 4
+estMinutes: 8
+objectives:
+  - Connect the E-step to expected component membership
+  - Derive weighted means for the Gaussian M-step
+goDeeper: cs229-em-notes
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+In <Term id="em-weighted-updates" />, the E-step computes responsibilities using current parameters. The M-step maximises the expected complete-data log likelihood under those fixed responsibilities. Write $r_{ik}$ for the responsibility of component $k$ for observation $x_i$ and $N_k = \sum_i r_{ik}$ for its effective count. For a one-dimensional Gaussian component, the updated mean is the responsibility-weighted sample mean, $\mu_k^{\text{new}} = \sum_i r_{ik} x_i / N_k$. This follows by setting the derivative of the weighted Gaussian log likelihood with respect to the mean to zero. The same argument for the variance gives $\sigma_k^2 = \sum_i r_{ik}(x_i-\mu_k^{\text{new}})^2/N_k$, using the new mean.
+
+Mixture weights are updated as $\pi_k = N_k / n$, the effective count divided by the total number of observations $n$. If a component has zero effective count, the weighted mean is undefined. Possible policies include dropping or reinitialising that component, with explicit handling. Unconstrained Gaussian mixture likelihood can become singular when variances collapse. Floors or regularisation can help, but change the exact optimisation problem.
+
+An exact EM step cannot decrease observed-data likelihood when the steps are well-defined; this does not guarantee a global optimum. Monitor objective values and compare initialisations. The fixture implements only the weighted-mean part of one M-step.
+
+## Worked example
+
+The first observation contributes three quarters of the component mass.
+
+```python
+def weighted_component_mean(values,weights):
+    if len(values) != len(weights) or any(weight < 0 for weight in weights):
+        raise ValueError("misaligned values or invalid weights")
+    mass = sum(weights)
+    return sum(value*weight for value,weight in zip(values,weights))/mass if mass else None
+
+print(weighted_component_mean([2,10],[0.75,0.25]))
+```
+
+```text title="Output"
+4.0
+```
+
+Check objective trends and component sizes instead of assuming convergence to one unique solution.
+
+## Try it
+
+<CodeExercise id="b2-em-weighted-updates-01" />

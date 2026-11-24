@@ -1,0 +1,4 @@
+term: "Conjugate prior"
+short: "A prior whose posterior remains in the same distribution family after observing data."
+body: "A prior is conjugate to a likelihood when the posterior stays in the prior's family. A Beta(α, β) prior with s Bernoulli successes and f failures gives Beta(α+s, β+f)."
+related: ["bayes-theorem","maximum-likelihood-estimation"]

@@ -1,0 +1,22 @@
+id: b2-probability-lab
+module: b2
+kind: homework
+title: Compare posterior prediction and latent mixtures
+brief: |-
+  Use synthetic Bernoulli and mixture data. Update a posterior, inspect point estimates, normalise component responsibilities and complete one EM-style mean update.
+
+  1. Predict a Bernoulli outcome with a Beta prior.
+  2. Contrast the interior mode and mean.
+  3. Compute stable component responsibilities.
+  4. Update one component mean.
+  5. Fit one fixed-variance mixture step.
+
+  Explain when a posterior mean loses important uncertainty. Describe how you would detect a collapsed mixture component and what evidence distinguishes local convergence from a useful fit.
+notebook: /homework/b2-probability-lab.ipynb
+rubric:
+  - Prior and observation counts are explicit.
+  - Boundary cases are handled by contract.
+  - Log probability normalisation is stable.
+  - Effective membership counts determine component updates.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.
