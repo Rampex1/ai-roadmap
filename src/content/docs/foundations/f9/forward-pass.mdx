@@ -1,0 +1,180 @@
+---
+title: "The forward pass in matrix form"
+module: f9
+order: 3
+estMinutes: 14
+objectives:
+  - "Write a fully connected layer as A = g(XW + b) and give the shape of every array in it"
+  - "Implement the forward pass of a multilayer perceptron with any number of layers"
+  - "Count the parameters of an MLP from its layer sizes"
+goDeeper: 3b1b-neural-networks
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import mlpImg from '@/assets/diagrams/f9-mlp.svg';
+
+The XOR network in the [last lesson](/foundations/f9/activation-functions/) had a hidden layer of two
+neurons, and we wrote it as `relu(X @ W1 + b1)`. This lesson makes that pattern general. A network of
+fully connected layers is called a <Term id="multilayer-perceptron" /> (MLP), and computing its output
+from its input is the **forward pass**. Getting the shapes right is most of the work.
+
+## From one neuron to a layer
+
+One neuron has a weight vector $\mathbf{w}$ of shape $(d,)$. A **layer** of $m$ neurons, all reading the
+same $d$ inputs, has $m$ weight vectors. Put them side by side as the **columns** of a matrix
+$W$ of shape $(d, m)$, and their biases in a vector $\mathbf{b}$ of shape $(m,)$. Then for a batch $X$ of
+$n$ examples:
+
+$$
+Z = XW + \mathbf{b}, \qquad A = g(Z)
+$$
+
+| Array | Shape | Meaning |
+|---|---|---|
+| $X$ | $(n, d)$ | one example per row |
+| $W$ | $(d, m)$ | column $j$ holds neuron $j$'s weights |
+| $\mathbf{b}$ | $(m,)$ | neuron $j$'s bias; broadcast to every row |
+| $Z$, $A$ | $(n, m)$ | entry $(i, j)$ is neuron $j$ on example $i$ |
+
+Entry $(i, j)$ of $XW$ is row $i$ of $X$ dotted with column $j$ of $W$: example $i$'s weighted sum for
+neuron $j$. That is the [matrix multiplication](/foundations/f3/matrix-multiplication/) rule from F3, now
+doing the work of $n \times m$ neurons at once. Adding $\mathbf{b}$ uses
+[broadcasting](/foundations/f2/broadcasting/): the $(m,)$ vector is added to each of the $n$ rows.
+
+:::note[Rows or columns?]
+This course puts examples in **rows** and computes $XW$, the convention NumPy code and most libraries use.
+Some textbooks put examples in columns and write $W\mathbf{x}$ instead, with $W$ of shape $(m, d)$.
+The maths is the same, transposed. PyTorch stores a layer's weight as $(m, d)$ and computes
+$XW^\top$ (lesson 9).
+:::
+
+## Stacking layers
+
+An MLP chains layers: the output of one is the input of the next. With $L$ layers,
+
+$$
+A_0 = X, \qquad A_\ell = g(A_{\ell-1}W_\ell + \mathbf{b}_\ell) \text{ for } \ell = 1, \dots, L - 1, \qquad
+\text{output} = A_{L-1}W_L + \mathbf{b}_L
+$$
+
+The **hidden** layers use an activation such as ReLU. The **last** layer usually has none: for regression
+its output is the prediction itself, and for classification it outputs one raw score per class, called
+<Term id="logit" />s, which the loss function (next lesson) turns into probabilities.
+
+<Figure
+  src={mlpImg}
+  alt="Network diagram: 2 input nodes, two hidden layers of 16 nodes each (6 drawn), and 3 output nodes, every node connected to every node in the next layer. Above each layer its batch shape: (n, 2), (n, 16), (n, 16), (n, 3). Below each set of connections the weight and bias shapes and the activation"
+  caption="An MLP with layer sizes [2, 16, 16, 3]. Each arrow bundle is one weight matrix; the shapes chain because each layer's output width is the next layer's input width."
+/>
+
+The layer sizes are the whole architecture. Describe the network above as `sizes = [2, 16, 16, 3]`: 2
+input features, two hidden layers of 16 units, 3 classes. Layer $\ell$ then has $W_\ell$ of shape
+`(sizes[l-1], sizes[l])`.
+
+```python
+import numpy as np
+
+def relu(z):
+    return np.maximum(0, z)
+
+rng = np.random.default_rng(0)
+sizes = [2, 16, 16, 3]                       # input, two hidden layers, output
+params = []
+for d_in, d_out in zip(sizes[:-1], sizes[1:]):
+    W = rng.normal(0, np.sqrt(2 / d_in), size=(d_in, d_out))
+    b = np.zeros(d_out)
+    params.append((W, b))
+
+for i, (W, b) in enumerate(params, start=1):
+    print(f"layer {i}: W {W.shape}, b {b.shape}")
+print("parameters:", sum(W.size + b.size for W, b in params))
+```
+
+```text title="Output"
+layer 1: W (2, 16), b (16,)
+layer 2: W (16, 16), b (16,)
+layer 3: W (16, 3), b (3,)
+parameters: 371
+```
+
+`zip(sizes[:-1], sizes[1:])` pairs each size with the next: $(2, 16), (16, 16), (16, 3)$. The random
+scale $\sqrt{2/d_\text{in}}$ is not arbitrary; lesson 7 explains it. Biases can start at zero.
+
+## The forward pass
+
+```python
+def forward(X, params):
+    A = X
+    for i, (W, b) in enumerate(params):
+        Z = A @ W + b                        # (n, d_in) @ (d_in, d_out) + (d_out,) -> (n, d_out)
+        A = relu(Z) if i < len(params) - 1 else Z   # no activation on the last layer
+        print(f"after layer {i + 1}: {A.shape}")
+    return A
+
+X = rng.normal(size=(5, 2))                  # a batch of 5 examples
+out = forward(X, params)
+print(np.round(out[:2], 3))
+```
+
+```text title="Output"
+after layer 1: (5, 16)
+after layer 2: (5, 16)
+after layer 3: (5, 3)
+[[-0.737 -2.242  0.8  ]
+ [-1.799 -3.033  0.846]]
+```
+
+The batch size $n = 5$ rides along untouched in the first dimension; only the second dimension changes,
+from 2 to 16 to 16 to 3. The output is 5 rows of 3 logits. They mean nothing yet because the weights are
+random.
+
+### When shapes go wrong
+
+A shape mismatch is the most common bug in network code, and NumPy reports it clearly if you read the
+message. Feeding the 2-feature batch straight into the second layer's $(16, 16)$ matrix:
+
+```python
+X @ params[1][0]
+```
+
+```text title="Output"
+ValueError: matmul: Input operand 1 has a mismatch in its core dimension 0, with gufunc signature (n?,k),(k,m?)->(n?,m?) (size 16 is different from 2)
+```
+
+The inner dimensions must agree: $(n, \mathbf{2}) @ (\mathbf{16}, 16)$ does not. When debugging, print
+`.shape` at every step, as above.
+
+## Counting parameters
+
+Layer $\ell$ has $d_{\ell-1} \cdot d_\ell$ weights and $d_\ell$ biases, so
+
+$$
+\text{parameters} = \sum_{\ell=1}^{L} (d_{\ell-1} + 1)\, d_\ell
+$$
+
+For `[2, 16, 16, 3]`: $(2 + 1)\cdot 16 + (16 + 1)\cdot 16 + (16 + 1)\cdot 3 = 48 + 272 + 51 = 371$, as
+printed. For an MNIST classifier `[784, 128, 10]` it is $785 \cdot 128 + 129 \cdot 10 = 101{,}770$. Most
+parameters sit in the widest connections, here the first layer.
+
+:::tip[A neuron is a column]
+If shapes confuse you, go back to one neuron. Column $j$ of $W_\ell$ and entry $j$ of $\mathbf{b}_\ell$
+are exactly the $\mathbf{w}$ and $b$ of [lesson 1](/foundations/f9/the-neuron/), and column $j$ of
+$A_\ell$ is that neuron's output on every example. The matrix form just runs all of them together.
+:::
+
+## Try it
+
+<CodeExercise id="f9-forward-pass-01" />
+
+<CodeExercise id="f9-forward-pass-02" />
+
+## Summary
+
+- A layer of $m$ neurons on $d$ inputs: $Z = XW + \mathbf{b}$, $A = g(Z)$, with $X$ $(n, d)$, $W$
+  $(d, m)$, $\mathbf{b}$ $(m,)$ and $Z, A$ $(n, m)$.
+- An MLP chains layers; hidden layers use an activation, the last layer outputs raw values (logits for
+  classification).
+- Layer sizes such as `[2, 16, 16, 3]` define the architecture; layer $\ell$'s weight matrix is
+  `(sizes[l-1], sizes[l])`. The batch dimension passes through unchanged.
+- Parameters: $\sum_\ell (d_{\ell-1} + 1)\,d_\ell$. When a matmul fails, compare the inner dimensions.

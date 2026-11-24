@@ -1,0 +1,38 @@
+id: f9-forward-pass-02
+lesson: foundations/f9/forward-pass
+title: Count the parameters
+prompt: |
+  Write `count_params(sizes)` that returns the total number of weights and biases in a fully connected
+  MLP with the given layer sizes, as an integer.
+
+  For example `sizes = [2, 16, 16, 3]` has weight matrices `(2, 16)`, `(16, 16)` and `(16, 3)` and bias
+  vectors of length 16, 16 and 3, for a total of 371. `[784, 128, 10]` has 101,770.
+
+  You only need arithmetic, not arrays.
+starter: |
+  def count_params(sizes):
+      total = 0
+      for d_in, d_out in zip(sizes[:-1], sizes[1:]):
+          total += d_in * d_out
+      return total
+solution: |
+  def count_params(sizes):
+      total = 0
+      for d_in, d_out in zip(sizes[:-1], sizes[1:]):
+          total += d_in * d_out + d_out
+      return total
+tests: |
+  assert count_params([2, 16, 16, 3]) == 371, f"[2, 16, 16, 3] has 371 parameters, got {count_params([2, 16, 16, 3])}"
+  assert count_params([784, 128, 10]) == 101770, "[784, 128, 10] has 784*128 + 128 + 128*10 + 10 = 101770 parameters"
+  assert count_params([3, 1]) == 4, "A single neuron with 3 inputs has 3 weights and 1 bias"
+  assert count_params([784, 256, 128, 10]) == 235146, "[784, 256, 128, 10] has 235146 parameters"
+  assert count_params([5]) == 0, "With a single size there are no layers, so 0 parameters"
+  import random
+  _r = random.Random(1)
+  for _ in range(5):
+      _s = [_r.randint(1, 50) for _ in range(_r.randint(2, 6))]
+      _exp = sum((a + 1) * b for a, b in zip(_s[:-1], _s[1:]))
+      assert count_params(_s) == _exp, f"Wrong count for sizes {_s}: expected {_exp}"
+hints:
+  - "Each layer has d_in * d_out weights."
+  - "Do not forget the d_out biases of each layer."

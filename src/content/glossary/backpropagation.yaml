@@ -1,0 +1,8 @@
+term: "Backpropagation"
+short: "The algorithm that computes the gradient of the loss with respect to every weight by applying the chain rule from the output backwards."
+body: |
+  A forward pass computes and stores every intermediate value. The backward pass then starts from
+  $\partial L/\partial L = 1$ and multiplies local derivatives node by node towards the inputs, summing where a
+  value was used more than once. One backward pass costs about as much as one forward pass and yields the whole
+  gradient.
+related: ["chain-rule", "gradient", "automatic-differentiation"]

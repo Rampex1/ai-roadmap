@@ -32,15 +32,15 @@ items:
     prompt: "Why does a stable softmax subtract the largest logit before calling `np.exp`?"
     explanation: "Softmax is unchanged by adding a constant to all logits. Subtracting the maximum makes the largest exponent e⁰ = 1, so nothing can overflow to inf."
     options:
+      - text: It makes the probabilities sum to 1
+        why: Dividing by the total already does that; the shift is about overflow.
+      - text: It removes negative logits, which softmax cannot handle
+        why: Softmax handles negative logits fine; after the shift all logits are at most 0.
+      - text: It changes the probabilities so the largest becomes exactly 1
+        why: The probabilities are identical with or without the shift.
       - text: Softmax is unchanged by shifting all logits, and the shift keeps every exponent at most 1, so nothing overflows
         correct: true
         why: The common factor e to the minus m cancels between top and bottom.
-      - text: It makes the probabilities sum to 1
-        why: Dividing by the total already does that; the shift is about overflow.
-      - text: It changes the probabilities so the largest becomes exactly 1
-        why: The probabilities are identical with or without the shift.
-      - text: It removes negative logits, which softmax cannot handle
-        why: Softmax handles negative logits fine; after the shift all logits are at most 0.
   - id: f9-loss-functions-06
     type: mcq
     prompt: "Why compute $\\log p_y$ with log-sum-exp instead of `np.log(softmax(z))[y]`?"
@@ -51,10 +51,10 @@ items:
         why: z_y − m − log Σ exp(z − m) never takes the log of 0.
       - text: np.log cannot be applied to arrays
         why: np.log works element by element on arrays.
-      - text: Log-sum-exp gives a different, better loss
-        why: Mathematically it is the same loss, just computed safely.
       - text: Softmax outputs can be negative
         why: Softmax outputs are always positive.
+      - text: Log-sum-exp gives a different, better loss
+        why: Mathematically it is the same loss, just computed safely.
   - id: f9-loss-functions-07
     type: mcq
     prompt: "For one example with softmax probabilities $\\mathbf{p} = (0.7, 0.2, 0.1)$ and true class 1 (the second class), what is the gradient of the cross-entropy with respect to the logits?"
@@ -85,19 +85,19 @@ items:
     prompt: "Which statements about softmax and cross-entropy are true? Select all that apply."
     explanation: "Softmax outputs are positive and sum to 1, and are unchanged by adding a constant to all logits. Cross-entropy grows without limit as the true class's probability goes to 0. The largest logit always gets the largest probability, but not necessarily above 0.5."
     options:
+      - text: The largest logit always gets a probability above 0.5
+        why: With logits (1, 1, 0.9) the largest probability is only about 0.35.
+      - text: The rows of the gradient (P − Y)/n each sum to zero
+        correct: true
+        why: Each row of P sums to 1 and each row of Y sums to 1.
       - text: Adding 100 to every logit leaves the softmax probabilities unchanged
         correct: true
         why: The factor e¹⁰⁰ cancels between numerator and denominator.
       - text: Cross-entropy has no upper limit for a confident wrong prediction
         correct: true
         why: As p_y approaches 0, −log p_y goes to infinity.
-      - text: The largest logit always gets a probability above 0.5
-        why: With logits (1, 1, 0.9) the largest probability is only about 0.35.
-      - text: The rows of the gradient (P − Y)/n each sum to zero
-        correct: true
-        why: Each row of P sums to 1 and each row of Y sums to 1.
   - id: f9-loss-functions-10
     type: cloze
     prompt: "The trick $\\log\\sum_c e^{z_c} = m + \\log\\sum_c e^{z_c - m}$, with $m$ the largest $z_c$, is called the log-______-exp trick."
-    accept: ["sum"]
+    accept: [ "sum" ]
     explanation: "Log-sum-exp: pull out the largest term so the exponentials cannot overflow."

@@ -1,0 +1,225 @@
+---
+title: "Build a tiny autograd engine"
+module: f9
+order: 6
+estMinutes: 12
+objectives:
+  - "Implement a scalar Value class that records how each number was computed"
+  - "Write the local backward rule for addition, multiplication and tanh, accumulating gradients with +="
+  - "Run backward() over a topological ordering of the graph and use it to train a tiny model"
+goDeeper: karpathy-zero-to-hero
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+In the [last lesson](/foundations/f9/backpropagation/) you wrote every backward step by hand. That works
+for two layers, but every change to the network means re-deriving the backward pass. **Automatic
+differentiation** removes that chore: each operation records what it did, and a generic `backward()`
+walks the record in reverse. This lesson builds a complete reverse-mode
+<Term id="automatic-differentiation" /> engine in about 50 lines. It works on single numbers rather than
+arrays, which makes every step visible.
+
+:::note[Credit]
+The design follows Andrej Karpathy's [micrograd](https://github.com/karpathy/micrograd) (MIT licence),
+which he builds step by step in the first lecture of *Neural Networks: Zero to Hero*. The code below is
+our own, written for this lesson. Watching that lecture after this lesson is the best way to go deeper.
+:::
+
+## The idea: numbers that remember
+
+A `Value` wraps one float and adds three things:
+
+- `grad`: the derivative of the final output with respect to this value, filled in by `backward()`;
+- `_prev`: the Values this one was computed from (its children in the graph);
+- `_backward`: a small function that knows this operation's local derivatives and passes `self.grad` on
+  to the children.
+
+Each operation creates a new Value and attaches the right `_backward` to it. The forward computation
+therefore builds the computational graph as a side effect.
+
+## The engine
+
+```python
+import math
+
+class Value:
+    def __init__(self, data, _children=()):
+        self.data = data
+        self.grad = 0.0
+        self._prev = _children           # the Values this one was computed from
+        self._backward = lambda: None    # pushes self.grad into the children's grads
+
+    def __repr__(self):
+        return f"Value(data={self.data:.4f}, grad={self.grad:.4f})"
+
+    def __add__(self, other):
+        other = other if isinstance(other, Value) else Value(other)
+        out = Value(self.data + other.data, (self, other))
+        def _backward():
+            self.grad += out.grad        # d(a + b)/da = 1
+            other.grad += out.grad       # d(a + b)/db = 1
+        out._backward = _backward
+        return out
+
+    def __mul__(self, other):
+        other = other if isinstance(other, Value) else Value(other)
+        out = Value(self.data * other.data, (self, other))
+        def _backward():
+            self.grad += other.data * out.grad   # d(a * b)/da = b
+            other.grad += self.data * out.grad   # d(a * b)/db = a
+        out._backward = _backward
+        return out
+
+    def tanh(self):
+        t = math.tanh(self.data)
+        out = Value(t, (self,))
+        def _backward():
+            self.grad += (1 - t ** 2) * out.grad
+        out._backward = _backward
+        return out
+
+    def backward(self):
+        # 1. order the graph so every node comes after the nodes it was computed from
+        order, seen = [], set()
+        def visit(v):
+            if v not in seen:
+                seen.add(v)
+                for child in v._prev:
+                    visit(child)
+                order.append(v)
+        visit(self)
+        # 2. walk it from the output back, applying the chain rule at each node
+        self.grad = 1.0
+        for v in reversed(order):
+            v._backward()
+
+    __radd__ = __add__                    # makes 2 + Value work
+    __rmul__ = __mul__                    # makes 2 * Value work
+    def __neg__(self):         return self * -1
+    def __sub__(self, other):  return self + (-other)
+```
+
+A few Python details:
+
+- `__add__` and `__mul__` are the methods Python calls for `a + b` and `a * b`. Defining them lets us write
+  ordinary arithmetic on Values. `__radd__` and `__rmul__` handle a plain number on the left, as in
+  `2 * v`.
+- Each `_backward` is a **closure**: an inner function that remembers `self`, `other` and `out` from the
+  moment it was created, so it can run much later.
+- `_backward` uses `out.grad`, the gradient that has arrived at the output of this operation, and applies
+  exactly the add and multiply rules from the last lesson.
+- Subtraction needs no rule of its own: `a - b` becomes `a + (b * -1)`.
+
+## Why a topological order?
+
+A node may only pass its gradient on once that gradient is **complete**, that is, once every node that
+uses it has already sent its contribution. `visit` performs a depth-first search that appends a node only
+after all of its children, so `order` lists every node after everything it depends on: a **topological
+order**. Walking it in reverse visits the output first and each node only after all its users. That is
+exactly the order backpropagation needs, for any graph, however it branches.
+
+## Check against the hand calculation
+
+Rebuild the network from the last lesson with Values:
+
+```python
+x, y = Value(1.0), Value(0.0)
+w1, b1 = Value(0.5), Value(0.0)
+w2, b2 = Value(2.0), Value(0.1)
+
+h = (w1 * x + b1).tanh()
+y_hat = w2 * h + b2
+L = (y_hat - y) * (y_hat - y)
+L.backward()
+print(L)
+print("w1:", w1)
+print("w2:", w2)
+```
+
+```text title="Output"
+Value(data=1.0491, grad=1.0000)
+w1: Value(data=0.5000, grad=3.2220)
+w2: Value(data=2.0000, grad=0.9466)
+```
+
+The same 3.2220 and 0.9466 as the table in the last lesson, with no derivative written by hand. Note that
+`(y_hat - y)` appears twice in `L`: the graph branches there, and the engine adds both contributions.
+
+## Why `+=`, not `=`
+
+Branching is where engines break. Take $b = a \cdot a + a$ at $a = 3$, so $\frac{db}{da} = 2a + 1 = 7$:
+
+```python
+a = Value(3.0)
+b = a * a + a         # a is used three times
+b.backward()
+print(b.data, a.grad)
+```
+
+```text title="Output"
+12.0 7.0
+```
+
+`a` receives three contributions: $3$ and $3$ from the multiplication (each factor gets the other) and
+$1$ from the addition. If `_backward` used `self.grad = ...` instead of `+=`, each contribution would
+overwrite the previous one; with that one change the same code prints `12.0 3.0`, silently wrong.
+
+## Training with the engine
+
+Because gradients accumulate, they must be **reset to zero** before each new backward pass; otherwise
+each step adds to the stale gradients of the previous one. Here the four parameters of the tiny network
+are fitted to four points by gradient descent:
+
+```python
+xs = [-2.0, -1.0, 0.5, 2.0]
+ys = [-1.0, -0.5, 0.5, 1.0]
+params = [Value(0.5), Value(0.0), Value(2.0), Value(0.1)]   # w1, b1, w2, b2
+
+for step in range(201):
+    w1, b1, w2, b2 = params
+    loss = Value(0.0)
+    for x, y in zip(xs, ys):
+        y_hat = w2 * (w1 * x + b1).tanh() + b2
+        loss = loss + (y_hat - y) * (y_hat - y)
+    for p in params:
+        p.grad = 0.0              # reset: backward() adds to .grad
+    loss.backward()
+    for p in params:
+        p.data -= 0.05 * p.grad   # gradient descent step
+    if step % 50 == 0:
+        print(f"step {step:3}: loss {loss.data:.4f}")
+```
+
+```text title="Output"
+step   0: loss 0.6807
+step  50: loss 0.0213
+step 100: loss 0.0132
+step 150: loss 0.0088
+step 200: loss 0.0067
+```
+
+(The loss printed at each step is measured before that step's update.) This is the whole training loop
+of every deep learning framework in miniature: forward, zero the gradients, backward, update.
+
+## From scalars to tensors
+
+This engine creates one Python object per number, so it is thousands of times too slow for a real
+network. PyTorch applies the same design to whole arrays (called tensors): each operation, such as a
+matrix multiplication, records itself, and its backward rule is the vectorised formula from the last
+lesson, such as $dW = A^\top dZ$. `loss.backward()` then does exactly what our `backward()` does: a
+topological sort and a reverse walk. You will meet it in [lesson 9](/foundations/f9/pytorch/), including
+the need to zero gradients before each step.
+
+## Try it
+
+<CodeExercise id="f9-autograd-engine-01" />
+
+## Summary
+
+- A `Value` stores its data, its gradient, its children and a `_backward` closure with the local rule.
+- Rules: addition copies `out.grad` to both inputs; multiplication sends `other.data * out.grad` and
+  `self.data * out.grad`; tanh sends `(1 - t**2) * out.grad`.
+- Always accumulate with `+=`, because a value used several times receives several contributions; and
+  reset gradients to zero before each new backward pass.
+- `backward()` sets the output's gradient to 1, sorts the graph topologically, and calls each node's
+  `_backward` in reverse order.

@@ -1,0 +1,226 @@
+---
+title: "Loss functions: MSE, softmax and cross-entropy"
+module: f9
+order: 4
+estMinutes: 14
+objectives:
+  - "Compute mean squared error for regression and softmax cross-entropy for classification"
+  - "Implement softmax and log-softmax stably with the max-subtraction (log-sum-exp) trick"
+  - "Derive and use the gradient of softmax cross-entropy with respect to the logits: probabilities minus one-hot labels"
+goDeeper: d2l-softmax-regression
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+The forward pass of the [last lesson](/foundations/f9/forward-pass/) turns inputs into outputs. To train,
+we need one number that says how wrong those outputs are: the <Term id="loss-function" />. Its gradient
+is what gradient descent follows. This lesson covers the two losses behind almost every network: mean
+squared error for numbers and cross-entropy for classes.
+
+## Regression: mean squared error
+
+When the network predicts a number $\hat y_i$ for each example (a price, a temperature), the usual loss is
+the **mean squared error** you minimised in [F6](/foundations/f6/linear-regression-by-gradient-descent/):
+
+$$
+L = \frac{1}{n}\sum_{i=1}^{n} (\hat y_i - y_i)^2, \qquad \frac{\partial L}{\partial \hat y_i} = \frac{2}{n}(\hat y_i - y_i)
+$$
+
+```python
+import numpy as np
+
+y_hat = np.array([2.5, 0.0, 2.1])
+y = np.array([3.0, -0.5, 2.0])
+mse = np.mean((y_hat - y) ** 2)
+print(round(mse, 4))
+```
+
+```text title="Output"
+0.17
+```
+
+$(0.25 + 0.25 + 0.01)/3 = 0.17$. Squaring makes big errors count much more than small ones. The
+gradient is that simple too: each prediction is pushed towards its target in proportion to its error.
+
+## Classification: from logits to probabilities
+
+For $k$ classes the last layer outputs $k$ logits $\mathbf{z} = (z_1, \dots, z_k)$ per example. The
+<Term id="softmax" /> turns them into probabilities:
+
+$$
+p_j = \operatorname{softmax}(\mathbf{z})_j = \frac{e^{z_j}}{\sum_{c=1}^{k} e^{z_c}}
+$$
+
+Exponentiating makes every score positive, and dividing by the total makes them sum to 1. The largest
+logit gets the largest probability, and adding the same constant to every logit changes nothing (it
+multiplies top and bottom by the same $e^{c}$). With two classes, softmax reduces to the sigmoid of the
+difference of the two logits, which is why a binary classifier can use one output and a sigmoid instead.
+
+## Cross-entropy: punish confident mistakes
+
+If the true class is $y$, a good model gives $p_y$ close to 1. The <Term id="cross-entropy" /> loss for
+one example is
+
+$$
+\ell = -\log p_y
+$$
+
+- $p_y = 1$ gives $\ell = 0$: perfect.
+- $p_y = 0.5$ gives $\ell \approx 0.69$.
+- $p_y = 0.01$ gives $\ell \approx 4.6$, and $\ell \to \infty$ as $p_y \to 0$: a confident wrong answer is
+  punished without limit.
+
+The training loss is the mean over the batch. If you did F5, you met this as the negative
+log-likelihood: minimising cross-entropy is maximum likelihood for a model that outputs probabilities.
+For two classes it is the binary cross-entropy $-[y\log p + (1 - y)\log(1 - p)]$. A model that guesses
+uniformly over $k$ classes has loss $\log k$, about $2.303$ for 10 classes, which is a useful sanity check
+for the loss of an untrained network.
+
+```python
+def softmax_naive(z):
+    e = np.exp(z)
+    return e / e.sum()
+
+z = np.array([2.0, 1.0, 0.1])
+p = softmax_naive(z)
+print(np.round(p, 3), p.sum())
+print("CE if class 0 is right:", round(-np.log(p[0]), 3))
+print("CE if class 2 is right:", round(-np.log(p[2]), 3))
+```
+
+```text title="Output"
+[0.659 0.242 0.099] 1.0
+CE if class 0 is right: 0.417
+CE if class 2 is right: 2.317
+```
+
+## The overflow trap and the max trick
+
+`np.exp` overflows for inputs above about 709: the result is `inf`, and `inf / inf` is `nan`. Logits of
+a few hundred are unusual but do happen, for instance when training diverges.
+
+```python
+print(softmax_naive(np.array([1000.0, 1001.0, 1002.0])))
+```
+
+```text title="Output"
+[nan nan nan]
+```
+
+(Plain Python also prints two warnings: `overflow encountered in exp` and `invalid value encountered in divide`.)
+
+The fix uses the shift invariance: subtract the largest logit $m = \max_c z_c$ first. Then the largest
+exponent is $e^0 = 1$, nothing overflows, and the answer is mathematically identical.
+
+```python
+def softmax(z):
+    e = np.exp(z - z.max())
+    return e / e.sum()
+
+print(np.round(softmax(np.array([1000.0, 1001.0, 1002.0])), 3))
+print(np.round(softmax(np.array([0.0, 1.0, 2.0])), 3))
+```
+
+```text title="Output"
+[0.09  0.245 0.665]
+[0.09  0.245 0.665]
+```
+
+### Log-sum-exp and log-softmax
+
+For the loss we need $\log p_y$, not $p_y$. Computing the softmax and then its log has a second trap: a
+tiny probability can round to exactly 0, and $\log 0 = -\infty$. Work in logs from the start:
+
+$$
+\log p_j = z_j - \log\sum_c e^{z_c}, \qquad
+\log\sum_c e^{z_c} = m + \log\sum_c e^{z_c - m}
+$$
+
+The second expression is the **log-sum-exp** trick: pull the largest term out before exponentiating. Now
+a hopeless prediction gives a large but finite loss instead of `inf`. For a batch, apply it row by row
+with `axis=1` and `keepdims=True` so the shapes broadcast:
+
+```python
+def log_softmax(Z):
+    m = Z.max(axis=1, keepdims=True)
+    lse = m + np.log(np.exp(Z - m).sum(axis=1, keepdims=True))   # log-sum-exp, row by row
+    return Z - lse
+
+def cross_entropy(Z, y):
+    """Mean cross-entropy of logits Z (n, k) against integer labels y (n,)."""
+    n = len(y)
+    return -log_softmax(Z)[np.arange(n), y].mean()
+
+Z = np.array([[2.0, 1.0, 0.1],
+              [0.5, 2.5, -1.0],
+              [-50.0, 0.0, 800.0]])
+y = np.array([0, 1, 0])
+print(np.round(log_softmax(Z), 3))
+print(round(cross_entropy(Z, y), 3))
+```
+
+```text title="Output"
+[[-4.170e-01 -1.417e+00 -2.317e+00]
+ [-2.153e+00 -1.530e-01 -3.653e+00]
+ [-8.500e+02 -8.000e+02  0.000e+00]]
+283.523
+```
+
+`log_softmax(Z)[np.arange(n), y]` picks, from each row $i$, the entry in column $y_i$: the log-probability
+of the true class. The third example is confidently wrong (class 0 has logit $-50$ against $800$), so it
+contributes a loss of 850 and dominates the mean. The naive version would have returned `inf` for it.
+
+:::caution[Labels are integers]
+`y` holds class indices `0, 1, ..., k-1`, not names or one-hot rows. Turn one-hot rows into indices with
+`Y.argmax(axis=1)`, and indices into one-hot rows with `np.eye(k)[y]`.
+:::
+
+## The gradient: probabilities minus labels
+
+For one example with logits $\mathbf{z}$ and true class $y$,
+$\ell = -z_y + \log\sum_c e^{z_c}$. Differentiate with respect to $z_j$. The first term gives $-1$ if
+$j = y$ and $0$ otherwise. The second gives $e^{z_j}/\sum_c e^{z_c} = p_j$ (chain rule on the log).
+Together:
+
+$$
+\frac{\partial \ell}{\partial z_j} = p_j - [j = y]
+\qquad\text{or, for the batch mean,}\qquad
+\frac{\partial L}{\partial Z} = \frac{1}{n}(P - Y)
+$$
+
+where $P$ holds the softmax probabilities and $Y$ the one-hot labels, both $(n, k)$. This is the same
+"prediction minus label" you used for the single sigmoid neuron in
+[lesson 1](/foundations/f9/the-neuron/). It is also why libraries fuse softmax and cross-entropy into one
+function: the combined gradient is simple and stable, while the separate pieces are neither.
+
+```python
+P = np.exp(log_softmax(Z[:2]))
+Y = np.eye(3)[y[:2]]                 # one-hot labels, shape (2, 3)
+dZ = (P - Y) / 2
+print(np.round(dZ, 3))
+```
+
+```text title="Output"
+[[-0.17   0.121  0.049]
+ [ 0.058 -0.071  0.013]]
+```
+
+Read the first row: the true class 0 has a negative gradient, so gradient descent *raises* its logit; the
+other two have positive gradients and are lowered. Each row sums to zero (up to rounding), because the probabilities sum to 1. Comparing this with central
+differences of `cross_entropy`, as in [F6](/foundations/f6/practical-optimisation/), agrees to better than
+$10^{-8}$.
+
+## Try it
+
+<CodeExercise id="f9-loss-functions-01" />
+
+<CodeExercise id="f9-loss-functions-02" />
+
+## Summary
+
+- Regression: MSE $\frac{1}{n}\sum(\hat y_i - y_i)^2$, gradient $\frac{2}{n}(\hat y - y)$.
+- Classification: softmax turns logits into probabilities; cross-entropy $-\log p_y$ punishes confident
+  mistakes without limit. An untrained $k$-class model should start near $\log k$.
+- Subtract the row maximum before exponentiating; compute $\log p$ with log-sum-exp,
+  $\log p_j = z_j - m - \log\sum_c e^{z_c - m}$, never as `np.log(softmax(z))`.
+- Gradient of mean softmax cross-entropy with respect to the logits: $(P - Y)/n$.

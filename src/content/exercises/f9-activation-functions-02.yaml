@@ -1,0 +1,43 @@
+id: f9-activation-functions-02
+lesson: foundations/f9/activation-functions
+title: Two linear layers are one
+prompt: |
+  Two linear layers with no activation in between compute $(XW_1 + \mathbf{b}_1)W_2 + \mathbf{b}_2$.
+
+  Write `collapse(W1, b1, W2, b2)` that returns a pair `(W, b)` for a **single** layer that computes
+  exactly the same thing: $XW + \mathbf{b}$ for every input $X$.
+
+  Shapes: `W1` is `(d, h)`, `b1` is `(h,)`, `W2` is `(h, k)` and `b2` is `(k,)`. Your `W` must be `(d, k)`
+  and `b` must be `(k,)`.
+
+  Expand the brackets on paper first.
+starter: |
+  import numpy as np
+
+  def collapse(W1, b1, W2, b2):
+      W = W1 @ W2
+      b = b1 + b2
+      return W, b
+solution: |
+  import numpy as np
+
+  def collapse(W1, b1, W2, b2):
+      W = W1 @ W2
+      b = b1 @ W2 + b2
+      return W, b
+tests: |
+  import numpy as np
+  _rng = np.random.default_rng(7)
+  for _d, _h, _k in [(2, 4, 3), (3, 3, 3), (5, 2, 1)]:
+      _W1, _b1 = _rng.normal(size=(_d, _h)), _rng.normal(size=_h)
+      _W2, _b2 = _rng.normal(size=(_h, _k)), _rng.normal(size=_k)
+      _r = collapse(_W1, _b1, _W2, _b2)
+      assert _r is not None and len(_r) == 2, "Return a pair: return W, b"
+      _W, _b = _r
+      assert np.shape(_W) == (_d, _k), f"W should have shape ({_d}, {_k}), got {np.shape(_W)}"
+      assert np.shape(_b) == (_k,), f"b should have shape ({_k},), got {np.shape(_b)}; the bias b1 has to pass through W2"
+      _X = _rng.normal(size=(6, _d))
+      np.testing.assert_allclose(_X @ _W + _b, (_X @ _W1 + _b1) @ _W2 + _b2, rtol=1e-10, atol=1e-12, err_msg="The single layer must give the same output as the two layers for every input")
+hints:
+  - "Expand (X W1 + b1) W2 + b2 into X (W1 W2) + (b1 W2 + b2)."
+  - "The first bias also goes through the second weight matrix: b1 @ W2."

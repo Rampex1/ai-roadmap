@@ -1,0 +1,7 @@
+term: "Early stopping"
+short: "Stop training when the validation loss has not improved for a set number of epochs, and keep the best weights seen."
+body: |
+  The number of epochs to wait is called the patience. Early stopping uses the validation set to choose how
+  long to train, which limits overfitting at no extra cost. The test set is still kept untouched for the final
+  measurement.
+related: ["overfitting", "epoch", "regularisation"]

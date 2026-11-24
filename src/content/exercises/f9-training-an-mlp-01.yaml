@@ -1,0 +1,106 @@
+id: f9-training-an-mlp-01
+lesson: foundations/f9/training-an-mlp
+title: Train a network to learn XOR
+prompt: |
+  Train a 2 → `hidden` → 2 network (tanh hidden layer, softmax cross-entropy output) to compute XOR.
+  The data `X_xor`, `y_xor`, the function `loss_and_grads(params, X, y)` and `predict(params, X)` are given.
+  `params` is a list `[W1, b1, W2, b2]` of NumPy arrays, and `loss_and_grads` returns
+  `(loss, grads)` with `grads` in the same order.
+
+  Write `train_xor(hidden=8, lr=0.5, steps=2000, seed=0)`:
+
+  1. Create `rng = np.random.default_rng(seed)` and initialise **random** weights: `W1` of shape
+     `(2, hidden)` and `W2` of shape `(hidden, 2)` from a normal distribution with standard deviation
+     $\sqrt{1/d_\text{in}}$ (Xavier, since the hidden layer is tanh). Biases start at zero.
+  2. Run `steps` steps of full-batch gradient descent on all four examples.
+  3. Return `params`.
+
+  The tests train with several seeds and expect `predict` to get all four XOR outputs right every time.
+  Try zero weights first and see what happens.
+starter: |
+  import numpy as np
+
+  X_xor = np.array([[0, 0], [0, 1], [1, 0], [1, 1]], dtype=float)
+  y_xor = np.array([0, 1, 1, 0])
+
+  def loss_and_grads(params, X, y):
+      W1, b1, W2, b2 = params
+      n = len(y)
+      H = np.tanh(X @ W1 + b1)
+      Z = H @ W2 + b2
+      m = Z.max(axis=1, keepdims=True)
+      logp = Z - m - np.log(np.exp(Z - m).sum(axis=1, keepdims=True))
+      loss = -logp[np.arange(n), y].mean()
+      dZ = np.exp(logp)
+      dZ[np.arange(n), y] -= 1
+      dZ /= n
+      dZ1 = (dZ @ W2.T) * (1 - H ** 2)
+      return loss, [X.T @ dZ1, dZ1.sum(axis=0), H.T @ dZ, dZ.sum(axis=0)]
+
+  def predict(params, X):
+      W1, b1, W2, b2 = params
+      return (np.tanh(X @ W1 + b1) @ W2 + b2).argmax(axis=1)
+
+  def train_xor(hidden=8, lr=0.5, steps=2000, seed=0):
+      rng = np.random.default_rng(seed)
+      params = [np.zeros((2, hidden)), np.zeros(hidden), np.zeros((hidden, 2)), np.zeros(2)]
+      for step in range(steps):
+          loss, grads = loss_and_grads(params, X_xor, y_xor)
+          # TODO: update every parameter
+      return params
+solution: |
+  import numpy as np
+
+  X_xor = np.array([[0, 0], [0, 1], [1, 0], [1, 1]], dtype=float)
+  y_xor = np.array([0, 1, 1, 0])
+
+  def loss_and_grads(params, X, y):
+      W1, b1, W2, b2 = params
+      n = len(y)
+      H = np.tanh(X @ W1 + b1)
+      Z = H @ W2 + b2
+      m = Z.max(axis=1, keepdims=True)
+      logp = Z - m - np.log(np.exp(Z - m).sum(axis=1, keepdims=True))
+      loss = -logp[np.arange(n), y].mean()
+      dZ = np.exp(logp)
+      dZ[np.arange(n), y] -= 1
+      dZ /= n
+      dZ1 = (dZ @ W2.T) * (1 - H ** 2)
+      return loss, [X.T @ dZ1, dZ1.sum(axis=0), H.T @ dZ, dZ.sum(axis=0)]
+
+  def predict(params, X):
+      W1, b1, W2, b2 = params
+      return (np.tanh(X @ W1 + b1) @ W2 + b2).argmax(axis=1)
+
+  def train_xor(hidden=8, lr=0.5, steps=2000, seed=0):
+      rng = np.random.default_rng(seed)
+      params = [rng.normal(0, np.sqrt(1 / 2), size=(2, hidden)), np.zeros(hidden),
+                rng.normal(0, np.sqrt(1 / hidden), size=(hidden, 2)), np.zeros(2)]
+      for step in range(steps):
+          loss, grads = loss_and_grads(params, X_xor, y_xor)
+          for p, g in zip(params, grads):
+              p -= lr * g
+      return params
+tests: |
+  import numpy as np
+  import time
+  _t0 = time.perf_counter()
+  _p = train_xor()
+  assert _p is not None and len(_p) == 4, "train_xor should return params = [W1, b1, W2, b2]"
+  assert np.shape(_p[0]) == (2, 8) and np.shape(_p[2]) == (8, 2), "With hidden=8, W1 should be (2, 8) and W2 (8, 2)"
+  assert not np.allclose(_p[0], _p[0][:, :1]), "All hidden units have identical weights: zero (or equal) initialisation never breaks the symmetry. Start from random weights"
+  assert np.array_equal(predict(_p, X_xor), [0, 1, 1, 0]), f"After training, predict should give [0, 1, 1, 0], got {predict(_p, X_xor)}"
+  _l0, _ = loss_and_grads(_p, X_xor, y_xor)
+  assert _l0 < 0.1, f"The final loss should be well below 0.1, got {_l0:.3f}: are you updating every parameter with p -= lr * g?"
+  for _s in [1, 2, 3, 4]:
+      _ps = train_xor(seed=_s)
+      assert np.array_equal(predict(_ps, X_xor), [0, 1, 1, 0]), f"Training failed for seed {_s}: check the initialisation scale"
+  _ps = train_xor(hidden=4, seed=7)
+  assert np.shape(_ps[0]) == (2, 4), "Use the hidden argument for the layer width"
+  _a = train_xor(seed=5); _b = train_xor(seed=5)
+  assert np.allclose(_a[0], _b[0]), "The same seed should give the same result: create rng = np.random.default_rng(seed) and use it for the weights"
+  assert time.perf_counter() - _t0 < 8, "Training is too slow: use full-batch NumPy operations, not Python loops over examples"
+hints:
+  - "rng.normal(0, np.sqrt(1 / 2), size=(2, hidden)) gives W1; use np.sqrt(1 / hidden) for W2."
+  - "Update in place so the arrays inside params change: for p, g in zip(params, grads): p -= lr * g."
+  - "With zero weights every hidden unit stays identical and the gradient into W1 is zero, so nothing is learned."

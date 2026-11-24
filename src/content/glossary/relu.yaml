@@ -1,0 +1,7 @@
+term: "ReLU"
+short: "The rectified linear unit, max(0, z): the most common activation function between hidden layers."
+body: |
+  $\operatorname{ReLU}(z) = \max(0, z)$ has derivative 1 for $z > 0$ and 0 for $z < 0$ (by convention 0 at
+  $z = 0$). Its slope does not shrink for large positive inputs, which keeps gradients from vanishing in deep
+  networks. A unit whose input is negative for every example gets zero gradient and stops learning ("dead ReLU").
+related: ["activation-function", "sigmoid"]

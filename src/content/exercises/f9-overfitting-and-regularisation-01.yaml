@@ -1,0 +1,47 @@
+id: f9-overfitting-and-regularisation-01
+lesson: foundations/f9/overfitting-and-regularisation
+title: Inverted dropout
+prompt: |
+  Write `dropout(A, p, rng, training)` that applies inverted dropout to an array of activations `A`:
+
+  - If `training` is false, or `p == 0`, return `A` unchanged.
+  - Otherwise draw `rng.random(A.shape)` once, keep each entry where that random number is `>= p`, set
+    the others to 0, and divide the kept entries by `1 - p`. Return the new array (do not change `A`).
+
+  `rng` is a NumPy `Generator` such as `np.random.default_rng(0)`; the tests check your exact mask
+  against one built from the same random numbers. For example with `p = 0.5` every surviving entry is
+  doubled, so the mean of a large array stays about the same.
+starter: |
+  import numpy as np
+
+  def dropout(A, p, rng, training):
+      keep = rng.random(A.shape) >= p
+      return A * keep
+solution: |
+  import numpy as np
+
+  def dropout(A, p, rng, training):
+      if not training or p == 0:
+          return A
+      keep = rng.random(A.shape) >= p
+      return A * keep / (1 - p)
+tests: |
+  import numpy as np
+  _A = np.arange(1.0, 13.0).reshape(3, 4)
+  _out = dropout(_A, 0.5, np.random.default_rng(0), False)
+  assert _out is not None, "dropout should return an array"
+  np.testing.assert_array_equal(_out, _A, err_msg="With training=False dropout must return A unchanged")
+  np.testing.assert_array_equal(dropout(_A, 0.0, np.random.default_rng(0), True), _A, err_msg="With p = 0 nothing is dropped")
+  for _p, _seed in [(0.5, 1), (0.2, 2), (0.8, 3)]:
+      _copy = _A.copy()
+      _got = dropout(_A, _p, np.random.default_rng(_seed), True)
+      _keep = np.random.default_rng(_seed).random(_A.shape) >= _p
+      np.testing.assert_allclose(_got, _A * _keep / (1 - _p), err_msg=f"For p = {_p}: keep entries where rng.random(A.shape) >= p and divide them by 1 - p")
+      np.testing.assert_array_equal(_A, _copy, err_msg="Do not modify A in place")
+  _big = np.ones((400, 500))
+  _d = dropout(_big, 0.3, np.random.default_rng(9), True)
+  assert abs(float((_d == 0).mean()) - 0.3) < 0.01, "About a fraction p of the entries should be zero"
+  assert abs(float(_d.mean()) - 1.0) < 0.01, "Inverted dropout should keep the mean about the same: divide survivors by 1 - p"
+hints:
+  - "Return A straight away when training is false or p is 0."
+  - "keep = rng.random(A.shape) >= p is a boolean mask; A * keep / (1 - p) applies it and rescales."

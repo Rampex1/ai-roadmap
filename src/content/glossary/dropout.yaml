@@ -1,0 +1,7 @@
+term: "Dropout"
+short: "A regulariser that randomly zeroes each hidden unit with probability p during training and is switched off at test time."
+body: |
+  With inverted dropout the surviving units are divided by $1 - p$, so the expected activation is unchanged
+  and nothing needs rescaling at test time. Because no unit can rely on any particular other unit being
+  present, the network learns more redundant features; training resembles averaging many thinned networks.
+related: ["regularisation", "overfitting"]

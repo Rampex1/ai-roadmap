@@ -1,0 +1,5 @@
+title: "micrograd: a tiny scalar autograd engine (Andrej Karpathy)"
+url: https://github.com/karpathy/micrograd
+kind: tool
+free: true
+modules: [f9]

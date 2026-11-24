@@ -1,0 +1,8 @@
+term: "Automatic differentiation"
+short: "Computing exact derivatives of a program by recording its elementary operations and applying the chain rule to them."
+body: |
+  Reverse-mode automatic differentiation (autograd) records the operations of a forward pass as a graph, then
+  walks the graph backwards in topological order, so each node passes gradient to the nodes it was computed
+  from. It is exact up to floating point, unlike finite differences, and is what PyTorch's `loss.backward()`
+  does.
+related: ["backpropagation", "chain-rule", "finite-difference"]

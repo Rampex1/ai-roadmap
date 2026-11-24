@@ -7,12 +7,12 @@ items:
       - text: The gradient of the loss with respect to every parameter, in one backward pass
         correct: true
         why: It applies the chain rule from the output back to every weight and bias.
-      - text: The updated weights after one training step
-        why: Updating is the optimiser's job; backpropagation only supplies the gradient.
-      - text: The network's predictions
-        why: That is the forward pass.
       - text: A numerical estimate of the gradient using small nudges
         why: That is finite differences; backpropagation is exact up to rounding.
+      - text: The network's predictions
+        why: That is the forward pass.
+      - text: The updated weights after one training step
+        why: Updating is the optimiser's job; backpropagation only supplies the gradient.
   - id: f9-backpropagation-02
     type: numeric
     prompt: "In $u = a \\cdot b$ with $a = 3$, $b = -2$, the gradient arriving from above is $\\partial L/\\partial u = 5$. What is $\\partial L/\\partial a$?"
@@ -36,11 +36,11 @@ items:
     prompt: "For a layer $Z = AW + \\mathbf{b}$ with $A$ of shape (n, d), $W$ (d, m) and upstream gradient $dZ$ of shape (n, m), which expression gives $dW$?"
     explanation: "dW must have W's shape (d, m). Only Aᵀ dZ, (d, n) @ (n, m), produces that."
     options:
+      - text: "dZ @ A.T"
+        why: (n, m) @ (d, n) does not even multiply unless m = d.
       - text: "A.T @ dZ"
         correct: true
         why: (d, n) @ (n, m) gives (d, m), the shape of W.
-      - text: "dZ @ A.T"
-        why: (n, m) @ (d, n) does not even multiply unless m = d.
       - text: "dZ @ W.T"
         why: That is dA, the gradient passed on to the previous layer.
       - text: "dZ.sum(axis=0)"
@@ -64,36 +64,35 @@ items:
       - text: The backward pass needs them to compute local derivatives, such as A in Aᵀ dZ
         correct: true
         why: Without them you would have to recompute the forward pass.
+      - text: To compute the finite-difference check
+        why: A gradient check re-runs the forward pass; it does not use the stored values.
       - text: So the loss can be printed
         why: Only the final loss is needed for printing.
       - text: Because NumPy cannot free arrays
         why: NumPy frees arrays fine; the values are kept on purpose.
-      - text: To compute the finite-difference check
-        why: A gradient check re-runs the forward pass; it does not use the stored values.
   - id: f9-backpropagation-08
     type: multi
     prompt: "A gradient check on your backward pass gives relative errors of 0.33 for W1 and about 1e-10 for everything else. Which conclusions are reasonable? Select all that apply."
     explanation: "A large error in one parameter's gradient points to a bug in the backward steps that lead to it; the others look correct. Training may still lower the loss with a wrong gradient, so the check matters."
     options:
-      - text: There is probably a bug in the backward steps between the output and W1
-        correct: true
-        why: The other gradients agree, so the shared early steps are fine.
+      - text: A relative error of 0.33 is normal rounding error
+        why: Rounding gives errors around 1e-7 or smaller, not a third.
       - text: The gradients of W2, b2 and b1 are very likely correct
         correct: true
         why: Errors near 1e-10 are what correct gradients give.
-      - text: A relative error of 0.33 is normal rounding error
-        why: Rounding gives errors around 1e-7 or smaller, not a third.
       - text: If training still lowers the loss, the bug does not matter
         why: A wrong gradient can still point roughly downhill while training badly or slowly.
+      - text: There is probably a bug in the backward steps between the output and W1
+        correct: true
+        why: The other gradients agree, so the shared early steps are fine.
   - id: f9-backpropagation-09
     type: order
     prompt: "Put these steps of computing gradients for a two-layer network (tanh hidden layer, softmax cross-entropy) in order."
-    explanation: "Forward first, then backward from the loss: dZ2, the second layer's gradients, dH, dZ1 through tanh, then the first layer's gradients."
+    explanation: "Forward first, then backward from the loss: dZ2, then everything that needs only dZ2 (the second layer's gradients and dH), then dZ1 through tanh, then the first layer's gradients."
     items:
       - "Forward pass: compute Z1, H, Z2 and the loss, keeping them"
       - "dZ2 = (softmax(Z2) - one-hot labels) / n"
-      - "dW2 = H.T @ dZ2 and db2 = dZ2.sum(axis=0)"
-      - "dH = dZ2 @ W2.T"
+      - "dW2 = H.T @ dZ2, db2 = dZ2.sum(axis=0) and dH = dZ2 @ W2.T"
       - "dZ1 = dH * (1 - H ** 2)"
       - "dW1 = X.T @ dZ1 and db1 = dZ1.sum(axis=0)"
   - id: f9-backpropagation-10
@@ -101,12 +100,12 @@ items:
     prompt: "In $\\hat y = w_2 h + b_2$, why is $\\partial L/\\partial b_2$ equal to $\\partial L/\\partial \\hat y$?"
     explanation: "b₂ enters through an addition, whose local derivative is 1, so the gradient is copied unchanged."
     options:
+      - text: Because biases never affect the loss
+        why: They do affect it; their gradient is just the upstream gradient.
       - text: The bias is added, and addition passes the gradient through unchanged
         correct: true
         why: The local derivative ∂ŷ/∂b₂ is 1.
-      - text: Because b₂ is small
-        why: The size of b₂ does not enter its gradient here.
-      - text: Because biases never affect the loss
-        why: They do affect it; their gradient is just the upstream gradient.
       - text: It is only approximately equal
         why: It is exactly equal.
+      - text: Because b₂ is small
+        why: The size of b₂ does not enter its gradient here.

@@ -7,12 +7,12 @@ items:
       - text: "(10, 4)"
         correct: true
         why: Inner dimensions 10 and 10 match, and the result has one column per neuron.
-      - text: "(4, 10)"
-        why: That is PyTorch's storage layout, used with a transpose; (32, 10) @ (4, 10) fails.
-      - text: "(32, 4)"
-        why: That is the shape of Z, not of W.
       - text: "(32, 10)"
         why: That is the shape of the batch X.
+      - text: "(32, 4)"
+        why: That is the shape of Z, not of W.
+      - text: "(4, 10)"
+        why: That is PyTorch's storage layout, used with a transpose; (32, 10) @ (4, 10) fails.
   - id: f9-forward-pass-02
     type: output
     prompt: "What does this print?"
@@ -42,11 +42,11 @@ items:
     prompt: "In the matrix $Z = XW + \\mathbf{b}$ for one layer, what is entry $Z_{ij}$?"
     explanation: "Row i of X is example i and column j of W holds neuron j's weights, so Z_ij is neuron j's pre-activation on example i."
     options:
+      - text: Neuron i's output for example j
+        why: Rows index examples and columns index neurons, not the other way round.
       - text: Neuron j's weighted sum plus bias for example i
         correct: true
         why: Row i of X dotted with column j of W, plus b_j.
-      - text: Neuron i's output for example j
-        why: Rows index examples and columns index neurons, not the other way round.
       - text: The weight from input i to neuron j
         why: That is W_ij, not Z_ij.
       - text: The average activation of neuron j over the batch
@@ -75,25 +75,25 @@ items:
         why: The inner dimensions must match; this W belongs to a later layer.
       - text: The batch has too few examples
         why: The batch size is never part of the inner dimension.
-      - text: W must be transposed whenever the batch size is not 16
-        why: The batch size does not appear in W at all.
       - text: The bias was not added
         why: The error is raised by the product, before any bias is added.
+      - text: W must be transposed whenever the batch size is not 16
+        why: The batch size does not appear in W at all.
   - id: f9-forward-pass-08
     type: multi
     prompt: "For a batch $X$ of shape (n, d) going through a layer of m neurons, which statements are true? Select all that apply."
     explanation: "The bias has one entry per neuron and broadcasts over the n rows; the output has n rows and m columns; column j is neuron j's output on every example; changing n changes no parameter shape."
     options:
+      - text: Changing the batch size n requires a different weight matrix
+        why: The same W works for any n; that is why we can train on mini-batches and predict on one example.
       - text: The bias vector has shape (m,) and is added to every row
         correct: true
         why: Broadcasting adds the same bias vector to each example.
+      - text: The weight matrix has n rows
+        why: W has d rows, one per input feature; it does not depend on the batch size.
       - text: The output has shape (n, m)
         correct: true
         why: One row per example, one column per neuron.
-      - text: The weight matrix has n rows
-        why: W has d rows, one per input feature; it does not depend on the batch size.
-      - text: Changing the batch size n requires a different weight matrix
-        why: The same W works for any n; that is why we can train on mini-batches and predict on one example.
   - id: f9-forward-pass-09
     type: order
     prompt: "Put the steps of one hidden layer's forward pass in order."
@@ -107,5 +107,5 @@ items:
   - id: f9-forward-pass-10
     type: cloze
     prompt: "The raw, unnormalised class scores output by the last layer of a classifier are called ______."
-    accept: ["logits", "logit"]
+    accept: [ "logits", "logit" ]
     explanation: "Logits become probabilities only after a softmax (or a sigmoid for one output)."

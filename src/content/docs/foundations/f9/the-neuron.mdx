@@ -1,0 +1,171 @@
+---
+title: "The neuron"
+module: f9
+order: 1
+estMinutes: 10
+objectives:
+  - "Compute a neuron's output from its inputs, weights, bias and activation"
+  - "Evaluate one neuron on a whole batch with a single matrix-vector product"
+  - "Explain why a single sigmoid neuron is logistic regression and why its decision boundary is a straight line"
+goDeeper: 3b1b-neural-networks
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import neuronImg from '@/assets/diagrams/f9-neuron.svg';
+
+This module builds a neural network from nothing but NumPy, trains it, and then shows how PyTorch does
+the same work for you. Everything rests on pieces you already have: dot products and matrix
+multiplication from [F3](/foundations/f3/matrix-multiplication/), the chain rule from
+[F4](/foundations/f4/chain-rule/), and gradient descent from [F6](/foundations/f6/gradient-descent/).
+The first piece is the smallest unit of a network: one neuron.
+
+## A weighted sum, then a squash
+
+A <Term id="neuron" /> takes a vector of inputs $\mathbf{x} = (x_1, \dots, x_d)$ and does two things:
+
+1. **Weighted sum plus bias.** It multiplies each input by a weight and adds a bias:
+   $$z = w_1x_1 + w_2x_2 + \dots + w_dx_d + b = \mathbf{w}\cdot\mathbf{x} + b$$
+2. **Activation.** It passes $z$ through a fixed non-linear function $g$:
+   $$a = g(z)$$
+
+Here $\mathbf{w}$ (the **weights**) and $b$ (the **bias**) are the neuron's parameters, the numbers that
+training will adjust. $z$ is called the **pre-activation** and $a$ the **activation** or output. A
+neuron with $d$ inputs has $d + 1$ parameters.
+
+<Figure
+  src={neuronImg}
+  alt="Three input circles x1, x2, x3 with arrows labelled w1, w2, w3 into a circle computing z = sum of wi xi plus b, then an arrow into a box a = g(z), then the output a"
+  caption="A neuron: weight each input, add a bias, apply an activation."
+/>
+
+The name comes from a loose analogy with brain cells, which "fire" when their combined input is strong
+enough. The analogy stops there: an artificial neuron is just this formula.
+
+For now the activation is the <Term id="sigmoid" /> from [F4](/foundations/f4/chain-rule/),
+$\sigma(z) = 1/(1 + e^{-z})$, which squashes any number into the range 0 to 1. The next lesson meets
+other choices.
+
+```python
+import numpy as np
+
+def neuron(x, w, b):
+    z = np.dot(w, x) + b          # weighted sum plus bias
+    return 1 / (1 + np.exp(-z))   # sigmoid activation
+
+x = np.array([2.0, -1.0, 0.5])
+w = np.array([0.4, 0.3, -1.0])
+b = 0.1
+print(round(neuron(x, w, b), 4))
+```
+
+```text title="Output"
+0.525
+```
+
+By hand: $z = 0.4\cdot 2 + 0.3\cdot(-1) + (-1)\cdot 0.5 + 0.1 = 0.1$, and $\sigma(0.1) \approx 0.525$.
+
+## What one neuron can compute
+
+The weights say how much each input matters and in which direction; the bias shifts the threshold. With
+two inputs that are 0 or 1, weights $(10, 10)$ and a bias of $-15$, the neuron only gets a positive
+$z$ when **both** inputs are 1. That is logical AND. Change the bias to $-5$ and one input is enough: OR.
+
+## A whole batch at once
+
+Looping over examples is slow. Stack $n$ examples as the rows of a matrix $X$ of shape $(n, d)$. Then
+$X\mathbf{w}$ computes every example's weighted sum in one product (row $i$ of the result is
+$\mathbf{x}_i \cdot \mathbf{w}$), and NumPy broadcasting adds the scalar bias to every entry:
+
+$$
+\mathbf{z} = X\mathbf{w} + b \qquad (n, d)\ @\ (d,) \to (n,)
+$$
+
+```python
+X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]], dtype=float)   # all four input pairs
+w = np.array([10.0, 10.0])
+
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+print("AND:", np.round(sigmoid(X @ w - 15), 3))
+print("OR: ", np.round(sigmoid(X @ w - 5), 3))
+```
+
+```text title="Output"
+AND: [0.    0.007 0.007 0.993]
+OR:  [0.007 0.993 0.993 1.   ]
+```
+
+The shapes are worth saying out loud every time: $X$ is $(4, 2)$, $\mathbf{w}$ is $(2,)$, so
+`X @ w` is $(4,)$, one number per example. Thinking in shapes will carry you through the whole module.
+
+## One neuron is logistic regression
+
+Read the sigmoid output as a probability: $p = \sigma(\mathbf{w}\cdot\mathbf{x} + b)$ is the model's
+estimate of $P(y = 1 \mid \mathbf{x})$. That model has a name you will meet again in F7: **logistic
+regression**. So a single sigmoid neuron *is* logistic regression, and training it means choosing
+$\mathbf{w}$ and $b$ to make the probabilities match labelled data.
+
+Instead of setting the AND weights by hand, let gradient descent find them. The loss is the binary
+cross-entropy (lesson 4 derives the gradient of the multi-class version, which reduces to this one for
+two classes); for now take on trust that its gradient with
+respect to $z$ is simply $p - y$, the prediction minus the label. The chain rule then gives
+$\nabla_{\mathbf{w}} = X^\top(\mathbf{p} - \mathbf{y})/n$ and
+$\partial L/\partial b = \operatorname{mean}(\mathbf{p} - \mathbf{y})$:
+
+```python
+X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]], dtype=float)
+y = np.array([0, 0, 0, 1], dtype=float)     # AND
+
+w, b, lr = np.zeros(2), 0.0, 1.0
+for step in range(2000):
+    p = sigmoid(X @ w + b)          # forward: predicted probabilities, shape (4,)
+    err = p - y                     # gradient of the loss with respect to z (lesson 4)
+    w -= lr * X.T @ err / len(y)
+    b -= lr * err.mean()
+
+print("w =", np.round(w, 2), " b =", round(b, 2))
+print("p =", np.round(sigmoid(X @ w + b), 3))
+```
+
+```text title="Output"
+w = [8.82 8.82]  b = -13.4
+p = [0.    0.01  0.01  0.986]
+```
+
+Training found weights close to the hand-made ones: equal weights and a bias about $-1.5$ times a weight.
+
+## The boundary is a straight line
+
+The neuron predicts class 1 when $p > 0.5$, which happens exactly when $z > 0$. So the **decision
+boundary**, the set of points where the prediction flips, is
+
+$$
+\mathbf{w}\cdot\mathbf{x} + b = 0
+$$
+
+With two inputs that is the straight line $w_1x_1 + w_2x_2 + b = 0$; in more dimensions it is a flat
+plane (a hyperplane). The sigmoid only decides *how confident* the neuron is on each side; it cannot bend
+the boundary. A single neuron can therefore only separate classes that a straight line can separate.
+AND and OR pass that test. The next lesson shows a famous function that fails it, and how stacking
+neurons fixes the problem.
+
+:::note[Vocabulary]
+Weights and biases together are the **parameters**. Settings you choose yourself, like the learning
+rate or the number of neurons, are **hyperparameters**. Training changes the first, never the second.
+:::
+
+## Try it
+
+<CodeExercise id="f9-the-neuron-01" />
+
+## Summary
+
+- A neuron computes $a = g(\mathbf{w}\cdot\mathbf{x} + b)$: a weighted sum plus bias, then an
+  activation. With $d$ inputs it has $d + 1$ parameters.
+- For a batch $X$ of shape $(n, d)$, `X @ w + b` gives all $n$ pre-activations at once.
+- A sigmoid neuron outputs a probability and is exactly logistic regression; the gradient of its loss
+  with respect to $z$ is $p - y$.
+- Its decision boundary $\mathbf{w}\cdot\mathbf{x} + b = 0$ is a straight line or hyperplane, so one
+  neuron can only separate linearly separable classes.

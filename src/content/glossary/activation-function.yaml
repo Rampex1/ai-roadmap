@@ -1,0 +1,7 @@
+term: "Activation function"
+short: "The non-linear function a neuron applies to its weighted sum, such as ReLU, tanh or the sigmoid."
+body: |
+  Without a non-linear activation between layers, a stack of linear layers collapses into a single linear
+  layer, so depth would add nothing. Common choices are ReLU $\max(0, z)$, $\tanh z$ and the sigmoid. During
+  backpropagation each layer's gradient is multiplied by the activation's derivative.
+related: ["relu", "sigmoid", "neuron"]

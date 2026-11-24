@@ -1,0 +1,277 @@
+---
+title: "The same network in PyTorch"
+module: f9
+order: 9
+estMinutes: 12
+objectives:
+  - "Create tensors, move them to a device, and get gradients from autograd with requires_grad and backward()"
+  - "Define an MLP as an nn.Module and train it with an optimiser loop: forward, zero_grad, backward, step"
+  - "Feed data in mini-batches with TensorDataset and DataLoader, and evaluate with eval() and no_grad()"
+goDeeper: pytorch-learn-the-basics
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+You have built every part of a neural network by hand: layers, losses, backpropagation, an autograd
+engine and a training loop. **PyTorch** is a library that provides all of these, fast, on arrays of any
+size, and on a GPU if you have one. Nothing in it is magic any more: each piece maps to something from
+the last eight lessons.
+
+:::caution[PyTorch does not run in the browser]
+The exercises on this site run in your browser, where PyTorch is not available. So this lesson shows code
+with its output, and the hands-on PyTorch work is in the homework notebook, which runs on Google Colab
+(PyTorch is preinstalled there). To run the examples locally, install it into a project with
+`uv add torch` (see [F0](/foundations/f0/python-with-uv/)). The outputs below were produced with
+PyTorch 2.15 on a CPU, as of late 2026; other versions or hardware may differ in the last digits.
+:::
+
+## Tensors
+
+A <Term id="tensor" /> is PyTorch's array. It behaves much like a NumPy array, with the same shapes,
+broadcasting, indexing and `@`:
+
+```python
+import torch
+import numpy as np
+
+t = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
+print(t.shape, t.dtype)
+print(t @ t.T)
+print(torch.from_numpy(np.arange(3.0)), torch.tensor([1, 2]).dtype)
+print(t.sum(dim=0), t.numpy().dtype)
+```
+
+```text title="Output"
+torch.Size([2, 2]) torch.float32
+tensor([[ 5., 11.],
+        [11., 25.]])
+tensor([0., 1., 2.], dtype=torch.float64) torch.int64
+tensor([4., 6.]) float32
+```
+
+Three differences from NumPy matter at once:
+
+- **dtype.** PyTorch defaults to `float32` for decimals, NumPy to `float64`. Networks train in
+  `float32` (half the memory, much faster on GPUs). Converting from NumPy keeps `float64`, so data from
+  scikit-learn usually needs `dtype=torch.float32`. Class labels are `int64`.
+- **`dim` instead of `axis`.** Most functions accept both names, but PyTorch documentation uses `dim`.
+- **device.** A tensor lives on the CPU or a GPU, and an operation needs all its inputs on the same
+  device. The usual idiom picks the GPU when there is one:
+
+```python
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print(device)
+```
+
+```text title="Output"
+cpu
+```
+
+On a Colab GPU runtime this prints `cuda`. Move a tensor or a whole model with `.to(device)`.
+
+## Autograd: the engine you built, for tensors
+
+Mark a tensor with `requires_grad=True` and PyTorch records every operation on it, exactly like your
+`Value` class from [lesson 6](/foundations/f9/autograd-engine/). `.backward()` then fills in `.grad`.
+Here is the hand-worked network from [lesson 5](/foundations/f9/backpropagation/) once more:
+
+```python
+x, y = torch.tensor(1.0), torch.tensor(0.0)
+w1 = torch.tensor(0.5, requires_grad=True)
+b1 = torch.tensor(0.0, requires_grad=True)
+w2 = torch.tensor(2.0, requires_grad=True)
+b2 = torch.tensor(0.1, requires_grad=True)
+
+y_hat = w2 * torch.tanh(w1 * x + b1) + b2
+loss = (y_hat - y) ** 2
+loss.backward()
+print(loss.item())
+print(w1.grad, w2.grad)
+```
+
+```text title="Output"
+1.0490559339523315
+tensor(3.2220) tensor(0.9466)
+```
+
+The same 3.2220 and 0.9466 again. `.item()` turns a one-element tensor into a Python number.
+
+PyTorch's gradients **accumulate**, just like yours did with `+=`. Run the forward and backward pass a
+second time without clearing, and `w1.grad` doubles:
+
+```python
+loss = (w2 * torch.tanh(w1 * x + b1) + b2 - y) ** 2
+loss.backward()
+print(w1.grad)
+```
+
+```text title="Output"
+tensor(6.4441)
+```
+
+That is why every training loop clears the gradients before each backward pass.
+
+## Layers and models: `nn.Module`
+
+`torch.nn` provides layers with their parameters already created and initialised. `nn.Linear(d_in, d_out)`
+is a fully connected layer. One detail differs from this course's convention: it **stores its weight as
+`(d_out, d_in)`** and computes $XW^\top + \mathbf{b}$. The maths is identical; only the storage is
+transposed.
+
+```python
+from torch import nn
+
+torch.manual_seed(0)
+layer = nn.Linear(2, 16)
+print(layer.weight.shape, layer.bias.shape)
+x = torch.randn(5, 2)
+print(layer(x).shape)
+print(torch.allclose(layer(x), x @ layer.weight.T + layer.bias))
+```
+
+```text title="Output"
+torch.Size([16, 2]) torch.Size([16])
+torch.Size([5, 16])
+True
+```
+
+A model is a class that inherits from `nn.Module`. You create its layers in `__init__` and say how data
+flows through them in `forward`. `nn.Sequential` chains layers in order, which is all an MLP needs:
+
+```python
+class MLP(nn.Module):
+    def __init__(self, sizes):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(sizes[0], sizes[1]), nn.ReLU(),
+            nn.Linear(sizes[1], sizes[2]), nn.ReLU(),
+            nn.Linear(sizes[2], sizes[3]),
+        )
+
+    def forward(self, x):
+        return self.net(x)          # logits
+
+model = MLP([2, 16, 16, 2])
+print(model)
+print("parameters:", sum(p.numel() for p in model.parameters()))
+```
+
+```text title="Output"
+MLP(
+  (net): Sequential(
+    (0): Linear(in_features=2, out_features=16, bias=True)
+    (1): ReLU()
+    (2): Linear(in_features=16, out_features=16, bias=True)
+    (3): ReLU()
+    (4): Linear(in_features=16, out_features=2, bias=True)
+  )
+)
+parameters: 354
+```
+
+354 is $(2 + 1)\cdot 16 + (16 + 1)\cdot 16 + (16 + 1)\cdot 2$, the formula from
+[lesson 3](/foundations/f9/forward-pass/). Call the model like a function, `model(X)`, which runs
+`forward`. `model.parameters()` yields every weight and bias tensor, which is what the optimiser needs.
+
+## Data in mini-batches: `DataLoader`
+
+`TensorDataset` pairs up input and label tensors, and `DataLoader` serves them in shuffled mini-batches,
+replacing the index shuffling you wrote by hand in [lesson 7](/foundations/f9/training-an-mlp/). We use
+the same moons data and split:
+
+```python
+from sklearn.datasets import make_moons
+from torch.utils.data import TensorDataset, DataLoader
+
+X, y = make_moons(n_samples=400, noise=0.2, random_state=2)
+rng = np.random.default_rng(0)
+idx = rng.permutation(len(y))
+train_idx, test_idx = idx[:300], idx[300:]
+X_t = torch.tensor(X, dtype=torch.float32)      # sklearn gives float64; layers expect float32
+y_t = torch.tensor(y)                            # int64 class labels
+
+train_ds = TensorDataset(X_t[train_idx], y_t[train_idx])
+loader = DataLoader(train_ds, batch_size=32, shuffle=True)
+xb, yb = next(iter(loader))
+print(xb.shape, yb.shape, len(loader))
+```
+
+```text title="Output"
+torch.Size([32, 2]) torch.Size([32]) 10
+```
+
+300 examples in batches of 32 give 10 batches per epoch, the last one with 12 examples.
+
+## The training loop
+
+Two more pieces. `nn.CrossEntropyLoss` takes **logits** and integer labels and computes the stable
+log-softmax cross-entropy of [lesson 4](/foundations/f9/loss-functions/) in one go; never put a softmax
+in front of it. `torch.optim.SGD` performs `p -= lr * p.grad` for every parameter (and `torch.optim.Adam`
+is the Adam of [F6](/foundations/f6/momentum-and-adam/)).
+
+```python
+torch.manual_seed(0)
+model = MLP([2, 16, 16, 2])
+loss_fn = nn.CrossEntropyLoss()                  # log-softmax + cross-entropy, from logits
+opt = torch.optim.SGD(model.parameters(), lr=0.1)
+
+for epoch in range(1, 101):
+    model.train()
+    for xb, yb in loader:
+        loss = loss_fn(model(xb), yb)   # 1. forward
+        opt.zero_grad()                 # 2. clear old gradients
+        loss.backward()                 # 3. backpropagate
+        opt.step()                      # 4. update every parameter
+    if epoch in (1, 50, 100):
+        model.eval()
+        with torch.no_grad():           # no graph needed for evaluation
+            acc = (model(X_t[test_idx]).argmax(dim=1) == y_t[test_idx]).float().mean()
+        print(f"epoch {epoch:3}: last batch loss {loss.item():.3f}, test acc {acc:.2f}")
+```
+
+```text title="Output"
+epoch   1: last batch loss 0.654, test acc 0.68
+epoch  50: last batch loss 0.330, test acc 0.90
+epoch 100: last batch loss 0.100, test acc 0.98
+```
+
+Those four numbered lines are the heart of all PyTorch training, from this toy to large language models.
+The numbers differ from the NumPy version because the initialisation differs (PyTorch's default is smaller
+than He) and the batches are shuffled differently, but the network reaches a similar accuracy.
+
+- `model.train()` and `model.eval()` switch layers such as dropout (`nn.Dropout`) between training and
+  evaluation behaviour. They do not train or evaluate anything by themselves.
+- `torch.no_grad()` tells autograd not to record a graph, which saves memory and time when you only need
+  predictions.
+- `torch.manual_seed(0)` fixes the initial weights and the shuffling order, so a run can be repeated.
+
+## NumPy to PyTorch, side by side
+
+| This module (NumPy) | PyTorch |
+|---|---|
+| `W` of shape `(d_in, d_out)`, `A @ W + b` | `nn.Linear(d_in, d_out)`, weight `(d_out, d_in)` |
+| `np.maximum(0, Z)` | `nn.ReLU()` or `torch.relu` |
+| `log_softmax` plus picking the true class | `nn.CrossEntropyLoss()` on logits |
+| hand-written `loss_and_grads` | `loss.backward()` |
+| `for p, g in zip(params, grads): p -= lr * g` | `opt.step()` |
+| resetting `grad` before each backward | `opt.zero_grad()` |
+| `rng.permutation` and slicing batches | `DataLoader(..., shuffle=True)` |
+| L2 penalty `lam * W` | `weight_decay=` argument of the optimiser |
+| dropout mask divided by `1 - p` | `nn.Dropout(p)` |
+
+## Try it
+
+PyTorch cannot run here, so this exercise rebuilds `nn.Linear`'s storage convention in NumPy. The
+homework then has you train real PyTorch models on Colab.
+
+<CodeExercise id="f9-pytorch-01" />
+
+## Summary
+
+- Tensors are NumPy-like arrays with a dtype (usually `float32`), a device (`cpu` or `cuda`) and
+  optional gradient tracking.
+- `requires_grad=True` plus `.backward()` is reverse-mode autograd; gradients accumulate, so call
+  `opt.zero_grad()` every step.
+- Models are `nn.Module` subclasses; `nn.Linear` stores its weight as `(d_out, d_in)`.
+- The loop: forward, loss, `zero_grad`, `backward`, `step`; data comes from a `DataLoader`; evaluate
+  under `model.eval()` and `torch.no_grad()`. `nn.CrossEntropyLoss` expects logits.

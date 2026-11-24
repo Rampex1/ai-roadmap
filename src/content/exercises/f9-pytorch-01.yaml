@@ -1,0 +1,61 @@
+id: f9-pytorch-01
+lesson: foundations/f9/pytorch
+title: nn.Linear in NumPy
+prompt: |
+  Rebuild PyTorch's `nn.Linear` convention in NumPy with two functions.
+
+  - `linear_init(d_in, d_out, rng)` returns `(weight, bias)` the way `nn.Linear` does by default: with
+    $k = 1/\sqrt{d_\text{in}}$, first `weight = rng.uniform(-k, k, size=(d_out, d_in))`, then
+    `bias = rng.uniform(-k, k, size=d_out)`, in that order. Note the weight shape is **(d_out, d_in)**.
+  - `linear_forward(x, weight, bias)` returns $xW^\top + \mathbf{b}$ for a batch `x` of shape
+    `(n, d_in)`, giving shape `(n, d_out)`.
+
+  Check: a layer created with `linear_init(3, 4, rng)` maps a `(5, 3)` batch to shape `(5, 4)`, and its
+  output equals `x @ W + b` with the course's `(d_in, d_out)` matrix `W = weight.T`.
+starter: |
+  import numpy as np
+
+  def linear_init(d_in, d_out, rng):
+      k = 1 / np.sqrt(d_in)
+      weight = rng.uniform(-k, k, size=(d_in, d_out))
+      bias = np.zeros(d_out)
+      return weight, bias
+
+  def linear_forward(x, weight, bias):
+      return x @ weight + bias
+solution: |
+  import numpy as np
+
+  def linear_init(d_in, d_out, rng):
+      k = 1 / np.sqrt(d_in)
+      weight = rng.uniform(-k, k, size=(d_out, d_in))
+      bias = rng.uniform(-k, k, size=d_out)
+      return weight, bias
+
+  def linear_forward(x, weight, bias):
+      return x @ weight.T + bias
+tests: |
+  import numpy as np
+  _r = linear_init(3, 4, np.random.default_rng(0))
+  assert _r is not None and len(_r) == 2, "linear_init should return a pair: weight, bias"
+  _w, _b = _r
+  assert np.shape(_w) == (4, 3), f"nn.Linear(3, 4) stores its weight as (d_out, d_in) = (4, 3), got {np.shape(_w)}"
+  assert np.shape(_b) == (4,), "The bias should have shape (d_out,)"
+  for _din, _dout, _seed in [(3, 4, 0), (16, 2, 1), (1, 5, 2)]:
+      _rng = np.random.default_rng(_seed)
+      _k = 1 / np.sqrt(_din)
+      _ew = _rng.uniform(-_k, _k, size=(_dout, _din)); _eb = _rng.uniform(-_k, _k, size=_dout)
+      _gw, _gb = linear_init(_din, _dout, np.random.default_rng(_seed))
+      np.testing.assert_allclose(_gw, _ew, err_msg=f"weight for d_in={_din}, d_out={_dout}: draw rng.uniform(-k, k, size=(d_out, d_in)) first")
+      np.testing.assert_allclose(_gb, _eb, err_msg="bias: draw rng.uniform(-k, k, size=d_out) right after the weight")
+  _big_w, _ = linear_init(400, 50, np.random.default_rng(3))
+  assert np.abs(_big_w).max() <= 1 / np.sqrt(400) + 1e-12, "Weights must lie between -1/sqrt(d_in) and 1/sqrt(d_in)"
+  _rng = np.random.default_rng(4)
+  for _n, _din, _dout in [(5, 3, 4), (1, 2, 2), (7, 6, 1)]:
+      _x = _rng.normal(size=(_n, _din)); _W = _rng.normal(size=(_dout, _din)); _bb = _rng.normal(size=_dout)
+      _o = linear_forward(_x, _W, _bb)
+      assert np.shape(_o) == (_n, _dout), f"Output shape should be ({_n}, {_dout}), got {np.shape(_o)}"
+      np.testing.assert_allclose(_o, _x @ _W.T + _bb, rtol=1e-10, err_msg="linear_forward should compute x @ weight.T + bias")
+hints:
+  - "The only change from the course convention is the transpose: weight has shape (d_out, d_in)."
+  - "x has shape (n, d_in) and weight.T has shape (d_in, d_out), so x @ weight.T works."

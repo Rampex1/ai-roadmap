@@ -1,0 +1,156 @@
+id: f9-autograd-engine-01
+lesson: foundations/f9/autograd-engine
+title: Your own autograd Value
+prompt: |
+  Finish the `Value` class. Addition is done for you as a model. Write:
+
+  - `__mul__(self, other)`: returns a new Value for `self * other`, whose `_backward` adds
+    `other.data * out.grad` to `self.grad` and `self.data * out.grad` to `other.grad`.
+  - `tanh(self)`: returns a new Value for $\tanh$ of `self.data`, whose `_backward` adds
+    $(1 - t^2)\cdot$`out.grad` to `self.grad`, where $t$ is the output.
+  - `backward(self)`: builds a topological order of the graph (each node after its children), sets
+    `self.grad = 1.0`, then calls `_backward()` on every node in **reverse** order.
+
+  Accumulate gradients with `+=` so that a value used several times gets every contribution. Plain numbers
+  must work on either side, so `2 * v` and `v * 2` both work (`__rmul__` is already set up).
+
+  Check: for `a = Value(3.0)` and `b = a * a + a`, after `b.backward()` you get `a.grad == 7.0`.
+starter: |
+  import math
+
+  class Value:
+      def __init__(self, data, _children=()):
+          self.data = data
+          self.grad = 0.0
+          self._prev = _children
+          self._backward = lambda: None
+
+      def __repr__(self):
+          return f"Value(data={self.data}, grad={self.grad})"
+
+      def __add__(self, other):
+          other = other if isinstance(other, Value) else Value(other)
+          out = Value(self.data + other.data, (self, other))
+          def _backward():
+              self.grad += out.grad
+              other.grad += out.grad
+          out._backward = _backward
+          return out
+
+      def __mul__(self, other):
+          other = other if isinstance(other, Value) else Value(other)
+          out = Value(self.data * other.data, (self, other))
+          # TODO: attach a _backward function
+          return out
+
+      def tanh(self):
+          # TODO
+          pass
+
+      def backward(self):
+          # TODO: topological order, then call _backward in reverse
+          self.grad = 1.0
+          self._backward()
+
+      __radd__ = __add__
+      __rmul__ = __mul__
+      def __neg__(self):        return self * -1
+      def __sub__(self, other): return self + (-other)
+solution: |
+  import math
+
+  class Value:
+      def __init__(self, data, _children=()):
+          self.data = data
+          self.grad = 0.0
+          self._prev = _children
+          self._backward = lambda: None
+
+      def __repr__(self):
+          return f"Value(data={self.data}, grad={self.grad})"
+
+      def __add__(self, other):
+          other = other if isinstance(other, Value) else Value(other)
+          out = Value(self.data + other.data, (self, other))
+          def _backward():
+              self.grad += out.grad
+              other.grad += out.grad
+          out._backward = _backward
+          return out
+
+      def __mul__(self, other):
+          other = other if isinstance(other, Value) else Value(other)
+          out = Value(self.data * other.data, (self, other))
+          def _backward():
+              self.grad += other.data * out.grad
+              other.grad += self.data * out.grad
+          out._backward = _backward
+          return out
+
+      def tanh(self):
+          t = math.tanh(self.data)
+          out = Value(t, (self,))
+          def _backward():
+              self.grad += (1 - t ** 2) * out.grad
+          out._backward = _backward
+          return out
+
+      def backward(self):
+          order, seen = [], set()
+          def visit(v):
+              if v not in seen:
+                  seen.add(v)
+                  for child in v._prev:
+                      visit(child)
+                  order.append(v)
+          visit(self)
+          self.grad = 1.0
+          for v in reversed(order):
+              v._backward()
+
+      __radd__ = __add__
+      __rmul__ = __mul__
+      def __neg__(self):        return self * -1
+      def __sub__(self, other): return self + (-other)
+tests: |
+  import math
+  _a, _b = Value(2.0), Value(-3.0)
+  _c = _a * _b
+  assert isinstance(_c, Value) and math.isclose(_c.data, -6.0), "Value(2) * Value(-3) should be a Value with data -6"
+  _c.backward()
+  assert math.isclose(_a.grad, -3.0) and math.isclose(_b.grad, 2.0), f"For c = a * b expected a.grad = b = -3 and b.grad = a = 2, got {_a.grad} and {_b.grad}"
+  _x = Value(0.5)
+  _t = _x.tanh()
+  assert isinstance(_t, Value) and math.isclose(_t.data, math.tanh(0.5)), "tanh() should return a Value holding math.tanh(data)"
+  _t.backward()
+  assert math.isclose(_x.grad, 1 - math.tanh(0.5) ** 2), f"d tanh(x)/dx at 0.5 should be 1 - tanh(0.5)**2 = {1 - math.tanh(0.5) ** 2:.6f}, got {_x.grad}"
+  _a = Value(3.0)
+  _r = _a * _a + _a
+  _r.backward()
+  assert math.isclose(_r.data, 12.0) and math.isclose(_a.grad, 7.0), f"For b = a*a + a at a = 3 expected grad 7 (use += so every use of a adds its part), got {_a.grad}"
+  _x = Value(0.5)
+  _m = _x * _x
+  _o = _m + _m.tanh()
+  _o.backward()
+  assert math.isclose(_x.grad, (2 - math.tanh(0.25) ** 2) * 2 * 0.5), f"backward must visit nodes in topological order, so each node's gradient is complete before it is passed on: expected x.grad {(2 - math.tanh(0.25) ** 2) * 2 * 0.5:.6f}, got {_x.grad}"
+  _x, _y = Value(1.0), Value(0.0)
+  _w1, _b1, _w2, _b2 = Value(0.5), Value(0.0), Value(2.0), Value(0.1)
+  _h = (_w1 * _x + _b1).tanh(); _yh = _w2 * _h + _b2
+  _L = (_yh - _y) * (_yh - _y)
+  _L.backward()
+  assert math.isclose(_w1.grad, 3.2220, abs_tol=1e-4) and math.isclose(_w2.grad, 0.9466, abs_tol=1e-4), f"The lesson network should give w1.grad 3.2220 and w2.grad 0.9466, got {_w1.grad:.4f} and {_w2.grad:.4f}: is backward visiting every node in reverse topological order?"
+  def _f(u, v):
+      return math.tanh(u * v + 2 * u) * v
+  for _u0, _v0 in [(0.3, -1.2), (-0.7, 0.4), (1.5, 0.9)]:
+      _u, _v = Value(_u0), Value(_v0)
+      _o = (_u * _v + 2 * _u).tanh() * _v
+      _o.backward()
+      _h = 1e-6
+      _du = (_f(_u0 + _h, _v0) - _f(_u0 - _h, _v0)) / (2 * _h)
+      _dv = (_f(_u0, _v0 + _h) - _f(_u0, _v0 - _h)) / (2 * _h)
+      assert math.isclose(_o.data, _f(_u0, _v0), rel_tol=1e-9), "Wrong forward value for tanh(u*v + 2*u) * v"
+      assert math.isclose(_u.grad, _du, abs_tol=1e-6) and math.isclose(_v.grad, _dv, abs_tol=1e-6), f"Gradients of tanh(u*v + 2*u) * v at u={_u0}, v={_v0} should be about {_du:.5f} and {_dv:.5f}, got {_u.grad:.5f} and {_v.grad:.5f}"
+hints:
+  - "Copy the shape of __add__: define _backward inside __mul__, then set out._backward = _backward."
+  - "In tanh, compute t = math.tanh(self.data) first; the closure can use t later."
+  - "In backward, a recursive visit(v) appends v after visiting all of v._prev; then loop over reversed(order)."

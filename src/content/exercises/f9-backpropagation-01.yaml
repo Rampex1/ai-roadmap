@@ -1,0 +1,102 @@
+id: f9-backpropagation-01
+lesson: foundations/f9/backpropagation
+title: Backpropagation for a two-layer network
+prompt: |
+  Complete `loss_and_grads(p, X, y)` for the network
+
+  $$Z_1 = XW_1 + \mathbf{b}_1,\quad H = \tanh Z_1,\quad Z_2 = HW_2 + \mathbf{b}_2,\quad L = \text{mean cross-entropy}(Z_2, y)$$
+
+  The forward pass and the first step of the backward pass, `dZ2` $= (P - Y)/n$, are written for you.
+  Fill in the five gradients and return `loss, grads`, where `grads` is a dictionary with keys `"W1"`,
+  `"b1"`, `"W2"`, `"b2"` and each gradient has the same shape as its parameter.
+
+  Use the layer rules: $dW = A^\top dZ$, $d\mathbf{b}$ = column sums of $dZ$, $dA = dZ\,W^\top$, and
+  $\tanh'(Z_1) = 1 - H^2$. The tests compare every gradient with finite differences.
+starter: |
+  import numpy as np
+
+  def log_softmax(Z):
+      m = Z.max(axis=1, keepdims=True)
+      return Z - m - np.log(np.exp(Z - m).sum(axis=1, keepdims=True))
+
+  def loss_and_grads(p, X, y):
+      n = len(y)
+      # forward pass
+      Z1 = X @ p["W1"] + p["b1"]
+      H = np.tanh(Z1)
+      Z2 = H @ p["W2"] + p["b2"]
+      logp = log_softmax(Z2)
+      loss = -logp[np.arange(n), y].mean()
+      # backward pass
+      dZ2 = np.exp(logp)
+      dZ2[np.arange(n), y] -= 1
+      dZ2 /= n
+      grads = {}
+      grads["W2"] = np.zeros_like(p["W2"])   # TODO
+      grads["b2"] = np.zeros_like(p["b2"])   # TODO
+      dH = None                              # TODO
+      dZ1 = None                             # TODO
+      grads["W1"] = np.zeros_like(p["W1"])   # TODO
+      grads["b1"] = np.zeros_like(p["b1"])   # TODO
+      return loss, grads
+solution: |
+  import numpy as np
+
+  def log_softmax(Z):
+      m = Z.max(axis=1, keepdims=True)
+      return Z - m - np.log(np.exp(Z - m).sum(axis=1, keepdims=True))
+
+  def loss_and_grads(p, X, y):
+      n = len(y)
+      # forward pass
+      Z1 = X @ p["W1"] + p["b1"]
+      H = np.tanh(Z1)
+      Z2 = H @ p["W2"] + p["b2"]
+      logp = log_softmax(Z2)
+      loss = -logp[np.arange(n), y].mean()
+      # backward pass
+      dZ2 = np.exp(logp)
+      dZ2[np.arange(n), y] -= 1
+      dZ2 /= n
+      grads = {}
+      grads["W2"] = H.T @ dZ2
+      grads["b2"] = dZ2.sum(axis=0)
+      dH = dZ2 @ p["W2"].T
+      dZ1 = dH * (1 - H ** 2)
+      grads["W1"] = X.T @ dZ1
+      grads["b1"] = dZ1.sum(axis=0)
+      return loss, grads
+tests: |
+  import numpy as np
+  def _loss_only(p, X, y):
+      Z2 = np.tanh(X @ p["W1"] + p["b1"]) @ p["W2"] + p["b2"]
+      m = Z2.max(axis=1, keepdims=True)
+      lp = Z2 - m - np.log(np.exp(Z2 - m).sum(axis=1, keepdims=True))
+      return -lp[np.arange(len(y)), y].mean()
+  def _num(p, X, y, name, eps=1e-6):
+      g = np.zeros_like(p[name])
+      for idx in np.ndindex(p[name].shape):
+          old = p[name][idx]
+          p[name][idx] = old + eps; up = _loss_only(p, X, y)
+          p[name][idx] = old - eps; down = _loss_only(p, X, y)
+          p[name][idx] = old
+          g[idx] = (up - down) / (2 * eps)
+      return g
+  _rng = np.random.default_rng(21)
+  for _n, _d, _h, _k in [(6, 3, 5, 4), (1, 2, 3, 2), (10, 4, 2, 3)]:
+      _X = _rng.normal(size=(_n, _d)); _y = _rng.integers(0, _k, size=_n)
+      _p = {"W1": _rng.normal(size=(_d, _h)), "b1": _rng.normal(size=_h), "W2": _rng.normal(size=(_h, _k)), "b2": _rng.normal(size=_k)}
+      _r = loss_and_grads({k: v.copy() for k, v in _p.items()}, _X, _y)
+      assert _r is not None and len(_r) == 2, "Return a pair: return loss, grads"
+      _loss, _g = _r
+      assert abs(float(_loss) - _loss_only(_p, _X, _y)) < 1e-10, "Keep the forward pass as given: the loss is wrong"
+      for _name in ["W2", "b2", "W1", "b1"]:
+          assert _name in _g and _g[_name] is not None, f"grads is missing {_name}"
+          assert np.shape(_g[_name]) == _p[_name].shape, f"grads[{_name!r}] should have shape {_p[_name].shape}, got {np.shape(_g[_name])}"
+          _ng = _num(_p, _X, _y, _name)
+          _rel = np.linalg.norm(_g[_name] - _ng) / (np.linalg.norm(_g[_name]) + np.linalg.norm(_ng) + 1e-12)
+          assert _rel < 1e-6, f"grads[{_name!r}] disagrees with finite differences (relative error {_rel:.1e}) for n={_n}, d={_d}, h={_h}, k={_k}"
+hints:
+  - "Shapes decide the order: W2 is (h, k), H is (n, h) and dZ2 is (n, k), so grads W2 is H.T @ dZ2."
+  - "dH = dZ2 @ W2.T, then dZ1 = dH * (1 - H ** 2), since H is tanh(Z1)."
+  - "Bias gradients sum over the examples: dZ.sum(axis=0)."

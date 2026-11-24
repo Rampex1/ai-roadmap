@@ -1,0 +1,5 @@
+title: "Learn the Basics (official PyTorch tutorial)"
+url: https://docs.pytorch.org/tutorials/beginner/basics/intro.html
+kind: course
+free: true
+modules: [f9]

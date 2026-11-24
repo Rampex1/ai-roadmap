@@ -1,0 +1,7 @@
+term: "Regularisation"
+short: "Any change to training that discourages overly complex fits so the model generalises better, such as an L2 penalty or dropout."
+body: |
+  L2 regularisation adds $\frac{\lambda}{2}\sum W^2$ to the loss, which adds $\lambda W$ to each weight's
+  gradient and pulls weights towards zero (also called weight decay). Dropout and early stopping are other
+  common regularisers. The strength, such as $\lambda$, is chosen on a validation set.
+related: ["overfitting", "dropout", "early-stopping"]

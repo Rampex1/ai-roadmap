@@ -4,15 +4,15 @@ items:
     prompt: "In the `Value` engine, what does an operation like `a * b` do besides computing the product?"
     explanation: "It returns a new Value that records its children (a and b) and a _backward closure holding the local derivative rule, so the graph is built during the forward computation."
     options:
+      - text: Nothing; gradients are worked out by re-reading the source code
+        why: The engine never inspects source code; it records operations as they run.
+      - text: It stores a finite-difference estimate of the derivative
+        why: The engine uses exact local rules, not finite differences.
+      - text: It immediately computes the gradient of the final loss
+        why: The final loss is not known yet; gradients are computed later by backward().
       - text: It records its inputs and attaches a function that knows how to pass gradient back to them
         correct: true
         why: That record is the computational graph that backward() later walks.
-      - text: It immediately computes the gradient of the final loss
-        why: The final loss is not known yet; gradients are computed later by backward().
-      - text: It stores a finite-difference estimate of the derivative
-        why: The engine uses exact local rules, not finite differences.
-      - text: Nothing; gradients are worked out by re-reading the source code
-        why: The engine never inspects source code; it records operations as they run.
   - id: f9-autograd-engine-02
     type: output
     prompt: "Using the lesson's `Value` class, what does this print?"
@@ -39,11 +39,11 @@ items:
     prompt: "Why do the `_backward` functions use `self.grad += ...` rather than `self.grad = ...`?"
     explanation: "A Value used in several places receives one gradient contribution per use, and the chain rule says to add them. With = each contribution would overwrite the last."
     options:
+      - text: It is faster than assignment
+        why: Speed is not the reason; correctness is.
       - text: A value used in several places must receive the sum of the gradients from every use
         correct: true
         why: For a*a + a, the three contributions 3, 3 and 1 must add to 7.
-      - text: It is faster than assignment
-        why: Speed is not the reason; correctness is.
       - text: To keep gradients from previous training steps
         why: Old gradients should be reset to zero before each backward pass, not kept.
       - text: Python does not allow assigning to attributes inside a closure
@@ -53,15 +53,15 @@ items:
     prompt: "Why does `backward()` process nodes in reverse topological order?"
     explanation: "Reverse topological order guarantees that every node that uses a value has already passed back its contribution before that value passes its own gradient on. A node's gradient is then complete when it is used."
     options:
+      - text: To find the node with the largest gradient
+        why: The order has nothing to do with gradient sizes.
+      - text: Because the order nodes were created in is random
+        why: Creation order is fine for simple chains, but the point is completeness when the graph branches.
       - text: So each node's gradient is complete, with every user's contribution added, before it is passed on
         correct: true
         why: Users come later in topological order, so earlier in the reverse walk.
-      - text: Because the order nodes were created in is random
-        why: Creation order is fine for simple chains, but the point is completeness when the graph branches.
       - text: To visit each leaf before the output
         why: The output must come first, with gradient 1.
-      - text: To find the node with the largest gradient
-        why: The order has nothing to do with gradient sizes.
   - id: f9-autograd-engine-06
     type: numeric
     prompt: "In `out = v.tanh()` the output value is $t = 0.8$ and `out.grad` is 2. How much does `out._backward()` add to `v.grad`?"
@@ -76,38 +76,37 @@ items:
       - text: Each step's gradient is added to all previous ones, so the updates become wrong
         correct: true
         why: The engine accumulates by design; resetting is the loop's job.
-      - text: Nothing; backward() overwrites the old gradients
-        why: The engine accumulates with +=; only the output's own grad is set to 1.
-      - text: Python raises an error on the second call
-        why: No error is raised; the bug is silent.
       - text: Training becomes faster because it uses momentum
         why: Summing every past gradient is not momentum, which decays old gradients.
+      - text: Python raises an error on the second call
+        why: No error is raised; the bug is silent.
+      - text: Nothing; backward() overwrites the old gradients
+        why: The engine accumulates with +=; only the output's own grad is set to 1.
   - id: f9-autograd-engine-08
     type: multi
     prompt: "Which statements about this scalar engine and PyTorch are true? Select all that apply."
     explanation: "PyTorch uses the same reverse-mode design on whole tensors with vectorised backward rules; it also accumulates gradients, which is why training loops zero them. The scalar engine is far too slow for real networks because it makes one Python object per number."
     options:
+      - text: Automatic differentiation gives only an approximation, like finite differences
+        why: It applies exact derivative rules; only floating-point rounding remains.
       - text: PyTorch records operations on tensors and walks the graph backwards in the same way
         correct: true
         why: loss.backward() is reverse-mode automatic differentiation over a recorded graph.
+      - text: The scalar engine is a practical way to train an MNIST network
+        why: One Python object per number makes it thousands of times too slow.
       - text: PyTorch also accumulates gradients, so training loops reset them each step
         correct: true
         why: That is what optimizer.zero_grad() is for.
-      - text: The scalar engine is a practical way to train an MNIST network
-        why: One Python object per number makes it thousands of times too slow.
-      - text: Automatic differentiation gives only an approximation, like finite differences
-        why: It applies exact derivative rules; only floating-point rounding remains.
   - id: f9-autograd-engine-09
     type: order
-    prompt: "Put the steps of one training step with the Value engine in order."
-    explanation: "Compute the loss (building the graph), zero the gradients, backpropagate, then update each parameter's data."
+    prompt: "In a training step with the Value engine, the forward computation has just produced the loss Value. Put the remaining steps in order."
+    explanation: "Zero the gradients, backpropagate, then update each parameter's data. Resetting could also happen before the forward pass, but it must come before backward()."
     items:
-      - "Run the forward computation to get the loss Value"
       - "Set every parameter's grad to 0.0"
       - "Call loss.backward()"
       - "Update each parameter: p.data -= lr * p.grad"
   - id: f9-autograd-engine-10
     type: cloze
     prompt: "An inner function that remembers variables from the function that created it, like each `_backward` in the engine, is called a ______."
-    accept: ["closure", "closures"]
+    accept: [ "closure", "closures" ]
     explanation: "Each _backward closure keeps self, other and out alive so it can run later during backward()."

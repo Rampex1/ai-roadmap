@@ -1,0 +1,7 @@
+term: "Logit"
+short: "A raw, unnormalised score that a classifier outputs before the softmax or sigmoid turns it into a probability."
+body: |
+  A network's last layer usually has no activation: its outputs, the logits, can be any real numbers. Softmax
+  turns a vector of logits into class probabilities. Losses such as PyTorch's `nn.CrossEntropyLoss` take
+  logits directly, because combining the softmax and the log is more numerically stable.
+related: ["softmax", "cross-entropy"]

@@ -1,0 +1,7 @@
+term: "Neuron"
+short: "The basic unit of a neural network: a weighted sum of its inputs plus a bias, passed through an activation function."
+body: |
+  A neuron computes $a = g(\mathbf{w}\cdot\mathbf{x} + b)$, where $\mathbf{w}$ are its weights, $b$ its bias and $g$
+  its activation function. With a sigmoid activation, one neuron is exactly logistic regression. Its decision
+  boundary $\mathbf{w}\cdot\mathbf{x} + b = 0$ is a straight line (a hyperplane in more dimensions).
+related: ["activation-function", "sigmoid", "multilayer-perceptron"]

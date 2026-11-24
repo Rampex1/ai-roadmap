@@ -1,0 +1,7 @@
+term: "Multilayer perceptron (MLP)"
+short: "A neural network made of fully connected layers, each a matrix multiplication plus bias followed by an activation."
+body: |
+  Each layer computes $A = g(XW + \mathbf{b})$ for a batch $X$ of shape (examples, inputs) and a weight
+  matrix $W$ of shape (inputs, outputs). The hidden layers use a non-linear activation; the output layer
+  usually produces logits or a regression value directly. Also called a feed-forward or fully connected network.
+related: ["neuron", "activation-function", "matrix-multiplication"]

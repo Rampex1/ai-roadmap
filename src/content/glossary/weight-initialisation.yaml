@@ -1,0 +1,7 @@
+term: "Weight initialisation"
+short: "How a network's starting weights are chosen: random, to break symmetry, and scaled so signals neither explode nor vanish."
+body: |
+  All-zero or identical weights make every unit in a layer compute and learn the same thing. Random weights
+  with a standard deviation of $\sqrt{2/d_\text{in}}$ (He initialisation, for ReLU) or about $\sqrt{1/d_\text{in}}$
+  (Xavier or Glorot style, for tanh) keep the size of activations roughly constant from layer to layer.
+related: ["relu", "multilayer-perceptron"]

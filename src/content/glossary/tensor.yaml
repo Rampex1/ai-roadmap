@@ -1,0 +1,7 @@
+term: "Tensor"
+short: "PyTorch's n-dimensional array: like a NumPy ndarray, but it can live on a GPU and record operations for autograd."
+body: |
+  A tensor has a shape, a dtype (usually `float32` for weights and data) and a device (`cpu` or `cuda`). With
+  `requires_grad=True`, operations on it are recorded so that `.backward()` can fill in `.grad`.
+  `torch.from_numpy` and `.numpy()` convert to and from NumPy.
+related: ["ndarray", "automatic-differentiation"]

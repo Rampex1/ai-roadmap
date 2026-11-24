@@ -4,29 +4,29 @@ items:
     prompt: "Why do we keep a test set aside instead of measuring accuracy on the training data?"
     explanation: "The goal is good predictions on new data. A model can score well on examples it was trained on while doing worse on unseen ones, so only held-out data gives an honest estimate."
     options:
+      - text: Accuracy cannot be computed on the training set
+        why: It can, it is just an over-optimistic measure.
       - text: Training accuracy can be high even when the model does worse on new data; the test set measures that
         correct: true
         why: The test points play the role of future, unseen examples.
-      - text: Training on fewer examples makes the model train faster, which is the main point
-        why: Speed is a side effect; the point is an honest measurement.
       - text: The test set is used to compute the gradients
         why: Gradients come from the training data only; the test set is never trained on.
-      - text: Accuracy cannot be computed on the training set
-        why: It can, it is just an over-optimistic measure.
+      - text: Training on fewer examples makes the model train faster, which is the main point
+        why: Speed is a side effect; the point is an honest measurement.
   - id: f9-training-an-mlp-02
     type: mcq
     prompt: "Every weight of a tanh MLP starts at exactly 0 and the biases are 0. What happens during training?"
     explanation: "With all weights zero the hidden activations are tanh(0) = 0 and the gradient flowing back to the first layer is zero, so the first layer never moves; even with equal non-zero weights all hidden units would stay identical."
     options:
+      - text: The weights diverge to infinity
+        why: Nothing pushes them to grow; they stay stuck.
+      - text: Training works normally because the biases break the symmetry
+        why: The biases are also equal, so every unit is still the same.
       - text: The hidden units stay identical (here all zero) and the network cannot learn anything useful
         correct: true
         why: Identical units get identical gradients, and zero weights pass back zero gradient.
       - text: Training works but is slower
         why: The symmetry is never broken, so it does not just slow down; it fails.
-      - text: The weights diverge to infinity
-        why: Nothing pushes them to grow; they stay stuck.
-      - text: Training works normally because the biases break the symmetry
-        why: The biases are also equal, so every unit is still the same.
   - id: f9-training-an-mlp-03
     type: numeric
     prompt: "Using He initialisation, what standard deviation should the weights of a ReLU layer with 512 inputs have? (3 decimal places.)"
@@ -38,13 +38,13 @@ items:
     prompt: "Activations shrink to about $10^{-10}$ after 10 ReLU layers. What is the most likely cause?"
     explanation: "Weights with too small a standard deviation shrink the signal at every layer. He initialisation, √(2/d_in), keeps it roughly constant."
     options:
+      - text: ReLU always shrinks activations exponentially
+        why: With He initialisation ReLU networks keep the activation size steady.
       - text: The initial weights are too small for the layer width
         correct: true
         why: Each layer multiplies the size by roughly √(d_in/2) times the weight std, which is below 1 here.
       - text: The learning rate is too large
         why: This happens before any training step.
-      - text: ReLU always shrinks activations exponentially
-        why: With He initialisation ReLU networks keep the activation size steady.
       - text: The batch size is too small
         why: Batch size does not change the scale of a forward pass.
   - id: f9-training-an-mlp-05
@@ -79,33 +79,33 @@ items:
     prompt: "Which are good checks before a long training run? Select all that apply."
     explanation: "A first loss near log k and the ability to overfit a tiny batch catch most bugs cheaply; a gradient check verifies the backward pass. Test accuracy is for the end, not for debugging."
     options:
-      - text: Confirm the first loss is close to log k for k classes
-        correct: true
-        why: A very different value points to bad initialisation or a bug in the loss.
+      - text: Tune the learning rate on the test set until test accuracy is highest
+        why: Choosing settings on the test set makes its accuracy over-optimistic; the test set is for the final measurement.
       - text: Train on about 10 examples and check the loss goes nearly to zero
         correct: true
         why: A correct model and backward pass can memorise a tiny batch.
       - text: Run a finite-difference gradient check on a tiny network
         correct: true
         why: It catches errors in the backward pass directly.
-      - text: Tune the learning rate on the test set until test accuracy is highest
-        why: Choosing settings on the test set makes its accuracy over-optimistic; the test set is for the final measurement.
+      - text: Confirm the first loss is close to log k for k classes
+        correct: true
+        why: A very different value points to bad initialisation or a bug in the loss.
   - id: f9-training-an-mlp-09
     type: mcq
     prompt: "On the two-moons data, a model with layer sizes [2, 2] stays near 87% accuracy however long it trains, while [2, 16, 16, 2] reaches about 97%. Why?"
     explanation: "With no hidden layer the model is linear, so its boundary is a straight line, which cannot follow the curved moons. Hidden layers with ReLU let the boundary bend."
     options:
+      - text: The smaller model needs a larger learning rate
+        why: Its loss has already flattened out; it is limited by what it can represent.
       - text: Without hidden layers the decision boundary is a straight line, which cannot follow the moons
         correct: true
         why: The [2, 2] model is a linear classifier.
-      - text: The smaller model needs a larger learning rate
-        why: Its loss has already flattened out; it is limited by what it can represent.
-      - text: The smaller model was trained for fewer epochs
-        why: More epochs do not let a straight line bend.
       - text: The bigger model has seen the test set
         why: Neither model trains on the test set.
+      - text: The smaller model was trained for fewer epochs
+        why: More epochs do not let a straight line bend.
   - id: f9-training-an-mlp-10
     type: cloze
     prompt: "Initialising ReLU layers with weight standard deviation $\\sqrt{2/d_{in}}$ is called ______ initialisation (one name)."
-    accept: ["He", "Kaiming", "He et al", "Kaiming He"]
+    accept: [ "He", "Kaiming", "He et al", "Kaiming He" ]
     explanation: "He (or Kaiming) initialisation. Xavier or Glorot initialisation, about √(1/d_in), is the usual choice for tanh and sigmoid."

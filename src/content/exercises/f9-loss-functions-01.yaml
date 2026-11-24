@@ -1,0 +1,55 @@
+id: f9-loss-functions-01
+lesson: foundations/f9/loss-functions
+title: Stable softmax and log-softmax
+prompt: |
+  Write two functions that work **row by row** on a matrix of logits `Z` of shape `(n, k)`:
+
+  - `log_softmax(Z)` returns $\log \operatorname{softmax}$ of each row, shape `(n, k)`, using the
+    log-sum-exp trick: subtract each row's maximum before exponentiating.
+  - `softmax(Z)` returns the probabilities, shape `(n, k)`; each row sums to 1.
+
+  Both must stay finite for huge logits such as `[[1000, 1001, 1002]]` and for very unequal ones such as
+  `[[-50, 0, 800]]`. Do not compute `np.log(softmax(Z))`: a probability that rounds to 0 gives `-inf`.
+starter: |
+  import numpy as np
+
+  def log_softmax(Z):
+      return np.log(np.exp(Z) / np.exp(Z).sum(axis=1, keepdims=True))
+
+  def softmax(Z):
+      return np.exp(Z) / np.exp(Z).sum(axis=1, keepdims=True)
+solution: |
+  import numpy as np
+
+  def log_softmax(Z):
+      m = Z.max(axis=1, keepdims=True)
+      return Z - m - np.log(np.exp(Z - m).sum(axis=1, keepdims=True))
+
+  def softmax(Z):
+      return np.exp(log_softmax(Z))
+tests: |
+  import numpy as np
+  import warnings
+  warnings.simplefilter("ignore")
+  _Z = np.array([[2.0, 1.0, 0.1], [0.0, 0.0, 0.0]])
+  _ls = log_softmax(_Z)
+  assert _ls is not None and np.shape(_ls) == (2, 3), "log_softmax should return an array with the same shape as Z"
+  np.testing.assert_allclose(_ls, [[-0.41703002, -1.41703002, -2.31703002], [-np.log(3)] * 3], rtol=1e-7, err_msg="log_softmax values are wrong for small logits")
+  _big = np.array([[1000.0, 1001.0, 1002.0], [-1000.0, -1001.0, -1002.0]])
+  _p = softmax(_big)
+  assert np.all(np.isfinite(_p)), "softmax overflowed for logits near 1000: subtract each row's maximum first"
+  np.testing.assert_allclose(_p, [[0.09003057, 0.24472847, 0.66524096], [0.66524096, 0.24472847, 0.09003057]], rtol=1e-6, err_msg="softmax of [1000, 1001, 1002] should equal softmax of [0, 1, 2]")
+  _l = log_softmax(np.array([[-50.0, 0.0, 800.0]]))
+  assert np.all(np.isfinite(_l)), "log_softmax returned -inf or nan for [-50, 0, 800]: use log-sum-exp instead of log(softmax)"
+  np.testing.assert_allclose(_l, [[-850.0, -800.0, 0.0]], atol=1e-9, err_msg="log_softmax of [-50, 0, 800] should be [-850, -800, 0]")
+  _rng = np.random.default_rng(5)
+  _R = _rng.normal(0, 3, size=(6, 4))
+  _P = softmax(_R)
+  np.testing.assert_allclose(_P.sum(axis=1), 1.0, rtol=1e-12, err_msg="Each row of softmax must sum to 1: did you use axis=1 and keepdims=True?")
+  _E = np.exp(_R); _ref = _E / _E.sum(axis=1, keepdims=True)
+  np.testing.assert_allclose(_P, _ref, rtol=1e-10, err_msg="softmax values are wrong for a random batch")
+  np.testing.assert_allclose(log_softmax(_R), np.log(_ref), rtol=1e-10, err_msg="log_softmax values are wrong for a random batch")
+hints:
+  - "m = Z.max(axis=1, keepdims=True) has shape (n, 1), so Z - m subtracts each row's own maximum."
+  - "log_softmax(Z) = Z - m - log(sum of exp(Z - m) along axis 1)."
+  - "softmax can simply be np.exp(log_softmax(Z))."

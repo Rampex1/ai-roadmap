@@ -1,0 +1,199 @@
+---
+title: "Activation functions and why depth needs them"
+module: f9
+order: 2
+estMinutes: 15
+objectives:
+  - "Compute sigmoid, tanh and ReLU and their derivatives, and say where each derivative is small"
+  - "Show that two linear layers without an activation collapse into one linear layer"
+  - "Explain why XOR needs a hidden layer and verify a hand-built two-layer network that computes it"
+goDeeper: d2l-multilayer-perceptrons
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import actImg from '@/assets/diagrams/f9-activations.svg';
+import xorImg from '@/assets/diagrams/f9-xor.svg';
+
+The [last lesson](/foundations/f9/the-neuron/) ended with a limit: one neuron draws one straight line.
+The fix is to feed neurons into other neurons. But that only helps because of the function $g$ inside
+each neuron, the <Term id="activation-function" />. This lesson meets the three classic activations,
+their derivatives (which backpropagation will need), and the reason a network without them is
+pointless.
+
+## Three classic activations
+
+| Name | $g(z)$ | $g'(z)$ | Output range |
+|---|---|---|---|
+| Sigmoid | $\sigma(z) = \dfrac{1}{1 + e^{-z}}$ | $\sigma(z)\,(1 - \sigma(z))$ | $(0, 1)$ |
+| Tanh | $\tanh z = \dfrac{e^{z} - e^{-z}}{e^{z} + e^{-z}}$ | $1 - \tanh^2 z$ | $(-1, 1)$ |
+| ReLU | $\max(0, z)$ | $1$ if $z > 0$, else $0$ | $[0, \infty)$ |
+
+The sigmoid derivative was derived in [F4](/foundations/f4/chain-rule/). The tanh derivative has the
+same pleasant form: once the forward pass has computed $t = \tanh z$, the slope is just $1 - t^2$.
+<Term id="relu" /> (rectified linear unit) is the simplest: it lets positive numbers through and
+replaces negative ones with 0. Its slope is 0 or 1. At exactly $z = 0$ it has no derivative; code uses 0
+there by convention, and it makes no practical difference.
+
+<Figure
+  src={actImg}
+  alt="Three plots side by side. Sigmoid: an S curve from 0 to 1, with a dashed bell-shaped derivative peaking at 0.25. Tanh: an S curve from minus 1 to 1 with a dashed derivative peaking at 1. ReLU: flat at 0 for negative z, then a line of slope 1; its dashed derivative is 0 then 1"
+  caption="The activations (solid) and their derivatives (dashed). Sigmoid and tanh flatten out at both ends, so their slopes vanish; ReLU's slope stays 1 for every positive input."
+/>
+
+```python
+import numpy as np
+
+def sigmoid(z):      return 1 / (1 + np.exp(-z))
+def sigmoid_grad(z): s = sigmoid(z); return s * (1 - s)
+def tanh(z):         return np.tanh(z)
+def tanh_grad(z):    return 1 - np.tanh(z) ** 2
+def relu(z):         return np.maximum(0, z)
+def relu_grad(z):    return (z > 0).astype(float)
+
+z = np.array([-3.0, -1.0, 0.0, 1.0, 3.0])
+for name, f, df in [("sigmoid", sigmoid, sigmoid_grad), ("tanh", tanh, tanh_grad), ("relu", relu, relu_grad)]:
+    print(f"{name:8}", np.round(f(z), 3), " slope", np.round(df(z), 3))
+```
+
+```text title="Output"
+sigmoid  [0.047 0.269 0.5   0.731 0.953]  slope [0.045 0.197 0.25  0.197 0.045]
+tanh     [-0.995 -0.762  0.     0.762  0.995]  slope [0.01 0.42 1.   0.42 0.01]
+relu     [0. 0. 0. 1. 3.]  slope [0. 0. 0. 1. 1.]
+```
+
+`np.maximum(0, z)` compares element by element (unlike `np.max`, which returns one number), and
+`(z > 0).astype(float)` turns the boolean mask into 0s and 1s.
+
+## Why the slope matters: saturation
+
+Training multiplies these slopes together as it works backwards through the layers (lesson 5). Look at
+the numbers:
+
+- **Sigmoid** has slope at most $0.25$, and about $0.045$ at $z = \pm 3$. Ten layers of the *best case*
+  already multiply the gradient by $0.25^{10} \approx 10^{-6}$. This is the **vanishing gradient**
+  problem you met in F4: early layers barely learn.
+- **Tanh** has slope up to $1$ and is centred on 0 (its outputs average around zero, which helps the next
+  layer), but it **saturates** just the same: for $|z| > 3$ its slope is below $0.01$.
+- **ReLU** has slope exactly $1$ for every positive input, so gradients pass through active units
+  undiminished. That, plus being very cheap to compute, made it the default for hidden layers. Its
+  weakness: a unit whose input is negative for every example has slope 0 everywhere and stops learning
+  for good. This is called a **dead ReLU**.
+
+Modern networks also use smooth relatives of ReLU such as GELU (common in transformers, as of late
+2026), but the ideas are the same. Sigmoid survives mainly at the **output** of binary classifiers,
+where a probability is wanted.
+
+## Without an activation, depth is useless
+
+Suppose you stack two layers with no activation in between. A layer with several neurons is a matrix
+multiplication (next lesson): $X W_1 + \mathbf{b}_1$. Then the second layer computes
+
+$$
+(XW_1 + \mathbf{b}_1)W_2 + \mathbf{b}_2 = X\underbrace{(W_1W_2)}_{W} + \underbrace{(\mathbf{b}_1W_2 + \mathbf{b}_2)}_{\mathbf{b}}
+$$
+
+That is a single linear layer with weights $W = W_1W_2$ and bias $\mathbf{b} = \mathbf{b}_1W_2 + \mathbf{b}_2$.
+However many linear layers you stack, the result is still one straight-line model, as you saw in
+[F3](/foundations/f3/matrix-multiplication/): composing linear maps gives a linear map.
+
+```python
+rng = np.random.default_rng(0)
+W1, b1 = rng.normal(size=(2, 4)), rng.normal(size=4)
+W2, b2 = rng.normal(size=(4, 3)), rng.normal(size=3)
+X = rng.normal(size=(5, 2))
+
+two_layers = (X @ W1 + b1) @ W2 + b2
+W, b = W1 @ W2, b1 @ W2 + b2          # one equivalent layer
+print(np.allclose(two_layers, X @ W + b))
+```
+
+```text title="Output"
+True
+```
+
+A non-linear $g$ between the layers breaks this collapse. It is what lets each extra layer bend the
+decision boundary further.
+
+## XOR: the function one neuron cannot learn
+
+**XOR** (exclusive or) of two bits is 1 when exactly one of them is 1:
+
+| $x_1$ | $x_2$ | XOR |
+|---|---|---|
+| 0 | 0 | 0 |
+| 0 | 1 | 1 |
+| 1 | 0 | 1 |
+| 1 | 1 | 0 |
+
+Plot the four points and the two 1s sit on opposite corners of the square. No straight line puts both 1s
+on one side and both 0s on the other. You can prove it: a neuron $w_1x_1 + w_2x_2 + b$ would need
+
+- $b < 0$ for $(0, 0)$,
+- $w_2 + b > 0$ and $w_1 + b > 0$ for the two 1s,
+- $w_1 + w_2 + b < 0$ for $(1, 1)$.
+
+Adding the middle two gives $w_1 + w_2 + 2b > 0$, so $w_1 + w_2 + b > -b > 0$, which contradicts the
+last line. No weights exist.
+
+### Two layers solve it
+
+Add a hidden layer of two ReLU units, $h_1 = \operatorname{ReLU}(x_1 + x_2)$ and
+$h_2 = \operatorname{ReLU}(x_1 + x_2 - 1)$, and an output $y = h_1 - 2h_2$:
+
+```python
+X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]], dtype=float)
+W1 = np.array([[1.0, 1.0],
+               [1.0, 1.0]])
+b1 = np.array([0.0, -1.0])
+w2 = np.array([1.0, -2.0])
+
+H = relu(X @ W1 + b1)     # hidden layer, shape (4, 2)
+print(H)
+print(H @ w2)
+```
+
+```text title="Output"
+[[0. 0.]
+ [1. 0.]
+ [1. 0.]
+ [2. 1.]]
+[0. 1. 1. 0.]
+```
+
+The hidden layer **moved the points**. In the new coordinates $(h_1, h_2)$, the inputs $(0, 1)$ and
+$(1, 0)$ land on the same point $(1, 0)$, and the other two land at $(0, 0)$ and $(2, 1)$. Now a single
+line separates them, and the output neuron draws it.
+
+<Figure
+  src={xorImg}
+  alt="Left: the XOR points in the unit square, 1s on opposite corners, no separating line. Right: the same points after the hidden layer; the two 1s coincide at (1, 0), with 0s at (0, 0) and (2, 1), and a dashed line separates them"
+  caption="The hidden layer re-maps the inputs so that a straight line can do the rest. This is what hidden layers are for."
+/>
+
+That is the core idea of deep learning: each layer transforms its inputs into a new representation in
+which the problem is easier, and the last layer is a simple linear model on top. Here we chose the
+weights by hand. In lesson 7 the network will find weights like these by itself.
+
+:::tip[Universal approximation]
+A network with one hidden layer of enough non-linear units can approximate any continuous function on a
+bounded region as closely as you like. That theorem says nothing about how many units you need or
+whether training will find them; in practice, deeper networks often need far fewer units.
+:::
+
+## Try it
+
+<CodeExercise id="f9-activation-functions-01" />
+
+<CodeExercise id="f9-activation-functions-02" />
+
+## Summary
+
+- Sigmoid $\sigma(z)$, slope $\sigma(1 - \sigma) \le 0.25$; tanh, slope $1 - \tanh^2 \le 1$; ReLU
+  $\max(0, z)$, slope 0 or 1.
+- Sigmoid and tanh saturate: for large $|z|$ their slopes vanish, and products of small slopes make
+  gradients vanish in deep networks. ReLU is the default for hidden layers; watch for dead units.
+- Linear layers without activations collapse to one linear layer: $W = W_1W_2$,
+  $\mathbf{b} = \mathbf{b}_1W_2 + \mathbf{b}_2$.
+- XOR is not linearly separable, so one neuron cannot compute it; a hidden layer re-maps the inputs so
+  that one line can.

@@ -1,0 +1,7 @@
+term: "Overfitting"
+short: "When a model fits the noise and quirks of its training data so closely that it does worse on new data."
+body: |
+  The symptom is a gap: training loss keeps falling while the loss on held-out validation data stops improving
+  or rises. Overfitting is more likely with a flexible model and little data. Remedies include more data,
+  regularisation (L2, dropout), early stopping and a smaller model.
+related: ["regularisation", "early-stopping", "loss-function"]

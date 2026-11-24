@@ -1,0 +1,56 @@
+id: f9-forward-pass-01
+lesson: foundations/f9/forward-pass
+title: Forward pass of an MLP
+prompt: |
+  Write `mlp_forward(X, params)` for a multilayer perceptron with **any** number of layers.
+
+  - `X` has shape `(n, d)`, one example per row.
+  - `params` is a list of `(W, b)` pairs, one per layer. `W` has shape `(d_in, d_out)` and `b` has
+    shape `(d_out,)`.
+  - Every layer computes `A @ W + b`. Apply ReLU after every layer **except the last**, which returns its
+    raw output.
+
+  Return the output of the last layer, shape `(n, d_out_last)`. A network with a single layer is just a
+  linear model.
+starter: |
+  import numpy as np
+
+  def mlp_forward(X, params):
+      A = X
+      for W, b in params:
+          A = np.maximum(0, A @ W + b)
+      return A
+solution: |
+  import numpy as np
+
+  def mlp_forward(X, params):
+      A = X
+      for i, (W, b) in enumerate(params):
+          Z = A @ W + b
+          A = np.maximum(0, Z) if i < len(params) - 1 else Z
+      return A
+tests: |
+  import numpy as np
+  def _ref(X, params):
+      A = X
+      for i, (W, b) in enumerate(params):
+          Z = A @ W + b
+          A = np.maximum(0, Z) if i < len(params) - 1 else Z
+      return A
+  _X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]], dtype=float)
+  _xor = [(np.ones((2, 2)), np.array([0.0, -1.0])), (np.array([[1.0], [-2.0]]), np.array([0.0]))]
+  _o = mlp_forward(_X, _xor)
+  assert _o is not None, "mlp_forward should return the last layer's output"
+  np.testing.assert_allclose(np.ravel(_o), [0, 1, 1, 0], err_msg="The hand-built XOR network should output [0, 1, 1, 0]")
+  _neg = [(np.array([[1.0], [1.0]]), np.array([-5.0]))]
+  np.testing.assert_allclose(mlp_forward(_X, _neg), _X @ _neg[0][0] - 5, err_msg="With a single layer there is no ReLU: negative outputs must stay negative")
+  _rng = np.random.default_rng(3)
+  for _sizes in [[3, 8, 4], [2, 16, 16, 3], [5, 1], [4, 6, 6, 6, 2]]:
+      _p = [(_rng.normal(size=(a, b)), _rng.normal(size=b)) for a, b in zip(_sizes[:-1], _sizes[1:])]
+      _Xr = _rng.normal(size=(7, _sizes[0]))
+      _out = mlp_forward(_Xr, _p)
+      assert np.shape(_out) == (7, _sizes[-1]), f"For sizes {_sizes} the output should have shape (7, {_sizes[-1]}), got {np.shape(_out)}"
+      np.testing.assert_allclose(_out, _ref(_Xr, _p), rtol=1e-10, err_msg=f"Wrong output for layer sizes {_sizes}: ReLU after every layer except the last")
+hints:
+  - "Use enumerate(params) so you know the index i of each layer."
+  - "The last layer has index len(params) - 1; skip the ReLU there."
