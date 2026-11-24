@@ -1,0 +1,23 @@
+id: c3-ticket-routing
+module: c3
+kind: homework
+title: Build and evaluate a ticket-routing prompt
+brief: |-
+  An internal support queue routes tickets to billing, technical or other. The lessons built each piece separately; here you join them into a pipeline and use it to choose between two prompt versions. A fixture-driven mock stands in for the model, so no model service is required.
+
+  1. Write `render_prompt` to produce a complete text prompt: instruction, allowed labels, an explicit fallback, labelled examples and the new ticket last with no label. Reject contracts whose fallback or example labels fall outside the allowed set.
+  2. Write `fake_model(prompt)`, a mock that reads the ticket from the prompt and replays the recorded reply for the prompt variant, raising an error for tickets with no fixture.
+  3. Route ten evaluation tickets through prompt, mock and validator, keeping invalid replies as failures rather than guesses.
+  4. Write `paired_report` to count gains, regressions, both-right, both-wrong and discordant cases, rejecting misaligned inputs.
+  5. Compare the two prompt variants end to end.
+
+  Then interpret the result: how much evidence do four discordant cases give, how would you handle the invalid reply, which three challenge tickets (one ambiguous) would you add to a fresh held-out set, and what result would make you adopt the revised prompt?
+notebook: /homework/c3-ticket-routing.ipynb
+rubric:
+  - The rendered prompt matches the specified layout, lists every allowed label and the fallback, escapes ticket text and ends with the unlabelled ticket.
+  - render_prompt raises ValueError for a fallback or example label outside the allowed set.
+  - fake_model reads the ticket from the last line, selects the reply by variant and raises KeyError for unknown tickets.
+  - Routing keeps invalid replies as None, and the paired report counts them as wrong and rejects lists of different lengths.
+  - The end-to-end comparison reports 3 gains, 1 regression and 4 discordant cases.
+  - The interpretation explains why 4 discordant cases are not enough to adopt B and names concrete held-out tickets and a human-review step.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

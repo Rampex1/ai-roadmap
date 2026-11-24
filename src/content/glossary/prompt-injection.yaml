@@ -1,0 +1,6 @@
+term: Prompt injection
+short: Text inside data sent to a model that tries to override the application's instructions.
+body: Delimiters, JSON fields and role separation make the data boundary clearer to the model, but none of them guarantees the model will ignore instructions written inside the data. Enforce permissions, tool limits and output validation in application code.
+related:
+  - few-shot-prompting
+  - schema

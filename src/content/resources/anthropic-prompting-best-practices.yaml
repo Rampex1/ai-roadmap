@@ -1,0 +1,6 @@
+title: Anthropic prompting best practices (see long context prompting)
+url: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
+kind: tool
+free: true
+modules:
+  - c3

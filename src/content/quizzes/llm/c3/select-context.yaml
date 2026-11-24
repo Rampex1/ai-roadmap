@@ -1,0 +1,99 @@
+items:
+  - id: c3-select-context-01
+    type: mcq
+    prompt: What cost should be charged to a snippet?
+    explanation: The rendered request must fit.
+    options:
+      - text: Zero when it is ranked first
+        why: Ranking does not change the token count.
+      - text: Only characters in its ID
+        why: This omits snippet content.
+      - text: Tokens including its label and separators
+        why: The model reads the rendered snippet, so its label and separator tokens use window space too.
+        correct: true
+  - id: c3-select-context-02
+    type: mcq
+    prompt: What does an existing source ID prove?
+    explanation: Support still requires reading the source.
+    options:
+      - text: The cited ID matches a source that was sent in the request.
+        why: An existence check can only confirm the ID refers to something actually supplied, not that the passage supports the claim.
+        correct: true
+      - text: The answer is factually correct
+        why: A model can cite an irrelevant passage.
+      - text: The source fits every future request
+        why: Budgets depend on the request.
+  - id: c3-select-context-03
+    type: mcq
+    prompt: What can a greedy packing rule miss?
+    explanation: Early selections can use limited capacity.
+    options:
+      - text: A better combination of shorter relevant snippets
+        why: Taking a high-ranked snippet early can use budget that two shorter, jointly more useful snippets would have filled.
+        correct: true
+      - text: The original ranking order
+        why: The exercise preserves candidate order.
+      - text: How much budget remains after a pick
+        why: The code tracks remaining tokens.
+  - id: c3-select-context-04
+    type: mcq
+    prompt: Why reserve output space first?
+    explanation: The prompt and generation must fit the window.
+    options:
+      - text: The reply shares capacity with the input
+        why: The prompt and the generated reply share one window, so the reply's room must be set aside before snippets claim it.
+        correct: true
+      - text: To hide selected passage IDs
+        why: Capacity is unrelated to provenance.
+      - text: To increase snippet relevance
+        why: Budget does not determine relevance.
+  - id: c3-select-context-05
+    type: multi
+    prompt: Which records help debug a grounded answer?
+    explanation: Debugging needs the evidence the model saw and its content; answer length says nothing about coverage.
+    options:
+      - text: The IDs sent in the prompt
+        why: They show exactly which evidence the model could have used.
+        correct: true
+      - text: Only the number of words in the generated answer
+        why: Length cannot identify source coverage.
+      - text: The passage text linked to each ID
+        why: With the text in hand, a reviewer can check whether a cited passage actually supports the claim.
+        correct: true
+  - id: c3-select-context-06
+    type: cloze
+    prompt: Tracking where an evidence snippet came from preserves its ______.
+    accept:
+      - provenance
+      - source provenance
+    explanation: Provenance identifies the source behind a claim.
+  - id: c3-select-context-07
+    type: order
+    prompt: Order the bounded-context steps.
+    items:
+      - Reserve fixed prompt and reply capacity
+      - Compute the remaining snippet capacity
+      - Pack ranked candidates
+      - Send the selected passages with their IDs
+    explanation: Packing uses the residual capacity.
+  - id: c3-select-context-08
+    type: output
+    prompt: Which sources are kept?
+    code: |
+      def pack_sources(candidates, budget):
+          kept = []
+          for source_id, cost in candidates:
+              if cost <= budget:
+                  kept.append(source_id)
+                  budget -= cost
+          return kept
+
+      print(pack_sources([("x", 4), ("y", 4), ("z", 2)], 6))
+    answer: "['x', 'z']"
+    explanation: x spends four tokens, y does not fit, and z spends the remaining two.
+  - id: c3-select-context-09
+    type: numeric
+    prompt: A model has an 8,000-token window. Instructions and template take 1,200 tokens, the question takes 200 and you reserve 800 for the reply. How many tokens are left for snippets?
+    answer: 5800
+    tol: 0
+    explanation: 8000 minus 1200 minus 200 minus 800 leaves 5800 tokens for rendered snippets, labels included.

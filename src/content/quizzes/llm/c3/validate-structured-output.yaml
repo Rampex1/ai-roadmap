@@ -1,0 +1,98 @@
+items:
+  - id: c3-validate-structured-output-01
+    type: mcq
+    prompt: "Contract: one object, exactly one key `label`, value billing, technical or other. Which is valid JSON but fails this contract?"
+    explanation: The label field must contain a permitted string.
+    options:
+      - text: '{"label":["billing"]}'
+        why: It parses as JSON, but the label value is an array rather than one of the three permitted strings.
+        correct: true
+      - text: '{"label":"other"}'
+        why: Other is a permitted string.
+      - text: An open brace with no closing brace
+        why: That fails JSON syntax.
+  - id: c3-validate-structured-output-02
+    type: mcq
+    prompt: Which check needs domain data?
+    explanation: Existence is checked against request-specific records.
+    options:
+      - text: Confirm a cited document ID occurred in the request
+        why: Whether the ID exists depends on which documents this particular request sent, which neither parsing nor a schema can see.
+        correct: true
+      - text: Require a string field
+        why: Type is a schema property.
+      - text: Check whether JSON parses
+        why: Parsing checks syntax.
+  - id: c3-validate-structured-output-03
+    type: mcq
+    prompt: "Contract: one object, exactly one key `label`, value billing, technical or other. What is other in this contract?"
+    explanation: It expresses a permitted outcome.
+    options:
+      - text: A valid fallback classification
+        why: Other is one of the three permitted values, so a reply carrying it passed validation and is a real decision.
+        correct: true
+      - text: A transport interruption
+        why: Transport status is separate.
+      - text: A Python null value
+        why: Other is a string.
+  - id: c3-validate-structured-output-04
+    type: mcq
+    prompt: How should an invalid reply affect a routing action?
+    explanation: An invalid payload provides no authorised route.
+    options:
+      - text: Return a validation failure before routing
+        why: Failing closed stops an unvalidated reply from triggering a route nobody decided on.
+        correct: true
+      - text: Silently map it to billing
+        why: That invents a business decision.
+      - text: Accept it whenever it looks close
+        why: Looks do not establish validity.
+  - id: c3-validate-structured-output-05
+    type: multi
+    prompt: Which can prevent using a structured reply?
+    explanation: Both leave you without a complete, valid object to route; a permitted fallback label does not.
+    options:
+      - text: A truncated JSON payload
+        why: A cut-off object fails to parse, so no label can be read from it.
+        correct: true
+      - text: A terminal refusal
+        why: A refusal carries no label object, so there is nothing to validate or route.
+        correct: true
+      - text: A permitted label other
+        why: Other passes the contract.
+  - id: c3-validate-structured-output-06
+    type: cloze
+    prompt: A specification for output field types and required keys is a ______.
+    accept:
+      - schema
+      - json schema
+      - json-schema
+      - output schema
+    explanation: A schema describes the expected structure.
+  - id: c3-validate-structured-output-07
+    type: order
+    prompt: Order the checks for a completed structured reply.
+    items:
+      - Read the completed text payload
+      - Parse JSON syntax
+      - Check the schema
+      - Check domain constraints
+    explanation: Business validation follows decoding the expected object shape.
+  - id: c3-validate-structured-output-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def parse_label(text):
+          import json
+          try:
+              value = json.loads(text)
+          except json.JSONDecodeError:
+              return None
+          if not isinstance(value, dict) or set(value) != {"label"}:
+              return None
+          label = value["label"]
+          return label if label in ("billing", "technical", "other") else None
+
+      print(parse_label("{\"label\": \"other\"}"))
+    answer: other
+    explanation: The label other is explicitly permitted.

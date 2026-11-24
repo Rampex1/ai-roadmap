@@ -1,0 +1,34 @@
+id: c3-compare-prompts-01
+lesson: llm/c3/compare-prompts
+title: Score paired prompt changes
+prompt: Write compare_labels(expected, before, after). Return counts (gains, regressions, unchanged correctness) over aligned cases. Raise ValueError for mismatched lengths.
+starter: |
+  def compare_labels(expected, before, after):
+      raise NotImplementedError
+solution: |
+  def compare_labels(expected, before, after):
+      if not (len(expected) == len(before) == len(after)):
+          raise ValueError("predictions must align with expected labels")
+      gains = regressions = unchanged = 0
+      for label, old, new in zip(expected, before, after):
+          if old != label and new == label:
+              gains += 1
+          elif old == label and new != label:
+              regressions += 1
+          else:
+              unchanged += 1
+      return gains, regressions, unchanged
+tests: |
+  assert compare_labels(["a", "b", "c", "d"], ["x", "b", "z", "d"], ["a", "y", "w", "d"]) == (1, 1, 2), "Count both unchanged-correct and unchanged-wrong"
+  assert compare_labels(["a", "b"], ["a", "x"], ["x", "b"]) == (1, 1, 0), "Case 1 regresses and case 2 gains: count from the inputs, not fixed numbers"
+  assert compare_labels(["a", "b", "c"], ["x", "y", "c"], ["a", "b", "c"]) == (2, 0, 1), "Two gains and one case that stays correct"
+  assert compare_labels([], [], []) == (0, 0, 0), "No cases means no changes"
+  try:
+      compare_labels(["a"], [], ["a"])
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("Reject mismatched predictions")
+hints:
+  - Compare each variant with the same expected label.
+  - A gain is old wrong and new right. A regression is old right and new wrong. Everything else is unchanged.

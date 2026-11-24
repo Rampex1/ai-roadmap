@@ -1,0 +1,7 @@
+term: Held-out set
+short: Examples kept separate from prompt development and used for a later evaluation.
+body: Once you use its results to tune a prompt or choose a model, it becomes development data for that decision.
+related:
+  - few-shot-prompting
+  - precision
+  - recall

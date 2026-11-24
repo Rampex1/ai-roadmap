@@ -1,0 +1,60 @@
+---
+title: Test prompt variants on shared cases
+module: c3
+order: 4
+estMinutes: 8
+objectives:
+  - Calculate paired gains and regressions
+  - Protect held-out examples from prompt tuning
+goDeeper: openai-evaluation-best-practices
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Run prompt variants against the same labelled cases. Suppose version A gets eight out of ten correct, version B gets nine, and the cases changed in both directions. Improvements on two tickets and one regression provide more information than the one-point gain. Keep the specific failures so you can see which rule changed behaviour.
+
+Create a development set to revise the prompt and a <Term id="held-out-set" /> for a final check. Include realistic inputs, rare cases and ambiguous examples with an explicit rubric. If you change the prompt based on a holdout result, that set is development data for the next decision. Prepare a fresh test if you need a new unbiased check.
+
+Compare one meaningful change at a time where feasible: for example, a fallback definition while leaving model, examples and settings fixed. If outputs vary across runs, repeat both variants under comparable settings and report the variability. Absence of an observed regression on a tiny test is weak evidence.
+
+:::caution[Small paired differences are noise]
+Only the **discordant pairs**, the cases where exactly one version is right, carry information about which prompt is better. Cases both get right or both get wrong cancel out. On 10 tickets, a result of +1/−1 (one gain, one regression) or +2/−1 rests on two or three discordant cases. If the prompts were equally good, each discordant case would be a coin flip, and B would win at least two of three such flips half the time. Collect tens to hundreds of cases, and enough discordant pairs, before adopting a change. Generation can also vary between runs of the *same* prompt (see [C1's decoding lesson](/llm/c1/decoding/)), so rerun both versions before trusting a small difference.
+:::
+
+The function below reports gains, regressions and unchanged correctness. A case can be unchanged even when both predictions are wrong in different ways. Inspect outputs separately to understand such changes.
+
+## Worked example
+
+One ticket improves, one regresses and the final case remains correct.
+
+```python
+def compare_labels(expected, before, after):
+    if not (len(expected) == len(before) == len(after)):
+        raise ValueError("predictions must align with expected labels")
+    gains = regressions = unchanged = 0
+    for label, old, new in zip(expected, before, after):
+        if old != label and new == label:
+            gains += 1
+        elif old == label and new != label:
+            regressions += 1
+        else:
+            unchanged += 1
+    return gains, regressions, unchanged
+
+print(compare_labels(["billing", "technical", "other"],
+                     ["other", "technical", "other"],
+                     ["billing", "other", "other"]))
+```
+
+```text title="Output"
+(1, 1, 1)
+```
+
+Read the result as two numbers, not one. Here version B has the same accuracy as A (two of three correct each), yet it fixed the billing ticket and broke the technical one. If a misrouted outage costs more than a misrouted refund, B is worse despite the tie.
+
+Report which cases changed as well as aggregate accuracy, especially when errors have different costs.
+
+## Try it
+
+<CodeExercise id="c3-compare-prompts-01" />

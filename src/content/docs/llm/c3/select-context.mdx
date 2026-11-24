@@ -1,0 +1,59 @@
+---
+title: Context selection and provenance
+module: c3
+order: 3
+estMinutes: 8
+objectives:
+  - Assemble bounded context while preserving source IDs
+  - Explain how source IDs support evidence checks
+goDeeper: anthropic-prompting-best-practices
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+An assistant often has several candidate snippets and room for only a few. Reserve fixed prompt and reply space from the <Term id="context-window" /> before packing snippets, using the budget equation from [C1's context-window lesson](/llm/c1/context-windows/). Measure snippet cost after including the labels and separators that actually reach the model. A token counter belongs at this boundary rather than a guess based on characters.
+
+Rank candidates by relevance, then keep those that fit the remaining budget. A simple greedy pass can skip a long high-ranked snippet and include a shorter later snippet. Greedy selection is transparent and cheap. It can miss the best combination of passages, especially when two snippets duplicate evidence. C4 covers how to rank candidates, and C5 builds the complete retrieval pipeline.
+
+Give each source a stable ID so the reviewer can inspect the evidence. Preserve the ID-to-content mapping outside the model. A valid-looking source ID does not establish that a passage supports a claim, so evaluate citation correctness separately. When no source fits, use the defined abstention path or reduce the context requirements.
+
+A worked budget makes the reservation concrete. Suppose the window is 8,000 tokens, the instructions and template take 1,200, the user's question takes 200 and you allow replies of up to 800. The snippets may then use
+
+$$
+8000 - 1200 - 200 - 800 = 5800 \text{ tokens.}
+$$
+
+Each snippet's cost is the token count of what is actually rendered, such as `[policy] Refunds are issued within 30 days.` with its ID label and a separator, not the count of the passage alone. Ten snippets with a 6-token label and separator each spend 60 tokens on bookkeeping.
+
+:::tip
+Packing decides *which* evidence the model sees; it does not make the model use it well. Provider guides (as of late 2026, for example Anthropic's long-context prompting advice) suggest putting long documents before the question and asking the model to quote the passages it relies on. Quoting with source IDs also gives your evidence check something concrete to verify.
+:::
+
+The example assumes a pre-ranked list and exact token costs. It demonstrates selection alone. It leaves the message assembly and tokenization to the caller.
+
+## Worked example
+
+The first candidate cannot fit, but two shorter passages fit exactly.
+
+```python
+def pack_sources(candidates, budget):
+    kept = []
+    for source_id, cost in candidates:
+        if cost <= budget:
+            kept.append(source_id)
+            budget -= cost
+    return kept
+
+print(pack_sources([("manual", 60), ("policy", 20), ("faq", 10)], 30))
+```
+
+```text title="Output"
+['policy', 'faq']
+```
+
+Log chosen IDs and costs so a failed answer can be traced back to coverage, ranking or generation.
+
+## Try it
+
+<CodeExercise id="c3-select-context-01" />

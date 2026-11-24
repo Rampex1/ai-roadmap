@@ -1,0 +1,110 @@
+items:
+  - id: c3-compare-prompts-01
+    type: mcq
+    prompt: Which experiment isolates an instruction change?
+    explanation: The changed instruction is the comparison variable.
+    options:
+      - text: Run variants on the same cases with the same model settings
+        why: Only the instruction differs, so any change in results can be attributed to it.
+        correct: true
+      - text: Use a stronger model for the new prompt
+        why: The model change confounds the result.
+      - text: Choose a new scoring rubric for each variant
+        why: Different scoring makes the results incomparable.
+  - id: c3-compare-prompts-02
+    type: mcq
+    prompt: What happens when you tune on the held-out cases?
+    explanation: The choice has been informed by their outcomes.
+    options:
+      - text: They become development examples
+        why: Once their results guided a decision, they no longer give an unbiased check of that decision.
+        correct: true
+      - text: They become more independent
+        why: Reuse makes them less independent of development.
+      - text: They stop having labels
+        why: Labels still exist, but the test role changed.
+  - id: c3-compare-prompts-03
+    type: mcq
+    prompt: What does an unchanged correctness count include?
+    explanation: The metric compares correctness indicators.
+    options:
+      - text: Cases both get right and cases both get wrong
+        why: Unchanged means the right-or-wrong status is the same in both versions, whichever it is.
+        correct: true
+      - text: Only jointly correct cases
+        why: Both wrong is unchanged too.
+      - text: Only identical raw strings
+        why: Different wrong answers can be unchanged.
+  - id: c3-compare-prompts-04
+    type: mcq
+    prompt: Why inspect regressions if overall accuracy rises?
+    explanation: The aggregate hides case-level impact.
+    options:
+      - text: New failures may matter disproportionately
+        why: A rise in accuracy can hide a few new failures on cases whose errors are costly.
+        correct: true
+      - text: An accuracy gain proves all cases improved
+        why: Improvements and regressions can coexist.
+      - text: Regressions force the labels to change
+        why: Labels should remain fixed for comparison.
+  - id: c3-compare-prompts-05
+    type: multi
+    prompt: Which belong in a realistic evaluation set?
+    explanation: A useful evaluation set mixes typical traffic with hard boundary cases and stays separate from the prompt's demonstrations.
+    options:
+      - text: Common requests
+        why: They show how the prompt performs on the bulk of real traffic.
+        correct: true
+      - text: Ambiguous boundary cases with a rubric
+        why: They probe exactly where the decision rule is most likely to break.
+        correct: true
+      - text: The same demonstrations copied into the holdout
+        why: Copying examples weakens independence.
+  - id: c3-compare-prompts-06
+    type: cloze
+    prompt: An example that changes from correct to wrong is a ______.
+    accept:
+      - regression
+      - prompt regression
+    explanation: The newer prompt loses a previously correct case.
+  - id: c3-compare-prompts-07
+    type: order
+    prompt: Order the steps for evaluating a prompt revision.
+    items:
+      - Separate development and held-out data
+      - Develop the change on the development data
+      - Evaluate both versions on held-out cases
+      - Inspect paired gains and regressions
+    explanation: Reserve the final cases before tuning.
+  - id: c3-compare-prompts-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def compare_labels(expected, before, after):
+          if not (len(expected) == len(before) == len(after)):
+              raise ValueError("predictions must align with expected labels")
+          gains = regressions = unchanged = 0
+          for label, old, new in zip(expected, before, after):
+              if old != label and new == label:
+                  gains += 1
+              elif old == label and new != label:
+                  regressions += 1
+              else:
+                  unchanged += 1
+          return gains, regressions, unchanged
+
+      print(compare_labels(["a", "b"], ["a", "x"], ["x", "b"]))
+    answer: (1, 1, 0)
+    explanation: The first case regresses and the second improves.
+  - id: c3-compare-prompts-09
+    type: mcq
+    prompt: On 10 shared tickets, version B has 2 gains and 1 regression against version A. What is the best reading?
+    explanation: Only discordant pairs separate the prompts, and three of them are close to coin flips; tens to hundreds of cases are needed before adopting a change.
+    options:
+      - text: A is better because B has a regression
+        why: A single regression is as weak evidence as two gains; neither settles the question.
+      - text: Too few discordant pairs to tell; collect more cases and rerun both versions
+        why: With only three cases where the versions disagree, the split carries almost no evidence either way.
+        correct: true
+      - text: B is better, so adopt it
+        why: Three discordant cases split 2 to 1 happen half the time even when the prompts are equally good.

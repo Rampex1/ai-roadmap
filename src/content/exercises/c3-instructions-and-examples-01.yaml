@@ -1,0 +1,50 @@
+id: c3-instructions-and-examples-01
+lesson: llm/c3/instructions-and-examples
+title: Build a prompt with an abstention contract
+prompt: |
+  Implement `build_prompt(instruction, labels, examples, ticket, fallback="other")`. Return a JSON string for an object with exactly these keys:
+
+  - `"instruction"`: the instruction text;
+  - `"labels"`: the allowed labels as a list, in the given order;
+  - `"fallback"`: the fallback label;
+  - `"examples"`: a list of `{"ticket": ..., "label": ...}` objects, in the given order;
+  - `"ticket"`: the new ticket text, with no label.
+
+  Raise `ValueError` if the fallback is not one of the labels, or if any example label is not one of the labels.
+starter: |
+  def build_prompt(instruction, labels, examples, ticket, fallback="other"):
+      raise NotImplementedError
+solution: |
+  import json
+
+  def build_prompt(instruction, labels, examples, ticket, fallback="other"):
+      labels = list(labels)
+      if fallback not in labels:
+          raise ValueError("fallback must be one of the labels")
+      for text, label in examples:
+          if label not in labels:
+              raise ValueError(f"example label {label!r} is not allowed")
+      return json.dumps({"instruction": instruction,
+                         "labels": labels,
+                         "fallback": fallback,
+                         "examples": [{"ticket": t, "label": l} for t, l in examples],
+                         "ticket": ticket})
+tests: |
+  import json
+  labels = ["billing", "technical", "other"]
+  got = json.loads(build_prompt("Route it.", labels, [("Refund", "billing"), ("Crash", "technical")], 'A "quote"'))
+  assert got == {"instruction": "Route it.", "labels": labels, "fallback": "other", "examples": [{"ticket": "Refund", "label": "billing"}, {"ticket": "Crash", "label": "technical"}], "ticket": 'A "quote"'}, f"Wrong prompt object: {got}"
+  got = json.loads(build_prompt("Sort mail.", ("spam", "ham", "unsure"), [], "Hi", fallback="unsure"))
+  assert got == {"instruction": "Sort mail.", "labels": ["spam", "ham", "unsure"], "fallback": "unsure", "examples": [], "ticket": "Hi"}, f"Use the given labels and fallback, not fixed ones: {got}"
+  for bad_args, why in [((labels, [("Refund", "refunds")]), "an example label outside the allowed set"),
+                        ((["billing", "technical"], []), "a fallback that is not an allowed label")]:
+      try:
+          build_prompt("Route it.", bad_args[0], bad_args[1], "Help")
+      except ValueError:
+          pass
+      else:
+          raise AssertionError(f"Raise ValueError for {why}")
+hints:
+  - Check the fallback and every example label against the labels before building anything.
+  - Build a Python dict first, then serialize it with json.dumps.
+  - Convert labels with list() so a tuple still serializes as a JSON list.

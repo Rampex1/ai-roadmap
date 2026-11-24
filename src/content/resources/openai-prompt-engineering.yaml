@@ -1,0 +1,6 @@
+title: OpenAI prompt engineering guide
+url: https://developers.openai.com/api/docs/guides/prompt-engineering
+kind: tool
+free: true
+modules:
+  - c3

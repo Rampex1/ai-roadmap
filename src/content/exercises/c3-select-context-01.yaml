@@ -1,0 +1,21 @@
+id: c3-select-context-01
+lesson: llm/c3/select-context
+title: Pack ranked context
+prompt: Write pack_sources(candidates, budget) for a ranked list of distinct (source_id, positive_token_cost) pairs. Include a source if it fits, subtract its cost, skip any that do not fit, and preserve ranking order.
+starter: |
+  def pack_sources(candidates, budget):
+      raise NotImplementedError
+solution: |
+  def pack_sources(candidates, budget):
+      kept = []
+      for source_id, cost in candidates:
+          if cost <= budget:
+              kept.append(source_id)
+              budget -= cost
+      return kept
+tests: |
+  assert pack_sources([("a", 6), ("b", 2), ("c", 3)], 5) == ["b", "c"], "Skip an oversized source and continue"
+  assert pack_sources([("a", 2), ("b", 2), ("c", 1)], 3) == ["a", "c"], "Spend only the remaining budget"
+  assert pack_sources([("a", 1)], 0) == [], "A zero budget admits no sources"
+hints:
+  - Track remaining budget after each accepted source.

@@ -1,0 +1,6 @@
+title: OpenAI structured outputs guide
+url: https://developers.openai.com/api/docs/guides/structured-outputs
+kind: tool
+free: true
+modules:
+  - c3

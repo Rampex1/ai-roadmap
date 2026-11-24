@@ -1,0 +1,67 @@
+---
+title: Structured output and validation
+module: c3
+order: 2
+estMinutes: 8
+objectives:
+  - Validate both output shape and permitted values
+  - Distinguish refusal, invalid output and a valid fallback prediction
+goDeeper: openai-structured-outputs
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+An answer that looks like JSON can still fail three checks. First parse syntax; a truncated object or Markdown fence may be invalid input to the parser. Then validate the <Term id="schema" />: required fields, types, allowed extra fields and enums. Finally check domain constraints, such as whether a cited ID exists in the current request.
+
+As of late 2026, some providers (for example OpenAI structured outputs) can constrain generation to a supplied JSON schema, but only for some models and a subset of schema features. Check the provider's current documentation for the supported subset. Even with a constraint, handle incomplete output or refusal before using the result. Schema validity says a reply fits the declared shape, while correctness depends on evidence and tests.
+
+A classifier can fail closed by returning a separate validation error or requesting human review. Avoid silently converting invalid output to a plausible business decision. In this exercise None is an invalid response, and the string other is a successful classification with an explicit fallback label.
+
+The exact reply contract here is one object with exactly one label field. The allowed label must be a string. An array containing billing does not satisfy the same contract as the string billing.
+
+## Worked example
+
+Both strings contain JSON. Only one contains a permitted scalar label.
+
+```python
+def parse_label(text):
+    import json
+    try:
+        value = json.loads(text)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(value, dict) or set(value) != {"label"}:
+        return None
+    label = value["label"]
+    return label if label in ("billing", "technical", "other") else None
+
+print(parse_label('{"label": "other"}'))
+print(parse_label('{"label": ["billing"]}'))
+```
+
+```text title="Output"
+other
+None
+```
+
+Here is how the same validator treats replies a real model might send. Each fails at a different layer, and each returns None rather than a guess:
+
+| Reply | Layer that fails | Result |
+|---|---|---|
+| `{"label": "billing"` (cut off) | syntax: not complete JSON | None |
+| a Markdown fence around valid JSON | syntax: the backticks are not JSON | None |
+| `"billing"` (a bare string) | schema: not an object | None |
+| `{"label": "billing", "confidence": 0.9}` | schema: extra field | None |
+| `{"label": "Billing"}` | schema: not one of the enum values | None |
+| `{"label": "other"}` | none | other |
+
+:::caution
+It is tempting to “repair” near misses: strip the fence, lower-case the label, drop the extra field. Each repair widens the contract without anyone deciding to. If you repair, do it in one named function, count how often it fires, and keep the original reply in the log. A rising repair rate is an early sign that a prompt or model change broke the format.
+:::
+
+This is a lightweight validator for the exercise contract. For larger contracts, use a schema validator plus business-domain checks.
+
+## Try it
+
+<CodeExercise id="c3-validate-structured-output-01" />

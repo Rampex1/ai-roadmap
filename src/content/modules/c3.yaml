@@ -4,5 +4,7 @@ title: "Prompt and context engineering"
 order: 3
 prereqs: ["c2"]
 objectives:
-  - "Explain the core ideas of prompt and context engineering"
-  - "Build and evaluate an application using prompt and context engineering"
+  - Write prompts that state a task, supply examples and define an abstention contract
+  - Distinguish syntax, schema and domain validation for model output
+  - Select context within a token budget and preserve its provenance
+  - Compare prompt variants on paired examples and keep a held-out test set
