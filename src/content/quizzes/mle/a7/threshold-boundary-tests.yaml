@@ -1,0 +1,95 @@
+items:
+  - id: a7-threshold-boundary-tests-01
+    type: mcq
+    prompt: Which test detects use of greater-than instead of at-least?
+    explanation: The comparison operators differ at equality.
+    options:
+      - text: A missing value only
+        why: That follows a separate branch.
+      - text: Exactly the threshold
+        why: The comparison operators differ at equality.
+        correct: true
+      - text: Far below the threshold
+        why: Both comparisons are false there.
+  - id: a7-threshold-boundary-tests-02
+    type: mcq
+    prompt: Under the lesson's route_score contract, what is the expected missing-score outcome?
+    explanation: Missing is supported as a fallback state.
+    options:
+      - text: Review
+        why: Missing is supported as a fallback state.
+        correct: true
+      - text: Urgent by default
+        why: There is no score evidence.
+      - text: A negative class
+        why: Missing does not mean negative.
+  - id: a7-threshold-boundary-tests-03
+    type: mcq
+    prompt: Under the lesson's route_score contract, what should invalid numeric probabilities do?
+    explanation: Out-of-range values violate the contract.
+    options:
+      - text: Replace the threshold
+        why: The threshold is fixed.
+      - text: Raise a validation error
+        why: Out-of-range values violate the contract.
+        correct: true
+      - text: Round to an arbitrary value
+        why: That hides the invalid input.
+  - id: a7-threshold-boundary-tests-04
+    type: mcq
+    prompt: Why freeze numeric test examples?
+    explanation: Retraining adds irrelevant variability.
+    options:
+      - text: To test the decision logic independently of training
+        why: Retraining adds irrelevant variability.
+        correct: true
+      - text: To improve training accuracy
+        why: Unit fixtures test behaviour.
+      - text: To avoid checking equality
+        why: Equality is a central fixture.
+  - id: a7-threshold-boundary-tests-05
+    type: multi
+    prompt: Which belong in edge-case tests?
+    explanation: It distinguishes two common comparisons. It checks the fallback path.
+    options:
+      - text: Missing score
+        why: It checks the fallback path.
+        correct: true
+      - text: Only a random training seed
+        why: That does not specify a boundary case.
+      - text: Exact cutoff
+        why: It distinguishes two common comparisons.
+        correct: true
+  - id: a7-threshold-boundary-tests-06
+    type: cloze
+    prompt: Testing below, at and above a cutoff is ______ testing.
+    accept:
+      - boundary
+      - boundary value
+      - boundary-value
+      - edge case
+      - edge-case
+    explanation: Those cases bracket the decision edge.
+  - id: a7-threshold-boundary-tests-07
+    type: order
+    prompt: Order a unit test setup.
+    items:
+      - Write the decision contract
+      - Choose edges and expected outcomes
+      - Call the isolated function
+      - Assert the expected result or error
+    explanation: Expected behaviour guides examples.
+  - id: a7-threshold-boundary-tests-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def route_score(score, threshold):
+          if score is None:
+              return "review"
+          if not 0 <= score <= 1:
+              raise ValueError("score outside probability range")
+          return "urgent" if score >= threshold else "standard"
+
+      print(route_score(None, 0.1))
+    answer: review
+    explanation: No score is available, so the route is review.

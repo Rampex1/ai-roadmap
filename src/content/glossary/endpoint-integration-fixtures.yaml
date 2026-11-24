@@ -1,0 +1,4 @@
+term: "Integration fixture"
+short: "A controlled dependency or input used to test cooperating components through a realistic boundary."
+body: "A pinned, deterministic artifact and set of requests that drive validation, preprocessing, inference and response shaping through the public handler. Its assertions cover status, schema, decision and model version, so a stale or mis-wired deployment fails even when it returns 200."
+related: ["model-artifact-contract","api-contract"]

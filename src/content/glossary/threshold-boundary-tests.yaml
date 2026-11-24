@@ -1,0 +1,4 @@
+term: "Boundary test"
+short: "A test of behaviour at and around an edge of a declared input or decision rule."
+body: "A test that probes a rule just below, exactly at and just above each edge, plus missing and invalid inputs. It catches mistakes like > versus >=, where implementations differ only at equality."
+related: ["validation-threshold-cost","human-review"]

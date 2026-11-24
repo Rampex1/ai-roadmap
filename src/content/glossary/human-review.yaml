@@ -1,0 +1,4 @@
+term: "Human review"
+short: "A workflow in which a designated person makes or checks decisions outside the model’s automatic policy."
+body: "Measure review load and response time alongside the quality of automatic decisions."
+related: ["model-card","calibration"]

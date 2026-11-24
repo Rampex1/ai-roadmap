@@ -1,0 +1,30 @@
+id: a7-threshold-boundary-tests-01
+lesson: mle/a7/threshold-boundary-tests
+title: Implement and exercise boundary policy
+prompt: Implement route_score using a valid probability threshold. Missing score yields review. Invalid nonmissing probability raises ValueError. Equal threshold is urgent.
+starter: |
+  def route_score(score, threshold):
+      raise NotImplementedError
+solution: |
+  def route_score(score, threshold):
+      if score is None:
+          return "review"
+      if not 0 <= score <= 1:
+          raise ValueError("score outside probability range")
+      return "urgent" if score >= threshold else "standard"
+tests: |
+  assert route_score(0.69,0.7) == "standard"
+  assert route_score(0.7,0.7) == "urgent"
+  assert route_score(0.71,0.7) == "urgent"
+  assert route_score(0.5,0.5) == "urgent"
+  assert route_score(0.49,0.5) == "standard"
+  assert route_score(None,0.7) == "review"
+  for score in (-0.1,1.1,float("nan")):
+      try:
+          route_score(score,0.7)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError("Reject invalid scores")
+hints:
+  - Keep missing and invalid inputs distinct.

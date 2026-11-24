@@ -1,0 +1,22 @@
+id: a7-prediction-parity-tests-01
+lesson: mle/a7/prediction-parity-tests
+title: Check tolerance and shape
+prompt: Implement predictions_match for aligned finite score lists. Return false for different lengths or nonfinite scores. Use math.isclose with the supplied nonnegative absolute and relative tolerances.
+starter: |
+  def predictions_match(reference, observed, abs_tol, rel_tol):
+      raise NotImplementedError
+solution: |
+  def predictions_match(reference, observed, abs_tol, rel_tol):
+      from math import isclose, isfinite
+      return len(reference) == len(observed) and all(
+          isfinite(a) and isfinite(b) and isclose(a,b,abs_tol=abs_tol,rel_tol=rel_tol)
+          for a,b in zip(reference,observed))
+tests: |
+  assert predictions_match([0,1],[0.00001,1],0.00002,0)
+  assert predictions_match([100],[101],0,0.02)
+  assert not predictions_match([1],[1,2],1,1)
+  assert not predictions_match([float("inf")],[float("inf")],1,1)
+  assert not predictions_match([0],[0.1],0.01,0)
+  assert predictions_match([],[],0,0)
+hints:
+  - Check lengths and finiteness before accepting close values.

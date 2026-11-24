@@ -1,0 +1,22 @@
+id: a7-classifier-tests
+module: a7
+kind: homework
+title: Build a regression suite for a toy classifier
+brief: |-
+  Check policy, dataset and inference boundaries with local fixtures. The notebook requires only the standard library.
+
+  1. Exercise numeric edge cases.
+  2. Detect group overlap.
+  3. Check approximate prediction parity.
+  4. Audit versioned endpoint responses.
+  5. Require score parity and decision parity.
+
+  Describe which checks should block a release and which need a stable fixture rather than live training. Add one negative case for each boundary.
+notebook: /homework/a7-classifier-tests.ipynb
+rubric:
+  - Threshold boundaries and missing scores are tested.
+  - All split pairs are checked.
+  - Parity uses explicit tolerances and shapes.
+  - Request failures and artifact mismatch are visible.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

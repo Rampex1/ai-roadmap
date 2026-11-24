@@ -1,0 +1,91 @@
+items:
+  - id: a7-prediction-parity-tests-01
+    type: mcq
+    prompt: What can zip hide in a parity test?
+    explanation: It stops at the shorter sequence.
+    options:
+      - text: Extra output values
+        why: It stops at the shorter sequence.
+        correct: true
+      - text: All floating-point errors by rounding
+        why: It does no rounding.
+      - text: Only a different dictionary key order
+        why: The inputs here are lists.
+  - id: a7-prediction-parity-tests-02
+    type: mcq
+    prompt: When does absolute tolerance matter most?
+    explanation: Relative differences can become unstable or unhelpful.
+    options:
+      - text: When scores are near zero
+        why: Relative differences can become unstable or unhelpful.
+        correct: true
+      - text: Only for file hashes
+        why: Hashes require exact identity.
+      - text: Only for strings
+        why: Numeric tolerance is for scores.
+  - id: a7-prediction-parity-tests-03
+    type: mcq
+    prompt: Can close scores imply different decisions?
+    explanation: Numeric tolerance does not guarantee identical routing.
+    options:
+      - text: Yes, when they straddle a threshold
+        why: Numeric tolerance does not guarantee identical routing.
+        correct: true
+      - text: No, closeness implies identical labels
+        why: Decision boundaries can split nearby values.
+      - text: Only when lists differ in size
+        why: Equal lengths can still flip a label.
+  - id: a7-prediction-parity-tests-04
+    type: mcq
+    prompt: Under predictions_match's contract, how should nonfinite scores be treated?
+    explanation: The contract requires finite values.
+    options:
+      - text: Fail parity
+        why: The contract requires finite values.
+        correct: true
+      - text: Always accept equal infinities
+        why: They violate finite-score expectations.
+      - text: Turn them into scores of one
+        why: That hides an invalid output.
+  - id: a7-prediction-parity-tests-05
+    type: multi
+    prompt: Which belong in conversion validation?
+    explanation: They detect mapping errors. They expose decision flips.
+    options:
+      - text: Golden inputs near operating thresholds
+        why: They expose decision flips.
+        correct: true
+      - text: Only runtime startup status
+        why: Startup is insufficient for behavioural parity.
+      - text: Output shape and order checks
+        why: They detect mapping errors.
+        correct: true
+  - id: a7-prediction-parity-tests-06
+    type: cloze
+    prompt: Comparing two runtimes on matched inputs tests prediction ______.
+    accept:
+      - parity
+      - agreement
+      - equivalence
+    explanation: The test checks agreement under explicit tolerances.
+  - id: a7-prediction-parity-tests-07
+    type: order
+    prompt: Order a parity check.
+    items:
+      - Freeze representative inputs
+      - Collect aligned outputs
+      - Check shape, finiteness and tolerance
+    explanation: Inputs are frozen before outputs are collected, and outputs are collected before they are compared.
+  - id: a7-prediction-parity-tests-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def predictions_match(reference, observed, abs_tol, rel_tol):
+          from math import isclose, isfinite
+          return len(reference) == len(observed) and all(
+              isfinite(a) and isfinite(b) and isclose(a,b,abs_tol=abs_tol,rel_tol=rel_tol)
+              for a,b in zip(reference,observed))
+
+      print(predictions_match([1.0], [1.01], 0.001, 0.0))
+    answer: "False"
+    explanation: The gap is larger than the absolute tolerance.

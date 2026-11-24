@@ -1,0 +1,4 @@
+term: "Prediction parity"
+short: "Agreement between predictions produced by two implementations on the same examples."
+body: "Two implementations agree when they produce the same output shape and row order, finite scores within stated absolute and relative tolerances, and identical decisions after thresholding. Close scores can still disagree in label when they fall on either side of a threshold."
+related: ["frozen-preprocessing","feature-interface"]

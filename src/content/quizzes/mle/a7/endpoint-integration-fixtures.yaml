@@ -1,0 +1,90 @@
+items:
+  - id: a7-endpoint-integration-fixtures-01
+    type: mcq
+    prompt: What can status 200 hide?
+    explanation: Transport success is not semantic correctness.
+    options:
+      - text: An incorrect decision or artifact version
+        why: Transport success is not semantic correctness.
+        correct: true
+      - text: Only client request failure
+        why: A 200 status means a reply arrived.
+      - text: A missing test fixture by definition
+        why: Fixture existence is separate.
+  - id: a7-endpoint-integration-fixtures-02
+    type: mcq
+    prompt: Why pin the artifact for integration tests?
+    explanation: A mutable model can change without code changes.
+    options:
+      - text: Expected behaviour should have a stable reference
+        why: A mutable model can change without code changes.
+        correct: true
+      - text: A version guarantees accuracy
+        why: The fixture still needs checks.
+      - text: It removes response validation
+        why: The contract still matters.
+  - id: a7-endpoint-integration-fixtures-03
+    type: mcq
+    prompt: What belongs in a negative endpoint case?
+    explanation: The service should reject it predictably.
+    options:
+      - text: Malformed input with a defined error
+        why: The service should reject it predictably.
+        correct: true
+      - text: Only one curated success
+        why: That does not test failures.
+      - text: A changing unlabelled production case
+        why: Expected behaviour should be controlled.
+  - id: a7-endpoint-integration-fixtures-04
+    type: mcq
+    prompt: What distinguishes an endpoint integration test from a unit test of a threshold?
+    explanation: It exercises their integration.
+    options:
+      - text: It observes several layers through their public contract
+        why: It exercises their integration.
+        correct: true
+      - text: It cannot use synthetic data
+        why: Fixtures can be synthetic.
+      - text: It need not check outcomes
+        why: It still needs assertions.
+  - id: a7-endpoint-integration-fixtures-05
+    type: multi
+    prompt: Which are useful contract assertions?
+    explanation: It detects stale deployment. It checks end-to-end mapping.
+    options:
+      - text: Only how many Python files exist
+        why: That does not exercise the path.
+      - text: The expected artifact version
+        why: It detects stale deployment.
+        correct: true
+      - text: The expected public decision
+        why: It checks end-to-end mapping.
+        correct: true
+  - id: a7-endpoint-integration-fixtures-06
+    type: cloze
+    prompt: A test that exercises cooperating components is an ______ test.
+    accept:
+      - integration
+      - end-to-end
+      - end to end
+    explanation: It checks boundaries between units.
+  - id: a7-endpoint-integration-fixtures-07
+    type: order
+    prompt: Order a serving integration test.
+    items:
+      - Load the fixed test artifact
+      - Send a representative request
+      - Observe public status and body
+      - Assert decision and deployed version
+    explanation: Check the same boundary a client uses.
+  - id: a7-endpoint-integration-fixtures-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def expected_response(status, body, version, decision):
+          return (status == 200 and isinstance(body,dict)
+                  and body.get("model_version") == version and body.get("decision") == decision)
+
+      print(expected_response(200, {"model_version":"v","decision":"urgent"}, "v", "urgent"))
+    answer: "True"
+    explanation: The status, version and decision all match.

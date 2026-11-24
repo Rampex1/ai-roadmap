@@ -4,5 +4,7 @@ title: "Testing"
 order: 7
 prereqs: ["a6"]
 objectives:
-  - "Explain the core ideas of testing"
-  - "Apply testing to a working ML project"
+  - Write unit tests for threshold boundaries and missing inputs
+  - Audit split and data invariants
+  - Test numerical parity and decision parity separately
+  - Exercise the serving path with versioned integration fixtures

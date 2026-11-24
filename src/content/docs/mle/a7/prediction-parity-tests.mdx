@@ -1,0 +1,41 @@
+---
+title: Test numerical and decision parity
+module: a7
+order: 3
+estMinutes: 8
+objectives:
+  - Choose explicit absolute and relative tolerances
+  - Fail parity checks on shape mismatch
+goDeeper: pytest-fixtures-reference
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+<Term id="prediction-parity-tests" /> matters when converting a trained model to another runtime. Test comparable scores, shapes and row order. Floating-point differences are normal; choose tolerances suited to the runtime and downstream decision. Check decisions separately around a threshold, where a tiny score change can flip a label.
+
+Relative tolerance scales with magnitude. Absolute tolerance is important near zero. Reject nonfinite outputs unless the contract explicitly supports them. A list comparison using zip alone can hide extra values because it silently truncates to the shorter input.
+
+## Worked example
+
+Both numeric differences fit within the absolute tolerance.
+
+```python
+def predictions_match(reference, observed, abs_tol, rel_tol):
+    from math import isclose, isfinite
+    return len(reference) == len(observed) and all(
+        isfinite(a) and isfinite(b) and isclose(a,b,abs_tol=abs_tol,rel_tol=rel_tol)
+        for a,b in zip(reference,observed))
+
+print(predictions_match([0,1], [0.00001,0.99999], 0.00002, 0))
+```
+
+```text title="Output"
+True
+```
+
+Run score parity and threshold parity as separate checks.
+
+## Try it
+
+<CodeExercise id="a7-prediction-parity-tests-01" />

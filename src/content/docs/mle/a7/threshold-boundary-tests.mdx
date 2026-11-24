@@ -1,0 +1,42 @@
+---
+title: Test threshold boundaries and fallback
+module: a7
+order: 1
+estMinutes: 8
+objectives:
+  - Test equality at a decision threshold
+  - Keep error propagation separate from explicit review
+goDeeper: pytest-fixtures-reference
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="threshold-boundary-tests" /> catches disagreement between a documented policy and its implementation. A classifier that routes score equal to the threshold differently between training and serving may cause a subtle release regression. Test one example below, exactly at and above each decision boundary.
+
+Add distinct cases for invalid values and missing values. An invalid numeric input violates the contract; a missing score may legitimately route to review. Coercing both to zero can silently select standard handling. Choose deterministic fixture scores so tests do not depend on retraining.
+
+## Worked example
+
+The equality case follows the positive branch.
+
+```python
+def route_score(score, threshold):
+    if score is None:
+        return "review"
+    if not 0 <= score <= 1:
+        raise ValueError("score outside probability range")
+    return "urgent" if score >= threshold else "standard"
+
+print(route_score(0.7,0.7))
+```
+
+```text title="Output"
+urgent
+```
+
+Store selected boundary cases as regression tests.
+
+## Try it
+
+<CodeExercise id="a7-threshold-boundary-tests-01" />

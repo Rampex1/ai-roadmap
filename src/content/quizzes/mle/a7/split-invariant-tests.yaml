@@ -1,0 +1,93 @@
+items:
+  - id: a7-split-invariant-tests-01
+    type: mcq
+    prompt: Which ID should a new-entity test use?
+    explanation: Rows from one entity can be related.
+    options:
+      - text: Only row index
+        why: Related rows can have different indices.
+      - text: Only class label
+        why: Labels do not identify relationships.
+      - text: Group ID
+        why: Rows from one entity can be related.
+        correct: true
+  - id: a7-split-invariant-tests-02
+    type: mcq
+    prompt: Why check validation against test too?
+    explanation: Shared groups compromise a separate final assessment.
+    options:
+      - text: Validation always duplicates training
+        why: That should be checked, not assumed.
+      - text: Test labels cannot be delayed
+        why: Label delay is separate.
+      - text: Model selection uses validation outcomes
+        why: Shared groups compromise a separate final assessment.
+        correct: true
+  - id: a7-split-invariant-tests-03
+    type: mcq
+    prompt: Why include an intentionally bad fixture?
+    explanation: A never-failing check can miss its purpose.
+    options:
+      - text: To prove the check detects a violation
+        why: A never-failing check can miss its purpose.
+        correct: true
+      - text: To train the model twice
+        why: The fixture checks data logic.
+      - text: To make all test runs fail
+        why: A good test expects the failure signal.
+  - id: a7-split-invariant-tests-04
+    type: mcq
+    prompt: In split_overlap's output, what is listed once?
+    explanation: Set intersection removes duplicates.
+    options:
+      - text: Each distinct shared group per split pair
+        why: Set intersection removes duplicates.
+        correct: true
+      - text: Every repeated row separately
+        why: The report is by group.
+      - text: Only the first group in every split
+        why: All shared groups matter.
+  - id: a7-split-invariant-tests-05
+    type: multi
+    prompt: Which are useful data checks?
+    explanation: It protects the held-out population. They catch contract errors before training.
+    options:
+      - text: Group disjointness where required
+        why: It protects the held-out population.
+        correct: true
+      - text: Expected field ranges
+        why: They catch contract errors before training.
+        correct: true
+      - text: Only total file size
+        why: It does not verify invariants.
+  - id: a7-split-invariant-tests-06
+    type: cloze
+    prompt: A property that prepared data must preserve is an ______.
+    accept:
+      - invariant
+    explanation: The test checks the property across pipeline changes.
+  - id: a7-split-invariant-tests-07
+    type: order
+    prompt: Order a split test.
+    items:
+      - Define the group boundary
+      - Prepare clean and violating fixtures
+      - Run the pipeline check
+      - Inspect expected diagnostics
+    explanation: Both kinds of fixtures exercise the invariant.
+  - id: a7-split-invariant-tests-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def split_overlap(splits):
+          from itertools import combinations
+          collisions = {}
+          for left,right in combinations(sorted(splits),2):
+              shared = set(splits[left]) & set(splits[right])
+              if shared:
+                  collisions[(left,right)] = sorted(shared)
+          return collisions
+
+      print(split_overlap({"a":["x"],"b":["y"]}))
+    answer: "{}"
+    explanation: There are no shared IDs.

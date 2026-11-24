@@ -1,0 +1,39 @@
+---
+title: Exercise a serving contract with fixtures
+module: a7
+order: 4
+estMinutes: 8
+objectives:
+  - Test a pipeline through its public prediction boundary
+  - Detect incompatible responses and outdated versions
+goDeeper: pytest-fixtures-reference
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+An <Term id="endpoint-integration-fixtures" /> tests a composed path: request validation, feature preprocessing, inference and response shaping. Use a small deterministic artifact and exercise the same public handler as a client. Assert version identity and schema, not just that an endpoint returned status 200.
+
+Keep fixtures independent from mutable production data. Cover invalid input, unavailable dependencies, manual review and a known prediction. The fixture below validates responses after an API transport returns a parsed body. It compares a typed status, decision and expected model version.
+
+## Worked example
+
+The right decision from an outdated model fails the contract.
+
+```python
+def expected_response(status, body, version, decision):
+    return (status == 200 and isinstance(body,dict)
+            and body.get("model_version") == version and body.get("decision") == decision)
+
+print(expected_response(200, {"model_version":"old","decision":"review"}, "new", "review"))
+```
+
+```text title="Output"
+False
+```
+
+Verify the composed path using a small stable artifact.
+
+## Try it
+
+<CodeExercise id="a7-endpoint-integration-fixtures-01" />

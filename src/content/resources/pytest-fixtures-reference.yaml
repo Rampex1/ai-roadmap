@@ -1,0 +1,6 @@
+title: pytest fixtures reference
+url: https://docs.pytest.org/en/stable/how-to/fixtures.html
+kind: tool
+free: true
+modules:
+  - a7

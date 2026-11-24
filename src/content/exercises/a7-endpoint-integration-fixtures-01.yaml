@@ -1,0 +1,20 @@
+id: a7-endpoint-integration-fixtures-01
+lesson: mle/a7/endpoint-integration-fixtures
+title: Check a client-visible prediction
+prompt: Implement expected_response(status, body, version, decision). Accept only a 200 dictionary with the expected model_version and decision. Extra fields may be present.
+starter: |
+  def expected_response(status, body, version, decision):
+      raise NotImplementedError
+solution: |
+  def expected_response(status, body, version, decision):
+      return (status == 200 and isinstance(body,dict)
+              and body.get("model_version") == version and body.get("decision") == decision)
+tests: |
+  assert expected_response(200,{"model_version":"v1","decision":"review","score":0.5},"v1","review")
+  assert not expected_response(200,{"model_version":"v2","decision":"review"},"v1","review")
+  assert not expected_response(200,{"model_version":"v1","decision":"standard"},"v1","review")
+  assert not expected_response(400,{},"v1","review")
+  assert not expected_response(200,[],"v1","review")
+  assert not expected_response(200,{"decision":"review"},"v1","review")
+hints:
+  - Compare version and decision after checking status and body type.

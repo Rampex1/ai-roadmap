@@ -1,0 +1,44 @@
+---
+title: Test split and data invariants
+module: a7
+order: 2
+estMinutes: 8
+objectives:
+  - Detect overlap between all data splits
+  - Return useful diagnostics without exposing raw data
+goDeeper: pytest-fixtures-reference
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="split-invariant-tests" /> catches pipeline regressions before training starts. For evaluation of new entities, assert that train, validation and test group IDs are disjoint. Checking only train against test misses inspection-driven leakage through validation. A test should report which boundary failed.
+
+Test the pipeline on examples that intentionally violate the invariant. A test that only sees clean fixtures can pass while checking the wrong fields. Check global properties, such as uniqueness, alongside row-level contract checks. Report redacted counts or controlled identifiers in real diagnostics.
+
+## Worked example
+
+The problem lies between validation and test.
+
+```python
+def split_overlap(splits):
+    from itertools import combinations
+    collisions = {}
+    for left,right in combinations(sorted(splits),2):
+        shared = set(splits[left]) & set(splits[right])
+        if shared:
+            collisions[(left,right)] = sorted(shared)
+    return collisions
+
+print(split_overlap({"train":["a"],"valid":["b"],"test":["b"]}))
+```
+
+```text title="Output"
+{('test', 'valid'): ['b']}
+```
+
+Test the invariant on both clean and intentionally overlapping fixtures.
+
+## Try it
+
+<CodeExercise id="a7-split-invariant-tests-01" />

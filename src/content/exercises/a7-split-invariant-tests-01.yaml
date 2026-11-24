@@ -1,0 +1,24 @@
+id: a7-split-invariant-tests-01
+lesson: mle/a7/split-invariant-tests
+title: Find split collisions
+prompt: Implement split_overlap(splits). Each split name maps to group IDs. Return only pairs with an overlap using alphabetically ordered pair keys and sorted unique shared IDs.
+starter: |
+  def split_overlap(splits):
+      raise NotImplementedError
+solution: |
+  def split_overlap(splits):
+      from itertools import combinations
+      collisions = {}
+      for left,right in combinations(sorted(splits),2):
+          shared = set(splits[left]) & set(splits[right])
+          if shared:
+              collisions[(left,right)] = sorted(shared)
+      return collisions
+tests: |
+  assert split_overlap({"train":["x","x"],"test":["x"],"validation":["y"]}) == {("test","train"):["x"]}
+  assert split_overlap({"train":["x"],"test":["y"],"validation":["y"]}) == {("test","validation"):["y"]}
+  assert split_overlap({"train":[],"test":[]}) == {}
+  assert split_overlap({"a":["z","y"],"b":["y","z"]}) == {("a","b"):["y","z"]}
+  assert split_overlap({}) == {}
+hints:
+  - Compare every pair of split names and intersect the group sets.

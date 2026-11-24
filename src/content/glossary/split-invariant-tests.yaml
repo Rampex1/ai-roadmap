@@ -1,0 +1,4 @@
+term: "Split invariant"
+short: "A property that must hold for prepared splits, such as absence of shared group IDs."
+body: "A property every prepared split must satisfy, such as no group ID appearing in more than one of train, validation and test. Testing it on all split pairs, using fixtures that deliberately break it, shows the check can actually fail."
+related: ["group-split","data-contract"]
