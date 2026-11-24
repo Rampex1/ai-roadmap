@@ -1,0 +1,42 @@
+---
+title: Check probability quality and calibration
+module: a5
+order: 3
+estMinutes: 8
+objectives:
+  - Compute binary Brier score
+  - Read a reliability diagram with its sample counts
+goDeeper: sklearn-calibration-guide
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A well-calibrated score of 0.8 should correspond to roughly 80 percent positives among comparable predictions near 0.8. This differs from ranking quality. A monotonic score transformation can preserve ranking while changing how probabilities match frequencies.
+
+The <Term id="probability-quality" /> is the mean of squared errors on probabilities. It reflects calibration and other properties of predictive accuracy; use a reliability diagram to inspect calibration more directly. Plot mean predicted score against observed event frequency in bins, and include bin sizes. A sparse bin is uncertain. Bin boundaries should be explicit.
+
+Fit any calibration transform on suitable development data or out-of-fold predictions, then evaluate on an independent split. Calibration can shift across populations and over time. This exercise assumes finite probabilities and fixed binary labels.
+
+## Worked example
+
+The observed outcomes are one and zero.
+
+```python
+def brier_score(rows):
+    if not rows:
+        return None
+    return sum((p-label)**2 for p,label in rows) / len(rows)
+
+print(round(brier_score([(0.8,1),(0.3,0)]), 3))
+```
+
+```text title="Output"
+0.065
+```
+
+Inspect probability quality and ranked decisions separately on the same target population.
+
+## Try it
+
+<CodeExercise id="a5-probability-quality-01" />

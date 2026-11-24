@@ -1,0 +1,93 @@
+items:
+  - id: a5-paired-slice-comparison-01
+    type: mcq
+    prompt: What is an improvement under this rubric?
+    explanation: The case gains a successful outcome.
+    options:
+      - text: A missing baseline answer under this fixture
+        why: It is missing by the stated convention.
+      - text: Before incorrect and after correct
+        why: The case gains a successful outcome.
+        correct: true
+      - text: Both answers incorrect
+        why: Correctness ties.
+  - id: a5-paired-slice-comparison-02
+    type: mcq
+    prompt: Why keep the same cases for both variants?
+    explanation: Pairs isolate changed behaviour.
+    options:
+      - text: It controls case difficulty in the comparison
+        why: Pairs isolate changed behaviour.
+        correct: true
+      - text: It makes all scores identical
+        why: Variants can still disagree.
+      - text: It guarantees the dataset represents every group
+        why: Sampling coverage is separate.
+  - id: a5-paired-slice-comparison-03
+    type: mcq
+    prompt: Can net improvement hide regressions?
+    explanation: Both directions can occur.
+    options:
+      - text: Yes, gains can outnumber harmful new errors
+        why: Both directions can occur.
+        correct: true
+      - text: No, every case must improve to raise the mean
+        why: Aggregate gains do not require unanimity.
+      - text: Only if there are no evaluated cases
+        why: There is no net estimate then.
+  - id: a5-paired-slice-comparison-04
+    type: mcq
+    prompt: Which outcome applies when both are wrong?
+    explanation: Neither variant improves the binary result.
+    options:
+      - text: Tie in correctness
+        why: Neither variant improves the binary result.
+        correct: true
+      - text: Regression
+        why: There was no gain to lose.
+      - text: Missing
+        why: Both correctness flags are known.
+  - id: a5-paired-slice-comparison-05
+    type: multi
+    prompt: Which belong next to a slice comparison?
+    explanation: It supports interpretation of rates. These can change release confidence.
+    options:
+      - text: Missing and critical case counts
+        why: These can change release confidence.
+        correct: true
+      - text: Only a global mean
+        why: It hides per-slice changes.
+      - text: Number of comparable cases
+        why: It supports interpretation of rates.
+        correct: true
+  - id: a5-paired-slice-comparison-06
+    type: cloze
+    prompt: A correct-before, incorrect-after case is a ______.
+    accept:
+      - regression
+    explanation: The candidate lost a correct result.
+  - id: a5-paired-slice-comparison-07
+    type: order
+    prompt: Order paired assessment.
+    items:
+      - Fix the rubric and slice rules
+      - Align outputs to case IDs
+      - Summarize matched changes by slice
+      - Investigate critical disagreements
+    explanation: The comparison requires aligned scores.
+  - id: a5-paired-slice-comparison-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def paired_slices(rows):
+          counts = {}
+          for tag, before, after in rows:
+              outcome = "missing" if before is None or after is None else (
+                  "gain" if after and not before else "regression" if before and not after else "tie")
+              summary = counts.setdefault(tag, dict.fromkeys(("gain","regression","tie","missing"),0))
+              summary[outcome] += 1
+          return counts
+
+      print(paired_slices([("x", True, True)])["x"]["tie"])
+    answer: "1"
+    explanation: Both variants pass the same case.

@@ -1,0 +1,44 @@
+---
+title: Choose a threshold with decision costs
+module: a5
+order: 2
+estMinutes: 8
+objectives:
+  - Measure the validation cost of a threshold
+  - Separate a probability score from a decision policy
+goDeeper: sklearn-calibration-guide
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+The <Term id="validation-threshold-cost" /> is a deployment choice. Raising a threshold normally reduces positive predictions, which can reduce false alarms and increase misses. Select it with validation data, using costs, capacity or constraints fixed before final testing.
+
+Calculate a cost table: multiply false alarms by their cost and misses by theirs. A rate may be more comparable across workloads than raw cost, but keep case counts. If misses cost more, a lower threshold can be preferable. Changing the positive rate in production can alter the trade-off.
+
+This fixture uses a fixed set of candidate cutoffs and positive prediction at score equal to the cutoff. It measures classification cost on already labelled validation rows. A deployed policy may also support review instead of a binary decision.
+
+With calibrated probabilities, A1's $t^* = c_{FP}/(c_{FP}+c_{FN})$ is the cost-minimising cutoff; with uncalibrated scores, search candidate cutoffs on validation as here. See [A1 metrics and baselines](/mle/a1/metrics-and-baselines/).
+
+## Worked example
+
+The threshold trades one miss and one false alarm.
+
+```python
+def threshold_cost(rows, cutoff, miss, false_alarm):
+    return sum(miss if label == 1 and score < cutoff else
+               false_alarm if label == 0 and score >= cutoff else 0
+               for score, label in rows)
+
+print(threshold_cost([(0.6,1),(0.5,0),(0.3,1)], 0.5, 5, 2))
+```
+
+```text title="Output"
+7
+```
+
+Keep the cost assumptions and threshold with model version so the evaluated policy can be reproduced.
+
+## Try it
+
+<CodeExercise id="a5-validation-threshold-cost-01" />

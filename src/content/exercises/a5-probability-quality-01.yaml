@@ -1,0 +1,19 @@
+id: a5-probability-quality-01
+lesson: mle/a5/probability-quality
+title: Calculate probability squared error
+prompt: Implement brier_score(rows) for a list of (probability, binary label) pairs. Return mean squared error or None if the list is empty.
+starter: |
+  def brier_score(rows):
+      raise NotImplementedError
+solution: |
+  def brier_score(rows):
+      if not rows:
+          return None
+      return sum((p-label)**2 for p,label in rows) / len(rows)
+tests: |
+  assert abs(brier_score([(0.8,1),(0.3,0)])-0.065) < 1e-12
+  assert brier_score([(1,1),(0,0)]) == 0
+  assert brier_score([(1,0),(0,1)]) == 1
+  assert brier_score([]) is None
+hints:
+  - Square each individual probability error before averaging.

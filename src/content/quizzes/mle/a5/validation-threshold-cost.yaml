@@ -1,0 +1,92 @@
+items:
+  - id: a5-validation-threshold-cost-01
+    type: mcq
+    prompt: Where should a threshold be selected?
+    explanation: Selection is a development decision.
+    options:
+      - text: Validation data
+        why: Selection is a development decision.
+        correct: true
+      - text: Repeatedly examined final test cases
+        why: That leaks assessment feedback.
+      - text: Only the highest observed logit
+        why: It carries no labelled cost information.
+  - id: a5-validation-threshold-cost-02
+    type: mcq
+    prompt: What does raising a threshold typically reduce?
+    explanation: Fewer scores meet the new cutoff.
+    options:
+      - text: The count of actual positive cases
+        why: Labels do not change.
+      - text: The size of the evaluation cohort
+        why: Thresholding changes decisions.
+      - text: The number of positive predictions
+        why: Fewer scores meet the new cutoff.
+        correct: true
+  - id: a5-validation-threshold-cost-03
+    type: mcq
+    prompt: Under the rule *positive if score >= cutoff*, what is predicted when score equals the cutoff?
+    explanation: The contract uses greater than or equal.
+    options:
+      - text: Negative prediction
+        why: That uses a strictly greater rule.
+      - text: Automatic abstention
+        why: No review band is defined.
+      - text: Positive prediction
+        why: The contract uses greater than or equal.
+        correct: true
+  - id: a5-validation-threshold-cost-04
+    type: mcq
+    prompt: Why write down costs first?
+    explanation: Otherwise comparisons can be optimized after inspection.
+    options:
+      - text: They define what better means for the policy
+        why: Otherwise comparisons can be optimized after inspection.
+        correct: true
+      - text: They calibrate scores automatically
+        why: Costs govern decisions, not calibration.
+      - text: They remove all false alarms
+        why: Error trade-offs can remain.
+  - id: a5-validation-threshold-cost-05
+    type: multi
+    prompt: Which may influence a threshold choice?
+    explanation: Asymmetric errors matter. Workload can constrain the policy.
+    options:
+      - text: The cost of a missed urgent case
+        why: Asymmetric errors matter.
+        correct: true
+      - text: Available review or response capacity
+        why: Workload can constrain the policy.
+        correct: true
+      - text: Only the alphabetical order of class names
+        why: Ordering names has no decision meaning.
+  - id: a5-validation-threshold-cost-06
+    type: cloze
+    prompt: A cutoff chosen on a development split is a decision ______.
+    accept:
+      - threshold
+      - cutoff
+      - rule
+      - boundary
+    explanation: The threshold turns a score into a decision.
+  - id: a5-validation-threshold-cost-07
+    type: order
+    prompt: Order a fair threshold comparison.
+    items:
+      - Define costs and validation cases
+      - Evaluate candidate cutoffs
+      - Freeze the chosen decision rule
+      - Evaluate once on the final test
+    explanation: The test happens after selection.
+  - id: a5-validation-threshold-cost-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def threshold_cost(rows, cutoff, miss, false_alarm):
+          return sum(miss if label == 1 and score < cutoff else
+                     false_alarm if label == 0 and score >= cutoff else 0
+                     for score, label in rows)
+
+      print(threshold_cost([(0.2,1),(0.9,0)], 0.5, 3, 2))
+    answer: "5"
+    explanation: Both decisions fail, with costs three and two.

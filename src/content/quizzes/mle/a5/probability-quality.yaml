@@ -1,0 +1,89 @@
+items:
+  - id: a5-probability-quality-01
+    type: mcq
+    prompt: What does good calibration near 0.8 mean?
+    explanation: Scores should match observed frequencies in groups.
+    options:
+      - text: About 80 percent of comparable cases are positive
+        why: Scores should match observed frequencies in groups.
+        correct: true
+      - text: Every such case is positive
+        why: Calibration is a frequency statement.
+      - text: Every prediction is correct eight times
+        why: One case has one label.
+  - id: a5-probability-quality-02
+    type: mcq
+    prompt: What does a Brier score of zero indicate on a dataset?
+    explanation: All squared errors are zero.
+    options:
+      - text: Every predicted probability equals its label
+        why: All squared errors are zero.
+        correct: true
+      - text: No predictions were observed
+        why: An empty set is undefined.
+      - text: Ranking is random
+        why: The predictions perfectly match observed labels.
+  - id: a5-probability-quality-03
+    type: mcq
+    prompt: Can ranking stay fixed while calibration changes?
+    explanation: Ordering can stay fixed while probability values move.
+    options:
+      - text: Only if every score is missing
+        why: That is not needed.
+      - text: Yes, under a strictly increasing transformation
+        why: Ordering can stay fixed while probability values move.
+        correct: true
+      - text: No, ranking implies calibration
+        why: Ranking only specifies order.
+  - id: a5-probability-quality-04
+    type: mcq
+    prompt: Why report reliability-bin counts?
+    explanation: Observed rates need denominators.
+    options:
+      - text: Counts remove every source effect
+        why: Slice and time differences can remain.
+      - text: Small bins have uncertain observed frequencies
+        why: Observed rates need denominators.
+        correct: true
+      - text: Bin counts calibrate the model automatically
+        why: A diagram is a diagnostic.
+  - id: a5-probability-quality-05
+    type: multi
+    prompt: Which help assess calibration?
+    explanation: It can be compared with the mean score. Calibration fitting should not reuse this evidence.
+    options:
+      - text: Observed frequency by probability bin
+        why: It can be compared with the mean score.
+        correct: true
+      - text: An independent assessment split
+        why: Calibration fitting should not reuse this evidence.
+        correct: true
+      - text: Only class predictions after thresholding
+        why: Those discard probability information.
+  - id: a5-probability-quality-06
+    type: cloze
+    prompt: The mean squared probability error is the ______ score.
+    accept:
+      - brier
+    explanation: Brier score measures squared probability error.
+  - id: a5-probability-quality-07
+    type: order
+    prompt: Order a reliability analysis.
+    items:
+      - Collect probabilities and outcomes on evaluation data
+      - Apply predefined bins
+      - Compute average score and frequency per bin
+      - Show them with counts
+    explanation: Each comparison uses the same rows for frequency and mean.
+  - id: a5-probability-quality-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def brier_score(rows):
+          if not rows:
+              return None
+          return sum((p-label)**2 for p,label in rows) / len(rows)
+
+      print(brier_score([(0.5, 0), (0.5, 1)]))
+    answer: "0.25"
+    explanation: Both squared errors equal 0.25.

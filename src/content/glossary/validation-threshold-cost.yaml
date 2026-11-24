@@ -1,0 +1,4 @@
+term: "Decision threshold"
+short: "A cutoff that converts a numeric model score into an action."
+body: "A cutoff t that turns a score s into an action (positive if s >= t). It is a policy choice separate from the model: chosen on validation data to minimise expected cost c_FP·FP + c_FN·FN or to meet a capacity limit, then frozen before the test set is scored."
+related: ["validation","false-negative-rate"]

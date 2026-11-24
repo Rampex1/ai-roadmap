@@ -4,5 +4,7 @@ title: "Evaluation"
 order: 5
 prereqs: ["a4"]
 objectives:
-  - "Explain the core ideas of evaluation"
-  - "Apply evaluation to a working ML project"
+  - Choose metrics for a decision and communicate their denominators
+  - Tune thresholds on validation using explicit costs
+  - Measure probability quality and calibration separately from ranking
+  - Compare candidates on matched cases and relevant slices

@@ -1,0 +1,46 @@
+---
+title: Compare candidates across paired slices
+module: a5
+order: 4
+estMinutes: 8
+objectives:
+  - Count paired gains and regressions by slice
+  - Keep pending or incomparable decisions visible
+goDeeper: sklearn-calibration-guide
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="paired-slice-comparison" /> reveals where a new candidate changed outcomes. Align cases by stable ID and compare both systems under the same rubric. A case can improve, regress or tie. The net gain hides which cases changed and how consequential they are.
+
+Separate unlabelled and missing predictions from ties. In this fixture a pair is comparable only when both correctness flags are known. An unavailable response can be a defined failure in a different evaluation; decide the convention before analysis. Report counts along with any paired interval or significance calculation.
+
+Inspect slice sizes and assignment rules. Aggregate improvement can coexist with a critical regression. Keep evidence at case level for decisions about rollout or further study.
+
+## Worked example
+
+One slice has a gain and a regression while another lacks a paired label.
+
+```python
+def paired_slices(rows):
+    counts = {}
+    for tag, before, after in rows:
+        outcome = "missing" if before is None or after is None else (
+            "gain" if after and not before else "regression" if before and not after else "tie")
+        summary = counts.setdefault(tag, dict.fromkeys(("gain","regression","tie","missing"),0))
+        summary[outcome] += 1
+    return counts
+
+print(paired_slices([("web",False,True),("web",True,False),("app",None,True)]))
+```
+
+```text title="Output"
+{'web': {'gain': 1, 'regression': 1, 'tie': 0, 'missing': 0}, 'app': {'gain': 0, 'regression': 0, 'tie': 0, 'missing': 1}}
+```
+
+Use aligned case evidence to decide whether an aggregate gain justifies a rollout.
+
+## Try it
+
+<CodeExercise id="a5-paired-slice-comparison-01" />

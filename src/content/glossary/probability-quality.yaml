@@ -1,0 +1,4 @@
+term: "Brier score"
+short: "Mean squared difference between a predicted probability and the observed binary outcome."
+body: "Brier = mean of (p − y)² over examples with labels y in {0,1}. It is a proper scoring rule, so it is minimised in expectation by reporting true probabilities. It mixes calibration with discrimination; 0 is perfect, and always predicting 0.5 scores 0.25."
+related: ["calibration","validation"]

@@ -1,0 +1,19 @@
+id: a5-validation-threshold-cost-01
+lesson: mle/a5/validation-threshold-cost
+title: Price a validation threshold
+prompt: Implement threshold_cost(rows, cutoff, miss, false_alarm). Prediction is positive if score >= cutoff. Add miss for positive labels predicted negative and false_alarm for negative labels predicted positive.
+starter: |
+  def threshold_cost(rows, cutoff, miss, false_alarm):
+      raise NotImplementedError
+solution: |
+  def threshold_cost(rows, cutoff, miss, false_alarm):
+      return sum(miss if label == 1 and score < cutoff else
+                 false_alarm if label == 0 and score >= cutoff else 0
+                 for score, label in rows)
+tests: |
+  assert threshold_cost([(0.6,1),(0.5,0),(0.3,1)],0.5,5,2) == 7
+  assert threshold_cost([(0.5,1),(0.4,0)],0.5,9,4) == 0
+  assert threshold_cost([(0.5,0)],0.5,9,4) == 4
+  assert threshold_cost([],0.3,2,3) == 0
+hints:
+  - Treat equality as a positive prediction.

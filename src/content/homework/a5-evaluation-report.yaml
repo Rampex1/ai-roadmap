@@ -1,0 +1,22 @@
+id: a5-evaluation-report
+module: a5
+kind: homework
+title: Evaluate a ticket-routing decision
+brief: |-
+  Use fixed prediction fixtures to turn model scores into an auditable decision. No training or credentials are needed.
+
+  1. Count binary outcomes.
+  2. Choose a threshold using validation costs.
+  3. Measure probability error.
+  4. Compare paired slice outcomes.
+  5. Select a validated operating point.
+
+  Explain the relative consequences of a false alarm and missed urgent ticket. Define a holdout gate and say how uncertainty in small slices changes your recommendation.
+notebook: /homework/a5-evaluation-report.ipynb
+rubric:
+  - Counts use actual then predicted ordering.
+  - Thresholds are selected without using the final test.
+  - Probability scores are not treated as binary labels.
+  - Missing labels and paired changes stay visible.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

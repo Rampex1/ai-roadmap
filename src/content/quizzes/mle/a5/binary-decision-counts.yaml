@@ -1,0 +1,91 @@
+items:
+  - id: a5-binary-decision-counts-01
+    type: mcq
+    prompt: Which count is a missed urgent ticket?
+    explanation: Its actual label is positive and prediction negative.
+    options:
+      - text: False negative
+        why: Its actual label is positive and prediction negative.
+        correct: true
+      - text: False positive
+        why: That predicts urgency for a nonurgent ticket.
+      - text: True negative
+        why: That correctly predicts a nonurgent ticket.
+  - id: a5-binary-decision-counts-02
+    type: mcq
+    prompt: What is the denominator of recall?
+    explanation: Recall measures how many positives were found.
+    options:
+      - text: Actual positives
+        why: Recall measures how many positives were found.
+        correct: true
+      - text: Predicted positives
+        why: Precision uses this denominator.
+      - text: Every attempted request
+        why: That is a different population.
+  - id: a5-binary-decision-counts-03
+    type: mcq
+    prompt: What is the denominator of precision?
+    explanation: Precision measures correctness of positive predictions.
+    options:
+      - text: Predicted positives
+        why: Precision measures correctness of positive predictions.
+        correct: true
+      - text: Actual positives
+        why: Recall uses this denominator.
+      - text: True negatives only
+        why: They do not contribute to precision.
+  - id: a5-binary-decision-counts-04
+    type: mcq
+    prompt: Why can accuracy be high for a useless rare-event classifier?
+    explanation: Always predicting negative can score well overall.
+    options:
+      - text: Most examples can be negative
+        why: Always predicting negative can score well overall.
+        correct: true
+      - text: False negatives never count toward errors
+        why: They count as mistakes.
+      - text: Positive classes have more feature columns
+        why: Class frequency is independent of feature width.
+  - id: a5-binary-decision-counts-05
+    type: multi
+    prompt: Which make rates interpretable?
+    explanation: It identifies measured coverage. They define the rate denominators.
+    options:
+      - text: Labelled count
+        why: It identifies measured coverage.
+        correct: true
+      - text: Confusion counts
+        why: They define the rate denominators.
+        correct: true
+      - text: Only the classifier name
+        why: A name does not describe outcomes.
+  - id: a5-binary-decision-counts-06
+    type: cloze
+    prompt: An actual positive predicted negative is a false ______.
+    accept:
+      - negative
+    explanation: This case contributes to the false-negative count.
+  - id: a5-binary-decision-counts-07
+    type: order
+    prompt: Order a threshold evaluation.
+    items:
+      - Define the positive outcome
+      - Collect eligible labels and decisions
+      - Count the four outcomes
+      - Compute rates with their denominators
+    explanation: Rates are computed after counts.
+  - id: a5-binary-decision-counts-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def decision_counts(rows):
+          counts = {"tp":0,"fp":0,"tn":0,"fn":0}
+          keys = {(1,1):"tp",(0,1):"fp",(0,0):"tn",(1,0):"fn"}
+          for actual, predicted in rows:
+              counts[keys[(actual,predicted)]] += 1
+          return counts
+
+      print(decision_counts([(0, 1), (0, 1)])["fp"])
+    answer: "2"
+    explanation: Both rows are false positives.

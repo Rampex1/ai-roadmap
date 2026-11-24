@@ -1,0 +1,4 @@
+term: "False negative rate"
+short: "The fraction of known positive examples assigned a negative prediction."
+body: "FNR = FN / (TP + FN) = 1 − recall: the share of actual positives the model misses. Its denominator is actual positives, so in small subgroups it is noisy; report it with counts."
+related: ["recall","evaluation-slice"]

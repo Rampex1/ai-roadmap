@@ -1,0 +1,20 @@
+id: a5-binary-decision-counts-01
+lesson: mle/a5/binary-decision-counts
+title: Build a confusion table
+prompt: Implement decision_counts(rows) for an iterable of (actual, predicted) binary integer pairs. Return tp, fp, tn and fn counts, including zero-valued keys.
+starter: |
+  def decision_counts(rows):
+      raise NotImplementedError
+solution: |
+  def decision_counts(rows):
+      counts = {"tp":0,"fp":0,"tn":0,"fn":0}
+      keys = {(1,1):"tp",(0,1):"fp",(0,0):"tn",(1,0):"fn"}
+      for actual, predicted in rows:
+          counts[keys[(actual,predicted)]] += 1
+      return counts
+tests: |
+  assert decision_counts([(1,1),(1,0),(0,1),(0,0),(1,1)]) == {"tp":2,"fp":1,"tn":1,"fn":1}
+  assert decision_counts(iter([(0,1)])) == {"tp":0,"fp":1,"tn":0,"fn":0}
+  assert decision_counts([]) == dict.fromkeys(("tp","fp","tn","fn"),0)
+hints:
+  - Use actual and predicted in the stated order.

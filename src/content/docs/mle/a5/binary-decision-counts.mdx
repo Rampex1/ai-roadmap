@@ -1,0 +1,44 @@
+---
+title: Measure outcomes with a confusion table
+module: a5
+order: 1
+estMinutes: 8
+objectives:
+  - Compute binary confusion counts
+  - Choose denominators that reflect a deployment decision
+goDeeper: sklearn-calibration-guide
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Start with the decision the model supports. In urgent ticket routing, a false negative is an urgent ticket assigned standard handling. A false positive routes a standard ticket to the urgent queue. These errors use different operational resources and can have different consequences.
+
+<Term id="binary-decision-counts" /> are sufficient for many threshold metrics. Precision divides true positives by predicted positives. Recall divides true positives by actual positives. If a denominator is zero, report the metric as undefined and show the counts. Accuracy can look high on an imbalanced workload when a model never detects a rare positive.
+
+State what constitutes one example, where labels come from and whether pending outcomes were excluded. Keep attempted and labelled counts in the report so that a move in coverage is visible. The fixture uses known 0/1 labels and does not handle abstention.
+
+## Worked example
+
+One urgent ticket is detected and another is missed.
+
+```python
+def decision_counts(rows):
+    counts = {"tp":0,"fp":0,"tn":0,"fn":0}
+    keys = {(1,1):"tp",(0,1):"fp",(0,0):"tn",(1,0):"fn"}
+    for actual, predicted in rows:
+        counts[keys[(actual,predicted)]] += 1
+    return counts
+
+print(decision_counts([(1,1),(1,0),(0,0)]))
+```
+
+```text title="Output"
+{'tp': 1, 'fp': 0, 'tn': 1, 'fn': 1}
+```
+
+Retain confusion counts next to derived rates so the relevant denominators are recoverable.
+
+## Try it
+
+<CodeExercise id="a5-binary-decision-counts-01" />

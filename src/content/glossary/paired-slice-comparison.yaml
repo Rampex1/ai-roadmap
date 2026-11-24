@@ -1,0 +1,4 @@
+term: "Paired slice comparison"
+short: "Evaluating two systems on the same cases within each relevant condition."
+body: "Scoring two systems on the same case IDs and counting, per slice, the cases each one fixes or breaks (gains, regressions, ties, missing). Pairing removes differences in case difficulty, so a paired test such as McNemar's or a paired bootstrap is tighter than comparing two unpaired accuracies."
+related: ["evaluation-slice","paired-bootstrap"]

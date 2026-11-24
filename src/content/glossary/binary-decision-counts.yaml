@@ -1,0 +1,4 @@
+term: "Binary outcome counts"
+short: "The numbers of true positives, false positives, true negatives and false negatives in a binary decision."
+body: "Every binary decision falls into one cell: TP (positive, flagged), FP (negative, flagged), TN (negative, not flagged), FN (positive, missed). Precision, recall, F1, false-positive rate and accuracy are all ratios of these four counts, so keeping the counts lets readers recompute any rate and see small denominators."
+related: ["precision", "recall", "confusion-matrix"]
