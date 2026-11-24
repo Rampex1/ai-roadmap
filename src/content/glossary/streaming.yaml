@@ -1,0 +1,6 @@
+term: Streaming
+short: Delivering pieces of a response as they become available.
+body: Protocol events may contain new text, metadata or a completion signal. Assemble text deltas and track completion separately.
+related:
+  - latency
+  - api-contract

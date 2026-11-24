@@ -1,0 +1,23 @@
+id: c2-portable-chat-client
+module: c2
+kind: homework
+title: Test a portable chat client
+brief: |-
+  You are building a help-desk assistant that talks to any OpenAI-compatible `/v1/chat/completions` server: a hosted API, Ollama, `llama-server` or vLLM. Every response is a recorded fixture, so failures are repeatable and no model download or credentials are needed. The notebook gives you the lesson solutions (`retry_delay`, `collect_sse`, `summarize_runs`) and each task extends them.
+
+  1. Build a multi-turn chat-completions payload from a conversation history, and read text, `finish_reason` and optional `usage` from a non-streaming reply.
+  2. Replay a run of failed attempts against a deadline and return every backoff delay actually slept.
+  3. Parse a chat-completions SSE stream from raw byte reads: buffer lines split across reads (including inside a UTF-8 character), ignore comments, stop at `data: [DONE]`, and report complete, truncated (`finish_reason` length) or interrupted.
+  4. Compare hosted and local runs on the same prompts: p90 latency, failure rate and quality that counts failed requests as zero, then name the preferred runtime.
+  5. Connect the pieces in a replayable request that uses at most two attempts.
+
+  Draw the interface between the caller and the transport. Explain what your client reports if a provider disconnects after sending two deltas, how that differs from a `length` finish, and which numbers and quality checks would justify switching runtimes.
+notebook: /homework/c2-portable-chat-client.ipynb
+rubric:
+  - The payload uses the chat-completions fields and keeps every earlier turn in order, and the reply reader handles missing usage and passes the finish reason through.
+  - The retry schedule respects the attempt limit, the server hint and the overall deadline, and stops at once on non-transient errors.
+  - The byte-level parser handles lines and characters split across reads and distinguishes complete, truncated and interrupted streams.
+  - The runtime comparison reports p90 latency and failure rate and lets failed requests lower quality.
+  - The integrated request passes every fixture check, including the two-attempt limit.
+  - The interpretation separates interruption from truncation and justifies a runtime choice with measured numbers.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 90 to 120 minutes.

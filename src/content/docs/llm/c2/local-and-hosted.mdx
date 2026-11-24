@@ -1,0 +1,110 @@
+---
+title: Compare local and hosted inference
+module: c2
+order: 4
+estMinutes: 11
+objectives:
+  - Design a fair local-versus-hosted evaluation
+  - Report completion latency and failures alongside quality
+goDeeper: ollama-chat-api
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A local runtime executes model weights on your machine. A hosted adapter sends requests to a service that owns the hardware and model deployment. First check constraints such as where prompts may be processed, memory budget, acceptable wait and cost. Use C1's weight and cache estimates to choose a small model for a laptop. Check licences before redistributing weights or using a model in a product.
+
+As of late 2026, Ollama exposes a local chat endpoint, plus an OpenAI-compatible one under `/v1`. llama.cpp is another common local runtime: its `llama-server` program loads a GGUF model file and serves the same OpenAI-compatible `/v1/chat/completions` endpoint, so the adapter from [lesson 1](/llm/c2/chat-requests/) works against it unchanged. If you already run a model locally, an optional hands-on experiment is to open its chat API reference, send the same short message list twice with streaming disabled and record the returned text and timing fields. The notebook uses synthetic measurements, so it requires no model download or API key.
+
+For an actual comparison, keep the prompt set, generation cap, rubric and timing definitions fixed. Record model ID, quantisation, hardware, concurrency and whether runs were cold or warmed. Compare quality on the same inputs and report failure rates. A model that fails half its requests can look fast if you only time successful responses.
+
+Report <Term id="latency" /> as a distribution, not one number. A latency percentile should name the timing milestone, such as first text or final response. The nearest-rank p90 uses rank ceil(0.9 × n) among n sorted observations. With few samples, ranks are coarse, so report sample count alongside the result.
+
+## Worked example: cost per 1,000 requests
+
+Cost is the other side of the trade-off. Hosted APIs usually charge per token. A local runtime has no per-token bill, but it uses electricity, ties up your machine and needs hardware you already paid for. The prices below are **illustrative only**, chosen to make the arithmetic easy. Look up current prices before deciding anything.
+
+```python
+# Illustrative prices only. Check current pricing before deciding.
+input_tokens, output_tokens = 500, 200
+
+# Hosted: priced per million tokens.
+in_price, out_price = 0.50, 1.50  # dollars per million tokens
+hosted_per_1k = 1000 * (input_tokens * in_price + output_tokens * out_price) / 1e6
+
+# Local: electricity for the extra power draw while generating.
+seconds_per_request, extra_watts, dollars_per_kwh = 8, 30, 0.30
+local_per_1k = 1000 * seconds_per_request * extra_watts / 3.6e6 * dollars_per_kwh
+
+print(f"hosted ${hosted_per_1k:.2f} per 1k requests")
+print(f"local  ${local_per_1k:.2f} per 1k requests, {1000 * seconds_per_request / 3600:.1f} hours of laptop time")
+```
+
+```text title="Output"
+hosted $0.55 per 1k requests
+local  $0.02 per 1k requests, 2.2 hours of laptop time
+```
+
+Hosted: each request costs $500 \times 0.50 / 10^6 + 200 \times 1.50 / 10^6 = \$0.00055$, so 1,000 requests cost about 55 cents. Local: 1,000 requests at 8 seconds each is 8,000 seconds. At 30 extra watts that is 240,000 joules, or about 0.067 kWh (one kWh is 3.6 million joules), which costs about 2 cents.
+
+Local looks far cheaper per request, but the comparison is incomplete. The local figure ignores the price of the machine, and the laptop is busy for over two hours, one request at a time. A failed request that you retry costs again on either side, so divide by successful requests, not attempts. Quality matters too: a cheaper model that needs more retries or gives worse answers may not save anything.
+
+## Worked example: latency and failures
+
+Four requests include one failure. The latency result conditions on successful requests, while the failure count stays visible.
+
+```python
+def summarize_runs(seconds):
+    from math import ceil
+    successful = sorted(value for value in seconds if value is not None)
+    p90 = successful[ceil(0.9 * len(successful)) - 1] if successful else None
+    return p90, len(seconds) - len(successful)
+
+print(summarize_runs([0.4, None, 0.6, 0.9]))
+```
+
+```text title="Output"
+(0.9, 1)
+```
+
+Include the denominator and separate cold starts from warmed timings before drawing a deployment conclusion.
+
+## Try it
+
+<CodeExercise id="c2-local-and-hosted-01" />
+
+## Optional local API call
+
+If Ollama is running on your Mac and already has a model installed, set `model` below to the exact
+name shown by `ollama list`. Run the code in local Python. This sends one request to the local chat
+endpoint, with streaming disabled so the response is one JSON object. Start with a small model and
+keep the output limit short.
+
+```python
+import json
+from urllib.request import Request, urlopen
+
+model = "replace-with-an-installed-model"
+payload = {
+    "model": model,
+    "messages": [{"role": "user", "content": "Name two ways to reset a password safely."}],
+    "stream": False,
+    "options": {"num_predict": 80},
+}
+request = Request(
+    "http://localhost:11434/api/chat",
+    data=json.dumps(payload).encode("utf-8"),
+    headers={"Content-Type": "application/json"},
+    method="POST",
+)
+with urlopen(request, timeout=60) as response:
+    reply = json.load(response)
+
+print(reply["message"]["content"])
+duration = reply.get("eval_duration", 0)
+if duration:
+    print("Decode tokens/s:", reply["eval_count"] / (duration / 1e9))
+```
+
+Record completion status, model and output separately from decode speed. Decode speed excludes
+model load, prefill and network wait. Those phases still contribute to the time the user experiences.

@@ -1,0 +1,91 @@
+---
+title: Make a chat request
+module: c2
+order: 1
+estMinutes: 10
+objectives:
+  - Construct a chat-completions request with model, messages, max_tokens, temperature and stream
+  - Read the reply text, finish reason and usage from a chat-completions response
+  - Separate request construction from transport and credentials
+goDeeper: ollama-openai-compatibility
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A model API takes text and configuration over a transport such as HTTP. The <Term id="api-contract" /> tells your client how to represent them. In C1, you built a chat template by hand. With a chat API you normally pass ordered role-labelled messages and let the runtime render its native template.
+
+A useful application boundary accepts a request containing a model, messages and a generation limit. A transport adapter translates it into provider fields, attaches credentials and applies a timeout. When the response arrives, the adapter extracts the text, completion status and available usage information. Application code can then switch backends without learning a new response format.
+
+## The portable shape: chat completions
+
+One request shape works almost everywhere: the OpenAI-compatible chat-completions endpoint, sent as a POST to a path ending in `/v1/chat/completions`. As of late 2026, OpenAI serves it, and so do the main open-model servers: Ollama (under `/v1`), llama.cpp's `llama-server` and vLLM. This course's own tutor panel talks to that same endpoint. If your adapter speaks this shape, changing backend is mostly a change of base URL, model name and key.
+
+The request body is a JSON object:
+
+| Field | Meaning |
+|---|---|
+| `model` | Which model to run. Each server has its own names. |
+| `messages` | Ordered list of `{"role": ..., "content": ...}`. Roles are `system`, `user` and `assistant`. |
+| `max_tokens` | Cap on generated tokens. Generation stops here even mid-sentence. |
+| `temperature` | Sampling temperature from [C1 decoding](/llm/c1/decoding/). `0` is close to greedy decoding. |
+| `stream` | `false` for one JSON reply, `true` for a stream of events (lesson 3). |
+
+The non-streaming response puts the reply inside a list called `choices`, because a request can ask for several alternatives. You almost always read the first one:
+
+- `choices[0].message.content` is the reply text.
+- `choices[0].finish_reason` says why generation stopped. `"stop"` means the model ended naturally. `"length"` means it hit `max_tokens`, so the text is cut off.
+- `usage` reports `prompt_tokens`, `completion_tokens` and `total_tokens` when the server provides them. Treat it as optional.
+
+Field support still varies at the edges. OpenAI's own documentation now prefers `max_completion_tokens` for some models, and each local server documents which options it accepts. Keep the core fields above in your fixture and validate extra options per backend.
+
+:::note
+As of late 2026, OpenAI also offers a newer Responses API with a different shape: an `input` field instead of `messages`, `max_output_tokens` instead of `max_tokens`, and typed streaming events. It is OpenAI's recommended interface for new OpenAI-only work. The open-model servers in this course use chat completions, so that is the shape we build on. Supporting Responses later means writing one more adapter, not changing application code.
+:::
+
+Store provider keys in an environment variable or secret store on the server. Avoid placing keys in browser JavaScript, source control or error logs. The key normally travels in an `Authorization: Bearer ...` header, never in the JSON body. Test the adapter with a fixture before sending a live request. Keep fixture text synthetic so test failures can be shared.
+
+## Worked example
+
+The model name is a fixture. Build the payload, then read a recorded response. No network call happens.
+
+```python
+def chat_payload(model, system, user, max_tokens, temperature=0.2):
+    return {
+        "model": model,
+        "messages": [{"role": "system", "content": system},
+                     {"role": "user", "content": user}],
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+        "stream": False,
+    }
+
+def read_reply(response):
+    choice = response["choices"][0]
+    usage = response.get("usage") or {}
+    return choice["message"]["content"], choice["finish_reason"], usage.get("total_tokens")
+
+payload = chat_payload("example-model", "Be brief.", "Where is my parcel?", 80)
+print(payload["messages"][1])
+
+fixture = {
+    "choices": [{"index": 0,
+                 "message": {"role": "assistant", "content": "Check the tracking link."},
+                 "finish_reason": "stop"}],
+    "usage": {"prompt_tokens": 21, "completion_tokens": 6, "total_tokens": 27},
+}
+print(read_reply(fixture))
+```
+
+```text title="Output"
+{'role': 'user', 'content': 'Where is my parcel?'}
+('Check the tracking link.', 'stop', 27)
+```
+
+`read_reply` returns the finish reason alongside the text, so a caller can tell a finished answer from one cut off by `max_tokens`. It uses `.get` for `usage` because some servers omit it.
+
+A payload test verifies the local contract. A separate integration test can check whether the selected provider accepts it.
+
+## Try it
+
+<CodeExercise id="c2-chat-requests-01" />

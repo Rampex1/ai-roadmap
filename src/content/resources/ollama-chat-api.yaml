@@ -1,0 +1,6 @@
+title: Ollama Chat API reference
+url: https://docs.ollama.com/api/chat
+kind: tool
+free: true
+modules:
+  - c2

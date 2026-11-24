@@ -1,0 +1,6 @@
+term: Latency
+short: Elapsed time between starting a request and observing a specified response milestone.
+body: Define the milestone before timing. Time to first visible text and time to a complete answer measure different parts of a streaming interaction.
+related:
+  - streaming
+  - token

@@ -1,0 +1,114 @@
+items:
+  - id: c2-chat-requests-01
+    type: mcq
+    prompt: Where should a hosted API key live for a browser app?
+    explanation: Server-side storage keeps the key out of the browser bundle.
+    options:
+      - text: On the server
+        why: Server-side storage keeps the key out of the browser bundle.
+        correct: true
+      - text: In the compiled JavaScript
+        why: Users can inspect downloaded code.
+      - text: In the system prompt
+        why: Prompt text can be sent or exposed.
+  - id: c2-chat-requests-02
+    type: mcq
+    prompt: Which component should rename fields for a specific provider?
+    explanation: The adapter owns provider-specific details.
+    options:
+      - text: The transport adapter
+        why: The adapter owns provider-specific details.
+        correct: true
+      - text: The user message
+        why: Message text is input data.
+      - text: Every call site
+        why: Duplicating mappings makes changes harder.
+  - id: c2-chat-requests-03
+    type: mcq
+    prompt: Which ordering preserves the conversation?
+    explanation: Ordered roles preserve intended context.
+    options:
+      - text: Alphabetical sorting by content
+        why: Sorting can change conversational meaning.
+      - text: System instructions followed by the user message
+        why: Ordered roles preserve intended context.
+        correct: true
+      - text: Keep only whichever message is longer
+        why: Length does not indicate role.
+  - id: c2-chat-requests-04
+    type: mcq
+    prompt: What does a fixture test establish?
+    explanation: A fixture isolates construction.
+    options:
+      - text: The client produced the expected payload locally
+        why: A fixture isolates construction.
+        correct: true
+      - text: The provider is online
+        why: No network call is made.
+      - text: Billing matches the estimate
+        why: No live usage is measured.
+  - id: c2-chat-requests-05
+    type: multi
+    prompt: Which fields belong in an ordinary request fixture?
+    explanation: A model identifier routes the request. The limit caps generation.
+    options:
+      - text: An example model ID
+        why: A model identifier routes the request.
+        correct: true
+      - text: A production API key
+        why: Secrets do not belong in fixtures.
+      - text: An output limit
+        why: The limit caps generation.
+        correct: true
+  - id: c2-chat-requests-06
+    type: cloze
+    prompt: The component that maps an app request into provider-specific fields is an ______.
+    accept:
+      - adapter
+      - transport adapter
+    explanation: The adapter translates the boundary contract.
+  - id: c2-chat-requests-07
+    type: order
+    prompt: Put the outgoing adapter steps in order.
+    items:
+      - Receive a call from application code
+      - Construct the provider payload
+      - Send the payload over the transport
+      - Translate the provider response
+    explanation: A response can only be translated after sending the request.
+  - id: c2-chat-requests-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def chat_payload(model, system, user, max_tokens, temperature=0.2):
+          return {
+              "model": model,
+              "messages": [{"role": "system", "content": system},
+                           {"role": "user", "content": user}],
+              "max_tokens": max_tokens,
+              "temperature": temperature,
+              "stream": False,
+          }
+
+      payload = chat_payload("m", "s", "u", 24)
+      print(payload["messages"][-1]["role"], payload["max_tokens"])
+    answer: "user 24"
+    explanation: The last message is the user turn, and the limit is stored under max_tokens.
+  - id: c2-chat-requests-09
+    type: mcq
+    prompt: A non-streaming chat-completions reply has `choices[0].finish_reason` equal to `"length"`. What does that tell you?
+    explanation: A length finish means generation stopped at the token cap, so the text is cut off.
+    options:
+      - text: The connection dropped before the reply arrived
+        why: A dropped connection produces no JSON reply at all, so there is no finish reason to read.
+      - text: The answer hit max_tokens and is probably cut off
+        why: A length finish means generation stopped at the token cap, so the text is cut off.
+        correct: true
+      - text: The model finished its answer naturally
+        why: A natural end is reported as stop.
+  - id: c2-chat-requests-10
+    type: cloze
+    prompt: In a non-streaming chat-completions response, the reply text is in the ______ field of `choices[0].message`.
+    accept:
+      - content
+    explanation: The assistant message has a role and a content field, the same shape as the messages you send.

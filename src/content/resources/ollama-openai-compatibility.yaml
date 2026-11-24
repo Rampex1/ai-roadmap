@@ -1,0 +1,6 @@
+title: Ollama OpenAI compatibility reference
+url: https://docs.ollama.com/api/openai-compatibility
+kind: tool
+free: true
+modules:
+  - c2

@@ -1,0 +1,25 @@
+id: c2-chat-requests-01
+lesson: llm/c2/chat-requests
+title: Build a chat-completions payload
+prompt: Write chat_payload(model, system, user, max_tokens, temperature=0.2) returning a chat-completions request body. Include model, a messages list with the system and user message dictionaries in that order, max_tokens, temperature and stream set to False. Preserve the text verbatim.
+starter: |
+  def chat_payload(model, system, user, max_tokens, temperature=0.2):
+      raise NotImplementedError
+solution: |
+  def chat_payload(model, system, user, max_tokens, temperature=0.2):
+      return {
+          "model": model,
+          "messages": [{"role": "system", "content": system},
+                       {"role": "user", "content": user}],
+          "max_tokens": max_tokens,
+          "temperature": temperature,
+          "stream": False,
+      }
+tests: |
+  assert chat_payload("m", "rules", "question", 32) == {"model": "m", "messages": [{"role": "system", "content": "rules"}, {"role": "user", "content": "question"}], "max_tokens": 32, "temperature": 0.2, "stream": False}, "Use the chat-completions fields: model, messages, max_tokens, temperature and stream"
+  assert chat_payload("other", "Use a rubric", "  Québec  ", 4, 0)["messages"][1]["content"] == "  Québec  ", "Preserve user text exactly"
+  assert chat_payload("other", "Use a rubric", "x", 4, 0)["temperature"] == 0, "Pass the temperature argument through"
+  assert chat_payload("other", "Use a rubric", "x", 4)["max_tokens"] == 4, "Store the limit under max_tokens"
+hints:
+  - The messages field is a list of dictionaries, each with role and content keys.
+  - Set stream to False because this request expects one JSON reply.

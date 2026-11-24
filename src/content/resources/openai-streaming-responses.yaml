@@ -1,0 +1,6 @@
+title: OpenAI streaming responses guide
+url: https://developers.openai.com/api/docs/guides/streaming-responses
+kind: tool
+free: true
+modules:
+  - c2

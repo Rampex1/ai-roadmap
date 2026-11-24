@@ -1,0 +1,119 @@
+items:
+  - id: c2-streaming-responses-01
+    type: mcq
+    prompt: In a chat-completions stream, which signal shows the server finished sending?
+    explanation: The data line with [DONE] is the explicit terminal marker.
+    options:
+      - text: A period in the last chunk
+        why: Punctuation is text, not transport status.
+      - text: Any socket close
+        why: A connection can drop mid-response.
+      - text: A line reading data, colon, [DONE]
+        why: The data line with [DONE] is the explicit terminal marker.
+        correct: true
+  - id: c2-streaming-responses-02
+    type: mcq
+    prompt: What should be done with cumulative snapshots?
+    explanation: The snapshot includes earlier text.
+    options:
+      - text: Replace displayed text with each snapshot
+        why: The snapshot includes earlier text.
+        correct: true
+      - text: Append every snapshot
+        why: Appending would duplicate earlier text.
+      - text: Discard the final snapshot
+        why: It can contain new text.
+  - id: c2-streaming-responses-03
+    type: mcq
+    prompt: When should a full JSON object be validated?
+    explanation: A partial object can be temporarily invalid.
+    options:
+      - text: After the structured payload is complete
+        why: A partial object can be temporarily invalid.
+        correct: true
+      - text: On each network read as a complete object
+        why: Reads need not align with events.
+      - text: Only when the output has no whitespace
+        why: Whitespace can be valid JSON.
+  - id: c2-streaming-responses-04
+    type: mcq
+    prompt: What does streaming improve most directly?
+    explanation: Text is displayed before generation finishes.
+    options:
+      - text: Time until the user can see text
+        why: Text is displayed before generation finishes.
+        correct: true
+      - text: Exact final-answer accuracy
+        why: Transport does not establish accuracy.
+      - text: The maximum context size
+        why: Context is a model/runtime property.
+  - id: c2-streaming-responses-05
+    type: multi
+    prompt: Which events matter to a text assembler?
+    explanation: It contributes text. It marks the result complete.
+    options:
+      - text: An ordered delta
+        why: It contributes text.
+        correct: true
+      - text: A terminal completion event
+        why: It marks the result complete.
+        correct: true
+      - text: An unrelated tracing header as text
+        why: Diagnostics should remain separate.
+  - id: c2-streaming-responses-06
+    type: cloze
+    prompt: An incremental addition to streamed text is a ______.
+    accept:
+      - delta
+      - text delta
+    explanation: A delta is appended to previously collected text.
+  - id: c2-streaming-responses-07
+    type: order
+    prompt: Order these streaming client steps.
+    items:
+      - Receive bytes
+      - Decode complete protocol events
+      - Append text deltas
+      - Finalize after the terminal event
+    explanation: The client consumes parsed events before it finalizes the answer.
+  - id: c2-streaming-responses-08
+    type: output
+    prompt: What does this stream parser return?
+    code: |
+      import json
+
+      def collect_sse(lines):
+          parts, finish = [], None
+          for line in lines:
+              if not line.startswith("data:"):
+                  continue
+              data = line[5:].strip()
+              if data == "[DONE]":
+                  return "".join(parts), "truncated" if finish == "length" else "complete"
+              choice = json.loads(data)["choices"][0]
+              parts.append(choice["delta"].get("content") or "")
+              finish = choice.get("finish_reason") or finish
+          return "".join(parts), "interrupted"
+
+      lines = [
+          'data: {"choices": [{"delta": {"content": "Step 1"}, "finish_reason": null}]}',
+          ": ping",
+          'data: {"choices": [{"delta": {"content": ", step"}, "finish_reason": "length"}]}',
+          "data: [DONE]",
+      ]
+      print(collect_sse(lines))
+    answer: "('Step 1, step', 'truncated')"
+    explanation: The comment line is skipped, both deltas are joined, and the last finish reason was length, so the stream ended properly but the answer was cut off.
+  - id: c2-streaming-responses-09
+    type: mcq
+    prompt: >-
+      One stream ends with `data: [DONE]` after a chunk whose finish reason is `"length"`. Another just stops with no `[DONE]`. Which statement is right?
+    explanation: The first hit max_tokens with a clean end. The second lost its connection, so its text may be missing anything.
+    options:
+      - text: The first is truncated by max_tokens, the second was interrupted
+        why: The first hit max_tokens with a clean end. The second lost its connection, so its text may be missing anything.
+        correct: true
+      - text: Retrying either with identical settings will usually fix it
+        why: A truncated answer will usually stop at the same cap again unless max_tokens changes.
+      - text: Both are complete because each delivered some text
+        why: Delivered text does not show that the answer was finished.

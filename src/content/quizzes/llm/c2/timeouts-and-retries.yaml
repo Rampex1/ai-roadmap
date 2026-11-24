@@ -1,0 +1,92 @@
+items:
+  - id: c2-timeouts-and-retries-01
+    type: mcq
+    prompt: Which error merits fixing credentials first?
+    explanation: An authentication failure requires a valid credential.
+    options:
+      - text: "401"
+        why: An authentication failure requires a valid credential.
+        correct: true
+      - text: "429"
+        why: A rate limit usually concerns request volume or quota.
+      - text: "503"
+        why: A temporary service outage can clear.
+  - id: c2-timeouts-and-retries-02
+    type: mcq
+    prompt: Which budget includes backoff sleeps?
+    explanation: It covers the entire operation.
+    options:
+      - text: The operation deadline
+        why: It covers the entire operation.
+        correct: true
+      - text: The per-attempt timeout
+        why: It applies to an individual attempt.
+      - text: The output token limit
+        why: It constrains generated tokens.
+  - id: c2-timeouts-and-retries-03
+    type: mcq
+    prompt: Why add jitter?
+    explanation: Clients otherwise tend to retry in lockstep.
+    options:
+      - text: To spread retries across time
+        why: Clients otherwise tend to retry in lockstep.
+        correct: true
+      - text: To deduplicate requests
+        why: Deduplication needs an explicit mechanism.
+      - text: To validate API keys
+        why: Jitter changes timing only.
+  - id: c2-timeouts-and-retries-04
+    type: mcq
+    prompt: What does an ambiguous timeout establish?
+    explanation: The provider may have processed the request.
+    options:
+      - text: Retrying is free
+        why: A second generation may be billed.
+      - text: No generation ran
+        why: The response can be lost after processing.
+      - text: The client stopped waiting
+        why: The provider may have processed the request.
+        correct: true
+  - id: c2-timeouts-and-retries-05
+    type: multi
+    prompt: Which can justify a bounded retry?
+    explanation: The service may recover. Backoff can allow the limit to clear.
+    options:
+      - text: A rate limit with enough time to wait
+        why: Backoff can allow the limit to clear.
+        correct: true
+      - text: A temporary service failure
+        why: The service may recover.
+        correct: true
+      - text: An unsupported request field
+        why: Fix the payload first.
+  - id: c2-timeouts-and-retries-06
+    type: cloze
+    prompt: The server delay hint is commonly sent in the ______ header.
+    accept:
+      - retry-after
+      - retry after
+    explanation: Retry-After specifies when the client should retry.
+  - id: c2-timeouts-and-retries-07
+    type: order
+    prompt: Order the decisions for a failed call in the lesson's policy, which checks retry budget only for transient failures.
+    items:
+      - Observe the failure
+      - Classify whether the failure is retryable
+      - Check attempt count and deadline before sleeping
+      - Issue the next attempt if allowed
+    explanation: Both the failure class and the available budget must permit a retry.
+  - id: c2-timeouts-and-retries-08
+    type: output
+    prompt: What delay follows a failed third attempt if there is no server hint?
+    code: |
+      def retry_delay(status, attempt, max_attempts, base, remaining, retry_after=0):
+          transient = status in {408, 429, 500, 502, 503, 504}
+          if not transient or attempt >= max_attempts:
+              return None
+          delay = max(base * 2 ** (attempt - 1), retry_after)
+          return delay if delay < remaining else None
+
+      print(retry_delay(503, 3, 4, 0.25, 10))
+    answer: "1.0"
+    explanation: The delay is 0.25 multiplied by 2 squared.

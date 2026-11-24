@@ -1,0 +1,6 @@
+term: Exponential backoff
+short: A retry schedule whose delay grows by a fixed multiplier after successive failures.
+body: A base delay of 0.25 seconds gives 0.25, 0.5 and 1 second on the first three retries. Add jitter in production and respect a total deadline.
+related:
+  - api-contract
+  - latency

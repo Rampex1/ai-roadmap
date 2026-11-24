@@ -1,0 +1,94 @@
+items:
+  - id: c2-local-and-hosted-01
+    type: mcq
+    prompt: What should stay fixed when comparing task quality?
+    explanation: Paired prompts and one rubric support comparison.
+    options:
+      - text: Prompts and scoring rubric
+        why: Paired prompts and one rubric support comparison.
+        correct: true
+      - text: Only hardware
+        why: Identical hardware does not control task difficulty.
+      - text: Only the provider name
+        why: Provider alone gives no consistent test.
+  - id: c2-local-and-hosted-02
+    type: mcq
+    prompt: Why report failures next to latency?
+    explanation: Successful-only timing excludes failures.
+    options:
+      - text: Percentiles otherwise require an API key
+        why: The calculation is local.
+      - text: Failures always have shorter runtimes
+        why: Failure timing depends on cause.
+      - text: A runtime can appear fast by failing slow requests
+        why: Successful-only timing excludes failures.
+        correct: true
+  - id: c2-local-and-hosted-03
+    type: mcq
+    prompt: Which comparison should be labelled separately?
+    explanation: Model load and initialization can change timings.
+    options:
+      - text: Prompts scored by the same rubric
+        why: Comparable scores are desirable.
+      - text: Cold start versus warmed requests
+        why: Model load and initialization can change timings.
+        correct: true
+      - text: Times converted to the same unit
+        why: A shared unit supports comparison.
+  - id: c2-local-and-hosted-04
+    type: mcq
+    prompt: Which additional measurement helps choose a model?
+    explanation: Latency alone cannot decide fitness.
+    options:
+      - text: Only file size
+        why: Size helps estimate memory but says little about correctness.
+      - text: Task quality under the target workload
+        why: Latency alone cannot decide fitness.
+        correct: true
+      - text: Only the model name
+        why: A name is not a measurement.
+  - id: c2-local-and-hosted-05
+    type: multi
+    prompt: Which can constrain local inference?
+    explanation: Both need space. The model may restrict some uses.
+    options:
+      - text: Model licence terms
+        why: The model may restrict some uses.
+        correct: true
+      - text: Memory shared by weights and cache
+        why: Both need space.
+        correct: true
+      - text: A hosted key in the prompt
+        why: Local runtime setup does not require putting secrets in prompts.
+  - id: c2-local-and-hosted-06
+    type: cloze
+    prompt: The wait from request start until any generated text becomes visible is called time to ______.
+    accept:
+      - first text
+      - first token
+      - time to first token
+      - time to first text
+      - first
+    explanation: The milestone is the first displayable text.
+  - id: c2-local-and-hosted-07
+    type: order
+    prompt: Order a paired benchmark.
+    items:
+      - Choose a shared prompt set and rubric
+      - Run both configurations against the set
+      - Aggregate latency and failures
+      - Compare quality and deployment trade-offs
+    explanation: Decide how to score before collecting results.
+  - id: c2-local-and-hosted-08
+    type: output
+    prompt: What does this benchmark report?
+    code: |
+      def summarize_runs(seconds):
+          from math import ceil
+          successful = sorted(value for value in seconds if value is not None)
+          p90 = successful[ceil(0.9 * len(successful)) - 1] if successful else None
+          return p90, len(seconds) - len(successful)
+
+      print(summarize_runs([None, 2.0, 1.0, None]))
+    answer: (2.0, 2)
+    explanation: Two completed times have nearest-rank p90 of 2.0, and two requests failed.

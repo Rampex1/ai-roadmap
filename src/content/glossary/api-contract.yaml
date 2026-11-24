@@ -1,0 +1,6 @@
+term: API contract
+short: The documented inputs, outputs and error behaviour an API exposes.
+body: The application can define a stable internal contract while each adapter translates to provider-specific fields. Test both accepted requests and failures.
+related:
+  - schema
+  - streaming

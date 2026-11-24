@@ -1,0 +1,20 @@
+id: c2-local-and-hosted-01
+lesson: llm/c2/local-and-hosted
+title: Summarize an inference benchmark
+prompt: Write summarize_runs(seconds) for a list of completed request times and None for each failure. Return (nearest-rank p90 of completed times, number of failures). Use None for p90 if no request finished.
+starter: |
+  def summarize_runs(seconds):
+      raise NotImplementedError
+solution: |
+  def summarize_runs(seconds):
+      from math import ceil
+      successful = sorted(value for value in seconds if value is not None)
+      p90 = successful[ceil(0.9 * len(successful)) - 1] if successful else None
+      return p90, len(seconds) - len(successful)
+tests: |
+  assert summarize_runs([1, 9, 3, None]) == (9, 1), "Sort completed times and count failures"
+  assert summarize_runs([3, 1, 8, 7, 6, 4, 9, 10, 2, 5]) == (9, 0), "Use rank 9 of 10"
+  assert summarize_runs([None, None]) == (None, 2), "No successful request means no latency percentile"
+hints:
+  - Sort only completed times.
+  - List indices start at zero.

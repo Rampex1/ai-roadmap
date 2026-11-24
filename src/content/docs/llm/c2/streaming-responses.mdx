@@ -1,0 +1,106 @@
+---
+title: Stream a response safely
+module: c2
+order: 3
+estMinutes: 11
+objectives:
+  - Parse a chat-completions server-sent event stream into text
+  - Distinguish a complete, a truncated and an interrupted stream
+  - Explain time to first text and total time separately
+goDeeper: ollama-openai-compatibility
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+<Term id="streaming" /> lets an interface display the first generated text before the sentence or answer is complete. It usually improves perceived latency by moving the first display forward. The total number of decode steps can be unchanged.
+
+Keep network framing separate from application events. A single network read can end halfway through an event or contain several. Let a protocol parser or SDK reconstruct events, then translate them to your internal form.
+
+## The chat-completions stream format
+
+Set `"stream": true` in the request from [lesson 1](/llm/c2/chat-requests/) and the server answers with server-sent events (SSE): a text stream made of lines. As of late 2026, OpenAI, Ollama's `/v1` endpoint, `llama-server` and vLLM all use the same format:
+
+```text
+data: {"choices": [{"delta": {"role": "assistant", "content": ""}, "finish_reason": null}]}
+
+: keep-alive
+data: {"choices": [{"delta": {"content": "Hello"}, "finish_reason": null}]}
+
+data: {"choices": [{"delta": {"content": " world"}, "finish_reason": null}]}
+
+data: {"choices": [{"delta": {}, "finish_reason": "stop"}]}
+
+data: [DONE]
+```
+
+The rules a client needs:
+
+- A line starting with `data:` carries a payload. Everything after the colon is JSON, apart from the end marker.
+- Blank lines separate events. A line starting with `:` is a comment, often a keep-alive. Ignore both.
+- The new text is in `choices[0].delta.content`. It is a delta: an addition to what came before. The first chunk may carry only the role, and the last may carry an empty delta, so treat a missing or null `content` as empty text.
+- `choices[0].finish_reason` is null until the final content chunk, then says why generation stopped, as in a non-streaming response.
+- `data: [DONE]` is the terminal marker. It is not JSON, so check for it before parsing.
+
+That gives three outcomes, and a client should keep them apart:
+
+| Outcome | Evidence | Meaning |
+|---|---|---|
+| Complete | `[DONE]` arrived, finish reason `stop` | The model ended its answer. |
+| Truncated | `[DONE]` arrived, finish reason `length` | The stream ended properly, but the answer hit `max_tokens` and is cut off. |
+| Interrupted | Input ended without `[DONE]` | The connection dropped. The text may be missing anything. |
+
+A truncated answer is incomplete in a different way from an interrupted one. Retrying an interrupted request may fix it. Retrying a truncated one with the same `max_tokens` will usually stop in the same place, so raise the limit or ask for a shorter answer. Other finish reasons exist, such as `content_filter` or `tool_calls`, and deserve their own handling. They are outside this lesson.
+
+If a backend sends the entire accumulated text each time instead of deltas, replace the displayed text instead of appending. Keep metadata out of the text buffer. Preserve partial output if useful, but label it so downstream code cannot mistake it for a finished answer.
+
+For structured output, distinguish progress rendering from final decoding and validation. A half-written JSON string cannot yet be parsed as a complete object. If a caller cancels, propagate cancellation to the adapter where possible and close the response.
+
+## Worked example
+
+This parser takes lines that have already been split. It ignores blank lines and comments, and stops at `[DONE]`.
+
+```python
+import json
+
+def collect_sse(lines):
+    parts, finish = [], None
+    for line in lines:
+        if not line.startswith("data:"):
+            continue  # blank separators and ": keep-alive" comments
+        data = line[5:].strip()
+        if data == "[DONE]":
+            return "".join(parts), "truncated" if finish == "length" else "complete"
+        choice = json.loads(data)["choices"][0]
+        parts.append(choice["delta"].get("content") or "")
+        finish = choice.get("finish_reason") or finish
+    return "".join(parts), "interrupted"
+
+lines = [
+    'data: {"choices": [{"delta": {"role": "assistant", "content": ""}, "finish_reason": null}]}',
+    "",
+    ": keep-alive",
+    'data: {"choices": [{"delta": {"content": "Hello"}, "finish_reason": null}]}',
+    "",
+    'data: {"choices": [{"delta": {"content": " world"}, "finish_reason": null}]}',
+    "",
+    'data: {"choices": [{"delta": {}, "finish_reason": "stop"}]}',
+    "",
+    "data: [DONE]",
+]
+print(collect_sse(lines))
+print(collect_sse(lines[:6]))
+```
+
+```text title="Output"
+('Hello world', 'complete')
+('Hello world', 'interrupted')
+```
+
+The second call sees the same text but no `[DONE]`. The status comes from the protocol, not from how finished the paragraph looks.
+
+A real client reads bytes, not lines. It must buffer an unfinished line until the rest arrives, because a network read can stop in the middle of `data: {...}` or even in the middle of a multi-byte character. The homework builds that layer.
+
+## Try it
+
+<CodeExercise id="c2-streaming-responses-01" />

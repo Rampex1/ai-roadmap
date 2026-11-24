@@ -1,0 +1,44 @@
+id: c2-streaming-responses-01
+lesson: llm/c2/streaming-responses
+title: Parse a chat-completions stream
+prompt: |
+  Write `collect_sse(lines)` for a list of server-sent event lines from a chat-completions stream. Return `(text, status)`.
+
+  - Ignore lines that do not start with `data:` (blank lines and `:` comments).
+  - Stop at `data: [DONE]`. The status is `"truncated"` if the last non-null `finish_reason` seen was `"length"`, otherwise `"complete"`.
+  - For other `data:` lines, parse the JSON and append `choices[0].delta.content`, treating a missing or null content as empty.
+  - If the lines run out before `[DONE]`, the status is `"interrupted"`.
+starter: |
+  import json
+
+  def collect_sse(lines):
+      raise NotImplementedError
+solution: |
+  import json
+
+  def collect_sse(lines):
+      parts, finish = [], None
+      for line in lines:
+          if not line.startswith("data:"):
+              continue
+          data = line[5:].strip()
+          if data == "[DONE]":
+              return "".join(parts), "truncated" if finish == "length" else "complete"
+          choice = json.loads(data)["choices"][0]
+          parts.append(choice["delta"].get("content") or "")
+          finish = choice.get("finish_reason") or finish
+      return "".join(parts), "interrupted"
+tests: |
+  import json as _json
+  def _chunk(content=None, finish=None):
+      delta = {} if content is None else {"content": content}
+      return "data: " + _json.dumps({"choices": [{"delta": delta, "finish_reason": finish}]})
+  _ok = [_chunk("a"), "", ": keep-alive", _chunk("b"), "", _chunk(None, "stop"), "", "data: [DONE]", _chunk("!")]
+  assert collect_sse(_ok) == ("ab", "complete"), "Join deltas in order, skip blank and comment lines, and stop at [DONE]"
+  assert collect_sse([_chunk("{"), ""]) == ("{", "interrupted"), "Without data: [DONE] the stream was interrupted"
+  assert collect_sse([]) == ("", "interrupted"), "An empty stream has no terminal marker"
+  assert collect_sse([_chunk("Once upon"), _chunk(" a", "length"), "data: [DONE]"]) == ("Once upon a", "truncated"), "finish_reason length means the answer hit max_tokens"
+  assert collect_sse(["data: " + _json.dumps({"choices": [{"delta": {"role": "assistant", "content": None}, "finish_reason": None}]}), _chunk("x"), "data:[DONE]"]) == ("x", "complete"), "Treat null content as empty, and allow data: with or without a space"
+hints:
+  - Check for the [DONE] marker before calling json.loads, because it is not JSON.
+  - Remember the finish reason as you go, and decide the status only when [DONE] arrives.

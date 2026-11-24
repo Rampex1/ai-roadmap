@@ -1,0 +1,46 @@
+---
+title: Timeouts, backoff and retry budgets
+module: c2
+order: 2
+estMinutes: 8
+objectives:
+  - Decide which failures justify a bounded retry
+  - Distinguish per-attempt timeout from a total deadline
+goDeeper: openai-streaming-responses
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A timeout limits how long you wait for an attempt. A deadline limits the entire operation, including sleeps and repeated attempts. If a request starts at zero with a two-second deadline, fails at 1.8 seconds and requires a half-second wait, another attempt cannot start in time.
+
+Use a small attempt budget for transient failures. Rate limits and temporary service failures may clear. Bad input, missing credentials and unsupported models usually require a corrected request. Read the error body of a 429, though: some providers also return 429 when your quota or prepaid credit is used up, and no amount of waiting fixes that. Treat that case like a credential error and stop. When a response supplies a valid Retry-After hint, honour it subject to the overall deadline. <Term id="exponential-backoff" />, with random jitter in production, helps spread retries so clients do not all return at once.
+
+A timeout does not prove the provider failed to process the request. Retrying can create another billable generation or repeat an external side effect. Retry only where the operation's contract allows it. If the service supports an idempotency mechanism, follow its documented semantics. Once a stream has been displayed, report interruption or restart explicitly rather than appending a second generation to the first.
+
+## Worked example
+
+The server asks for two seconds. The client compares that with its own backoff before retrying.
+
+```python
+def retry_delay(status, attempt, max_attempts, base, remaining, retry_after=0):
+    transient = status in {408, 429, 500, 502, 503, 504}
+    if not transient or attempt >= max_attempts:
+        return None
+    delay = max(base * 2 ** (attempt - 1), retry_after)
+    return delay if delay < remaining else None
+
+print(retry_delay(429, 2, 4, 0.5, 4, retry_after=2))
+print(retry_delay(401, 1, 4, 0.5, 4))
+```
+
+```text title="Output"
+2
+None
+```
+
+This deterministic function decides whether a retry can start. A real transport still needs per-attempt timeouts and jitter.
+
+## Try it
+
+<CodeExercise id="c2-timeouts-and-retries-01" />

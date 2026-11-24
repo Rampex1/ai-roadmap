@@ -4,5 +4,7 @@ title: "APIs and open models"
 order: 2
 prereqs: ["c1"]
 objectives:
-  - "Explain the core ideas of APIs and open models"
-  - "Build and evaluate an application using APIs and open models"
+  - Build an OpenAI-compatible chat-completions request and read its reply, keeping transport details behind a client interface
+  - Classify transient failures and bound retries within a request budget
+  - Parse a chat-completions SSE stream and distinguish complete, truncated and interrupted responses
+  - Compare hosted and local runtimes using the same inputs and quality criteria
