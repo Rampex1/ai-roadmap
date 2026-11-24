@@ -1,0 +1,41 @@
+---
+title: Verify candidate answers with executable rules
+module: b12
+order: 2
+estMinutes: 8
+objectives:
+  - Use a separate oracle for a checkable answer
+  - Retain ambiguity and verification coverage
+goDeeper: training-verifiers-paper
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+For tasks with a checkable result, an <Term id="verify-with-an-oracle" /> can complement voting. In a toy arithmetic task, recompute the required answer and check candidate integers against it. A plausible explanation or strong majority does not override a failed check.
+
+Verifier quality depends on what it measures. Checking format only establishes parseability. Checking an answer can establish correctness for one exercise but may leave the explanation untested. For ambiguous tasks, use a separate rubric or human assessment and report disagreement.
+
+Test known-valid and deliberately wrong examples, including tricky representations. Do not use general code execution to interpret model text; parse a restricted format and call known computation. The exercise takes already-parsed candidates and returns verified integer values, with duplicates removed.
+
+## Worked example
+
+Only candidate five passes the independent sum check.
+
+```python
+def verified_sums(terms,candidates):
+    expected=sum(terms)
+    return sorted({value for value in candidates if type(value) is int and value==expected})
+
+print(verified_sums([2,3],[5,False,4,5]))
+```
+
+```text title="Output"
+[5]
+```
+
+Distinguish verified correctness from validity of the explanation.
+
+## Try it
+
+<CodeExercise id="b12-verify-with-an-oracle-01" />

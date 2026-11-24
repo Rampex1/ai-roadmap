@@ -1,0 +1,22 @@
+id: b12-reasoning-attribution-lab
+module: b12
+kind: homework
+title: Audit reasoning and attribution with controlled tests
+brief: |-
+  Compare voting with arithmetic verification, then check path attributions and feature interventions on explicit scalar functions.
+
+  1. Count votes and abstentions.
+  2. Verify known answer values.
+  3. Integrate model gradients along a baseline path.
+  4. Measure one signed intervention effect.
+  5. Compare path attribution with matched single-feature controls.
+
+  Give one case where a majority is wrong and one where an attribution is complete but not an external causal explanation. Describe a suitable control.
+notebook: /homework/b12-reasoning-attribution-lab.ipynb
+rubric:
+  - Ties and parse failures are visible.
+  - Verification checks the actual task result.
+  - The selected output and baseline are documented.
+  - Intervention effects are compared on matched cases.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

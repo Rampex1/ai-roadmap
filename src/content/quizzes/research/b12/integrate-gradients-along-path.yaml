@@ -1,0 +1,97 @@
+items:
+  - id: b12-integrate-gradients-along-path-01
+    type: mcq
+    prompt: What does the baseline specify?
+    explanation: Attributions describe change from it.
+    options:
+      - text: The reference input where attribution begins
+        why: Attributions describe change from it.
+        correct: true
+      - text: The learning rate used to train the model
+        why: No optimizer is used.
+      - text: A guaranteed causally neutral input
+        why: Neutrality requires justification.
+  - id: b12-integrate-gradients-along-path-02
+    type: mcq
+    prompt: How is each averaged partial derivative converted to attribution?
+    explanation: The path moves by input minus baseline.
+    options:
+      - text: Multiply by its feature displacement
+        why: The path moves by input minus baseline.
+        correct: true
+      - text: Divide by its feature index
+        why: Index has no such mathematical role.
+      - text: Always take its absolute value
+        why: Sign carries information about change.
+  - id: b12-integrate-gradients-along-path-03
+    type: mcq
+    prompt: What does exact completeness compare?
+    explanation: Their equality follows from the path integral.
+    options:
+      - text: Sum of feature attributions and output difference
+        why: Their equality follows from the path integral.
+        correct: true
+      - text: Sum of gradients and number of examples
+        why: That is unrelated.
+      - text: Each attribution and total prediction separately
+        why: Only the sum matches the change.
+  - id: b12-integrate-gradients-along-path-04
+    type: mcq
+    prompt: Why can numerical completeness have residual error?
+    explanation: More suitable steps can improve accuracy.
+    options:
+      - text: Finite quadrature approximates the integral
+        why: More suitable steps can improve accuracy.
+        correct: true
+      - text: Because every gradient is necessarily negative
+        why: Gradient sign does not determine integration error.
+      - text: Because baseline must equal input
+        why: Nontrivial paths are permitted.
+  - id: b12-integrate-gradients-along-path-05
+    type: multi
+    prompt: Which support a sound attribution report?
+    explanation: Attributions depend on the reference. They document numerical evidence.
+    options:
+      - text: Steps and completeness residual
+        why: They document numerical evidence.
+        correct: true
+      - text: The chosen baseline and why it fits
+        why: Attributions depend on the reference.
+        correct: true
+      - text: Only the most colorful feature visualization
+        why: That does not establish correctness.
+  - id: b12-integrate-gradients-along-path-06
+    type: cloze
+    prompt: Matching summed attributions to output difference checks ______.
+    accept:
+      - completeness
+    explanation: It is a conservation relation for this attribution.
+  - id: b12-integrate-gradients-along-path-07
+    type: order
+    prompt: Order midpoint attribution.
+    items:
+      - Choose the output and baseline
+      - Construct path midpoints
+      - Accumulate partial derivatives along the path
+      - Scale averages by feature displacement
+    explanation: Both the path gradient and displacement contribute.
+  - id: b12-integrate-gradients-along-path-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def integrated_gradients(gradient,baseline,point,steps):
+          if len(baseline)!=len(point) or steps<=0:
+              raise ValueError("invalid path or step count")
+          delta=[end-start for start,end in zip(baseline,point)]
+          totals=[0.0]*len(delta)
+          for step in range(steps):
+              alpha=(step+0.5)/steps
+              grad=gradient([start+alpha*change for start,change in zip(baseline,delta)])
+              if len(grad)!=len(delta):
+                  raise ValueError("gradient width mismatch")
+              totals=[total+value for total,value in zip(totals,grad)]
+          return [change*total/steps for change,total in zip(delta,totals)]
+
+      print(integrated_gradients(lambda _: [3], [2], [4], 1))
+    answer: "[6.0]"
+    explanation: The constant gradient three multiplies displacement two.

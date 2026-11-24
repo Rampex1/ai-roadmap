@@ -1,0 +1,25 @@
+id: b12-aggregate-reasoning-samples-01
+lesson: research/b12/aggregate-reasoning-samples
+title: Implement aggregate reasoning samples
+prompt: Implement vote_answers for strings already normalized and None for invalid parses. Return the unique plurality if it has at least minimum votes, otherwise None. Minimum is a positive integer.
+starter: |
+  def vote_answers(answers,minimum):
+      raise NotImplementedError
+solution: |
+  def vote_answers(answers,minimum):
+      from collections import Counter
+      counts=Counter(answer for answer in answers if answer is not None)
+      if not counts:
+          return None
+      high=max(counts.values())
+      winners=[answer for answer,count in counts.items() if count==high]
+      return winners[0] if high>=minimum and len(winners)==1 else None
+tests: |
+  assert vote_answers(["7","8","7",None],2)=="7"
+  assert vote_answers(["7","8"],1) is None
+  assert vote_answers(["7",None],2) is None
+  assert vote_answers([None],1) is None
+  assert vote_answers(["0","0"],2)=="0"
+  assert vote_answers([None,None,"7"],1)=="7", "abstentions do not count as votes"
+hints:
+  - A tie remains unresolved even if both candidates reach the minimum.

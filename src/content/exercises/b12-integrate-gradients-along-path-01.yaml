@@ -1,0 +1,36 @@
+id: b12-integrate-gradients-along-path-01
+lesson: research/b12/integrate-gradients-along-path
+title: Implement integrate gradients along path
+prompt: Implement integrated_gradients with midpoint quadrature. Return one attribution per feature. Reject nonpositive steps, incompatible endpoints or a gradient vector of the wrong length.
+starter: |
+  def integrated_gradients(gradient,baseline,point,steps):
+      raise NotImplementedError
+solution: |
+  def integrated_gradients(gradient,baseline,point,steps):
+      if len(baseline)!=len(point) or steps<=0:
+          raise ValueError("invalid path or step count")
+      delta=[end-start for start,end in zip(baseline,point)]
+      totals=[0.0]*len(delta)
+      for step in range(steps):
+          alpha=(step+0.5)/steps
+          grad=gradient([start+alpha*change for start,change in zip(baseline,delta)])
+          if len(grad)!=len(delta):
+              raise ValueError("gradient width mismatch")
+          totals=[total+value for total,value in zip(totals,grad)]
+      return [change*total/steps for change,total in zip(delta,totals)]
+tests: |
+  assert integrated_gradients(lambda _:[2,-1],[0,0],[3,4],4)==[6,-4]
+  assert integrated_gradients(lambda p:[2*p[0]],[0],[4],4)==[16]
+  assert integrated_gradients(lambda p:[3*p[0]**2],[0],[2],2)==[7.5]
+  assert integrated_gradients(lambda p:[9],[2],[2],1)==[0]
+  import math
+  result=integrated_gradients(lambda p:[2*p[0]],[1],[3],2)
+  assert len(result)==1 and math.isclose(result[0],8), "integrate along the path from the baseline, not from zero"
+  try:
+      integrated_gradients(lambda _:[],[0],[1],2)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject gradient width mismatch")
+hints:
+  - Use midpoint (step+0.5)/steps and multiply the final coordinate average by its displacement.

@@ -1,0 +1,34 @@
+id: b12-compare-feature-interventions-01
+lesson: research/b12/compare-feature-interventions
+title: Implement compare feature interventions
+prompt: Implement intervention_delta. Return altered output minus original output after copying the input and replacing exactly one feature. Reject out-of-range feature indices. The model does not mutate its inputs.
+starter: |
+  def intervention_delta(model,point,index,replacement):
+      raise NotImplementedError
+solution: |
+  def intervention_delta(model,point,index,replacement):
+      if not 0<=index<len(point):
+          raise ValueError("unknown feature index")
+      changed=list(point)
+      changed[index]=replacement
+      return model(changed)-model(point)
+tests: |
+  point=[3,1]
+  assert intervention_delta(lambda z:2*z[0]+z[1],point,0,0)==-6
+  assert point==[3,1]
+  assert intervention_delta(lambda z:sum(z),[1,2],1,5)==3
+  assert intervention_delta(lambda z:sum(z),[1],0,1)==0
+  try:
+      intervention_delta(sum,[1],-1,0)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject index outside declared range")
+  try:
+      intervention_delta(sum,[1],1,0)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject index past the end")
+hints:
+  - Make a fresh list for the altered input and preserve the sign convention.

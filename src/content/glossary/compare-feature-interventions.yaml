@@ -1,0 +1,4 @@
+term: "Feature intervention"
+short: "Changing a chosen input or internal feature and measuring how a model output responds."
+body: "A feature intervention sets one input or internal feature to a chosen value and records the change in output (altered minus original). It measures the model's sensitivity under that edit; on its own it is not evidence of a cause in the real world."
+related: ["integrate-gradients-along-path","evaluation-slice"]

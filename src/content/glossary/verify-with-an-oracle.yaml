@@ -1,0 +1,4 @@
+term: "Executable verifier"
+short: "A rule-based check that can accept or reject a candidate against a declared objective."
+body: "An executable verifier recomputes or checks a candidate's answer with trusted code under a fixed answer format. Passing shows the final answer is correct, not that the reasoning behind it is."
+related: ["schema","aggregate-reasoning-samples"]

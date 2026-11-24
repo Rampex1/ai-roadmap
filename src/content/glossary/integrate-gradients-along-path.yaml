@@ -1,0 +1,4 @@
+term: "Integrated gradients"
+short: "Feature attribution obtained by integrating gradients from a baseline to the input and scaling by feature displacement."
+body: "Integrated gradients assigns feature i the value (x_i − x'_i) multiplied by the average of ∂f/∂x_i along the straight path from baseline x' to input x. The attributions sum to f(x) − f(x') (completeness), and they depend on which baseline is chosen."
+related: ["gradient","check-gradients-numerically"]

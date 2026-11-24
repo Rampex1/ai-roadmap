@@ -1,0 +1,91 @@
+items:
+  - id: b12-compare-feature-interventions-01
+    type: mcq
+    prompt: Does one intervention prove an external causal claim?
+    explanation: Real-world causal effects need separate evidence.
+    options:
+      - text: No, it measures the model under a defined modification
+        why: Real-world causal effects need separate evidence.
+        correct: true
+      - text: Only if an attention map agrees visually
+        why: Agreement does not establish external causality.
+      - text: Yes, any score change proves a world-level cause
+        why: Model response and external causality differ.
+  - id: b12-compare-feature-interventions-02
+    type: mcq
+    prompt: What if features are redundant?
+    explanation: Remaining inputs may substitute for the changed one.
+    options:
+      - text: One-feature ablation can miss shared information
+        why: Remaining inputs may substitute for the changed one.
+        correct: true
+      - text: Every ablation effect necessarily grows
+        why: Redundancy can reduce the observed effect.
+      - text: Feature count becomes irrelevant to the design
+        why: Choosing controls still matters.
+  - id: b12-compare-feature-interventions-03
+    type: mcq
+    prompt: Why use matched controls?
+    explanation: The alternative provides comparison evidence.
+    options:
+      - text: To distinguish the targeted change from generic disruption
+        why: The alternative provides comparison evidence.
+        correct: true
+      - text: To make every effect positive
+        why: Effect sign depends on the objective.
+      - text: To avoid using comparable examples
+        why: Matching keeps differences interpretable.
+  - id: b12-compare-feature-interventions-04
+    type: mcq
+    prompt: How is a negative delta interpreted here?
+    explanation: The subtraction is altered minus original.
+    options:
+      - text: Altered output is lower than original
+        why: The subtraction is altered minus original.
+        correct: true
+      - text: The feature value was necessarily negative
+        why: The effect depends on the model.
+      - text: The input was invalid by definition
+        why: Negative is a valid direction.
+  - id: b12-compare-feature-interventions-05
+    type: multi
+    prompt: Which strengthen an intervention study?
+    explanation: Implausible inputs can confound effects. A mean can hide heterogeneous responses.
+    options:
+      - text: Test plausible replacements
+        why: Implausible inputs can confound effects.
+        correct: true
+      - text: Use one unlabelled heatmap as proof
+        why: A visualization does not identify intervention effects.
+      - text: Report changes on matched cases
+        why: A mean can hide heterogeneous responses.
+        correct: true
+  - id: b12-compare-feature-interventions-06
+    type: cloze
+    prompt: Replacing a feature and measuring the model is an ______.
+    accept:
+      - intervention
+      - ablation
+    explanation: The replacement defines the tested modification.
+  - id: b12-compare-feature-interventions-07
+    type: order
+    prompt: Order a matched intervention test.
+    items:
+      - Fix examples and the output metric
+      - Measure original and altered outputs on each case
+      - Compute altered minus original output
+    explanation: Fix the cases and metric first, then measure both outputs on the same case, then take altered minus original.
+  - id: b12-compare-feature-interventions-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def intervention_delta(model,point,index,replacement):
+          if not 0<=index<len(point):
+              raise ValueError("unknown feature index")
+          changed=list(point)
+          changed[index]=replacement
+          return model(changed)-model(point)
+
+      print(intervention_delta(sum, [1, 4], 1, 2))
+    answer: "-2"
+    explanation: Replacing four with two lowers the sum by two.

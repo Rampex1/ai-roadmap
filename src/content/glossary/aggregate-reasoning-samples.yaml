@@ -1,0 +1,4 @@
+term: "Self-consistency"
+short: "Sampling several solution attempts and selecting an answer by agreement across their normalized final outputs."
+body: "Self-consistency samples several reasoning paths at nonzero temperature, extracts each final answer and returns the most frequent one. It helps when errors are diverse, but correlated errors can still win the vote."
+related: ["evaluation-slice","held-out-set","verify-with-an-oracle"]

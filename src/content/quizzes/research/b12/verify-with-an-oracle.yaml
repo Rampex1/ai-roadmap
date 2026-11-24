@@ -1,0 +1,89 @@
+items:
+  - id: b12-verify-with-an-oracle-01
+    type: mcq
+    prompt: What does this verifier prove for an accepted candidate?
+    explanation: The declared task is checkable.
+    options:
+      - text: Every reasoning step was correct
+        why: The verifier observes only the final integer.
+      - text: It is an exact integer equal to the specified sum
+        why: The declared task is checkable.
+        correct: true
+      - text: The model generalizes to every task
+        why: One check does not establish breadth.
+  - id: b12-verify-with-an-oracle-02
+    type: mcq
+    prompt: Why exclude True even if the sum is one?
+    explanation: Python Boolean equality can otherwise pass.
+    options:
+      - text: The answer schema requires an exact integer
+        why: Python Boolean equality can otherwise pass.
+        correct: true
+      - text: True is numerically larger than one
+        why: The issue is type.
+      - text: The true answer is necessarily negative
+        why: Signs are unrelated.
+  - id: b12-verify-with-an-oracle-03
+    type: mcq
+    prompt: What would format-only validation establish?
+    explanation: That does not establish its value.
+    options:
+      - text: Whether the answer is mathematically correct
+        why: The reference computation is still needed.
+      - text: Whether the answer can be parsed under the schema
+        why: That does not establish its value.
+        correct: true
+      - text: Whether the explanation faithfully describes the model
+        why: Output format cannot prove mechanism.
+  - id: b12-verify-with-an-oracle-04
+    type: mcq
+    prompt: What if no candidates pass?
+    explanation: An unverified guess should stay visible.
+    options:
+      - text: Invent a new reference value
+        why: The task defines the oracle.
+      - text: Return any candidate to keep coverage high
+        why: That misreports verification.
+      - text: Report failure or abstain under the evaluation rule
+        why: An unverified guess should stay visible.
+        correct: true
+  - id: b12-verify-with-an-oracle-05
+    type: multi
+    prompt: Which are good verifier tests?
+    explanation: They should be accepted. They should not pass.
+    options:
+      - text: Known correct values
+        why: They should be accepted.
+        correct: true
+      - text: Plausible wrong values and type edge cases
+        why: They should not pass.
+        correct: true
+      - text: Only unlabelled examples
+        why: Those alone cannot establish correctness.
+  - id: b12-verify-with-an-oracle-06
+    type: cloze
+    prompt: Checking a candidate by recomputation uses an executable ______.
+    accept:
+      - verifier
+      - oracle
+      - checker
+    explanation: The check provides explicit evidence of acceptance.
+  - id: b12-verify-with-an-oracle-07
+    type: order
+    prompt: Order a verification pipeline.
+    items:
+      - Define the reference computation and required answer format
+      - Compute the reference and parse candidates under the declared format
+      - Compare the parsed candidates with the computed reference and keep those that pass
+    explanation: Verification uses the parsed candidate and independent reference.
+  - id: b12-verify-with-an-oracle-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def verified_sums(terms,candidates):
+          expected=sum(terms)
+          return sorted({value for value in candidates if type(value) is int and value==expected})
+
+      print(verified_sums([2, -5], [-3, -3, 3]))
+    answer: "[-3]"
+    explanation: The accepted sum is negative three and duplicates are removed.

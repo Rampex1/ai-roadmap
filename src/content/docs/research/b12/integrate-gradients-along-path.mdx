@@ -1,0 +1,50 @@
+---
+title: Attribute a score along a baseline path
+module: b12
+order: 3
+estMinutes: 8
+objectives:
+  - Approximate a path integral of gradients
+  - Check completeness for a simple function
+goDeeper: integrated-gradients-paper
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+<Term id="integrate-gradients-along-path" cap /> asks how a scalar output changes along the straight line from a baseline to an input. At several points along the path, evaluate the gradient of the same scalar output. Average each gradient coordinate along the path and multiply by the corresponding input-minus-baseline displacement.
+
+For a smooth function, the sum of exact attributions equals the output difference between input and baseline. This is completeness. Numerical quadrature only approximates that property, so measure the residual. The result is relative to the baseline and path, and a baseline can be implausible for the data.
+
+The fixture uses midpoint quadrature and a supplied gradient callback. A linear model gives a constant gradient, so midpoint integration is exact. Completeness alone does not make an explanation causal in an external system.
+
+## Worked example
+
+A constant gradient assigns contributions six and negative four.
+
+```python
+def integrated_gradients(gradient,baseline,point,steps):
+    if len(baseline)!=len(point) or steps<=0:
+        raise ValueError("invalid path or step count")
+    delta=[end-start for start,end in zip(baseline,point)]
+    totals=[0.0]*len(delta)
+    for step in range(steps):
+        alpha=(step+0.5)/steps
+        grad=gradient([start+alpha*change for start,change in zip(baseline,delta)])
+        if len(grad)!=len(delta):
+            raise ValueError("gradient width mismatch")
+        totals=[total+value for total,value in zip(totals,grad)]
+    return [change*total/steps for change,total in zip(delta,totals)]
+
+print(integrated_gradients(lambda _: [2,-1],[0,0],[3,4],4))
+```
+
+```text title="Output"
+[6.0, -4.0]
+```
+
+Report numerical completeness error and why the baseline is meaningful.
+
+## Try it
+
+<CodeExercise id="b12-integrate-gradients-along-path-01" />

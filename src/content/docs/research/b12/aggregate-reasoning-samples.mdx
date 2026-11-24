@@ -1,0 +1,46 @@
+---
+title: Aggregate sampled answers and measure cost
+module: b12
+order: 1
+estMinutes: 8
+objectives:
+  - Compare a single sample with a fixed vote budget
+  - Keep ties and invalid samples visible
+goDeeper: self-consistency-paper
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+<Term id="aggregate-reasoning-samples" cap /> treats each generated answer as one vote. Fix decoding settings, sample budget and the answer parser before evaluation. Compare the aggregate and a single-sample baseline on the same tasks. Include total calls and latency because more samples consume more inference resources.
+
+A plurality can be wrong when attempts share the same systematic error. Distinct samples from one model do not guarantee independent or unbiased evidence. Keep raw counts, invalid parse counts and abstentions visible so failed answers do not disappear from the denominator.
+
+The exercise returns a unique plurality only when it meets the stated minimum votes. A tie or too few votes yields None. It accepts normalized answers and uses None for an unsuccessful parse.
+
+## Worked example
+
+Two valid samples agree on seven.
+
+```python
+def vote_answers(answers,minimum):
+    from collections import Counter
+    counts=Counter(answer for answer in answers if answer is not None)
+    if not counts:
+        return None
+    high=max(counts.values())
+    winners=[answer for answer,count in counts.items() if count==high]
+    return winners[0] if high>=minimum and len(winners)==1 else None
+
+print(vote_answers(["7","8","7",None],2))
+```
+
+```text title="Output"
+7
+```
+
+Report answer accuracy together with sampling costs and failure rates.
+
+## Try it
+
+<CodeExercise id="b12-aggregate-reasoning-samples-01" />

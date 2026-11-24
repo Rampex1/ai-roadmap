@@ -4,5 +4,7 @@ title: "Reasoning and interpretability"
 order: 13
 prereqs: ["b11"]
 objectives:
-  - "Explain the core ideas of reasoning and interpretability"
-  - "Derive or implement the key methods of reasoning and interpretability"
+  - Evaluate reasoning samples at a fixed compute budget
+  - Construct an executable verifier for checkable tasks
+  - Implement integrated gradients and test completeness
+  - Design controlled interventions without overstating causal claims

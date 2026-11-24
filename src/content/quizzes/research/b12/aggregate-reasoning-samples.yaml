@@ -1,0 +1,93 @@
+items:
+  - id: b12-aggregate-reasoning-samples-01
+    type: mcq
+    prompt: Does agreement guarantee correctness?
+    explanation: A common model can repeat a misconception.
+    options:
+      - text: Yes, whenever three samples agree
+        why: Agreement is not ground truth.
+      - text: No, samples can share errors
+        why: A common model can repeat a misconception.
+        correct: true
+      - text: Only on every arithmetic question
+        why: Arithmetic still needs verification.
+  - id: b12-aggregate-reasoning-samples-02
+    type: mcq
+    prompt: How should a tie be represented here?
+    explanation: The declared rule requires a unique plurality.
+    options:
+      - text: Count both as correct
+        why: No reference label was supplied.
+      - text: Choose alphabetically
+        why: That is not this contract.
+      - text: An abstention
+        why: The declared rule requires a unique plurality.
+        correct: true
+  - id: b12-aggregate-reasoning-samples-03
+    type: mcq
+    prompt: Why freeze the parser?
+    explanation: Parser changes can create or remove votes.
+    options:
+      - text: Normalization affects which answers agree
+        why: Parser changes can create or remove votes.
+        correct: true
+      - text: It makes all outputs identical
+        why: Generation can still differ.
+      - text: Parsing proves logical correctness
+        why: It only interprets text.
+  - id: b12-aggregate-reasoning-samples-04
+    type: mcq
+    prompt: What makes a single-sample baseline comparable?
+    explanation: This holds evaluation scope fixed.
+    options:
+      - text: Excluding failures from the vote method only
+        why: Asymmetric exclusion biases metrics.
+      - text: Different tasks for every method
+        why: Task difficulty would be confounded.
+      - text: Shared prompts and scoring rules
+        why: This holds evaluation scope fixed.
+        correct: true
+  - id: b12-aggregate-reasoning-samples-05
+    type: multi
+    prompt: Which should be reported?
+    explanation: It measures evaluation coverage. Aggregation has resource costs.
+    options:
+      - text: Invalid parse count
+        why: It measures evaluation coverage.
+        correct: true
+      - text: Samples and latency per prompt
+        why: Aggregation has resource costs.
+        correct: true
+      - text: Only the text of one successful completion
+        why: That does not evaluate the system.
+  - id: b12-aggregate-reasoning-samples-06
+    type: cloze
+    prompt: A unique most frequent answer is a ______ winner.
+    accept:
+      - plurality
+    explanation: It may have fewer than half of all votes.
+  - id: b12-aggregate-reasoning-samples-07
+    type: order
+    prompt: Order a vote-based evaluation.
+    items:
+      - Freeze prompts parser and budget
+      - Collect attempts
+      - Normalize and count valid answers
+      - Score vote outcomes and cost
+    explanation: Correctness is assessed after the voting rule.
+  - id: b12-aggregate-reasoning-samples-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def vote_answers(answers,minimum):
+          from collections import Counter
+          counts=Counter(answer for answer in answers if answer is not None)
+          if not counts:
+              return None
+          high=max(counts.values())
+          winners=[answer for answer,count in counts.items() if count==high]
+          return winners[0] if high>=minimum and len(winners)==1 else None
+
+      print(vote_answers(["a", "b", "b", "a"], 2))
+    answer: None
+    explanation: Both answers reach two votes, so no unique winner exists.

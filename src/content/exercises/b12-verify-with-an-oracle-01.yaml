@@ -1,0 +1,18 @@
+id: b12-verify-with-an-oracle-01
+lesson: research/b12/verify-with-an-oracle
+title: Implement verify with an oracle
+prompt: Implement verified_sums. Return sorted unique exact integer candidates matching the sum of integer terms. Reject noninteger candidates, including booleans, by excluding them.
+starter: |
+  def verified_sums(terms,candidates):
+      raise NotImplementedError
+solution: |
+  def verified_sums(terms,candidates):
+      expected=sum(terms)
+      return sorted({value for value in candidates if type(value) is int and value==expected})
+tests: |
+  assert verified_sums([2,3],[5,False,4,5])==[5]
+  assert verified_sums([1],[True,1.0,"1"])==[]
+  assert verified_sums([],[-1,0,1])==[0]
+  assert verified_sums([-2,1],[-1,0])==[-1]
+hints:
+  - Use type(value) is int when the representation must be an exact integer.

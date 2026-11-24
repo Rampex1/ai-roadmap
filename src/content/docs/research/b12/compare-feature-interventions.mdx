@@ -1,0 +1,44 @@
+---
+title: Test feature interventions with controls
+module: b12
+order: 4
+estMinutes: 8
+objectives:
+  - Measure a signed intervention effect
+  - Distinguish model sensitivity from a real-world cause
+goDeeper: attention-interpretability-paper
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="compare-feature-interventions" /> tests whether a model's output changes under a defined replacement. Ablating a feature can reveal sensitivity that a visualization or attention map alone cannot establish. Compare the same examples, fix the output metric and include matched controls that modify other features or preserve relevant structure.
+
+If a replacement creates an implausible input, the response may reflect distribution shift rather than ordinary use of that feature. Redundant features can conceal sensitivity under one-feature ablation. A model-level effect under a synthetic intervention does not establish an external causal relationship.
+
+This exercise computes a signed change with an injected model and one input coordinate replacement. Run it with multiple matched references, and report case-level effects as well as averages.
+
+## Worked example
+
+Replacing feature zero with zero lowers the score by six.
+
+```python
+def intervention_delta(model,point,index,replacement):
+    if not 0<=index<len(point):
+        raise ValueError("unknown feature index")
+    changed=list(point)
+    changed[index]=replacement
+    return model(changed)-model(point)
+
+print(intervention_delta(lambda x:2*x[0]+x[1],[3,1],0,0))
+```
+
+```text title="Output"
+-6
+```
+
+Use a plausible control replacement before drawing a mechanism claim.
+
+## Try it
+
+<CodeExercise id="b12-compare-feature-interventions-01" />
