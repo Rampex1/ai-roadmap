@@ -262,7 +262,7 @@ Its properties come straight from F5's [sampling lesson](/foundations/f5/samplin
   beats grids (whose cost explodes with dimension) for high-dimensional integrals. The price: 10 times more
   accuracy costs 100 times more samples.
 
-**Always report an error bar.** By the CLT, $\hat{\mu}_N \pm 1.96\,\widehat{\text{SE}}$ is an approximate 95%
+**Report an error bar when its assumptions hold.** With independent draws, finite variance and enough samples for the CLT approximation, $\hat{\mu}_N \pm 1.96\,\widehat{\text{SE}}$ is an approximate 95%
 confidence interval. Estimate $\mathbb{E}[e^X]$ for $X \sim \mathcal{N}(0, 1)$, whose exact value is
 $e^{1/2} \approx 1.6487$:
 
@@ -281,7 +281,7 @@ n =    10,000: 1.6573 +/- 0.0445   (true 1.6487)
 n = 1,000,000: 1.6472 +/- 0.0042   (true 1.6487)
 ```
 
-Every 100× more samples makes the error bar 10× narrower, and each interval contains the truth.
+With fixed variance, 100× as many independent draws reduces the standard error by 10×. Each interval in this run contains the truth.
 
 :::caution[When the error bar lies]
 The error bar is itself estimated from the samples. If $f(x)$ has a heavy tail, rare huge values dominate the

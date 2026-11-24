@@ -105,7 +105,7 @@ peaked top-p 0.9 keeps 1 tokens
 ```
 
 When the model is confident, top-p behaves like greedy; when many continuations are reasonable, it
-allows variety. What it always removes is the **long tail**: the thousands of individually unlikely
+allows variety. It can remove the **long tail**: the thousands of individually unlikely
 tokens that, together, carry real probability. Sampling from the full distribution picks one of them
 surprisingly often, and one bad token derails everything after it.
 

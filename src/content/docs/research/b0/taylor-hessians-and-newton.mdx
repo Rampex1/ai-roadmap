@@ -156,8 +156,8 @@ $$
 $$
 
 the ratio of the steepest to the flattest curvature. F6 showed that gradient descent must use
-$\eta < 2/\lambda_{\max}$ to stay stable, and that the flattest direction then shrinks by only about
-$1 - \eta\lambda_{\min} \approx 1 - 1/\kappa$ per step. So the number of steps grows roughly in proportion to
+$\eta < 2/\lambda_{\max}$ to stay stable. With $\eta = 1/\lambda_{\max}$, the error in the flattest direction shrinks by the factor
+$1 - 1/\kappa$ per step. So the number of steps grows roughly in proportion to
 $\kappa$, which the next experiment confirms.
 
 ## Newton's method: jump to the bottom of the model
@@ -177,8 +177,9 @@ divide the slope by the curvature, so steep-and-narrow directions get small step
 big ones. In code, never form $H^{-1}$; solve the linear system $H\mathbf{h} = -\nabla f$ with
 `np.linalg.solve`, which is faster and more accurate ([F3](/foundations/f3/linear-systems/)).
 
-On a quadratic the model **is** the function, so one Newton step lands exactly on the minimum, whatever the
-condition number. Gradient descent, with the largest comfortable learning rate $1/\lambda_{\max}$, needs a
+For a strictly convex quadratic, the model is the function. One Newton step reaches the minimum in exact
+arithmetic. An ill-conditioned Hessian can still make the floating-point solve inaccurate. Gradient descent,
+with learning rate $1/\lambda_{\max}$, needs a
 number of steps that grows with $\kappa$:
 
 ```python

@@ -34,7 +34,7 @@ items:
       - text: "At x = A⁻¹b, the exact minimum"
         correct: true
         why: "The quadratic model is the function itself, so jumping to the model's minimum solves the problem."
-    explanation: "x − A⁻¹(Ax − b) = A⁻¹b for every x. That is why Newton is immune to ill-conditioning on quadratics."
+    explanation: "x − A⁻¹(Ax − b) = A⁻¹b for every x. This is exact in exact arithmetic. An ill-conditioned linear solve can still lose numerical accuracy."
   - id: b0-taylor-hessians-and-newton-04
     type: numeric
     prompt: |

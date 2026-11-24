@@ -141,9 +141,9 @@ $$
 or, for twice-differentiable $f$, $H(\mathbf{x}) \succeq \mu I$: every Hessian eigenvalue is at least $\mu$. Two
 consequences:
 
-- The minimiser is **unique**.
-- Gradient descent converges **linearly** (the error shrinks by a constant factor each step), at a rate set by the
-  condition number $L/\mu$, where $L$ bounds the largest curvature. This is the precise form of the F6 and
+- If a minimiser exists, it is **unique**.
+- For an unconstrained smooth objective with an upper curvature bound $L$, gradient descent with step
+  size $1/L$ converges **linearly**, at a rate set by the condition number $L/\mu$, where $L$ bounds the largest curvature. This is the precise form of the F6 and
   lesson 2 story.
 
 Least squares with more features than examples is convex but not strongly convex: $X^\top X$ has zero eigenvalues,
@@ -265,12 +265,12 @@ $\mu_i$ per inequality (and $\nu_j$ per equality $h_j$):
 
 1. **Stationarity:** $\nabla f(\mathbf{x}) + \sum_i \mu_i\nabla g_i(\mathbf{x}) + \sum_j \nu_j\nabla h_j(\mathbf{x}) = \mathbf{0}$.
 2. **Primal feasibility:** $g_i(\mathbf{x}) \le 0$ and $h_j(\mathbf{x}) = 0$.
-3. **Dual feasibility:** $\mu_i \ge 0$. The constraint can only push you back into the feasible region, never pull.
+3. **Dual feasibility:** $\mu_i \ge 0$. Each multiplier weights the outward constraint normal in the stationarity equation.
 4. **Complementary slackness:** $\mu_i\, g_i(\mathbf{x}) = 0$. Either the constraint is active or its multiplier
    is zero.
 
 For a convex problem (convex $f$ and $g_i$, affine $h_j$) and under a mild regularity condition (for example,
-Slater's condition: some point satisfies every inequality strictly), the KKT conditions are both necessary and
+Slater's condition: a point satisfies the equalities and all inequalities strictly), the KKT conditions are both necessary and
 sufficient: a point satisfying them is a global optimum. For non-convex problems they are only necessary, under
 regularity conditions.
 
@@ -320,7 +320,7 @@ x + y <= 5.0: solution [2. 2.], f = 0.0000
 - Convex function tests: chords above, tangent planes below ($f(\mathbf{y}) \ge f(\mathbf{x}) + \nabla f^\top(\mathbf{y} - \mathbf{x})$),
   or $H \succeq 0$. Build convex losses from sums, affine maps and maxima.
 - Jensen: $f(\mathbb{E}X) \le \mathbb{E}f(X)$ for convex $f$; reversed for concave $f$ such as $\log$.
-- Strong convexity ($H \succeq \mu I$) gives a unique minimiser and linear convergence; L2 regularisation provides it.
+- Strong convexity ($H \succeq \mu I$) gives at most one minimiser. With smoothness and a suitable step size, gradient descent converges linearly. Ridge regularisation adds positive curvature.
 - Lagrange: at an equality-constrained optimum $\nabla f + \nu\nabla h = \mathbf{0}$; $\nu$ is the sensitivity of
   the optimum to the constraint. A quadratic with linear constraints is one linear (KKT) solve.
 - KKT for $g_i \le 0$: stationarity, feasibility, $\mu_i \ge 0$, and $\mu_i g_i = 0$.

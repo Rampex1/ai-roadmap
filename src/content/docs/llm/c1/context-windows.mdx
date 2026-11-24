@@ -62,6 +62,8 @@ When the content does not fit, something has to go. The options, roughly from si
        """Keep the start and the end of a long token list, dropping the middle."""
        if len(tokens) <= budget:
            return tokens
+       if budget <= 0:
+           return []
        head = (budget - 1) // 2               # one slot goes to the marker
        tail = budget - 1 - head
        return tokens[:head] + [marker] + tokens[len(tokens) - tail:]
@@ -103,7 +105,8 @@ Models released since have improved on such tests, but as of late 2026 the pract
 
 **Cost.** F10 gave the formula: input tokens times the input price plus output tokens times the (several
 times higher) output price, both per million. In a multi-turn chat the whole history is re-sent each
-turn, so input grows with the square of the number of turns. Every token you trim from a prompt saves
+turn. For similarly sized turns with no truncation, input tokens per request grow roughly linearly, and
+the total across the conversation grows roughly quadratically. Every token you trim from a prompt saves
 money on every request that uses it.
 
 **Latency.** [Lesson 1](/llm/c1/llm-as-a-function/) split generation into prefill and decode. A first
@@ -134,8 +137,8 @@ in  20000, out   200: first token 10.00 s, total  14.0 s
 in    500, out  2000: first token  0.25 s, total  40.2 s
 ```
 
-Forty times more input cost 10 seconds; ten times more *output* cost 36. **Output length dominates
-latency.** Ask for short answers, structured fields instead of prose, and stream the reply so users see
+In these examples, the longer input adds 9.75 seconds to prefill, while the longer output adds 36
+seconds to decode. Either phase can dominate, depending on token counts and throughput. Ask for short answers, structured fields instead of prose, and stream the reply so users see
 the first tokens immediately. Real systems add network time, queueing and slower decoding for long
 contexts, so measure your own numbers; the second exercise turns this model into a workload estimate.
 
