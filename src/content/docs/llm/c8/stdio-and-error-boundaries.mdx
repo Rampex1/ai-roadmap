@@ -1,0 +1,101 @@
+---
+title: Test a local server and distinguish failures
+module: c8
+order: 4
+estMinutes: 8
+objectives:
+  - Recognize missing, protocol and execution failures
+  - Explain the local stdio SDK lifecycle
+goDeeper: mcp-python-sdk
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+With <Term id="stdio" />, a local client starts a server subprocess and uses its input and output for protocol messages. Diagnostics belong on standard error. In a desktop app use configured, trusted server commands. The server program runs with local process privileges, so keep the executable and exposed tools within the application policy.
+
+A disconnected process can leave no response. A JSON-RPC error indicates the protocol request failed. A tool result can report an execution error inside a valid response result. These states call for different handling: investigate the transport, correct the request, or show a tool-level failure. A matching ID and a well-formed result are necessary before forwarding it to the model.
+
+The simplified fixture handles one expected response and treats mismatched IDs as correlation errors. It assumes a valid JSON-RPC version and one of result or error, with result represented as a dictionary. The SDK handles framing and more detailed protocol validation.
+
+## Worked example
+
+The protocol reply arrived with the correct ID, but the tool reported failure.
+
+```python
+def response_status(response, expected_id):
+    if response is None:
+        return "no_response"
+    if response.get("id") != expected_id:
+        return "unexpected_id"
+    if "error" in response:
+        return "protocol_error"
+    result = response.get("result")
+    if not isinstance(result, dict):
+        return "protocol_error"
+    return "tool_error" if result.get("isError") is True else "ok"
+
+print(response_status({"id":4,"result":{"isError":True}}, 4))
+```
+
+```text title="Output"
+tool_error
+```
+
+Preserve the failure category in diagnostics instead of sending the model a fabricated result.
+
+## Try it
+
+<CodeExercise id="c8-stdio-and-error-boundaries-01" />
+
+## Optional local MCP smoke test
+
+Use an isolated local Python environment. As of late 2026 this example targets the v1 Python SDK (`python -m pip install "mcp<2"`); v2 APIs may differ.
+Create these two files in the same directory. The server only reads a fixed in-memory dictionary.
+Run the client in that environment. It starts and closes the server subprocess for you.
+
+```python title="library_server.py"
+from mcp.server.fastmcp import FastMCP
+
+server = FastMCP("Public library fixture")
+HOURS = {"north": "09:00", "south": "10:00"}
+
+@server.tool()
+def opening_time(branch: str) -> str:
+    """Return the opening time for a known public branch."""
+    if branch not in HOURS:
+        raise ValueError("Unknown branch")
+    return HOURS[branch]
+
+if __name__ == "__main__":
+    server.run(transport="stdio")
+```
+
+```python title="library_client.py"
+import asyncio
+import sys
+from pathlib import Path
+
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+
+async def main():
+    server_path = Path(__file__).with_name("library_server.py").resolve()
+    parameters = StdioServerParameters(command=sys.executable, args=[str(server_path)])
+    async with stdio_client(parameters) as (read, write):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+            listing = await session.list_tools()
+            assert "opening_time" in {tool.name for tool in listing.tools}
+            reply = await session.call_tool("opening_time", arguments={"branch": "north"})
+            assert not reply.isError
+            text_values = [getattr(part, "text", None) for part in reply.content]
+            structured = reply.structuredContent or {}
+            assert structured.get("result") == "09:00" or "09:00" in text_values
+            print("Public catalogue smoke test passed")
+
+asyncio.run(main())
+```
+
+After the successful call, try an unknown branch. Check that the server reports a tool error
+and that the same session can still list tools. No model API key is needed for this smoke test.

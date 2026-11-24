@@ -1,0 +1,41 @@
+---
+title: MCP roles and session lifecycle
+module: c8
+order: 1
+estMinutes: 8
+objectives:
+  - Distinguish host, client and server
+  - Gate discovery on advertised capabilities
+goDeeper: mcp-python-sdk
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+In C6, the application registered tools directly. <Term id="model-context-protocol" /> adds a protocol boundary so applications and servers can discover supported primitives and exchange requests. A host is the application the user interacts with. It manages client sessions and decides what to show to the model. Each client session communicates with a server that exposes capabilities.
+
+A session starts with initialization. The parties agree on a protocol version and exchange capabilities. After the client signals initialization is complete, it can make requests appropriate to those capabilities. For example, use tools/list after the server advertises tools. An empty tools capability object still advertises tools. It simply declares no optional fields under that capability.
+
+Discovery is an inventory, not authorization. The host still chooses which operations to expose and the server still checks access at execution. This lesson models only the decision of which discovery requests are relevant. It omits transport, version negotiation and the initialized notification.
+
+## Worked example
+
+The server advertised tools and resources without extra options.
+
+```python
+def discovery_methods(capabilities):
+    names = ("tools", "resources", "prompts")
+    return [name + "/list" for name in names if name in capabilities]
+
+print(discovery_methods({"resources": {}, "tools": {}}))
+```
+
+```text title="Output"
+['tools/list', 'resources/list']
+```
+
+Initialize the session and respect the capability inventory before attempting discovery.
+
+## Try it
+
+<CodeExercise id="c8-mcp-roles-and-lifecycle-01" />

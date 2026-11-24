@@ -1,0 +1,17 @@
+id: c8-mcp-roles-and-lifecycle-01
+lesson: llm/c8/mcp-roles-and-lifecycle
+title: Plan capability-aware discovery
+prompt: Return supported list methods in tools, resources, prompts order. An empty advertised object still counts. Ignore unknown capability keys.
+starter: |
+  def discovery_methods(capabilities):
+      raise NotImplementedError
+solution: |
+  def discovery_methods(capabilities):
+      names = ("tools", "resources", "prompts")
+      return [name + "/list" for name in names if name in capabilities]
+tests: |
+  assert discovery_methods({"prompts": {}, "tools": {}}) == ["tools/list", "prompts/list"]
+  assert discovery_methods({"resources": {"subscribe": True}, "other": {}}) == ["resources/list"]
+  assert discovery_methods({}) == []
+hints:
+  - Check for key membership rather than truthiness of the object.

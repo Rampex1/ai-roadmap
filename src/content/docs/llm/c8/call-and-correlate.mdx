@@ -1,0 +1,43 @@
+---
+title: Call a tool and correlate the result
+module: c8
+order: 3
+estMinutes: 8
+objectives:
+  - Construct a request for a known tool
+  - Use JSON-RPC IDs to match responses
+goDeeper: mcp-python-sdk
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+MCP messages use <Term id="json-rpc" />. A request carries a method, an ID and parameters. The corresponding response returns the same ID and either a result or an error. Notifications have no request ID and must not be answered. Multiple calls can be outstanding, so arrival order alone is insufficient.
+
+The tools/call method names a discovered operation and supplies arguments in its parameters. Use the tool schema to validate arguments and check policy before sending. The server may reject unavailable tools or malformed requests. A transport can also fail before any response arrives.
+
+The request ID here identifies a protocol exchange. A model provider's tool call ID, from C6, can exist at another layer. Keep a mapping if the host links a model call to an MCP request. Reusing a JSON-RPC ID for two simultaneously outstanding requests would make replies ambiguous.
+
+The example assumes a valid integer request ID and an already-validated argument dictionary. It constructs the envelope independently of transport.
+
+## Worked example
+
+This protocol envelope asks the server to run a catalogue lookup.
+
+```python
+def tool_request(request_id, name, arguments):
+    return {"jsonrpc": "2.0", "id": request_id, "method": "tools/call",
+            "params": {"name": name, "arguments": dict(arguments)}}
+
+print(tool_request(7, "catalogue", {"query":"maps"})["params"])
+```
+
+```text title="Output"
+{'name': 'catalogue', 'arguments': {'query': 'maps'}}
+```
+
+Use request IDs to correlate replies and maintain any model-side correlation separately.
+
+## Try it
+
+<CodeExercise id="c8-call-and-correlate-01" />

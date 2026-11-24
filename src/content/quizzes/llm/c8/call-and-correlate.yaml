@@ -1,0 +1,89 @@
+items:
+  - id: c8-call-and-correlate-01
+    type: mcq
+    prompt: What matches an MCP response to its request?
+    explanation: The response echoes the ID.
+    options:
+      - text: The JSON-RPC request ID
+        why: The response echoes the ID.
+        correct: true
+      - text: The method name alone
+        why: Several requests can use one method.
+      - text: The order in which bytes arrive
+        why: Independent requests may complete out of order.
+  - id: c8-call-and-correlate-02
+    type: mcq
+    prompt: What method calls an advertised tool?
+    explanation: The tool name is a parameter of this method.
+    options:
+      - text: tools/call
+        why: The tool name is a parameter of this method.
+        correct: true
+      - text: The tool name as its own JSON-RPC method
+        why: MCP uses a general tools/call method.
+      - text: tools/list
+        why: This discovers tools.
+  - id: c8-call-and-correlate-03
+    type: mcq
+    prompt: What distinguishes a notification?
+    explanation: Notifications are one-way messages.
+    options:
+      - text: It has no request ID and expects no response
+        why: Notifications are one-way messages.
+        correct: true
+      - text: It returns two results
+        why: It does not ask for a reply.
+      - text: Its method must be a catalogue lookup
+        why: Notification semantics do not depend on catalogue operations.
+  - id: c8-call-and-correlate-04
+    type: mcq
+    prompt: When should arguments be checked?
+    explanation: Shape and authorization are independent execution requirements.
+    options:
+      - text: After exposing returned sensitive data
+        why: That is too late.
+      - text: Before the operation is allowed to execute
+        why: Shape and authorization are independent execution requirements.
+        correct: true
+      - text: Only when a network connection drops
+        why: Malformed inputs exist on healthy connections.
+  - id: c8-call-and-correlate-05
+    type: multi
+    prompt: What belongs in the call request?
+    explanation: It supports response correlation. They identify the operation and requested inputs.
+    options:
+      - text: A protocol request ID
+        why: It supports response correlation.
+        correct: true
+      - text: Tool name and arguments
+        why: They identify the operation and requested inputs.
+        correct: true
+      - text: The final model explanation
+        why: The request asks for a tool result.
+  - id: c8-call-and-correlate-06
+    type: cloze
+    prompt: A reply is matched using the request ______.
+    accept:
+      - id
+      - identifier
+    explanation: The value identifies one outstanding exchange.
+  - id: c8-call-and-correlate-07
+    type: order
+    prompt: Order a single tool exchange.
+    items:
+      - Discover and choose a supported tool
+      - Validate arguments and construct the request
+      - Send the request
+      - Match the reply by ID
+    explanation: A correlated reply depends on a sent request.
+  - id: c8-call-and-correlate-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def tool_request(request_id, name, arguments):
+          return {"jsonrpc": "2.0", "id": request_id, "method": "tools/call",
+                  "params": {"name": name, "arguments": dict(arguments)}}
+
+      print(tool_request(3, "hours", {})["method"])
+    answer: tools/call
+    explanation: The method is tools/call even though the named tool is hours.

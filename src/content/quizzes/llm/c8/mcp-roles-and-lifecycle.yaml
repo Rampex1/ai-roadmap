@@ -1,0 +1,89 @@
+items:
+  - id: c8-mcp-roles-and-lifecycle-01
+    type: mcq
+    prompt: Who owns presentation and approval policy?
+    explanation: The host mediates interaction with the model and user.
+    options:
+      - text: A single tool description
+        why: Documentation does not enforce approval.
+      - text: The resource URI
+        why: A URI identifies data.
+      - text: The host application
+        why: The host mediates interaction with the model and user.
+        correct: true
+  - id: c8-mcp-roles-and-lifecycle-02
+    type: mcq
+    prompt: What does an empty tools capability object mean?
+    explanation: Presence indicates basic support.
+    options:
+      - text: Tools are advertised
+        why: Presence indicates basic support.
+        correct: true
+      - text: Tools are unavailable
+        why: An empty object can advertise the base capability.
+      - text: Every tool is approved
+        why: Discovery and approval are different.
+  - id: c8-mcp-roles-and-lifecycle-03
+    type: mcq
+    prompt: When should ordinary discovery happen?
+    explanation: Capabilities and protocol version are established first.
+    options:
+      - text: Before negotiating a session
+        why: The lifecycle starts with initialization.
+      - text: After initialization
+        why: Capabilities and protocol version are established first.
+        correct: true
+      - text: Only after a first tool call
+        why: Discovery can precede execution.
+  - id: c8-mcp-roles-and-lifecycle-04
+    type: mcq
+    prompt: What sends MCP requests to a particular server?
+    explanation: The host manages the session through its client.
+    options:
+      - text: Every model token
+        why: Generated tokens are not protocol messages.
+      - text: The client session
+        why: The host manages the session through its client.
+        correct: true
+      - text: A resource identifier
+        why: The identifier is carried in a request.
+  - id: c8-mcp-roles-and-lifecycle-05
+    type: multi
+    prompt: Which decisions remain application responsibilities?
+    explanation: A listed operation need not be offered to the model. Policy can require confirmation before a call.
+    options:
+      - text: Which tools to expose
+        why: A listed operation need not be offered to the model.
+        correct: true
+      - text: When approval is required
+        why: Policy can require confirmation before a call.
+        correct: true
+      - text: Which bytes the tool returns without invoking it
+        why: Results depend on execution.
+  - id: c8-mcp-roles-and-lifecycle-06
+    type: cloze
+    prompt: The parties exchange capabilities during ______.
+    accept:
+      - initialization
+      - initialisation
+    explanation: The initialization phase establishes compatibility.
+  - id: c8-mcp-roles-and-lifecycle-07
+    type: order
+    prompt: Order the client lifecycle.
+    items:
+      - Send initialize
+      - Receive the version and capabilities
+      - Signal initialization complete
+      - Discover a supported primitive
+    explanation: Discovery follows the initialization handshake.
+  - id: c8-mcp-roles-and-lifecycle-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def discovery_methods(capabilities):
+          names = ("tools", "resources", "prompts")
+          return [name + "/list" for name in names if name in capabilities]
+
+      print(discovery_methods({"tools": {}, "unknown": {}}))
+    answer: "['tools/list']"
+    explanation: Only tools is recognized and present.

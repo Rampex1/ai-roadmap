@@ -1,0 +1,4 @@
+term: "MCP resource"
+short: "Application-selected context identified by a URI and exposed by an MCP server."
+body: "Keep resource selection and access checks separate from instructions found in the resource text."
+related: ["model-context-protocol","tool-call"]

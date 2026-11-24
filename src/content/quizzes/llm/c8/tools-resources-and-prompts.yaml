@@ -1,0 +1,90 @@
+items:
+  - id: c8-tools-resources-and-prompts-01
+    type: mcq
+    prompt: Which primitive fits a known opening-hours page?
+    explanation: It is data addressed by a URI.
+    options:
+      - text: An instruction string treated as a permission
+        why: Text cannot authorize access.
+      - text: A write tool
+        why: Reading the page does not modify it.
+      - text: A resource
+        why: It is data addressed by a URI.
+        correct: true
+  - id: c8-tools-resources-and-prompts-02
+    type: mcq
+    prompt: Which primitive fits a title query with a result limit?
+    explanation: It performs a specified lookup with arguments.
+    options:
+      - text: A tool
+        why: It performs a specified lookup with arguments.
+        correct: true
+      - text: An error envelope
+        why: An error is an outcome.
+      - text: A single fixed resource only
+        why: The result depends on the query.
+  - id: c8-tools-resources-and-prompts-03
+    type: mcq
+    prompt: Which primitive fits a reusable summarization template?
+    explanation: It supplies a repeatable interaction pattern.
+    options:
+      - text: A prompt
+        why: It supplies a repeatable interaction pattern.
+        correct: true
+      - text: A tool result
+        why: A result is observed data.
+      - text: A session handshake
+        why: Initialization negotiates compatibility.
+  - id: c8-tools-resources-and-prompts-04
+    type: mcq
+    prompt: What should an empty stored page return in the example?
+    explanation: The identifier exists.
+    options:
+      - text: A successful empty result
+        why: The identifier exists.
+        correct: true
+      - text: not_found
+        why: Absent identity and empty content are different.
+      - text: The text of a different page
+        why: That would misattribute content.
+  - id: c8-tools-resources-and-prompts-05
+    type: multi
+    prompt: Which features help trace a resource read?
+    explanation: It identifies the material selected. It allows the application to match content to source.
+    options:
+      - text: A stable URI
+        why: It identifies the material selected.
+        correct: true
+      - text: The selected content returned with its identity
+        why: It allows the application to match content to source.
+        correct: true
+      - text: Treating page text as permission
+        why: Data does not authorize a read.
+  - id: c8-tools-resources-and-prompts-06
+    type: cloze
+    prompt: A resource is normally identified by a ______.
+    accept:
+      - uri
+      - uniform resource identifier
+    explanation: The URI names the resource.
+  - id: c8-tools-resources-and-prompts-07
+    type: order
+    prompt: Order an application-selected resource read.
+    items:
+      - Identify the resource URI
+      - Check authorization for that object
+      - Read its permitted content
+      - Supply it as data with provenance
+    explanation: Authorization comes before returning content.
+  - id: c8-tools-resources-and-prompts-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def read_public_resource(uri, resources):
+          if uri not in resources:
+              return {"status": "not_found"}
+          return {"status": "ok", "uri": uri, "text": resources[uri]}
+
+      print(read_public_resource("library://b", {"library://a":"A"}))
+    answer: "{'status': 'not_found'}"
+    explanation: The registry does not contain the requested URI.

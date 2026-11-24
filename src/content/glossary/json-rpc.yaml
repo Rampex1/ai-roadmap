@@ -1,0 +1,4 @@
+term: "JSON-RPC"
+short: "A JSON message format for remote calls with method names, parameters and request IDs."
+body: "A request has `jsonrpc: \"2.0\"`, a method, params and an id. The response echoes that id with either `result` or `error` (`code`, `message`). A notification has no id and gets no response."
+related: ["model-context-protocol","tool-call-id"]

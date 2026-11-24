@@ -1,0 +1,4 @@
+term: "Standard I/O"
+short: "A local transport in which a client communicates with a subprocess through its standard input and output."
+body: "The client launches the server as a subprocess and writes JSON-RPC messages to its stdin. The server replies on stdout, one newline-delimited message per line. Stdout carries protocol messages only; logs go to stderr."
+related: ["model-context-protocol","json-rpc"]

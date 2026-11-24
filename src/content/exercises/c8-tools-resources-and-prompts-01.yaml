@@ -1,0 +1,18 @@
+id: c8-tools-resources-and-prompts-01
+lesson: llm/c8/tools-resources-and-prompts
+title: Resolve a public library resource
+prompt: Return status ok, URI and text for an exact registry match. For an unknown URI return only status not_found. A stored empty string is a successful read.
+starter: |
+  def read_public_resource(uri, resources):
+      raise NotImplementedError
+solution: |
+  def read_public_resource(uri, resources):
+      if uri not in resources:
+          return {"status": "not_found"}
+      return {"status": "ok", "uri": uri, "text": resources[uri]}
+tests: |
+  assert read_public_resource("library://a", {"library://a": ""}) == {"status":"ok","uri":"library://a","text":""}
+  assert read_public_resource("library://missing", {"library://a":"A"}) == {"status":"not_found"}
+  assert read_public_resource("library://a", {"library://a":"A","library://b":"B"})["text"] == "A"
+hints:
+  - Distinguish key membership from whether its value is empty.

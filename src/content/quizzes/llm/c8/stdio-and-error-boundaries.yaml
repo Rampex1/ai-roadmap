@@ -1,0 +1,97 @@
+items:
+  - id: c8-stdio-and-error-boundaries-01
+    type: mcq
+    prompt: Where should an stdio server write logs?
+    explanation: Standard output carries protocol data.
+    options:
+      - text: Into protocol stdout as unframed text
+        why: It can interfere with message decoding.
+      - text: Standard error
+        why: Standard output carries protocol data.
+        correct: true
+      - text: Inside every tool result
+        why: Diagnostics need not become model context.
+  - id: c8-stdio-and-error-boundaries-02
+    type: mcq
+    prompt: Which status describes a disconnected server with no response?
+    explanation: No protocol envelope arrived.
+    options:
+      - text: no_response
+        why: No protocol envelope arrived.
+        correct: true
+      - text: tool_error
+        why: That requires a received result.
+      - text: ok
+        why: Silence cannot confirm success.
+  - id: c8-stdio-and-error-boundaries-03
+    type: mcq
+    prompt: What does result.isError mark in the fixture?
+    explanation: The JSON-RPC response carried a tool result.
+    options:
+      - text: A missing server process with no message
+        why: A response exists.
+      - text: A successful result by definition
+        why: Its failure flag matters.
+      - text: A tool execution failure
+        why: The JSON-RPC response carried a tool result.
+        correct: true
+  - id: c8-stdio-and-error-boundaries-04
+    type: mcq
+    prompt: Why start only a trusted configured server executable?
+    explanation: Starting a process is an authority boundary.
+    options:
+      - text: It runs under local process privileges
+        why: Starting a process is an authority boundary.
+        correct: true
+      - text: The executable name changes the protocol version automatically
+        why: Version is negotiated at initialization.
+      - text: It makes authentication unnecessary everywhere
+        why: Trust requirements still apply.
+  - id: c8-stdio-and-error-boundaries-05
+    type: multi
+    prompt: Which help distinguish failed MCP calls?
+    explanation: It shows whether the reply belongs to this request. They indicate different failure layers.
+    options:
+      - text: The correlated response ID
+        why: It shows whether the reply belongs to this request.
+        correct: true
+      - text: Only the wording of a user-facing summary
+        why: The summary may hide the underlying category.
+      - text: Protocol and tool error fields
+        why: They indicate different failure layers.
+        correct: true
+  - id: c8-stdio-and-error-boundaries-06
+    type: cloze
+    prompt: In an stdio transport, reserve standard ______ for protocol messages.
+    accept:
+      - output
+      - stdout
+    explanation: Unframed output can corrupt the transport.
+  - id: c8-stdio-and-error-boundaries-07
+    type: order
+    prompt: Order a local session.
+    items:
+      - Start the configured subprocess
+      - Initialize the client session
+      - List and call a permitted tool
+      - Close the session and transport
+    explanation: The SDK brackets protocol operations with session lifetime.
+  - id: c8-stdio-and-error-boundaries-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def response_status(response, expected_id):
+          if response is None:
+              return "no_response"
+          if response.get("id") != expected_id:
+              return "unexpected_id"
+          if "error" in response:
+              return "protocol_error"
+          result = response.get("result")
+          if not isinstance(result, dict):
+              return "protocol_error"
+          return "tool_error" if result.get("isError") is True else "ok"
+
+      print(response_status({"id":2,"result":{"isError":False}}, 2))
+    answer: ok
+    explanation: The ID matches and the result has no true error flag.

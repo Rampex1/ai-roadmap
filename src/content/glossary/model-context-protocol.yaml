@@ -1,0 +1,4 @@
+term: "Model Context Protocol"
+short: "A protocol for connecting applications to servers that expose tools, resources and prompt templates."
+body: "A host runs one client session per server. The session starts with `initialize`, which negotiates the protocol version and capabilities, then the `notifications/initialized` notification. After that the client can list and call the advertised tools, resources and prompts over stdio or Streamable HTTP."
+related: ["tool-registry","api-contract"]

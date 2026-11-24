@@ -1,0 +1,6 @@
+title: MCP Python SDK v1 documentation
+url: https://py.sdk.modelcontextprotocol.io/v1/
+kind: tool
+free: true
+modules:
+  - c8

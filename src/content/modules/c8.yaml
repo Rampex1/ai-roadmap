@@ -4,5 +4,7 @@ title: "MCP"
 order: 8
 prereqs: ["c7"]
 objectives:
-  - "Explain the core ideas of MCP"
-  - "Build and evaluate an application using MCP"
+  - Distinguish a host, client session and server in MCP
+  - Choose among tools, resources and prompt templates
+  - Validate advertised capabilities and distinguish protocol errors from tool errors
+  - Connect a local read-only Python server using the documented SDK lifecycle

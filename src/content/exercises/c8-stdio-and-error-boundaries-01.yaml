@@ -1,0 +1,30 @@
+id: c8-stdio-and-error-boundaries-01
+lesson: llm/c8/stdio-and-error-boundaries
+title: Classify a simulated MCP response
+prompt: Return no_response for None, unexpected_id for mismatch, protocol_error for a protocol error or missing dictionary result, tool_error when result.isError is True, and ok otherwise.
+starter: |
+  def response_status(response, expected_id):
+      raise NotImplementedError
+solution: |
+  def response_status(response, expected_id):
+      if response is None:
+          return "no_response"
+      if response.get("id") != expected_id:
+          return "unexpected_id"
+      if "error" in response:
+          return "protocol_error"
+      result = response.get("result")
+      if not isinstance(result, dict):
+          return "protocol_error"
+      return "tool_error" if result.get("isError") is True else "ok"
+tests: |
+  assert response_status(None,1) == "no_response"
+  assert response_status({"id":2,"result":{}},1) == "unexpected_id"
+  assert response_status({"id":1,"error":{"code":-32602}},1) == "protocol_error"
+  assert response_status({"id":1,"result":[]},1) == "protocol_error"
+  assert response_status({"id":1,"result":{"isError":True}},1) == "tool_error"
+  assert response_status({"id":1,"result":{}},1) == "ok"
+  assert response_status({"id":2,"error":{"code":-32601}},1) == "unexpected_id", "Check the ID before the error"
+  assert response_status({"id":1,"result":{"isError":"yes"}},1) == "ok", "Only isError true marks a tool error"
+hints:
+  - Check routing and protocol shape before reading the tool-level flag.

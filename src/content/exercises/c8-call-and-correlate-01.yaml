@@ -1,0 +1,20 @@
+id: c8-call-and-correlate-01
+lesson: llm/c8/call-and-correlate
+title: Build a tools/call request
+prompt: Return a JSON-RPC 2.0 dictionary with id, method tools/call and params containing name and a shallow copy of arguments. Preserve the provided request ID.
+starter: |
+  def tool_request(request_id, name, arguments):
+      raise NotImplementedError
+solution: |
+  def tool_request(request_id, name, arguments):
+      return {"jsonrpc": "2.0", "id": request_id, "method": "tools/call",
+              "params": {"name": name, "arguments": dict(arguments)}}
+tests: |
+  args = {"branch":"north"}
+  message = tool_request(11,"hours",args)
+  assert message == {"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"hours","arguments":{"branch":"north"}}}
+  args["branch"] = "south"
+  assert message["params"]["arguments"]["branch"] == "north"
+  assert tool_request(0,"list_public",{})["id"] == 0
+hints:
+  - Put the name and arguments inside params, rather than at top level.

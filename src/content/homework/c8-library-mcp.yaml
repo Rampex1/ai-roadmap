@@ -1,0 +1,22 @@
+id: c8-library-mcp
+module: c8
+kind: homework
+title: Exercise a read-only MCP library adapter
+brief: |-
+  Use in-memory MCP-shaped fixtures to test a library integration. After the required tasks, the optional local SDK example in the last lesson lets you discover and call the same kind of tool over stdio.
+
+  1. Check which primitives the server advertised.
+  2. Expose a catalogue URI as application-selected data.
+  3. Construct and correlate a read-only call.
+  4. Classify tool, transport and successful outcomes.
+  5. Replay an MCP tool exchange.
+
+  Draw the host, client session and server with the direction of initialize, list and call messages. Where would you enforce permissions if this service also held restricted library records?
+notebook: /homework/c8-library-mcp.ipynb
+rubric:
+  - Unadvertised capabilities are skipped.
+  - Unknown resources do not return unrelated content.
+  - The response ID is checked against its request.
+  - Protocol and execution failures stay distinct.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.
