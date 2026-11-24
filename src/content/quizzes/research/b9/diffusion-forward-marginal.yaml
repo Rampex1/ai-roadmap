@@ -1,0 +1,99 @@
+items:
+  - id: b9-diffusion-forward-marginal-01
+    type: mcq
+    prompt: What is ᾱ_t?
+    explanation: It is cumulative retention.
+    options:
+      - text: Only the last α value
+        why: That is one-step retention.
+      - text: The product of α values through time t
+        why: It is cumulative retention.
+        correct: true
+      - text: The sum of all β values exactly
+        why: Products and sums are different.
+  - id: b9-diffusion-forward-marginal-02
+    type: mcq
+    prompt: What passes through when retention is zero?
+    explanation: The clean multiplier is zero.
+    options:
+      - text: The supplied noise alone
+        why: The clean multiplier is zero.
+        correct: true
+      - text: The original sample alone
+        why: That happens when retention is one.
+      - text: Zeros for every possible input
+        why: Noise still has full scale.
+  - id: b9-diffusion-forward-marginal-03
+    type: mcq
+    prompt: Why sample directly at t?
+    explanation: Simulating each earlier step is unnecessary for this construction.
+    options:
+      - text: The Gaussian marginal already has a closed form
+        why: Simulating each earlier step is unnecessary for this construction.
+        correct: true
+      - text: The process never uses Gaussian noise
+        why: The closed form follows from Gaussian noise.
+      - text: Direct sampling makes all timesteps identical
+        why: Their retention values can change.
+  - id: b9-diffusion-forward-marginal-04
+    type: mcq
+    prompt: Which variance determines the noise coefficient under the square root in the marginal?
+    explanation: The noise amplitude is its square root.
+    options:
+      - text: Always one
+        why: Noise increases with attenuation.
+      - text: Cumulative retention itself
+        why: That is the clean signal coefficient squared.
+      - text: One minus cumulative retention
+        why: The noise amplitude is its square root.
+        correct: true
+  - id: b9-diffusion-forward-marginal-05
+    type: multi
+    prompt: Which determine a reproducible noisy example?
+    explanation: It specifies signal-to-noise weighting. These supply the two vectors.
+    options:
+      - text: The time-indexed cumulative retention
+        why: It specifies signal-to-noise weighting.
+        correct: true
+      - text: The clean observation and noise draw
+        why: These supply the two vectors.
+        correct: true
+      - text: The learned reverse prediction only
+        why: The forward draw is defined independently.
+  - id: b9-diffusion-forward-marginal-06
+    type: cloze
+    prompt: The clean input multiplier is the square root of cumulative ______.
+    accept:
+      - retention
+      - alpha
+      - alpha-bar
+      - alpha bar
+      - "ᾱ"
+      - "ᾱ_t"
+      - alphabar
+      - alpha_bar
+      - signal retention
+    explanation: It scales the clean signal.
+  - id: b9-diffusion-forward-marginal-07
+    type: order
+    prompt: Order direct noising when the standard normal noise vector has already been drawn.
+    items:
+      - Choose a valid timestep
+      - Read the cumulative retention for that timestep
+      - Compute the signal and noise coefficients from the retention
+      - Combine the scaled vectors
+    explanation: The marginal depends on the cumulative schedule value.
+  - id: b9-diffusion-forward-marginal-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def forward_noise(clean,noise,retained):
+          from math import sqrt
+          if len(clean)!=len(noise) or not 0<=retained<=1:
+              raise ValueError("invalid noise inputs")
+          a,b = sqrt(retained),sqrt(1-retained)
+          return [a*x+b*e for x,e in zip(clean,noise)]
+
+      print(forward_noise([1, 2], [3, 4], 0))
+    answer: "[3.0, 4.0]"
+    explanation: At zero retained signal, the output is the supplied noise.

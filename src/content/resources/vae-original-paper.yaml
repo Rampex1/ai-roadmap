@@ -1,0 +1,6 @@
+title: Auto-Encoding Variational Bayes
+url: https://arxiv.org/abs/1312.6114
+kind: paper
+free: true
+modules:
+  - b9

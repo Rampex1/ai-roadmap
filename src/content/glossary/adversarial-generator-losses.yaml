@@ -1,0 +1,4 @@
+term: "Non-saturating GAN loss"
+short: "A generator objective that rewards making generated samples look real to the discriminator."
+body: "Instead of minimising log(1 − D(G(z))), the generator minimises −log D(G(z)), which is softplus(−logit). The fixed point is the same, but the gradient stays large when the discriminator confidently rejects generated samples, where the minimax form saturates."
+related: ["softmax-cross-entropy-gradient","gradient"]

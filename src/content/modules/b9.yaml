@@ -4,5 +4,7 @@ title: "Generative models"
 order: 10
 prereqs: ["b8"]
 objectives:
-  - "Explain the core ideas of generative models"
-  - "Derive or implement the key methods of generative models"
+  - Compute analytic Gaussian KL and interpret the VAE objective
+  - Distinguish adversarial generator and discriminator updates
+  - Derive the forward diffusion marginal using cumulative retention
+  - Compute and test an epsilon-parameterized reverse mean

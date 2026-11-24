@@ -1,0 +1,29 @@
+id: b9-diffusion-forward-marginal-01
+lesson: research/b9/diffusion-forward-marginal
+title: Implement diffusion forward marginal
+prompt: Implement forward_noise for aligned clean and noise lists. Retained is cumulative alpha-bar in [0,1]. Return the analytic noisy sample. Reject mismatched lengths or retention outside the interval.
+starter: |
+  def forward_noise(clean,noise,retained):
+      raise NotImplementedError
+solution: |
+  def forward_noise(clean,noise,retained):
+      from math import sqrt
+      if len(clean)!=len(noise) or not 0<=retained<=1:
+          raise ValueError("invalid noise inputs")
+      a,b = sqrt(retained),sqrt(1-retained)
+      return [a*x+b*e for x,e in zip(clean,noise)]
+tests: |
+  from math import sqrt
+  assert forward_noise([3,-4],[2,1],1)==[3,-4]
+  assert forward_noise([3,-4],[2,1],0)==[2,1]
+  assert forward_noise([2],[0],0.25)==[1]
+  assert abs(forward_noise([0],[2],0.25)[0]-sqrt(3))<1e-12
+  for args in [([0],[],0.5),([1],[1],1.1)]:
+      try:
+          forward_noise(*args)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError("reject invalid inputs")
+hints:
+  - The clean and noise multipliers are square roots of complementary weights.

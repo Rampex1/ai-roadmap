@@ -1,0 +1,44 @@
+---
+title: Form a diffusion reverse-step mean
+module: b9
+order: 4
+estMinutes: 8
+objectives:
+  - Use a noise prediction in the DDPM mean
+  - Distinguish the predicted mean from a sampled reverse transition
+goDeeper: ddpm-original-paper
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A noise-predicting DDPM learns to estimate ε from the noisy state x_t and time t. Its <Term id="diffusion-reverse-mean" /> can be written as (x_t−β_t·ε_pred/sqrt(1−ᾱ_t))/sqrt(α_t), with α_t=1−β_t. The cumulative retention controls how the noise prediction is scaled. This formula assumes a valid positive noise step and nonzero accumulated noise.
+
+Generating samples uses a schedule in reverse, normally starting near Gaussian noise. A stochastic transition also adds a draw scaled by its chosen reverse standard deviation. The mean alone omits that step. The final transition is often sampled without extra noise in the original DDPM algorithm.
+
+Treat the time index and variance convention as part of the implementation contract. A denoiser that predicts the clean sample or a velocity-like target requires a different conversion. Test a short deterministic trace and evaluate sample coverage and quality separately rather than relying solely on training noise MSE.
+
+## Worked example
+
+Even with zero predicted noise, dividing by sqrt(alpha) changes this state.
+
+```python
+def reverse_mean(state,epsilon,beta,retained):
+    from math import sqrt
+    if len(state)!=len(epsilon) or not 0<beta<1 or not 0<=retained<1:
+        raise ValueError("invalid reverse step")
+    fine = beta/sqrt(1-retained)
+    return [(value-fine*guess)/sqrt(1-beta) for value,guess in zip(state,epsilon)]
+
+print([round(x,3) for x in reverse_mean([1],[0],0.25,0.5)])
+```
+
+```text title="Output"
+[1.155]
+```
+
+Fix the denoiser parameterization and variance convention when evaluating a sampler.
+
+## Try it
+
+<CodeExercise id="b9-diffusion-reverse-mean-01" />

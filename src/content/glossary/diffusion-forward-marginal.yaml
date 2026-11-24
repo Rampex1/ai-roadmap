@@ -1,0 +1,4 @@
+term: "Diffusion noise schedule"
+short: "The sequence of per-step noise variances that determines how quickly signal is attenuated."
+body: "The variances β_1…β_T define α_t = 1 − β_t and the cumulative retention ᾱ_t = ∏_{s≤t} α_s. This gives x_t = √ᾱ_t·x_0 + √(1 − ᾱ_t)·ε, so the schedule controls how fast the signal-to-noise ratio falls."
+related: ["covariance-matrix","diffusion-reverse-mean"]

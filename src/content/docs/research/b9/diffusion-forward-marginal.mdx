@@ -1,0 +1,44 @@
+---
+title: Sample a forward diffusion marginal
+module: b9
+order: 3
+estMinutes: 8
+objectives:
+  - Build cumulative signal retention from a noise schedule
+  - Sample x_t directly from x_0 and supplied noise
+goDeeper: ddpm-original-paper
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A Gaussian diffusion step scales the previous signal by the square root of α_t and adds independent noise with scale the square root of 1−α_t. The <Term id="diffusion-forward-marginal" /> specifies β_t = 1−α_t. Signal retention through t is the product of α values, written ᾱ_t. At zero steps that product is one.
+
+Because a combination of independent Gaussian noises is Gaussian, the conditional marginal takes a simple form: x_t = sqrt(ᾱ_t)·x_0 + sqrt(1−ᾱ_t)·ε. This allows a training batch to pick a time and construct a noisy input directly instead of iterating from zero. A denoiser can learn to predict the noise that was added.
+
+The fixture accepts ᾱ_t and a noise vector you already drew, making it deterministic for testing. Keep the distinction between one-step retention and cumulative retention; using α_t by mistake generally gives too little noise at later steps.
+
+## Worked example
+
+Full retention corresponds to the original input.
+
+```python
+def forward_noise(clean,noise,retained):
+    from math import sqrt
+    if len(clean)!=len(noise) or not 0<=retained<=1:
+        raise ValueError("invalid noise inputs")
+    a,b = sqrt(retained),sqrt(1-retained)
+    return [a*x+b*e for x,e in zip(clean,noise)]
+
+print(forward_noise([3,-4],[2,1],1.0))
+```
+
+```text title="Output"
+[3.0, -4.0]
+```
+
+Record the schedule and indexing convention when comparing denoisers.
+
+## Try it
+
+<CodeExercise id="b9-diffusion-forward-marginal-01" />

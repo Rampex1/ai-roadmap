@@ -1,0 +1,6 @@
+title: Denoising Diffusion Probabilistic Models
+url: https://arxiv.org/abs/2006.11239
+kind: paper
+free: true
+modules:
+  - b9

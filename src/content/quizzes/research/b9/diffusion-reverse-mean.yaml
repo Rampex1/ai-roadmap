@@ -1,0 +1,94 @@
+items:
+  - id: b9-diffusion-reverse-mean-01
+    type: mcq
+    prompt: "In the ε-parameterised DDPM mean, what does ε_pred represent?"
+    explanation: "In this parameterisation the network predicts the forward noise ε that was added to x_0, and the mean formula converts that prediction into a transition mean."
+    options:
+      - text: A prediction of the forward noise
+        why: This mean formula is specific to ε-parameterisation.
+        correct: true
+      - text: An unconditional clean sample
+        why: That requires a different conversion.
+      - text: The reverse step variance
+        why: Noise prediction and transition variance differ.
+  - id: b9-diffusion-reverse-mean-02
+    type: mcq
+    prompt: "What does the ε-parameterised mean formula give for one reverse step?"
+    explanation: "The formula gives only the transition mean; a sampler adds σ_t·z separately."
+    options:
+      - text: The transition mean only
+        why: A stochastic draw is separate.
+        correct: true
+      - text: A fully sampled trajectory
+        why: Only one deterministic calculation is performed.
+      - text: The training loss
+        why: Prediction loss is an objective, not this state.
+  - id: b9-diffusion-reverse-mean-03
+    type: mcq
+    prompt: "Why must ᾱ_t be below one in (x_t−β_t·ε/√(1−ᾱ_t))/√α_t?"
+    explanation: "If ᾱ_t were one, √(1−ᾱ_t) would be zero and the noise coefficient would divide by zero. Any timestep that has added noise has ᾱ_t below one."
+    options:
+      - text: The noise coefficient denominator would be zero
+        why: "√(1−ᾱ_t) sits in the denominator, so ᾱ_t = 1 makes it zero."
+        correct: true
+      - text: It always makes alpha zero
+        why: One-step alpha and cumulative retention differ.
+      - text: A unit retention is impossible at clean time
+        why: It is valid at time zero for the forward process.
+  - id: b9-diffusion-reverse-mean-04
+    type: mcq
+    prompt: Why preserve sampler time indexing?
+    explanation: Both values refer to the same time step.
+    options:
+      - text: Misaligned β and ᾱ produce a different transition
+        why: Both values refer to the same time step.
+        correct: true
+      - text: Indices determine the number of latent labels
+        why: The schedule controls noise, not labels.
+      - text: Time labels are irrelevant to a conditioned denoiser
+        why: The denoiser uses the timestep.
+  - id: b9-diffusion-reverse-mean-05
+    type: multi
+    prompt: Which should be recorded for sampling parity?
+    explanation: It defines how outputs are converted. They define the transition.
+    options:
+      - text: Reverse variance and timestep convention
+        why: They define the transition.
+        correct: true
+      - text: Denoiser target parameterization
+        why: It defines how outputs are converted.
+        correct: true
+      - text: Only the generated image filename
+        why: A filename does not reproduce a trace.
+  - id: b9-diffusion-reverse-mean-06
+    type: cloze
+    prompt: The deterministic central prediction of one transition is its ______.
+    accept:
+      - mean
+      - reverse mean
+      - transition mean
+      - predicted mean
+    explanation: Additional noise can be sampled around it.
+  - id: b9-diffusion-reverse-mean-07
+    type: order
+    prompt: Order one reverse evaluation.
+    items:
+      - Read the current noisy state and timestep
+      - Predict the noise term
+      - Compute the reverse transition mean
+      - Add a draw if the chosen sampler calls for one
+    explanation: The mean is formed before any stochastic increment.
+  - id: b9-diffusion-reverse-mean-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def reverse_mean(state,epsilon,beta,retained):
+          from math import sqrt
+          if len(state)!=len(epsilon) or not 0<beta<1 or not 0<=retained<1:
+              raise ValueError("invalid reverse step")
+          fine = beta/sqrt(1-retained)
+          return [(value-fine*guess)/sqrt(1-beta) for value,guess in zip(state,epsilon)]
+
+      print([round(x, 6) for x in reverse_mean([0], [0], 0.5, 0.5)])
+    answer: "[0.0]"
+    explanation: Zero state and zero predicted noise produce zero mean.

@@ -1,0 +1,28 @@
+id: b9-diffusion-reverse-mean-01
+lesson: research/b9/diffusion-reverse-mean
+title: Implement diffusion reverse mean
+prompt: Implement reverse_mean(state, epsilon, beta, retained) for aligned vectors, 0<beta<1 and 0<=retained<1. Return only the DDPM mean under epsilon prediction. Reject invalid inputs.
+starter: |
+  def reverse_mean(state,epsilon,beta,retained):
+      raise NotImplementedError
+solution: |
+  def reverse_mean(state,epsilon,beta,retained):
+      from math import sqrt
+      if len(state)!=len(epsilon) or not 0<beta<1 or not 0<=retained<1:
+          raise ValueError("invalid reverse step")
+      fine = beta/sqrt(1-retained)
+      return [(value-fine*guess)/sqrt(1-beta) for value,guess in zip(state,epsilon)]
+tests: |
+  from math import sqrt
+  assert abs(reverse_mean([1],[0],0.25,0.5)[0]-1/sqrt(0.75))<1e-12
+  assert abs(reverse_mean([1],[2],0.25,0.75)[0])<1e-12
+  assert reverse_mean([],[],0.1,0.5)==[]
+  for args in [([1],[],0.1,0.5),([1],[1],0.1,1),([1],[1],0,0.5)]:
+      try:
+          reverse_mean(*args)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError("reject invalid reverse parameter")
+hints:
+  - The extra random reverse draw is outside this mean calculation.

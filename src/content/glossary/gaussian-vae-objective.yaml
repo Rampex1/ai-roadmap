@@ -1,0 +1,4 @@
+term: "VAE Gaussian KL"
+short: "The analytic divergence from a diagonal Gaussian encoder posterior to a standard normal prior."
+body: "For q = N(μ, diag(σ²)) and p = N(0, I), KL(q‖p) = ½ Σ (μ² + σ² − 1 − log σ²). It is zero only when μ = 0 and σ = 1. The negative ELBO adds this to the negative reconstruction log-likelihood, and having a closed form avoids sampling the KL."
+related: ["elbo","covariance-matrix"]

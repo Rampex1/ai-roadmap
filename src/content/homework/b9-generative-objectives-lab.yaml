@@ -1,0 +1,22 @@
+id: b9-generative-objectives-lab
+module: b9
+kind: homework
+title: Compare and test generative objectives
+brief: |-
+  Use fixed data and noise fixtures to implement selected components of VAEs, GANs and diffusion models.
+
+  1. Evaluate an analytic Gaussian KL.
+  2. Compare discriminator and generator losses.
+  3. Apply the closed-form forward marginal.
+  4. Check one DDPM transition mean.
+  5. Check a reverse step with known forward noise.
+
+  Explain which objective and metric would reveal missed modes in generated samples. Describe what an oracle noise predictor checks and what it cannot tell you about a learned denoiser.
+notebook: /homework/b9-generative-objectives-lab.ipynb
+rubric:
+  - The KL direction and reductions are explicit.
+  - Generator and discriminator losses remain distinct.
+  - Diffusion uses cumulative retention and aligned noise.
+  - The reverse calculation is treated as a mean rather than a full sample.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

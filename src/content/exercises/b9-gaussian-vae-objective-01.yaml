@@ -1,0 +1,27 @@
+id: b9-gaussian-vae-objective-01
+lesson: research/b9/gaussian-vae-objective
+title: Implement the Gaussian VAE KL term
+prompt: Implement gaussian_kl for aligned lists of means and finite log variances in a numerically representable range. Return the summed KL to a standard normal. Raise ValueError on shape mismatch.
+starter: |
+  def gaussian_kl(mean,log_variance):
+      raise NotImplementedError
+solution: |
+  def gaussian_kl(mean,log_variance):
+      from math import expm1
+      if len(mean)!=len(log_variance):
+          raise ValueError("misaligned posterior dimensions")
+      return 0.5*sum(expm1(logvar)+mu*mu-logvar for mu,logvar in zip(mean,log_variance))
+tests: |
+  from math import log
+  assert gaussian_kl([0,0],[0,0])==0
+  assert gaussian_kl([0,2],[0,0])==2
+  assert abs(gaussian_kl([0],[log(2)])-0.5*(1-log(2)))<1e-12
+  assert gaussian_kl([],[])==0
+  try:
+      gaussian_kl([1],[])
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject mismatched shapes")
+hints:
+  - Use expm1(logvar) to compute exp(logvar)−1 accurately near zero.

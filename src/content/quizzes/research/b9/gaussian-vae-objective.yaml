@@ -1,0 +1,93 @@
+items:
+  - id: b9-gaussian-vae-objective-01
+    type: mcq
+    prompt: When is the KL exactly zero in the matched case?
+    explanation: Mean zero and unit variance match the reference.
+    options:
+      - text: When the posterior equals the standard normal prior
+        why: Mean zero and unit variance match the reference.
+        correct: true
+      - text: Whenever the decoder reconstructs perfectly
+        why: Reconstruction and KL differ.
+      - text: When the log variance is one
+        why: Unit variance has log variance zero.
+  - id: b9-gaussian-vae-objective-02
+    type: mcq
+    prompt: Which direction is the divergence here?
+    explanation: The KL is KL(q(z|x) || p(z)).
+    options:
+      - text: Prior to encoder posterior
+        why: KL is not generally symmetric.
+      - text: Encoder posterior to prior
+        why: The KL is KL(q(z|x) || p(z)).
+        correct: true
+      - text: Decoder to observed image
+        why: Reconstruction is a separate likelihood.
+  - id: b9-gaussian-vae-objective-03
+    type: mcq
+    prompt: What is the scale of noise for log variance ℓ?
+    explanation: The noise is scaled by standard deviation.
+    options:
+      - text: exp(ℓ)
+        why: That is variance.
+      - text: exp(ℓ/2)
+        why: The noise is scaled by standard deviation.
+        correct: true
+      - text: ℓ itself
+        why: Log variance may be negative.
+  - id: b9-gaussian-vae-objective-04
+    type: mcq
+    prompt: Why reparameterize?
+    explanation: The sampled noise is treated separately.
+    options:
+      - text: Gradients can flow through differentiable posterior parameters
+        why: The sampled noise is treated separately.
+        correct: true
+      - text: It calculates the exact likelihood for every decoder
+        why: The objective can still use a sampled estimate.
+      - text: It eliminates latent uncertainty
+        why: Noise remains in the sample.
+  - id: b9-gaussian-vae-objective-05
+    type: multi
+    prompt: Which appear in the negative ELBO?
+    explanation: It penalizes poor decoder fit. It penalizes divergence from the reference.
+    options:
+      - text: KL to the latent prior
+        why: It penalizes divergence from the reference.
+        correct: true
+      - text: Negative reconstruction log likelihood
+        why: It penalizes poor decoder fit.
+        correct: true
+      - text: A label-smoothing requirement
+        why: This is not part of the stated objective.
+  - id: b9-gaussian-vae-objective-06
+    type: cloze
+    prompt: The variance parameter is stored as log ______.
+    accept:
+      - variance
+      - "σ²"
+      - sigma squared
+      - "sigma^2"
+    explanation: Exponentiation recovers a positive variance.
+  - id: b9-gaussian-vae-objective-07
+    type: order
+    prompt: Order one VAE objective evaluation.
+    items:
+      - Encode posterior parameters
+      - Sample using independent noise and the learned scale
+      - Score the decoded observation
+      - Combine reconstruction and KL
+    explanation: Both terms use the declared objective reduction.
+  - id: b9-gaussian-vae-objective-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def gaussian_kl(mean,log_variance):
+          from math import expm1
+          if len(mean)!=len(log_variance):
+              raise ValueError("misaligned posterior dimensions")
+          return 0.5*sum(expm1(logvar)+mu*mu-logvar for mu,logvar in zip(mean,log_variance))
+
+      print(gaussian_kl([1, 1], [0, 0]))
+    answer: "1.0"
+    explanation: Each shifted unit-variance coordinate contributes half.

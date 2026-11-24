@@ -1,0 +1,45 @@
+---
+title: Separate GAN discriminator and generator losses
+module: b9
+order: 2
+estMinutes: 8
+objectives:
+  - Compute stable logistic adversarial losses
+  - Identify which predictions belong to each update
+goDeeper: gan-original-paper
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A GAN trains a generator and discriminator with different objectives. The discriminator learns to classify real and generated examples. In the common <Term id="adversarial-generator-losses" />, the generator treats its generated examples as desired positives under the discriminator. It seeks larger discriminator logits on its outputs.
+
+Let d_real and d_fake be logits. Binary cross-entropy with target one is softplus(−logit); with target zero it is softplus(logit). Average the two discriminator terms here, while the generator gets softplus(−d_fake). The one-pair discriminator convention fixes a weighting; other implementations may sum instead.
+
+The original minimax generator minimises log(1 − D(G(z))) = −softplus(d_fake). Its gradient vanishes when the discriminator confidently rejects fakes (D ≈ 0), which is common early in training. The non-saturating loss −log D(G(z)) = softplus(−d_fake) has the same fixed point but keeps a strong gradient there (Goodfellow et al. 2014, §3).
+
+In a discriminator step, detach generated inputs so the generator does not receive this update. In the generator step, allow gradients through the discriminator's computation to its inputs while leaving discriminator parameters unchanged. Discriminator accuracy alone does not measure generation diversity or sample quality.
+
+## Worked example
+
+The discriminator handles these inputs confidently, while the generator receives a high loss.
+
+```python
+def logistic_gan_losses(real_score,fake_score):
+    from math import exp,log1p
+    def softplus(value):
+        return max(value,0)+log1p(exp(-abs(value)))
+    return (softplus(-real_score)+softplus(fake_score))/2,softplus(-fake_score)
+
+print([round(x,3) for x in logistic_gan_losses(2,-2)])
+```
+
+```text title="Output"
+[0.127, 2.127]
+```
+
+Evaluate both sample quality and coverage on independent generated examples.
+
+## Try it
+
+<CodeExercise id="b9-adversarial-generator-losses-01" />

@@ -1,0 +1,92 @@
+items:
+  - id: b9-adversarial-generator-losses-01
+    type: mcq
+    prompt: What target does the non-saturating generator loss assign to generated samples?
+    explanation: It seeks higher fake-sample logits.
+    options:
+      - text: Fake for generated samples
+        why: That is the discriminator target.
+      - text: Real for generated samples
+        why: It seeks higher fake-sample logits.
+        correct: true
+      - text: Real only for training examples
+        why: The generator needs a path through its own samples.
+  - id: b9-adversarial-generator-losses-02
+    type: mcq
+    prompt: Why detach generated inputs during discriminator training?
+    explanation: Its objective is discriminative.
+    options:
+      - text: This step should not update the generator
+        why: Its objective is discriminative.
+        correct: true
+      - text: To prevent the discriminator from reading them
+        why: The discriminator still consumes the values.
+      - text: To guarantee diversity
+        why: Detaching does not establish coverage.
+  - id: b9-adversarial-generator-losses-03
+    type: mcq
+    prompt: Which logistic term applies to a real sample?
+    explanation: The target is one.
+    options:
+      - text: Softplus of negative real logit
+        why: The target is one.
+        correct: true
+      - text: Softplus of positive real logit
+        why: That uses a zero target.
+      - text: The raw real logit alone
+        why: Binary cross-entropy needs the normalizer.
+  - id: b9-adversarial-generator-losses-04
+    type: mcq
+    prompt: "Early in training the discriminator confidently rejects generated samples, so d_fake is very negative. Why prefer the non-saturating loss softplus(−d_fake) to the minimax loss −softplus(d_fake) there?"
+    explanation: "The derivative of softplus(−d) is −σ(−d), which tends to −1 as d becomes very negative, while the derivative of −softplus(d) is −σ(d), which tends to zero. Both losses share the same fixed point; only the gradient signal differs."
+    options:
+      - text: Its gradient with respect to d_fake stays near −1, while the minimax gradient shrinks towards zero
+        why: "Correct: σ(−d_fake) is close to one when d_fake is very negative, but σ(d_fake) is close to zero."
+        correct: true
+      - text: It removes the need to train the discriminator
+        why: The discriminator still trains with its own loss; only the generator objective changes.
+      - text: Its loss value is smaller, so the updates are more stable
+        why: Its value is actually large there; what matters is that its gradient does not vanish.
+      - text: It changes the optimal generator to one that fools the discriminator more easily
+        why: Both forms have the same fixed point; they differ in gradient strength, not in the target distribution.
+  - id: b9-adversarial-generator-losses-05
+    type: multi
+    prompt: Which are useful sample assessments?
+    explanation: Training examples alone can hide memorization. Diversity can fail even when samples look plausible.
+    options:
+      - text: Quality on independent examples
+        why: Training examples alone can hide memorization.
+        correct: true
+      - text: Coverage of known modes
+        why: Diversity can fail even when samples look plausible.
+        correct: true
+      - text: Only the smallest discriminator training loss
+        why: That does not measure coverage.
+  - id: b9-adversarial-generator-losses-06
+    type: cloze
+    prompt: The network scoring real versus generated samples is the ______.
+    accept:
+      - discriminator
+    explanation: It supplies the adversarial learning signal.
+  - id: b9-adversarial-generator-losses-07
+    type: order
+    prompt: Order a generator step.
+    items:
+      - Generate samples from latent noise
+      - Score them with the discriminator
+      - Compute the generator objective
+      - Backpropagate through scores and update generator weights
+    explanation: The update follows the generator objective.
+  - id: b9-adversarial-generator-losses-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def logistic_gan_losses(real_score,fake_score):
+          from math import exp,log1p
+          def softplus(value):
+              return max(value,0)+log1p(exp(-abs(value)))
+          return (softplus(-real_score)+softplus(fake_score))/2,softplus(-fake_score)
+
+      print(round(logistic_gan_losses(0, 0)[1], 3))
+    answer: "0.693"
+    explanation: At zero logit the generator loss is ln(2).

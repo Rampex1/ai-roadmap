@@ -1,0 +1,23 @@
+id: b9-adversarial-generator-losses-01
+lesson: research/b9/adversarial-generator-losses
+title: Implement adversarial generator losses
+prompt: Implement logistic_gan_losses using stable softplus on finite logits. Return (mean discriminator loss over a real and generated example, non-saturating generator loss for the generated example).
+starter: |
+  def logistic_gan_losses(real_score,fake_score):
+      raise NotImplementedError
+solution: |
+  def logistic_gan_losses(real_score,fake_score):
+      from math import exp,log1p
+      def softplus(value):
+          return max(value,0)+log1p(exp(-abs(value)))
+      return (softplus(-real_score)+softplus(fake_score))/2,softplus(-fake_score)
+tests: |
+  from math import log
+  assert all(abs(x-log(2))<1e-12 for x in logistic_gan_losses(0,0))
+  d,g=logistic_gan_losses(1000,-1000)
+  assert d==0 and g==1000
+  d,g=logistic_gan_losses(-1000,1000)
+  assert d==1000 and g==0
+  assert logistic_gan_losses(4,1)[1] < logistic_gan_losses(4,-1)[1]
+hints:
+  - Use max(x,0)+log1p(exp(-abs(x))) for softplus.
