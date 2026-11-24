@@ -11,7 +11,7 @@ const tipId = `term-tip-${id}-${n}`;
 ---
 
 <a class="air-term" data-term={id} href={`/glossary/#${id}`} aria-describedby={tipId}
-  >{text ?? entry.data.term}<span class="air-term-tip" role="tooltip" id={tipId} aria-hidden="true">{entry.data.short}</span></a
+  >{Astro.slots.has('default') ? <slot /> : (text ?? entry.data.term)}<span class="air-term-tip" role="tooltip" id={tipId} aria-hidden="true">{entry.data.short}</span></a
 >
 
 <script>
