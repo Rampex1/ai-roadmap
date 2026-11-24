@@ -1,0 +1,6 @@
+term: "Information gain"
+short: "The decrease in entropy produced by a split: the parent's entropy minus the size-weighted entropy of its children."
+body: |
+  It measures how many bits of uncertainty about the class a question removes, on average. Decision trees can pick
+  the split with the largest information gain; using Gini impurity instead usually picks the same split.
+related: ["entropy", "decision-tree", "gini-impurity"]

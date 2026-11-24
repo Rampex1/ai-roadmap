@@ -1,0 +1,201 @@
+---
+title: "Choosing a model for tabular data: trees or linear?"
+module: f8
+order: 5
+estMinutes: 13
+objectives:
+  - "List the strengths of tree ensembles on tabular data and the situations where linear models win"
+  - "Show that trees cannot extrapolate beyond the range of the training targets"
+  - "Set up a fair comparison of a linear pipeline and gradient boosting with cross-validation"
+goDeeper: islp
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+You now have two families of models: the linear ones from F7 (linear and logistic regression, with regularisation)
+and tree ensembles (random forests and gradient boosting). Deep learning gets the headlines, but on **tabular** data,
+rows of mixed numeric and categorical columns, tree ensembles are still the model to beat. Several benchmark studies
+have found that gradient boosted trees match or outperform neural networks on typical medium-sized tables. This
+lesson is about why, and about the cases where a plain linear model is the better choice.
+
+## Why trees suit tables
+
+Real tables are messy in ways that trees shrug off:
+
+| Property of the data | Linear model | Tree ensemble |
+|---|---|---|
+| Features on wildly different scales | Needs scaling (regularisation and gradient descent care) | Indifferent: splits only use order |
+| Categorical columns | One-hot encode | Native in HistGradientBoosting; or ordinal codes |
+| Missing values | Impute first | Native in HistGradientBoosting |
+| Thresholds ("tenure under 12 months") | Must be engineered by hand | Found automatically |
+| Interactions ("only for basic-plan users") | Must be engineered by hand | Found automatically by nested splits |
+| Outliers in features | Can drag the fit | Mostly harmless: only their rank matters |
+
+A linear model predicts $w_1 x_1 + w_2 x_2 + \dots$: each feature pushes the prediction up or down by a fixed amount
+per unit, the same for everyone. Real effects are often not like that. Churn may jump when a contract is short, then
+flatten; a price may matter only for one plan. A tree finds those steps and conditions by itself.
+
+Here is a synthetic churn table with two categorical columns, 10% missing values in `tenure`, a threshold effect and
+an interaction:
+
+```python
+import numpy as np
+import pandas as pd
+
+rng = np.random.default_rng(0)
+n = 2000
+df = pd.DataFrame({
+    "plan": rng.choice(["basic", "plus", "pro"], n),
+    "region": rng.choice(["north", "south", "east", "west"], n),
+    "tenure": rng.integers(1, 73, n).astype(float),
+    "charge": rng.uniform(20, 120, n).round(2),
+})
+logit = (-2.0 + 3.0 * (df.tenure < 12)                           # threshold
+         + 0.08 * (df.charge - 70) * (df.plan == "basic")       # interaction
+         + 1.0 * (df.region == "south"))
+y = (rng.random(n) < 1 / (1 + np.exp(-logit))).astype(int)
+df.loc[rng.random(n) < 0.1, "tenure"] = np.nan                  # 10% missing
+```
+
+The linear model needs a preprocessing pipeline ([F7](/foundations/f7/preprocessing-and-pipelines/)): impute and scale the numbers, one-hot encode the categories.
+Gradient boosting needs only the categorical columns marked with pandas' `category` dtype:
+
+```python
+from sklearn.model_selection import cross_val_score, StratifiedKFold
+from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.pipeline import make_pipeline
+from sklearn.compose import make_column_transformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LogisticRegression
+
+cat_cols, num_cols = ["plan", "region"], ["tenure", "charge"]
+linear = make_pipeline(
+    make_column_transformer(
+        (OneHotEncoder(handle_unknown="ignore"), cat_cols),
+        (make_pipeline(SimpleImputer(strategy="median"), StandardScaler()), num_cols)),
+    LogisticRegression(max_iter=1000))
+boosting = HistGradientBoostingClassifier(random_state=0)
+X_tree = df.astype({c: "category" for c in cat_cols})
+
+cv = StratifiedKFold(5, shuffle=True, random_state=0)
+print(f"boosting  CV ROC AUC {cross_val_score(boosting, X_tree, y, cv=cv, scoring='roc_auc').mean():.3f}")
+print(f"logistic  CV ROC AUC {cross_val_score(linear, df, y, cv=cv, scoring='roc_auc').mean():.3f}")
+```
+
+```text title="Output"
+boosting  CV ROC AUC 0.779
+logistic  CV ROC AUC 0.730
+```
+
+Same data, same folds, less preprocessing, better ranking of churners. The logistic model could catch up, but only if
+you hand-craft a `tenure < 12` indicator and a `charge × basic` interaction feature, which means already knowing the
+answer.
+
+## Where linear models win
+
+### Small data with a genuinely linear signal
+
+When the truth *is* roughly additive and linear, and rows are few, a regularised linear model uses the data far more
+efficiently. A tree must spend many splits to approximate a straight slope with steps.
+
+```python
+from sklearn.linear_model import Ridge
+from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.model_selection import KFold
+
+cv = KFold(5, shuffle=True, random_state=0)
+def compare(X, y):
+    for name, m in [("linear", Ridge(alpha=1.0)), ("boosting", HistGradientBoostingRegressor(random_state=0))]:
+        print(f"  {name:9s} CV R2 {cross_val_score(m, X, y, cv=cv).mean():.3f}")
+
+rng = np.random.default_rng(1)
+X = rng.normal(size=(200, 20))
+y = X @ rng.normal(size=20) + rng.normal(0, 1, 200)
+print("A: linear signal, 20 features, 200 rows"); compare(X, y)
+
+X = rng.uniform(-1, 1, size=(1000, 5))
+y = (np.where((X[:, 0] > 0) == (X[:, 1] > 0), 3.0, -3.0)
+     + np.where(X[:, 2] > 0.5, 2.0, 0.0) + rng.normal(0, 1, 1000))
+print("B: thresholds and an interaction, 5 features, 1000 rows"); compare(X, y)
+```
+
+```text title="Output"
+A: linear signal, 20 features, 200 rows
+  linear    CV R2 0.957
+  boosting  CV R2 0.719
+B: thresholds and an interaction, 5 features, 1000 rows
+  linear    CV R2 0.023
+  boosting  CV R2 0.810
+```
+
+Each family crushes the other on its home ground. In B the target depends on whether $x_1$ and $x_2$ have the same
+sign, an XOR pattern: no weighted sum of the raw features can express it, so the linear model explains almost nothing.
+
+### Extrapolation
+
+A tree predicts a leaf average, so a tree or forest **can never predict outside the range of the training targets**.
+Boosting likewise goes flat: beyond the last split, the prediction stops changing:
+
+```python
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+
+rng = np.random.default_rng(0)
+x = rng.uniform(0, 10, 100)
+y = 2 * x + rng.normal(0, 1, 100)                     # trained on x from 0 to 10
+X, X_new = x.reshape(-1, 1), np.array([[5.0], [15.0], [20.0]])
+for name, m in [("linear", LinearRegression()), ("forest", RandomForestRegressor(random_state=0)),
+                ("boosting", HistGradientBoostingRegressor(random_state=0))]:
+    print(f"{name:9s}", np.round(m.fit(X, y).predict(X_new), 1))
+```
+
+```text title="Output"
+linear    [ 9.9 29.8 39.7]
+forest    [10.4 19.9 19.9]
+boosting  [10.3 18.9 18.9]
+```
+
+At $x = 5$ all agree. At 15 and 20 the true values are about 30 and 40; the tree models are stuck near 20, the
+largest values they saw. This matters for anything that trends: prices that rise with inflation, sales that grow
+year on year, a sensor drifting out of its usual range. Common fixes are to model the *change* or *ratio* instead
+of the raw level, or to use a linear model (or a linear trend plus trees on the residuals).
+
+### Other reasons to prefer linear
+
+- **Very high-dimensional sparse data**, such as bag-of-words text with 100,000 columns: linear models are fast and
+  strong there.
+- **Interpretability and constraints**: a coefficient per feature is easy to explain, audit and keep monotone.
+  (Tree libraries offer monotonic constraints too, but a linear model is simplest.)
+- **Smoothness**: tree predictions jump at thresholds; a small change in input can flip the output.
+
+## A practical recipe
+
+For a new tabular problem:
+
+1. Split off a test set and do not look at it ([F7](/foundations/f7/overfitting-and-bias-variance/)).
+2. Fit a **baseline**: the majority class or the mean, and a regularised linear model in a pipeline.
+3. Fit `HistGradientBoostingClassifier` / `Regressor` with defaults (and early stopping on larger data).
+4. Compare them with the **same cross-validation folds** and the metric you actually care about.
+5. Tune the winner a little (learning rate, `max_leaf_nodes`, `min_samples_leaf`), then evaluate once on the test set.
+
+A random forest is a good extra candidate: it is hard to get badly wrong and its OOB score is free. If boosting barely
+beats the linear model, prefer the linear one: simpler to explain, deploy and debug.
+
+:::caution[Neither family fixes bad features]
+Leakage, a wrong train/test split, or a target that is not predictable from the columns will defeat any model. Most
+gains on real tables come from better features and cleaner data, not from swapping algorithms.
+:::
+
+## Try it
+
+<CodeExercise id="f8-trees-vs-linear-models-01" />
+
+## Summary
+
+- On tabular data, gradient boosted trees are usually the strongest default: no scaling, native missing values and
+  categories, automatic thresholds and interactions.
+- Linear models win with small data and a linear signal, with very high-dimensional sparse features, and when you need
+  smooth, explainable predictions.
+- Trees cannot extrapolate: outside the training range their prediction is flat.
+- Compare candidates fairly: same folds, same metric, a simple baseline, and the test set used once at the end.

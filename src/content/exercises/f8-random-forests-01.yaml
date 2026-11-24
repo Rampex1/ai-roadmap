@@ -1,0 +1,62 @@
+id: f8-random-forests-01
+lesson: foundations/f8/random-forests
+title: A bootstrap sample and its out-of-bag rows
+prompt: |
+  Write `bootstrap_oob(n, rng)` that returns a tuple `(idx, oob)`:
+
+  - `idx`: a bootstrap sample of row indices, drawn with **one** call `rng.integers(0, n, size=n)`;
+  - `oob`: the indices from `0` to `n - 1` that do **not** appear in `idx`, as a sorted 1-D integer array.
+
+  Then, in `oob_fraction(n, trials, rng)`, call `bootstrap_oob(n, rng)` `trials` times and return the **average
+  fraction** of rows that were out of bag. For large `n` it should be close to $1/e \approx 0.368$.
+starter: |
+  import numpy as np
+
+  def bootstrap_oob(n, rng):
+      idx = rng.integers(0, n, size=n)
+      oob = np.array([], dtype=int)   # TODO: the rows never drawn
+      return idx, oob
+
+  def oob_fraction(n, trials, rng):
+      # TODO: average len(oob) / n over trials bootstrap samples
+      return 0.0
+
+  print(bootstrap_oob(10, np.random.default_rng(0)))
+  print(oob_fraction(1000, 200, np.random.default_rng(0)))
+solution: |
+  import numpy as np
+
+  def bootstrap_oob(n, rng):
+      idx = rng.integers(0, n, size=n)
+      oob = np.setdiff1d(np.arange(n), idx)
+      return idx, oob
+
+  def oob_fraction(n, trials, rng):
+      return float(np.mean([len(bootstrap_oob(n, rng)[1]) / n for _ in range(trials)]))
+
+  print(bootstrap_oob(10, np.random.default_rng(0)))
+  print(oob_fraction(1000, 200, np.random.default_rng(0)))
+tests: |
+  import math
+  import numpy as np
+  for _n, _s in [(10, 0), (50, 1), (7, 4), (1, 2)]:
+      _ri = np.random.default_rng(_s).integers(0, _n, size=_n)
+      _ro = np.setdiff1d(np.arange(_n), _ri)
+      _r = bootstrap_oob(_n, np.random.default_rng(_s))
+      assert len(_r) == 2, "Return a tuple (idx, oob)"
+      _i, _o = np.asarray(_r[0]), np.asarray(_r[1])
+      assert np.array_equal(_i, _ri), f"n={_n}: idx should come from one call rng.integers(0, n, size=n)"
+      assert np.array_equal(_o, _ro), f"n={_n}, idx={_ri.tolist()}: oob should be {_ro.tolist()}, got {_o.tolist()}"
+  _i, _o = bootstrap_oob(200, np.random.default_rng(9))
+  assert len(np.intersect1d(_i, _o)) == 0, "No out-of-bag row may also be in the sample"
+  assert len(np.union1d(_i, _o)) == 200, "Sample rows plus out-of-bag rows must cover every row"
+  _f = oob_fraction(1000, 200, np.random.default_rng(0))
+  assert abs(_f - math.exp(-1)) < 0.01, f"With n = 1000 the out-of-bag fraction should be close to 1/e = 0.368, got {_f}"
+  _f2 = oob_fraction(2, 4000, np.random.default_rng(1))
+  assert abs(_f2 - 0.25) < 0.02, f"With n = 2 the out-of-bag fraction should be about (1 - 1/2)^2 = 0.25, got {_f2}"
+  _rng = np.random.default_rng(3)
+  _ref = np.mean([len(np.setdiff1d(np.arange(30), _rng.integers(0, 30, size=30))) / 30 for _ in range(25)])
+  assert math.isclose(oob_fraction(30, 25, np.random.default_rng(3)), _ref), "oob_fraction should call bootstrap_oob(n, rng) trials times with the same generator and average len(oob) / n"
+hints:
+  - "np.setdiff1d(np.arange(n), idx) returns the sorted values of arange(n) that are not in idx."
+  - "In oob_fraction, collect len(oob) / n for each trial and return the mean."

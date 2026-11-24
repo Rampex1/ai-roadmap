@@ -1,0 +1,60 @@
+id: f8-gradient-boosting-02
+lesson: foundations/f8/gradient-boosting
+title: How many trees? Ask the validation set
+prompt: |
+  A fitted `GradientBoostingRegressor` has a method `staged_predict(X)` that yields the predictions after 1 tree,
+  after 2 trees, and so on up to all of them.
+
+  Write `best_n_trees(model, X_val, y_val)` that returns a tuple `(n, mse)`: the number of trees (counting from
+  **1**) with the lowest validation MSE, and that MSE. If several tie, return the smallest number of trees.
+
+  The starter fits 500 trees with a large learning rate, which overfits; the best number should be far below 500.
+starter: |
+  import numpy as np
+  from sklearn.ensemble import GradientBoostingRegressor
+
+  def best_n_trees(model, X_val, y_val):
+      # TODO: loop over model.staged_predict(X_val)
+      return model.n_estimators, 0.0
+
+  rng = np.random.default_rng(0)
+  X = rng.uniform(0, 6, (300, 1))
+  y = np.sin(X[:, 0]) + rng.normal(0, 0.3, 300)
+  model = GradientBoostingRegressor(n_estimators=500, learning_rate=0.5, max_depth=2, random_state=0)
+  model.fit(X[:200], y[:200])
+  print(best_n_trees(model, X[200:], y[200:]))
+solution: |
+  import numpy as np
+  from sklearn.ensemble import GradientBoostingRegressor
+
+  def best_n_trees(model, X_val, y_val):
+      mses = [np.mean((y_val - p) ** 2) for p in model.staged_predict(X_val)]
+      i = int(np.argmin(mses))
+      return i + 1, float(mses[i])
+
+  rng = np.random.default_rng(0)
+  X = rng.uniform(0, 6, (300, 1))
+  y = np.sin(X[:, 0]) + rng.normal(0, 0.3, 300)
+  model = GradientBoostingRegressor(n_estimators=500, learning_rate=0.5, max_depth=2, random_state=0)
+  model.fit(X[:200], y[:200])
+  print(best_n_trees(model, X[200:], y[200:]))
+tests: |
+  import math
+  import numpy as np
+  from sklearn.ensemble import GradientBoostingRegressor
+  def _ref(m, X, y):
+      s = [np.mean((y - p) ** 2) for p in m.staged_predict(X)]
+      return int(np.argmin(s)) + 1, float(np.min(s))
+  for _seed, _n, _lr in [(0, 500, 0.5), (1, 200, 0.1), (2, 60, 0.05)]:
+      _r = np.random.default_rng(_seed)
+      _X = _r.uniform(0, 6, (300, 2))
+      _y = np.sin(_X[:, 0]) + 0.3 * _X[:, 1] + _r.normal(0, 0.3, 300)
+      _m = GradientBoostingRegressor(n_estimators=_n, learning_rate=_lr, max_depth=2, random_state=0).fit(_X[:200], _y[:200])
+      _got = best_n_trees(_m, _X[200:], _y[200:])
+      _want = _ref(_m, _X[200:], _y[200:])
+      assert len(_got) == 2, "Return a tuple (n, mse)"
+      assert _got[0] == _want[0], f"n_estimators={_n}, learning_rate={_lr}: best number of trees is {_want[0]}, got {_got[0]}. Count trees from 1, not 0."
+      assert math.isclose(_got[1], _want[1], rel_tol=1e-9), f"The best validation MSE should be {_want[1]:.5f}, got {_got[1]}"
+hints:
+  - "Collect the MSE of each staged prediction in a list."
+  - "np.argmin gives the first index of the minimum; add 1 to turn an index into a number of trees."

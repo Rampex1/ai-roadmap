@@ -1,0 +1,65 @@
+id: f8-visualising-high-dimensional-data-01
+lesson: foundations/f8/visualising-high-dimensional-data
+title: How many neighbours survive?
+prompt: |
+  Write `neighbour_overlap(X_high, X_low, k)` that measures how well a low-dimensional picture `X_low` keeps the
+  neighbourhoods of the original data `X_high` (same rows, different columns):
+
+  1. For each point, find its `k` nearest **other** points (Euclidean distance) in `X_high`, and separately in `X_low`.
+     A point is not its own neighbour.
+  2. Count how many of the two sets of `k` neighbours are the same, and divide by `k`.
+  3. Return the mean of that fraction over all points: 1 means every neighbourhood survived, about $k/n$ means no
+     better than chance.
+
+  Use NumPy only: build the full distance matrix with broadcasting, set the diagonal to `np.inf` so a point never
+  picks itself, and use `np.argsort(..., axis=1)[:, :k]`.
+starter: |
+  import numpy as np
+
+  def neighbour_overlap(X_high, X_low, k):
+      # TODO
+      return 0.0
+
+  rng = np.random.default_rng(0)
+  X = rng.normal(size=(200, 10))
+  print(neighbour_overlap(X, X, 5))          # a perfect copy keeps everything: 1.0
+  print(neighbour_overlap(X, X[:, :2], 5))   # keeping 2 of 10 columns loses a lot
+solution: |
+  import numpy as np
+
+  def knn(X, k):
+      X = np.asarray(X, dtype=float)
+      D = np.sqrt(((X[:, None, :] - X[None, :, :]) ** 2).sum(axis=2))
+      np.fill_diagonal(D, np.inf)
+      return np.argsort(D, axis=1)[:, :k]
+
+  def neighbour_overlap(X_high, X_low, k):
+      a, b = knn(X_high, k), knn(X_low, k)
+      return float(np.mean([len(set(r) & set(s)) / k for r, s in zip(a, b)]))
+
+  rng = np.random.default_rng(0)
+  X = rng.normal(size=(200, 10))
+  print(neighbour_overlap(X, X, 5))
+  print(neighbour_overlap(X, X[:, :2], 5))
+tests: |
+  import math
+  import numpy as np
+  from sklearn.neighbors import NearestNeighbors
+  from sklearn.decomposition import PCA
+  def _ref(H, L, k):
+      a = NearestNeighbors(n_neighbors=k + 1).fit(H).kneighbors(H, return_distance=False)[:, 1:]
+      b = NearestNeighbors(n_neighbors=k + 1).fit(L).kneighbors(L, return_distance=False)[:, 1:]
+      return np.mean([len(set(r) & set(s)) / k for r, s in zip(a, b)])
+  _rng = np.random.default_rng(1)
+  _X = _rng.normal(size=(150, 8))
+  assert math.isclose(neighbour_overlap(_X, _X, 5), 1.0), "Comparing data with itself must give 1.0. Make sure a point is never counted as its own neighbour in only one of the two spaces."
+  assert math.isclose(neighbour_overlap(_X, 3 * _X + 1, 4), 1.0), "Scaling and shifting all points keeps every neighbourhood: expected 1.0"
+  for _k in [3, 7]:
+      for _L in [_X[:, :2], PCA(2).fit_transform(_X), _rng.normal(size=(150, 2))]:
+          _w = _ref(_X, _L, _k)
+          _g = neighbour_overlap(_X, _L, _k)
+          assert math.isclose(_g, _w, abs_tol=1e-9), f"k={_k}: expected overlap {_w:.4f}, got {_g}"
+hints:
+  - "D = np.sqrt(((X[:, None, :] - X[None, :, :]) ** 2).sum(axis=2)) is the (n, n) distance matrix."
+  - "np.fill_diagonal(D, np.inf) stops a point choosing itself; np.argsort(D, axis=1)[:, :k] gives the k nearest."
+  - "For each row, len(set(a) & set(b)) counts the shared neighbours."

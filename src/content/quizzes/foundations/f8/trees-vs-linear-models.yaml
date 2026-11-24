@@ -4,43 +4,43 @@ items:
     prompt: "A random forest is trained on house prices between 100k and 900k. What can it predict for a mansion far larger than any training house?"
     explanation: "Each prediction is an average of training targets in leaves, so it can never exceed the largest training target (900k)."
     options:
+      - text: A price that keeps rising with size, like a linear model
+        why: Beyond the last split the tree's prediction is flat.
+      - text: Zero
+        why: It lands in the leaf for the largest houses and predicts their average.
       - text: At most about 900k, the top of the training range
         correct: true
         why: Tree predictions are averages of training targets, so they cannot extrapolate.
-      - text: A price that keeps rising with size, like a linear model
-        why: Beyond the last split the tree's prediction is flat.
       - text: An error, because the input is out of range
         why: The tree happily predicts; it just predicts a value inside the training range.
-      - text: Zero
-        why: It lands in the leaf for the largest houses and predicts their average.
   - id: f8-trees-vs-linear-models-02
     type: multi
     prompt: "Which preprocessing steps does `HistGradientBoostingClassifier` **not** need on a pandas table?"
     explanation: "It ignores feature scale, handles NaN natively and treats category-dtype columns as categorical. It still needs a sensible train/test split."
     options:
-      - text: Standardising numeric features
-        correct: true
-        why: Splits depend only on the order of values.
+      - text: Holding out a test set
+        why: Every model needs an honest evaluation on unseen data.
       - text: Imputing missing values
         correct: true
         why: Missing values are routed left or right at each split.
+      - text: Standardising numeric features
+        correct: true
+        why: Splits depend only on the order of values.
       - text: One-hot encoding category-dtype columns
         correct: true
         why: Category-dtype columns are handled natively by default.
-      - text: Holding out a test set
-        why: Every model needs an honest evaluation on unseen data.
   - id: f8-trees-vs-linear-models-03
     type: mcq
     prompt: "The target is +1 when $x_1$ and $x_2$ have the same sign and -1 otherwise. Why does linear regression on $x_1, x_2$ fail?"
     explanation: "This XOR pattern cannot be written as $w_1 x_1 + w_2 x_2 + b$: the effect of $x_1$ flips with the sign of $x_2$. Trees capture it with nested splits."
     options:
+      - text: Linear regression cannot handle negative values
+        why: It handles any real numbers.
+      - text: The features need scaling
+        why: Scaling does not create an interaction.
       - text: The effect of x1 depends on x2, and a weighted sum cannot express that
         correct: true
         why: It is an interaction; a linear model needs an engineered product feature.
-      - text: The features need scaling
-        why: Scaling does not create an interaction.
-      - text: Linear regression cannot handle negative values
-        why: It handles any real numbers.
       - text: There is too little data
         why: Even infinite data cannot make a linear fit express XOR.
   - id: f8-trees-vs-linear-models-04
@@ -48,13 +48,13 @@ items:
     prompt: "You have 150 rows, 20 numeric features, and a target that is close to a weighted sum of them. Which model is most likely to do best?"
     explanation: "With a genuinely linear signal and few rows, a regularised linear model uses the data efficiently; trees waste splits approximating slopes with steps."
     options:
-      - text: Ridge regression
-        correct: true
-        why: Its assumption matches the truth, so it needs few rows.
       - text: An unlimited decision tree
         why: It would overfit badly on 150 rows.
       - text: Gradient boosting with 5,000 trees
         why: Trees approximate a slope with many steps and need much more data to do it well.
+      - text: Ridge regression
+        correct: true
+        why: Its assumption matches the truth, so it needs few rows.
       - text: k-means
         why: That is a clustering method, not a regressor.
   - id: f8-trees-vs-linear-models-05
@@ -62,9 +62,6 @@ items:
     prompt: "In which situations is a linear model often the better choice?"
     explanation: "Linear models shine with small data and linear signals, high-dimensional sparse features such as text, trending targets that need extrapolation, and when simple explanations are required."
     options:
-      - text: Bag-of-words text with 100,000 sparse columns
-        correct: true
-        why: Linear models are fast and strong on high-dimensional sparse data.
       - text: Forecasting a quantity that keeps growing beyond its past range
         correct: true
         why: Trees cannot extrapolate past the training targets.
@@ -73,13 +70,15 @@ items:
         why: A coefficient per feature is easy to explain and audit.
       - text: A table with many categorical columns, missing values and threshold effects
         why: That is home ground for tree ensembles.
+      - text: Bag-of-words text with 100,000 sparse columns
+        correct: true
+        why: Linear models are fast and strong on high-dimensional sparse data.
   - id: f8-trees-vs-linear-models-06
     type: order
     prompt: "Put this recipe for a new tabular problem in order."
     items:
       - "Split off a test set"
-      - "Fit a simple baseline and a regularised linear pipeline"
-      - "Fit gradient boosting with default settings"
+      - "Fit the candidates: a simple baseline, a regularised linear pipeline and gradient boosting"
       - "Compare them with the same cross-validation folds"
       - "Evaluate the chosen model once on the test set"
     explanation: "Hold out the test set first, build baselines and candidates, compare fairly with CV, and only then touch the test set once."
@@ -88,31 +87,31 @@ items:
     prompt: "Gradient boosting scores CV $R^2$ 0.812 and ridge regression 0.806 on the same folds. Which is a sensible conclusion?"
     explanation: "The difference is tiny and probably within fold-to-fold noise; the simpler linear model is easier to explain, deploy and debug."
     options:
+      - text: Evaluate both on the test set and pick the better one
+        why: Choosing on the test set makes its estimate optimistic.
+      - text: Both models are broken
+        why: An R squared above 0.8 is a reasonable fit.
       - text: Prefer the linear model unless the small gain really matters
         correct: true
         why: When the gain is marginal, simplicity wins.
       - text: Boosting is clearly better and must be used
         why: A 0.006 difference may be noise across folds.
-      - text: Both models are broken
-        why: An R squared above 0.8 is a reasonable fit.
-      - text: Evaluate both on the test set and pick the better one
-        why: Choosing on the test set makes its estimate optimistic.
   - id: f8-trees-vs-linear-models-08
     type: mcq
     prompt: "Why must both models in a comparison use the **same** cross-validation folds?"
     explanation: "Scores vary from split to split. Using the same folds means differences come from the models, not from luckier splits."
     options:
+      - text: So the test set can be reused
+        why: CV folds come from the training data; the test set stays separate.
       - text: So differences in score come from the models rather than from luckier splits
         correct: true
         why: Fold-to-fold variation can be as large as the model difference.
-      - text: Because scikit-learn refuses different folds
-        why: It allows any folds; fairness is the reason.
       - text: To make training faster
         why: Speed is unaffected.
-      - text: So the test set can be reused
-        why: CV folds come from the training data; the test set stays separate.
+      - text: Because scikit-learn refuses different folds
+        why: It allows any folds; fairness is the reason.
   - id: f8-trees-vs-linear-models-09
     type: cloze
     prompt: "A tree's prediction outside the range of its training data is ____: it does not keep rising or falling."
-    accept: ["flat", "constant"]
+    accept: [ "flat", "constant" ]
     explanation: "Beyond the last split every input lands in the same leaf, so the prediction stays constant."

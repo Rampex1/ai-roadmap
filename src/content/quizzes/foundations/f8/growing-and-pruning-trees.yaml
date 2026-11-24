@@ -4,15 +4,15 @@ items:
     prompt: "A regression tree is grown with no limits on 200 training points that all have different feature values. What is its training MSE?"
     explanation: "With no limits the tree keeps splitting until every leaf holds a single point, and each leaf predicts that point's target exactly, so training error is 0."
     options:
+      - text: The same as a depth-1 tree
+        why: Deeper trees always fit the training data at least as well.
       - text: "0, because every point ends up in its own leaf"
         correct: true
         why: Each leaf predicts its single training target exactly.
-      - text: About the noise variance
-        why: That is the best possible test error, not the training error of a memorising tree.
-      - text: The same as a depth-1 tree
-        why: Deeper trees always fit the training data at least as well.
       - text: It cannot be computed without a test set
         why: Training MSE uses only the training data.
+      - text: About the noise variance
+        why: That is the best possible test error, not the training error of a memorising tree.
   - id: f8-growing-and-pruning-trees-02
     type: mcq
     prompt: "As `max_depth` increases from 1 to unlimited, what typically happens to **test** error?"
@@ -21,47 +21,47 @@ items:
       - text: It falls, then rises
         correct: true
         why: Underfitting at one end, overfitting at the other.
-      - text: It falls steadily
-        why: That is the training error; test error rises again once the tree memorises noise.
       - text: It rises steadily
         why: Very shallow trees are too simple, so test error first improves with depth.
       - text: It stays the same
         why: Depth strongly affects how well a tree generalises.
+      - text: It falls steadily
+        why: That is the training error; test error rises again once the tree memorises noise.
   - id: f8-growing-and-pruning-trees-03
     type: multi
     prompt: "Which scikit-learn settings make a decision tree **simpler** (less prone to overfitting)?"
     explanation: "Smaller max_depth, larger min_samples_leaf and larger ccp_alpha all shrink the tree."
     options:
-      - text: Decreasing max_depth
-        correct: true
-        why: Fewer questions per path means fewer leaves.
+      - text: Setting max_depth=None
+        why: That removes the depth limit and lets the tree grow fully.
       - text: Increasing min_samples_leaf
         correct: true
         why: Every leaf must average more rows, so there are fewer, smoother leaves.
       - text: Increasing ccp_alpha
         correct: true
         why: A higher price per leaf prunes more subtrees away.
-      - text: Setting max_depth=None
-        why: That removes the depth limit and lets the tree grow fully.
+      - text: Decreasing max_depth
+        correct: true
+        why: Fewer questions per path means fewer leaves.
   - id: f8-growing-and-pruning-trees-04
     type: cloze
     prompt: "Cost-complexity pruning picks the subtree minimising training error plus $\\alpha$ times the number of ____."
-    accept: ["leaves", "leaf nodes", "terminal nodes"]
+    accept: [ "leaves", "leaf nodes", "terminal nodes" ]
     explanation: "Each leaf costs $\\alpha$, so a subtree is kept only if its error reduction is worth its extra leaves."
   - id: f8-growing-and-pruning-trees-05
     type: mcq
     prompt: "Why can pruning a fully grown tree beat simply stopping early with a minimum-improvement rule?"
     explanation: "A split that barely helps on its own can make a very useful split below it possible. Stopping early never sees that; pruning judges subtrees after growing them."
     options:
-      - text: A weak split can enable a strong split below it, which early stopping would never see
-        correct: true
-        why: Pruning evaluates whole subtrees, not single splits in isolation.
       - text: Pruning makes the training error lower
         why: Pruning removes leaves, so training error can only rise or stay the same.
       - text: Early stopping cannot be used with regression trees
         why: Stopping rules work for both kinds of tree.
       - text: Pruning uses the test set
         why: Pruning strength should be chosen by cross-validation, never the test set.
+      - text: A weak split can enable a strong split below it, which early stopping would never see
+        correct: true
+        why: Pruning evaluates whole subtrees, not single splits in isolation.
   - id: f8-growing-and-pruning-trees-06
     type: numeric
     prompt: "Data has noise standard deviation 0.5. Roughly what test MSE do you expect from an unlimited regression tree whose leaves each hold one training point (assume the true function barely changes between nearby points)?"
@@ -76,24 +76,24 @@ items:
       - text: The best setting has a mean cross-validated MSE of 0.113
         correct: true
         why: Flip the sign of a negated error to read it.
-      - text: The model is worse than predicting zero
-        why: The minus sign is a convention, not a sign of a bad model.
       - text: The test-set MSE is 0.113
         why: best_score_ comes from cross-validation on the training data.
       - text: The R squared is -0.113
         why: The scoring was negated MSE, not R squared.
+      - text: The model is worse than predicting zero
+        why: The minus sign is a convention, not a sign of a bad model.
   - id: f8-growing-and-pruning-trees-08
     type: mcq
     prompt: "In bias-variance terms, an unlimited deep decision tree has…"
     explanation: "It can fit almost any pattern (low bias) but changes a lot with the training sample (high variance), which is why averaging many deep trees works so well."
     options:
+      - text: high bias and high variance
+        why: A deep tree fits the training data very well, so its bias is low.
       - text: low bias and high variance
         correct: true
         why: Flexible enough to fit anything, sensitive to the exact sample.
       - text: high bias and low variance
         why: That describes a stump or a very shallow tree.
-      - text: high bias and high variance
-        why: A deep tree fits the training data very well, so its bias is low.
       - text: low bias and low variance
         why: If that were true, no regularisation would be needed.
   - id: f8-growing-and-pruning-trees-09
@@ -120,12 +120,12 @@ items:
     prompt: "Why do you use cross-validation rather than the test set to choose `max_depth`?"
     explanation: "Choosing a setting by test score fits the test set, so its score stops being an honest estimate of performance on new data."
     options:
+      - text: Trees cannot be scored on a test set
+        why: They can; you just should not tune on it.
+      - text: The test set is too large to evaluate
+        why: Size is not the issue; honesty of the final estimate is.
       - text: Choosing by test score makes the test estimate optimistic, because the choice was fitted to it
         correct: true
         why: The test set must stay untouched until the final evaluation.
-      - text: The test set is too large to evaluate
-        why: Size is not the issue; honesty of the final estimate is.
       - text: Cross-validation always gives a lower error
         why: It gives a fairer estimate for choosing, not necessarily a lower one.
-      - text: Trees cannot be scored on a test set
-        why: They can; you just should not tune on it.

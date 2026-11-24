@@ -1,0 +1,6 @@
+term: "Ensemble"
+short: "A model that combines the predictions of many models, usually by averaging or voting, to beat any single one of them."
+body: |
+  Bagging and random forests average many deep trees trained on resampled data, mainly reducing variance. Boosting
+  adds many small trees in sequence, each correcting the errors of the ones before, mainly reducing bias.
+related: ["bagging", "random-forest", "gradient-boosting"]

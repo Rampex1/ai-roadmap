@@ -1,0 +1,7 @@
+term: "Out-of-bag error"
+short: "The error of a bagged ensemble measured on each training row using only the models whose bootstrap sample left that row out."
+body: |
+  A bootstrap resample of size $n$ misses each row with probability $(1 - 1/n)^n \approx 1/e \approx 0.368$, so about
+  a third of the trees never saw any given row. Their predictions on it act like a validation set, without holding
+  any data back.
+related: ["bagging", "random-forest", "bootstrap"]

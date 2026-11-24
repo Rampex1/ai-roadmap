@@ -1,0 +1,7 @@
+term: "Silhouette score"
+short: "A clustering quality measure from -1 to 1: how much closer each point is to its own cluster than to the next nearest cluster."
+body: |
+  For a point, $a$ is its mean distance to the other members of its cluster and $b$ its mean distance to the points
+  of the nearest other cluster; its silhouette is $(b - a)/\max(a, b)$. The score of a clustering is the mean over
+  points. It needs no true labels, so it is used to compare values of k.
+related: ["k-means"]

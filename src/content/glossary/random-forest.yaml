@@ -1,0 +1,7 @@
+term: "Random forest"
+short: "An ensemble of deep decision trees, each trained on a bootstrap resample and choosing each split from a random subset of the features."
+body: |
+  The feature subsampling decorrelates the trees, so averaging them reduces variance more than plain bagging. Random
+  forests work well with little tuning, give an out-of-bag error estimate for free, and are a strong default for
+  tabular data.
+related: ["bagging", "decision-tree", "out-of-bag-error", "permutation-importance"]

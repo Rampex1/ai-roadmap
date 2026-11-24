@@ -1,0 +1,37 @@
+id: f8-trees-and-clusters
+module: f8
+kind: homework
+title: "Trees versus forests versus boosting, and customer segments with k-means"
+brief: |
+  Two parts in one notebook. In Part A you compare a single decision tree, a random forest and gradient boosting on a
+  real tabular dataset (breast tumour measurements, bundled with scikit-learn), and check which feature-importance
+  measure is fooled by two fake columns. In Part B you segment synthetic shop customers with k-means and describe the
+  segments. Download the notebook and open it in local Jupyter or [Google Colab](https://colab.research.google.com/)
+  (File > Upload notebook). Only scikit-learn, pandas and matplotlib are needed.
+
+  Each task has `TODO` cells and a check cell that prints `OK` when your code is right:
+
+  1. **Single tree:** tune `max_depth` and `min_samples_leaf` with `GridSearchCV` on shared 5-fold CV splits, and
+     explain why the unlimited tree is or is not chosen.
+  2. **Random forest:** 5-fold CV accuracy and the out-of-bag score; compare the two estimates.
+  3. **Gradient boosting:** `HistGradientBoostingClassifier` on the same folds, and a results table of CV mean and
+     standard deviation for all three models.
+  4. **One test-set evaluation** of the model chosen by CV, and a judgement on whether the ensembles really differ.
+  5. **Importances:** impurity-based versus permutation importance (on the test set) in one chart; explain the credit
+     given to the fake `noise_id` column and how correlated measurements affect permutation importance.
+  6. **Choosing k:** standardise the customer table, compute inertia and silhouette for $k = 2, \dots, 8$, plot both and
+     pick $k$.
+  7. **Segments:** profile each segment in the original units, describe it in plain words, plot a PCA view, and show
+     with the adjusted Rand index how much the clustering changes without scaling.
+
+  Stretch tasks try agglomerative clustering, feature selection by permutation importance, and boosting learning
+  curves.
+notebook: /homework/f8-trees-and-clusters.ipynb
+rubric:
+  - "Every check cell for Tasks 1 to 7 prints OK after restarting and running all cells"
+  - "All three models were compared on the same cross-validation folds, and the test set was used exactly once"
+  - "The results table shows CV mean and standard deviation, and the written answer says whether the gap between the ensembles exceeds the fold-to-fold spread"
+  - "The importance chart shows both measures side by side, and the answer explains why impurity importance credits noise_id and how correlated features share permutation importance"
+  - "Each customer segment has a one-line plain-language description based on its profile in the original units"
+  - "The written answer names the column that dominates unscaled k-means distances and explains why"
+compute: "Any laptop or free Colab (CPU), under 15 minutes including reading; all cells together run in about a minute"

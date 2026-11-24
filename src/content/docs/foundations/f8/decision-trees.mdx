@@ -1,0 +1,215 @@
+---
+title: "Decision trees: splits, impurity and information gain"
+module: f8
+order: 1
+estMinutes: 18
+objectives:
+  - "Trace how a decision tree turns a row of features into a prediction"
+  - "Compute the Gini impurity and entropy of a node from its class counts"
+  - "Score a candidate split by weighted impurity or information gain, and find the best threshold on one feature by hand"
+goDeeper: statquest-decision-trees
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import Figure from '@/components/Figure.astro';
+import treeImg from '@/assets/diagrams/f8-decision-tree.svg';
+
+In [F7](/foundations/f7/what-is-machine-learning/) every model was a formula: a weighted sum of features (linear and logistic regression) or a vote of nearby
+points (k-nearest neighbours). This module is about a different family that dominates real-world work on
+**tabular data**, the spreadsheets and database tables most companies run on. It starts with a model you could draw
+on a napkin: a flowchart of yes/no questions.
+
+## A tree is a flowchart
+
+A <Term id="decision-tree" /> asks one question about one feature at each **node**, such as "is the contract at most
+10.5 months?", and follows the *yes* or *no* branch. When it reaches a **leaf** it stops and answers. Here is a
+tree trained on ten customers of a phone company, predicting whether each one will **churn** (cancel) or stay:
+
+<Figure
+  src={treeImg}
+  alt="A decision tree. Root: contract at most 10.5? No leads to a leaf predicting stay. Yes leads to a node asking charge at most 87.5? Yes leads to a leaf predicting churn, no to a leaf predicting stay"
+  caption="A depth-2 tree for churn. Each box lists the training customers that reached it."
+/>
+
+To predict for a new customer with a 3-month contract paying 50 a month: $3 \le 10.5$, so go left; $50 \le 87.5$, so
+go left again and land in a leaf where all 4 training customers churned. Prediction: **churn**. A customer on a
+24-month contract goes right at the root and is predicted to stay, whatever they pay.
+
+Some vocabulary:
+
+- The **root** is the top node. The **depth** of a node is the number of questions above it; the depth of the tree
+  is the depth of its deepest leaf (2 here).
+- Each question compares **one feature with a threshold**. So every leaf owns a box-shaped region of feature space,
+  with edges parallel to the axes.
+- A classification leaf predicts the **majority class** of the training rows that reached it, and its class
+  proportions serve as predicted probabilities. A regression leaf predicts the **mean** target of its rows.
+
+Two things already stand out. The tree never multiplies or adds features, so it does not care whether charges are
+in euros or cents: **no feature scaling needed** (compare the scaling you needed for [k-NN](/foundations/f7/k-nearest-neighbours/) and gradient descent). And
+you can read the whole model, which is rare in machine learning.
+
+## Where do the questions come from?
+
+Training a tree means choosing the questions. The algorithm (called CART) is **greedy**: at the root, it tries every
+feature and every threshold, picks the single split that makes the two children "purest", then repeats inside each
+child. It never goes back to reconsider an earlier choice. To make "purest" precise we need a number.
+
+## Impurity: how mixed is a node?
+
+Let $p_k$ be the fraction of the node's rows in class $k$. A node is **pure** when one $p_k$ is 1. Two standard
+impurity measures:
+
+$$
+\text{Gini}(p) = 1 - \sum_k p_k^2
+\qquad\qquad
+H(p) = -\sum_k p_k \log_2 p_k
+$$
+
+- **<Term id="gini-impurity" text="Gini impurity" />** is the probability that two rows drawn at random (with
+  replacement) from the node have *different* classes. Pure node: $1 - 1^2 = 0$. A 50/50 two-class node:
+  $1 - (0.25 + 0.25) = 0.5$, the maximum for two classes.
+- **<Term id="entropy" />** is the average surprise from
+  [F5 information theory](/foundations/f5/information-theory/): 0 bits for a pure node, 1 bit for a 50/50 node.
+
+Both are 0 when pure and largest when the classes are evenly mixed. They almost always pick the same splits. Gini, scikit-learn's
+default, is slightly cheaper to compute (no logarithm).
+
+The root of our tree holds 6 stayers and 4 churners, so $p = (0.6, 0.4)$:
+
+$$
+\text{Gini} = 1 - (0.6^2 + 0.4^2) = 1 - 0.52 = 0.48
+\qquad
+H = -0.6\log_2 0.6 - 0.4\log_2 0.4 \approx 0.971 \text{ bits}
+$$
+
+## Scoring a split
+
+A split sends $n_L$ of the node's $n$ rows left and $n_R$ right. Its quality is the impurity of the children,
+weighted by how many rows each one gets:
+
+$$
+I_{\text{split}} = \frac{n_L}{n}\, I(\text{left}) + \frac{n_R}{n}\, I(\text{right})
+$$
+
+and the best split is the one with the biggest **decrease** $I(\text{parent}) - I_{\text{split}}$. With entropy as
+$I$, that decrease is called <Term id="information-gain" />: how many bits of uncertainty about the class the
+question removes, on average.
+
+### A split by hand
+
+Here are the ten customers:
+
+| contract (months) | 1 | 3 | 6 | 6 | 9 | 12 | 12 | 24 | 24 | 36 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| charge | 85 | 40 | 90 | 75 | 55 | 45 | 30 | 80 | 60 | 50 |
+| churn | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
+
+**Split A: contract < 12.** Left gets the first five customers (4 churn, 1 stay); right gets the other five (all
+stay).
+
+- Left: $\text{Gini} = 1 - (0.8^2 + 0.2^2) = 0.32$. Right: pure, $\text{Gini} = 0$.
+- Weighted: $\frac{5}{10}(0.32) + \frac{5}{10}(0) = 0.16$. Decrease: $0.48 - 0.16 = 0.32$.
+
+**Split B: charge > 70.** Left gets the four big spenders (2 churn, 2 stay); right gets six (2 churn, 4 stay).
+
+- Left: $\text{Gini} = 0.5$. Right: $1 - \left((\tfrac{1}{3})^2 + (\tfrac{2}{3})^2\right) = \tfrac{4}{9} \approx 0.444$.
+- Weighted: $0.4(0.5) + 0.6(0.444) \approx 0.467$. Decrease: about $0.013$, almost nothing.
+
+Split A wins by a mile. Let's check with code, using entropy too:
+
+```python
+import numpy as np
+
+def gini(y):
+    _, counts = np.unique(y, return_counts=True)
+    p = counts / counts.sum()
+    return 1 - np.sum(p ** 2)
+
+def entropy(y):
+    _, counts = np.unique(y, return_counts=True)
+    p = counts / counts.sum()                 # np.unique only returns classes present, so no p = 0
+    return -np.sum(p * np.log2(p))
+
+churn    = np.array([1, 1, 0, 1, 1, 0, 0, 0, 0, 0])
+contract = np.array([1, 3, 6, 6, 9, 12, 12, 24, 24, 36])
+charge   = np.array([85, 40, 90, 75, 55, 45, 30, 80, 60, 50])
+
+print(f"root: gini {gini(churn):.3f}, entropy {entropy(churn):.3f} bits")
+for name, mask in [("contract < 12", contract < 12), ("charge > 70", charge > 70)]:
+    left, right = churn[mask], churn[~mask]
+    wl, wr = len(left) / len(churn), len(right) / len(churn)
+    g = wl * gini(left) + wr * gini(right)
+    h = wl * entropy(left) + wr * entropy(right)
+    print(f"{name}: weighted gini {g:.3f} (decrease {gini(churn) - g:.3f}), "
+          f"information gain {entropy(churn) - h:.3f} bits")
+```
+
+```text title="Output"
+root: gini 0.480, entropy 0.971 bits
+contract < 12: weighted gini 0.160 (decrease 0.320), information gain 0.610 bits
+charge > 70: weighted gini 0.467 (decrease 0.013), information gain 0.020 bits
+```
+
+Both measures agree: knowing the contract length removes 0.61 of the 0.97 bits of uncertainty; knowing whether the
+charge is above 70 removes almost none.
+
+### Which thresholds to try?
+
+For a numeric feature, only the **gaps between sorted distinct values** matter: any threshold between 9 and 12
+splits the customers in exactly the same way. So the algorithm sorts the values and tries one threshold per gap,
+conventionally the **midpoint**. For `contract` the candidates are 2, 4.5, 7.5, 10.5, 18 and 30; the winner,
+between 9 and 12, becomes $10.5$. With $n$ rows and $d$ features that is at most $d(n - 1)$ candidates per node,
+cheap enough to check them all.
+
+## The same thing in scikit-learn
+
+```python
+from sklearn.tree import DecisionTreeClassifier, export_text
+
+X = np.column_stack([contract, charge])
+tree = DecisionTreeClassifier(max_depth=2, random_state=0).fit(X, churn)
+print(export_text(tree, feature_names=["contract", "charge"], show_weights=True))
+print(tree.predict([[3, 50], [24, 95]]))
+print(tree.predict_proba([[3, 50]]))
+```
+
+```text title="Output"
+|--- contract <= 10.50
+|   |--- charge <= 87.50
+|   |   |--- weights: [0.00, 4.00] class: 1
+|   |--- charge >  87.50
+|   |   |--- weights: [1.00, 0.00] class: 0
+|--- contract >  10.50
+|   |--- weights: [5.00, 0.00] class: 0
+
+[1 0]
+[[0. 1.]]
+```
+
+`weights` are the class counts in each leaf (stay, churn). The root split is our split A at the midpoint 10.5. The
+second split, `charge <= 87.50`, exists only to isolate *one* customer: the 6-month customer paying 90 who stayed.
+Would you bet that customers paying over 87.5 never churn? Ten rows cannot support that rule. A tree will keep
+splitting until every leaf is pure unless you stop it, which is the subject of the
+[next lesson](/foundations/f8/growing-and-pruning-trees/).
+
+:::note[Regression trees]
+For a numeric target the recipe is the same with a different impurity: the **variance** (mean squared error around
+the node's mean). The best split is the one that most reduces the weighted squared error, and each leaf predicts the
+mean of its rows. `DecisionTreeRegressor` does this, and gradient boosting (lesson 4) is built from such trees.
+:::
+
+## Try it
+
+<CodeExercise id="f8-decision-trees-01" />
+
+<CodeExercise id="f8-decision-trees-02" />
+
+## Summary
+
+- A decision tree is a flowchart of single-feature threshold questions; each leaf predicts the majority class (or
+  the mean, for regression) of the training rows that reached it.
+- Impurity measures how mixed a node is: Gini $= 1 - \sum_k p_k^2$ or entropy $= -\sum_k p_k \log_2 p_k$. Both are 0
+  for a pure node.
+- A split is scored by the size-weighted impurity of its children. The decrease in entropy is the information gain.
+- Training is greedy: try every feature and every midpoint threshold, keep the best, recurse.
+- Trees need no feature scaling and are easy to read, but they will happily memorise tiny groups of rows.

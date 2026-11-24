@@ -1,0 +1,203 @@
+---
+title: "Growing trees: depth, overfitting and pruning"
+module: f8
+order: 2
+estMinutes: 16
+objectives:
+  - "Describe how a tree is grown recursively and when growth stops"
+  - "Explain why an unlimited tree overfits, and limit it with max_depth, min_samples_leaf or cost-complexity pruning"
+  - "Choose a tree's size with cross-validation"
+goDeeper: islp
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+The [last lesson](/foundations/f8/decision-trees/) chose one split. A full tree is that step applied over and over.
+This lesson is about how far to go, because a tree left alone goes much too far.
+
+## Growing a tree, recursively
+
+The training algorithm in pseudocode:
+
+```text
+grow(rows):
+    if a stopping rule fires (node pure, too deep, too few rows):
+        return a leaf predicting the majority class / mean of rows
+    find the best split (feature, threshold) over all features and midpoints
+    if no split reduces impurity:
+        return a leaf
+    left  = grow(rows with feature <= threshold)
+    right = grow(rows with feature >  threshold)
+    return a node(feature, threshold, left, right)
+```
+
+It is a recursive function, like the ones in F1: each call builds a subtree from fewer rows. With **no stopping rules**
+besides purity, growth only ends when every leaf is pure, or when the remaining rows cannot be told apart because they
+have identical features. On data with any noise that means leaves of one or two rows.
+
+## Overfitting, measured
+
+Take 200 noisy points from $y = \sin(x) + \varepsilon$ with $x$ between 0 and 6 and noise standard deviation 0.3, and a
+fresh test set of 1,000 points from the same process. Fit regression trees of increasing depth:
+
+```python
+import numpy as np
+from sklearn.tree import DecisionTreeRegressor
+
+rng = np.random.default_rng(0)
+def make(n):
+    x = rng.uniform(0, 6, n)
+    return x.reshape(-1, 1), np.sin(x) + rng.normal(0, 0.3, n)
+X_train, y_train = make(200)
+X_test, y_test = make(1000)
+
+def mse(m, X, y):
+    return np.mean((m.predict(X) - y) ** 2)
+
+for depth in [1, 2, 3, 4, 6, 8, None]:
+    t = DecisionTreeRegressor(max_depth=depth, random_state=0).fit(X_train, y_train)
+    print(f"max_depth={str(depth):>4}: leaves {t.get_n_leaves():3d}, "
+          f"train MSE {mse(t, X_train, y_train):.3f}, test MSE {mse(t, X_test, y_test):.3f}")
+```
+
+```text title="Output"
+max_depth=   1: leaves   2, train MSE 0.164, test MSE 0.175
+max_depth=   2: leaves   4, train MSE 0.123, test MSE 0.141
+max_depth=   3: leaves   8, train MSE 0.091, test MSE 0.115
+max_depth=   4: leaves  16, train MSE 0.081, test MSE 0.108
+max_depth=   6: leaves  52, train MSE 0.052, test MSE 0.121
+max_depth=   8: leaves  98, train MSE 0.029, test MSE 0.144
+max_depth=None: leaves 200, train MSE 0.000, test MSE 0.176
+```
+
+The pattern is the <Term id="overfitting" /> curve from [F7](/foundations/f7/overfitting-and-bias-variance/):
+
+- **Training error always falls** with depth. At `max_depth=None` the tree has 200 leaves for 200 points, one per
+  point, and training error is exactly 0: it has memorised the data, noise and all.
+- **Test error falls, then rises.** The noise variance is $0.3^2 = 0.09$, which no model can beat. Depth 4 gets
+  close (0.108). The unlimited tree is as bad as a single split (0.176 against 0.175), for the opposite reason:
+  a stump is too simple (high bias), the full tree copies the noise (high variance).
+
+The prediction of a regression tree is a **step function**, constant within each leaf's interval. Shallow trees draw
+a few wide steps; the unlimited tree draws a step for every training point and jumps up and down with the noise.
+
+:::note[Why the full tree's test error is about twice the noise]
+Each leaf of the full tree predicts the $y$ of one training point, which carries its own noise. A test point near it
+has independent noise of its own. The difference of two independent noises has variance $0.09 + 0.09 = 0.18$, close
+to the 0.176 we measured.
+:::
+
+## Three ways to keep a tree small
+
+A tree's flexibility comes from its size, so <Term id="regularisation" /> for trees means limiting size. The
+scikit-learn parameters you will actually use:
+
+| Parameter | What it does | Typical values |
+|---|---|---|
+| `max_depth` | No path from the root may ask more than this many questions | 3 to 10 |
+| `min_samples_leaf` | Never create a leaf with fewer rows than this | 1 (default), 5, 20, ... |
+| `ccp_alpha` | Grow fully, then prune back subtrees that do not earn their keep | 0 (default), found by CV |
+
+`min_samples_leaf` is often better behaved than `max_depth`: it lets the tree go deep where there is a lot of data
+and stops it where there is little. Each leaf then averages several rows, which smooths away some noise:
+
+```python
+for leaf in [1, 5, 10, 20, 40]:
+    t = DecisionTreeRegressor(min_samples_leaf=leaf, random_state=0).fit(X_train, y_train)
+    print(f"min_samples_leaf={leaf:2d}: leaves {t.get_n_leaves():3d}, "
+          f"train MSE {mse(t, X_train, y_train):.3f}, test MSE {mse(t, X_test, y_test):.3f}")
+```
+
+```text title="Output"
+min_samples_leaf= 1: leaves 200, train MSE 0.000, test MSE 0.176
+min_samples_leaf= 5: leaves  33, train MSE 0.069, test MSE 0.117
+min_samples_leaf=10: leaves  15, train MSE 0.081, test MSE 0.108
+min_samples_leaf=20: leaves   8, train MSE 0.095, test MSE 0.116
+min_samples_leaf=40: leaves   4, train MSE 0.151, test MSE 0.165
+```
+
+### Cost-complexity pruning
+
+Stopping rules decide *before* seeing what lies below a split. A split that looks useless can enable a great split
+under it (XOR-like patterns are the classic case). **Pruning** avoids that by growing the full tree first and then
+cutting back. Cost-complexity pruning picks the subtree $T$ that minimises
+
+$$
+\text{training error}(T) + \alpha \cdot |\text{leaves}(T)|
+$$
+
+where $\alpha \ge 0$ (`ccp_alpha`) is a price per leaf. With $\alpha = 0$ you keep the full tree; as $\alpha$ grows,
+subtrees whose error reduction is worth less than their extra leaves get collapsed into a single leaf. It is the same
+idea as the L2 penalty of [ridge regression](/foundations/f7/regularisation/), a penalty on complexity added to the training loss, with leaves instead of weight sizes.
+
+```python
+for a in [0.0, 0.001, 0.003, 0.01, 0.03]:
+    t = DecisionTreeRegressor(ccp_alpha=a, random_state=0).fit(X_train, y_train)
+    print(f"ccp_alpha={a:<5}: leaves {t.get_n_leaves():3d}, "
+          f"train MSE {mse(t, X_train, y_train):.3f}, test MSE {mse(t, X_test, y_test):.3f}")
+```
+
+```text title="Output"
+ccp_alpha=0.0  : leaves 200, train MSE 0.000, test MSE 0.176
+ccp_alpha=0.001: leaves  41, train MSE 0.040, test MSE 0.136
+ccp_alpha=0.003: leaves   7, train MSE 0.089, test MSE 0.113
+ccp_alpha=0.01 : leaves   5, train MSE 0.102, test MSE 0.123
+ccp_alpha=0.03 : leaves   2, train MSE 0.164, test MSE 0.175
+```
+
+`tree.cost_complexity_pruning_path(X, y)` lists the exact $\alpha$ values at which the pruned tree changes, which
+makes a natural grid to search.
+
+## Choose the size with cross-validation
+
+We peeked at the test set above to *show* the curve. To *choose* a setting you must not: the test set is for the
+final, single estimate. Use <Term id="cross-validation" /> on the training data instead, as in [F7](/foundations/f7/cross-validation/). `GridSearchCV` tries every
+combination with k-fold CV and refits the best one on all the training data:
+
+```python
+from sklearn.model_selection import GridSearchCV
+
+grid = GridSearchCV(DecisionTreeRegressor(random_state=0),
+                    {"max_depth": [2, 3, 4, 5, 6, None], "min_samples_leaf": [1, 5, 10, 20]},
+                    cv=5, scoring="neg_mean_squared_error").fit(X_train, y_train)
+print(grid.best_params_, round(-grid.best_score_, 3), round(mse(grid.best_estimator_, X_test, y_test), 3))
+```
+
+```text title="Output"
+{'max_depth': 3, 'min_samples_leaf': 5} 0.113 0.115
+```
+
+scikit-learn always *maximises* a score, so errors appear negated (`neg_mean_squared_error`); flip the sign back.
+Cross-validation picked a small tree whose CV error (0.113) is an honest preview of its test error (0.115).
+
+## The deeper problem: trees are unstable
+
+Even a well-tuned single tree has a weakness. Because training is greedy, a small change in the data can change the
+root split, and then everything below it changes too. Train two trees on two slightly different samples and you can
+get very different flowcharts with similar accuracy. In the language of the <Term id="bias-variance-trade-off" />, a deep tree has **low bias and high
+variance**.
+
+High variance is exactly what averaging fixes: the mean of many noisy estimates is less noisy than any one of them
+(you saw the $1/\sqrt{n}$ law in F5). The next lesson averages hundreds of deep trees, each trained on a different
+resample of the data. That is a random forest.
+
+:::tip[Reading a tree]
+For a small tree, `sklearn.tree.export_text(tree)` prints the rules and `sklearn.tree.plot_tree(tree)` draws them.
+Under the hood the fitted tree is stored as parallel arrays in `tree.tree_`: for node `i`, `feature[i]`,
+`threshold[i]`, `children_left[i]`, `children_right[i]` (both `-1` at a leaf) and `value[i]`. The second exercise
+walks these arrays by hand.
+:::
+
+## Try it
+
+<CodeExercise id="f8-growing-and-pruning-trees-01" />
+
+<CodeExercise id="f8-growing-and-pruning-trees-02" />
+
+## Summary
+
+- Trees grow recursively until a stopping rule fires; with none, they memorise the training data.
+- Training error falls monotonically with size, test error is U-shaped: shallow trees underfit, deep ones overfit.
+- Limit size with `max_depth`, `min_samples_leaf` or cost-complexity pruning (`ccp_alpha`), chosen by
+  cross-validation, never by the test set.
+- Deep trees have low bias but high variance and are unstable, which motivates averaging many of them.

@@ -1,0 +1,91 @@
+id: f8-trees-vs-linear-models-01
+lesson: foundations/f8/trees-vs-linear-models
+title: A fair comparison
+prompt: |
+  Write `compare(X, y)` that returns a dictionary with the **mean 5-fold cross-validated $R^2$** of two models:
+
+  - `"linear"`: `Ridge(alpha=1.0)`
+  - `"boosting"`: `HistGradientBoostingRegressor(max_iter=50, random_state=0)`
+
+  Both must be scored on the **same folds**: `cv = KFold(n_splits=5, shuffle=True, random_state=0)`, passed to
+  `cross_val_score` (whose default score for a regressor is $R^2$).
+
+  Then write `winner(X, y)` that returns the key (`"linear"` or `"boosting"`) with the higher score.
+
+  The starter builds two datasets like the lesson's: a linear signal with few rows, and an XOR pattern. Each should
+  have a different winner.
+starter: |
+  import numpy as np
+  from sklearn.linear_model import Ridge
+  from sklearn.ensemble import HistGradientBoostingRegressor
+  from sklearn.model_selection import KFold, cross_val_score
+
+  def compare(X, y):
+      # TODO: mean CV R^2 for both models on the same folds
+      return {"linear": 0.0, "boosting": 0.0}
+
+  def winner(X, y):
+      return "linear"
+
+  rng = np.random.default_rng(0)
+  X_a = rng.normal(size=(150, 10))
+  y_a = X_a @ rng.normal(size=10) + rng.normal(0, 1, 150)
+  X_b = rng.uniform(-1, 1, size=(400, 3))
+  y_b = np.where((X_b[:, 0] > 0) == (X_b[:, 1] > 0), 2.0, -2.0) + rng.normal(0, 0.5, 400)
+  print(compare(X_a, y_a))
+  print(compare(X_b, y_b))
+solution: |
+  import numpy as np
+  from sklearn.linear_model import Ridge
+  from sklearn.ensemble import HistGradientBoostingRegressor
+  from sklearn.model_selection import KFold, cross_val_score
+
+  def compare(X, y):
+      cv = KFold(n_splits=5, shuffle=True, random_state=0)
+      models = {"linear": Ridge(alpha=1.0),
+                "boosting": HistGradientBoostingRegressor(max_iter=50, random_state=0)}
+      return {name: float(cross_val_score(m, X, y, cv=cv).mean()) for name, m in models.items()}
+
+  def winner(X, y):
+      scores = compare(X, y)
+      return max(scores, key=scores.get)
+
+  rng = np.random.default_rng(0)
+  X_a = rng.normal(size=(150, 10))
+  y_a = X_a @ rng.normal(size=10) + rng.normal(0, 1, 150)
+  X_b = rng.uniform(-1, 1, size=(400, 3))
+  y_b = np.where((X_b[:, 0] > 0) == (X_b[:, 1] > 0), 2.0, -2.0) + rng.normal(0, 0.5, 400)
+  print(compare(X_a, y_a))
+  print(compare(X_b, y_b))
+tests: |
+  import math
+  import numpy as np
+  from sklearn.linear_model import Ridge
+  from sklearn.ensemble import HistGradientBoostingRegressor
+  from sklearn.model_selection import KFold, cross_val_score
+  _cv = KFold(n_splits=5, shuffle=True, random_state=0)
+  _rng = np.random.default_rng(0)
+  _Xa = _rng.normal(size=(150, 10))
+  _ya = _Xa @ _rng.normal(size=10) + _rng.normal(0, 1, 150)
+  _Xb = _rng.uniform(-1, 1, size=(400, 3))
+  _yb = np.where((_Xb[:, 0] > 0) == (_Xb[:, 1] > 0), 2.0, -2.0) + _rng.normal(0, 0.5, 400)
+  _sa = compare(_Xa, _ya)
+  assert set(_sa) == {"linear", "boosting"}, f"compare should return the keys 'linear' and 'boosting', got {sorted(_sa)}"
+  _wl = cross_val_score(Ridge(alpha=1.0), _Xa, _ya, cv=_cv).mean()
+  assert math.isclose(_sa["linear"], _wl, abs_tol=1e-9), f"Linear CV R^2 on the linear data should be {_wl:.4f}, got {_sa['linear']}. Use KFold(n_splits=5, shuffle=True, random_state=0)."
+  _sb = compare(_Xb, _yb)
+  _wl2 = cross_val_score(Ridge(alpha=1.0), _Xb, _yb, cv=_cv).mean()
+  assert math.isclose(_sb["linear"], _wl2, abs_tol=1e-9), f"Linear CV R^2 on the XOR data should be {_wl2:.4f}, got {_sb['linear']}"
+  _wb2 = cross_val_score(HistGradientBoostingRegressor(max_iter=50, random_state=0), _Xb, _yb, cv=_cv).mean()
+  assert math.isclose(_sb["boosting"], _wb2, abs_tol=1e-9), f"Boosting CV R^2 on the XOR data should be {_wb2:.4f}, got {_sb['boosting']}. Use HistGradientBoostingRegressor(max_iter=50, random_state=0)."
+  _compare = compare
+  _cached = {id(_Xa): _sa, id(_Xb): _sb}
+  compare = lambda X, y: dict(_cached[id(X)])
+  try:
+      assert winner(_Xa, _ya) == "linear", "On a linear signal with few rows the linear model should win"
+      assert winner(_Xb, _yb) == "boosting", "On the XOR pattern boosting should win"
+  finally:
+      compare = _compare
+hints:
+  - "Create the KFold object once inside compare and pass it as cv= to both cross_val_score calls."
+  - "max(scores, key=scores.get) returns the key with the largest value."

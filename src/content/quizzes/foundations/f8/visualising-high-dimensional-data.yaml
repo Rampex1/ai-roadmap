@@ -1,0 +1,128 @@
+items:
+  - id: f8-visualising-high-dimensional-data-01
+    type: numeric
+    prompt: "The first two principal components of a dataset have explained variance ratios 0.149 and 0.136. What fraction of the variance does the 2-D PCA picture throw away? (Give a decimal.)"
+    answer: 0.715
+    tol: 0.002
+    explanation: "It keeps $0.149 + 0.136 = 0.285$, so it discards $1 - 0.285 = 0.715$, about 72%."
+  - id: f8-visualising-high-dimensional-data-02
+    type: mcq
+    prompt: "What does t-SNE mainly try to preserve?"
+    explanation: "t-SNE matches neighbour probabilities, so points that are close in the original space stay close in 2-D. Global distances and cluster sizes are not preserved."
+    options:
+      - text: Which points are near neighbours of each other
+        correct: true
+        why: Local neighbourhoods are its objective.
+      - text: The class labels
+        why: t-SNE is unsupervised and never sees labels.
+      - text: The distances between all pairs of points
+        why: No 2-D picture can do that for high-dimensional data; t-SNE does not try.
+      - text: The variance along each direction
+        why: That is PCA's objective.
+  - id: f8-visualising-high-dimensional-data-03
+    type: multi
+    prompt: "In a t-SNE plot, which readings are **not** reliable?"
+    explanation: "Island sizes, gaps between islands and apparent clusters at a single setting can all be artefacts. Local neighbourhoods are the reliable part."
+    options:
+      - text: Cluster A is far from B and close to C, so A resembles C more than B
+        correct: true
+        why: Distances between clusters are often not meaningful.
+      - text: Points within a tight island were near neighbours in the original space
+        why: Local neighbourhoods are what t-SNE preserves.
+      - text: Cluster A looks twice as large as cluster B, so A is more spread out
+        correct: true
+        why: t-SNE expands dense clusters and shrinks sparse ones; sizes mean little.
+      - text: A clear cluster appeared at perplexity 2, so the data have that group
+        correct: true
+        why: Low perplexity can make clusters out of pure noise; check several settings.
+  - id: f8-visualising-high-dimensional-data-04
+    type: mcq
+    prompt: "What does the **perplexity** setting of t-SNE control?"
+    explanation: "Perplexity is roughly the effective number of neighbours each point considers when its neighbour probabilities are built; typical values are 5 to 50."
+    options:
+      - text: The number of clusters to find
+        why: t-SNE does not find clusters; it makes a picture.
+      - text: The number of output dimensions
+        why: That is n_components.
+      - text: Roughly how many neighbours each point pays attention to
+        correct: true
+        why: Low values focus on very local structure, higher values on broader structure.
+      - text: The learning rate of the gradient descent
+        why: That is a separate setting.
+  - id: f8-visualising-high-dimensional-data-05
+    type: mcq
+    prompt: "You want to reduce 300 features to fewer dimensions as input to k-means. Which method fits best?"
+    explanation: "PCA is linear, deterministic and keeps the main variance with real geometry; t-SNE and UMAP distort distances and are for pictures."
+    options:
+      - text: t-SNE with a very high perplexity
+        why: Still a picture-making method, not a feature transform.
+      - text: t-SNE to 2 dimensions
+        why: t-SNE coordinates distort distances and encourage artificial islands.
+      - text: PCA
+        correct: true
+        why: Its projections keep meaningful distances, and it can transform new points.
+      - text: Nothing; k-means works best on 300 raw features
+        why: Many noisy dimensions blur distances; PCA often helps.
+  - id: f8-visualising-high-dimensional-data-06
+    type: mcq
+    prompt: "In scikit-learn, why can't you embed a new point into an existing t-SNE picture?"
+    explanation: "`TSNE` only has `fit_transform`: the 2-D positions are optimised jointly for the data it was fitted on, with no learned mapping for new points."
+    options:
+      - text: t-SNE only works on images
+        why: It works on any numeric features.
+      - text: You can, with TSNE.transform
+        why: That method does not exist in scikit-learn's TSNE.
+      - text: New points must be standardised first
+        why: Scaling is not the obstacle.
+      - text: TSNE has no transform method; the positions are optimised for the fitted points only
+        correct: true
+        why: There is no reusable mapping from features to 2-D.
+  - id: f8-visualising-high-dimensional-data-07
+    type: multi
+    prompt: "Which statements about UMAP are true?"
+    explanation: "UMAP builds a neighbour graph and lays it out in 2-D. It is usually faster than t-SNE, can transform new points, lives in umap-learn, and shares t-SNE's caveats."
+    options:
+      - text: Cluster sizes in a UMAP plot can be read literally
+        why: Like t-SNE, it distorts sizes and between-cluster distances.
+      - text: It is provided by the separate umap-learn package
+        correct: true
+        why: It is not part of scikit-learn.
+      - text: It can embed new points into an existing embedding
+        correct: true
+        why: The umap-learn model has a transform method.
+      - text: It is usually faster than t-SNE on large datasets
+        correct: true
+        why: Speed is one of its main attractions.
+  - id: f8-visualising-high-dimensional-data-08
+    type: mcq
+    prompt: "A 2-D embedding of 1,000 points keeps on average 0.58 of each point's 10 nearest neighbours. Which is the best interpretation?"
+    explanation: "More than half of each neighbourhood survives, far above chance (about 10/999 ≈ 0.01), so local structure is mostly kept, but not perfectly."
+    options:
+      - text: 58% of the points are correctly clustered
+        why: No clustering or labels are involved.
+      - text: The embedding is no better than random
+        why: Random positions would keep about 1% of neighbours.
+      - text: The embedding keeps 58% of the variance
+        why: Neighbour overlap and explained variance are different measures.
+      - text: Local neighbourhoods are largely, but not completely, preserved
+        correct: true
+        why: Chance would keep about 1%; 58% is high but not 100%.
+  - id: f8-visualising-high-dimensional-data-09
+    type: mcq
+    prompt: "A colleague runs k-means on t-SNE coordinates and reports 12 customer segments. What is the main problem?"
+    explanation: "t-SNE creates islands and distorts distances, so clusters on its coordinates partly reflect the method and its settings. Cluster in the original scaled space, then use t-SNE to look."
+    options:
+      - text: t-SNE coordinates must be standardised first
+        why: Scaling would not fix the distortions.
+      - text: k-means cannot run on two-dimensional data
+        why: It runs on any number of dimensions.
+      - text: 12 is too many clusters for k-means
+        why: k-means accepts any k; the issue is the input space.
+      - text: The islands partly reflect t-SNE and its settings, not just the data
+        correct: true
+        why: Clustering should be done in the original (or PCA) space.
+  - id: f8-visualising-high-dimensional-data-10
+    type: cloze
+    prompt: "t-SNE fits its 2-D positions by gradient descent on a ____ divergence between neighbour probabilities in the original space and in 2-D."
+    accept: [ "KL", "Kullback-Leibler", "Kullback Leibler", "Kullback–Leibler" ]
+    explanation: "It minimises the KL divergence from F5 between the two sets of neighbour probabilities."

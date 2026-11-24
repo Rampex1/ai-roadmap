@@ -1,0 +1,234 @@
+---
+title: "Bagging and random forests"
+module: f8
+order: 3
+estMinutes: 17
+objectives:
+  - "Explain why averaging many deep trees trained on bootstrap resamples reduces variance, and what feature subsampling adds"
+  - "Draw a bootstrap sample, find its out-of-bag rows, and use the out-of-bag score as a free validation estimate"
+  - "Compare impurity-based and permutation feature importance and name the caveats of each"
+goDeeper: sklearn-ensembles-guide
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A single deep tree is a nervous expert: it knows the training data perfectly and changes its mind whenever the data
+changes a little. This lesson builds a committee of such experts that is far steadier than any member. It is one of the
+most reliable models in all of machine learning, and needs almost no tuning.
+
+## Averaging reduces variance
+
+Suppose $B$ models each make a prediction with variance $\sigma^2$, and their errors are independent. The variance of
+their average is $\sigma^2 / B$, the same law that makes a sample mean more accurate than one observation
+([F5](/foundations/f5/sampling-and-the-clt/)). Real models trained on the same data are not independent. If each pair
+has correlation $\rho$, the variance of the average is
+
+$$
+\rho\,\sigma^2 + \frac{1 - \rho}{B}\,\sigma^2
+$$
+
+The second term vanishes as you add models; the first does not. So an <Term id="ensemble" /> of models helps most when
+the members are (1) individually flexible, so their bias is low, and (2) as **uncorrelated** as possible. Deep trees
+are perfect for (1). The two tricks below are about (2).
+
+## Bagging: a different dataset for each tree
+
+We only have one training set. The <Term id="bootstrap" /> from
+[F5](/foundations/f5/estimation-and-the-bootstrap/) fakes many: draw $n$ rows **with replacement** from the $n$
+training rows. Each resample has some rows twice or more and leaves others out, so each tree trained on one sees a
+slightly different dataset and makes different mistakes.
+
+<Term id="bagging" text="Bagging" /> (bootstrap aggregating) is:
+
+1. For $b = 1, \dots, B$: draw a bootstrap resample and grow a deep tree on it (no pruning).
+2. Predict by **averaging** the trees (regression) or by averaging their class probabilities, equivalent to a soft
+   vote (classification).
+
+## The rows each tree never saw
+
+How many rows does a resample leave out? A given row is missed by one draw with probability $1 - \frac{1}{n}$, so by
+all $n$ independent draws with probability
+
+$$
+\left(1 - \frac{1}{n}\right)^n \;\approx\; e^{-1} \approx 0.368
+$$
+
+About 37% of the rows are **out of bag** (OOB) for each tree, and about 63% are in it:
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(0)
+n = 1000
+idx = rng.integers(0, n, size=n)                 # bootstrap: n row indices, with replacement
+oob = np.setdiff1d(np.arange(n), idx)            # the rows never drawn
+print(f"distinct rows in the resample: {len(np.unique(idx))}, out-of-bag: {len(oob)} ({len(oob) / n:.1%})")
+print(f"(1 - 1/n)^n = {(1 - 1/n) ** n:.4f}, 1/e = {np.exp(-1):.4f}")
+```
+
+```text title="Output"
+distinct rows in the resample: 622, out-of-bag: 378 (37.8%)
+(1 - 1/n)^n = 0.3677, 1/e = 0.3679
+```
+
+That gives a free validation set. For each training row, average the predictions of only the trees that did **not**
+train on it (about a third of them), and score those predictions. This <Term id="out-of-bag-error" text="out-of-bag score" />
+behaves like a cross-validation estimate, without holding out any data or training any extra models.
+
+## Random forests: decorrelate the trees
+
+Bagged trees are still correlated: if one feature is very strong, nearly every tree puts it at the root, and the trees
+look alike. A <Term id="random-forest" /> adds one more source of randomness: **at each split, only a random subset of
+the features is considered**. Sometimes the strong feature is not on offer, so other features get a chance, and the
+trees become more varied.
+
+The size of the subset is `max_features`. The defaults in scikit-learn (as of version 1.8) differ by task:
+
+| Estimator | Default `max_features` | Meaning |
+|---|---|---|
+| `RandomForestClassifier` | `"sqrt"` | $\sqrt{d}$ of the $d$ features per split |
+| `RandomForestRegressor` | `1.0` | all features, which is plain bagging |
+
+Smaller `max_features` gives more varied but individually weaker trees; it is the main knob worth tuning, along with
+`min_samples_leaf`. A common starting point for regression is about $d/3$.
+
+Here are a single tree, bagging and a random forest on `make_friedman1`, a synthetic regression problem with 10
+features of which only the first 5 matter:
+
+```python
+from sklearn.datasets import make_friedman1
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor
+
+X, y = make_friedman1(n_samples=1000, n_features=10, noise=1.0, random_state=0)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+models = {
+    "single tree": DecisionTreeRegressor(random_state=0),
+    "bagging (max_features=1.0)": RandomForestRegressor(
+        n_estimators=200, max_features=1.0, oob_score=True, random_state=0),
+    "random forest (max_features=0.33)": RandomForestRegressor(
+        n_estimators=200, max_features=0.33, oob_score=True, random_state=0),
+}
+for name, m in models.items():
+    m.fit(X_train, y_train)
+    oob = f", OOB R2 {m.oob_score_:.3f}" if hasattr(m, "oob_score_") else ""
+    print(f"{name:34s} test R2 {m.score(X_test, y_test):.3f}{oob}")
+```
+
+```text title="Output"
+single tree                        test R2 0.584
+bagging (max_features=1.0)         test R2 0.854, OOB R2 0.838
+random forest (max_features=0.33)  test R2 0.848, OOB R2 0.830
+```
+
+(`score` for a regressor is $R^2$ from [F7](/foundations/f7/linear-regression-with-scikit-learn/): 1 is perfect, 0 is no better than predicting the mean.)
+
+- Averaging 200 trees lifts $R^2$ from 0.58 to 0.85. Same trees, same data, just averaged.
+- The OOB $R^2$ is close to the test $R^2$, as promised, without touching the test set.
+- On this problem feature subsampling ties with plain bagging, while training each tree faster. It tends to help more
+  when a few strong features dominate or many features are correlated. Try both with cross-validation rather than
+  assuming.
+
+### How many trees?
+
+```python
+for k in [1, 5, 20, 100, 200]:
+    m = RandomForestRegressor(n_estimators=k, max_features=0.33, random_state=0).fit(X_train, y_train)
+    print(k, round(m.score(X_test, y_test), 3))
+```
+
+```text title="Output"
+1 0.444
+5 0.788
+20 0.837
+100 0.848
+200 0.848
+```
+
+Accuracy rises quickly, then plateaus. **More trees never overfit**: adding a tree only makes the average more
+stable, it does not make the model more flexible. The cost is time and memory. A few hundred trees is typical; stop
+adding when the OOB score stops improving.
+
+## Which features matter?
+
+Forests report `feature_importances_`, the **impurity-based** (or "mean decrease in impurity") importance: for each
+feature, the total impurity decrease of all splits on it, averaged over trees and normalised to sum to 1.
+
+```python
+rf = models["random forest (max_features=0.33)"]
+print(np.round(rf.feature_importances_, 3))
+```
+
+```text title="Output"
+[0.189 0.175 0.076 0.335 0.087 0.026 0.027 0.029 0.029 0.027]
+```
+
+Features 5 to 9 are pure noise, yet each gets about 0.027. Impurity importance is computed **on the training data**,
+where deep trees happily split on noise to purify tiny leaves. It also has a known bias towards features with many
+distinct values (continuous or high-cardinality columns), which offer more thresholds to overfit with.
+
+### Permutation importance
+
+A more honest question: *if I scramble this feature, how much worse does the model get on held-out data?*
+
+1. Score the fitted model on a validation or test set.
+2. For feature $j$, randomly shuffle column $j$, breaking its link with the target while keeping its distribution.
+3. Score again. The **drop** in score is feature $j$'s importance. Repeat with several shuffles and average.
+
+This is <Term id="permutation-importance" />. It works for any model, not just trees, and is measured on data the
+model did not train on:
+
+```python
+from sklearn.inspection import permutation_importance
+
+r = permutation_importance(rf, X_test, y_test, n_repeats=10, random_state=0)
+print(np.round(r.importances_mean, 3))
+```
+
+```text title="Output"
+[ 0.296  0.34   0.069  0.558  0.109 -0.    -0.     0.    -0.002  0.   ]
+```
+
+The noise features now score zero: scrambling them costs nothing. The values are drops in $R^2$, so they do not sum
+to 1, and small negative values are just noise.
+
+:::caution[Correlated features share the credit]
+Permutation importance has its own trap. Take a real medical dataset (`load_breast_cancer`), keep three features, and
+add a random noise column. Two of the real features, `mean radius` and `worst perimeter`, both measure the size of
+the tumour and have correlation 0.97. Here are a forest's importances (permutation measured on a held-out 30%):
+
+```text
+feature                impurity  permutation
+worst concave points   0.378     0.129
+worst perimeter        0.392     0.150
+mean radius            0.190    -0.006
+random_noise           0.035    -0.011
+```
+
+Impurity importance gives the noise column 0.035. Permutation importance correctly gives it nothing, but it also says
+`mean radius` is useless. It is not: a forest using only `mean radius` reaches about 83% cross-validated accuracy,
+against 63% for always guessing the majority class. Shuffle it and the forest simply uses `worst perimeter`,
+which carries the same information. So "low permutation importance" means "the model does not *need* this feature
+given the others", not "this feature is unrelated to the target". When features are correlated, permute them as a
+group or drop one and refit.
+:::
+
+Neither number is causal. They describe what *this model* relies on, not what drives the outcome in the world.
+
+## Try it
+
+<CodeExercise id="f8-random-forests-01" />
+
+<CodeExercise id="f8-random-forests-02" />
+
+## Summary
+
+- Averaging $B$ models with variance $\sigma^2$ and pairwise correlation $\rho$ gives variance
+  $\rho\sigma^2 + (1 - \rho)\sigma^2 / B$: averaging helps, and less correlation helps more.
+- Bagging trains deep trees on bootstrap resamples and averages them. Each resample leaves out about
+  $1/e \approx 37\%$ of the rows, which give a free out-of-bag validation score.
+- A random forest also picks each split from a random subset of features (`max_features`), decorrelating the trees.
+- More trees never overfit; they only cost time.
+- Impurity importance is computed on training data and inflates noisy, high-cardinality features. Permutation
+  importance on held-out data is more honest, but correlated features share (and can hide) each other's credit.

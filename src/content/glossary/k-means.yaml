@@ -1,0 +1,7 @@
+term: "k-means"
+short: "A clustering algorithm that splits data into k groups by alternately assigning each point to its nearest centroid and moving each centroid to the mean of its points."
+body: |
+  It minimises the inertia, the sum of squared distances from points to their centroids, but only finds a local
+  minimum, so it is usually run from several k-means++ starts. It assumes roughly round, similar-sized clusters, needs
+  scaled features and needs k chosen in advance, for example with the silhouette score.
+related: ["silhouette-score", "feature-scaling"]

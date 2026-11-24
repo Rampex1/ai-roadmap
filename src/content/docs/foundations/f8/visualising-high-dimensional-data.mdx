@@ -1,0 +1,167 @@
+---
+title: "Seeing high-dimensional data: PCA, t-SNE and UMAP"
+module: f8
+order: 7
+estMinutes: 15
+objectives:
+  - "Project data to 2-D with PCA and read the explained variance ratio"
+  - "Explain what t-SNE and UMAP preserve (local neighbourhoods) and what they do not (sizes, global distances)"
+  - "Measure how many nearest neighbours a 2-D picture keeps, and avoid the common misreadings of t-SNE plots"
+goDeeper: distill-tsne
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import Figure from '@/components/Figure.astro';
+import tsneImg from '@/assets/diagrams/f8-pca-vs-tsne.svg';
+
+After clustering customers or training a model, you will want to *look* at the data. But a table with 64 columns is a
+cloud of points in 64 dimensions, and screens have two. This lesson covers the standard ways to squash data into a
+2-D picture, and how to avoid reading things into the picture that are not there.
+
+Our running example is scikit-learn's `load_digits`: 1,797 handwritten digits, each an 8×8 grayscale image flattened
+into 64 pixel values.
+
+## PCA: the best flat view
+
+You built <Term id="pca" text="PCA" /> from the SVD in [F3](/foundations/f3/svd-and-pca/). Recap: centre the data,
+find the orthogonal directions of greatest variance (the principal components), and project onto the first few. Using
+two components gives the **linear** 2-D view that keeps as much variance as possible.
+
+```python
+import numpy as np
+from sklearn.datasets import load_digits
+from sklearn.decomposition import PCA
+
+X, y = load_digits(return_X_y=True)
+pca = PCA(n_components=2).fit(X)
+Z_pca = pca.transform(X)
+print("explained variance ratio:", np.round(pca.explained_variance_ratio_, 3))
+cum = np.cumsum(PCA().fit(X).explained_variance_ratio_)
+print("components needed for 90%:", int(np.searchsorted(cum, 0.9) + 1))
+```
+
+```text title="Output"
+explained variance ratio: [0.149 0.136]
+components needed for 90%: 21
+```
+
+The 2-D view keeps only $14.9\% + 13.6\% \approx 28\%$ of the variance; 21 components are needed for 90%. The digits
+genuinely live in more than two dimensions, so any flat 2-D picture must throw a lot away. PCA is still the first
+thing to try: it is fast, deterministic, has a meaningful geometry (distances in the plot are distances along real
+directions), and can project new points with `transform`.
+
+## t-SNE: keep the neighbours
+
+**<Term id="t-sne" />** (t-distributed stochastic neighbour embedding, van der Maaten and Hinton, 2008) gives up on
+preserving the global geometry and focuses on one thing: **points that are close in the original space should be
+close in the picture**. Roughly:
+
+1. For each point, turn distances to the other points into probabilities of being "neighbours": near points get high
+   probability, far points almost zero. The **perplexity** sets how many neighbours each point effectively considers,
+   typically 5 to 50.
+2. Place the points randomly in 2-D and define similar neighbour probabilities there, using a heavy-tailed Student t
+   distribution (that is the "t").
+3. Move the 2-D points by gradient descent to make the two sets of probabilities match, minimising a
+   <Term id="kl-divergence" /> from F5.
+
+The heavy tails let moderately distant points be placed far apart in 2-D, which is why t-SNE pictures show
+well-separated islands.
+
+```python
+from sklearn.manifold import TSNE
+
+Z_tsne = TSNE(n_components=2, perplexity=30, random_state=0).fit_transform(X)
+```
+
+This takes a few seconds on a laptop (about 15 seconds in the browser). Here are both pictures, coloured by the true
+digit, which neither method was told:
+
+<Figure
+  src={tsneImg}
+  alt="Two scatter plots of a 700-point sample of the handwritten digits coloured by digit. Left, PCA: the classes overlap heavily in the middle, with 0, 4 and 6 somewhat apart. Right, t-SNE: ten compact, well-separated islands, one per digit, with the 1s split into a few pieces"
+  caption="A 700-point sample of the digits through PCA (left) and t-SNE (right), both fitted on all 1,797. Neither saw the labels. Colours are the true digits."
+/>
+
+t-SNE separates the digits far more cleanly. We can measure what each picture keeps: for each point, what fraction of
+its 10 nearest neighbours in 64-D are still among its 10 nearest neighbours in 2-D?
+
+```python
+from sklearn.neighbors import NearestNeighbors
+
+def neighbour_overlap(X_high, X_low, k=10):
+    nn_h = NearestNeighbors(n_neighbors=k + 1).fit(X_high).kneighbors(X_high, return_distance=False)[:, 1:]
+    nn_l = NearestNeighbors(n_neighbors=k + 1).fit(X_low).kneighbors(X_low, return_distance=False)[:, 1:]
+    return np.mean([len(set(a) & set(b)) / k for a, b in zip(nn_h, nn_l)])
+
+print(f"PCA:   {neighbour_overlap(X, Z_pca):.2f} of the 10 nearest neighbours kept")
+print(f"t-SNE: {neighbour_overlap(X, Z_tsne):.2f} of the 10 nearest neighbours kept")
+```
+
+```text title="Output"
+PCA:   0.12 of the 10 nearest neighbours kept
+t-SNE: 0.58 of the 10 nearest neighbours kept
+```
+
+(Each point's nearest neighbour is itself, hence `k + 1` and `[:, 1:]`.) t-SNE does what it promises: neighbourhoods
+survive. scikit-learn's `sklearn.manifold.trustworthiness` is a more refined score of the same idea.
+
+## Reading t-SNE plots safely
+
+The Distill article *How to Use t-SNE Effectively* shows, with interactive examples, how easily these pictures
+mislead. The main rules:
+
+- **Cluster sizes mean nothing.** t-SNE expands dense clusters and contracts sparse ones. A big island is not a big or
+  diverse group.
+- **Distances between clusters may mean nothing.** Two islands far apart are not necessarily more different than two
+  that are close. Only *local* structure is trustworthy.
+- **The picture depends on perplexity**, and the best value is not known in advance. Look at several (say 5, 30, 50).
+- **Different random seeds give different pictures.** Check that the structure you care about appears in several runs.
+- **Random noise can look like clusters**, especially at low perplexity. Do not "discover" groups from one picture.
+- **It is for looking, not for features.** scikit-learn's `TSNE` has no `transform` for new points, and the 2-D
+  coordinates distort distances, so do not cluster on them or feed them to a model.
+
+:::caution[A classic mistake]
+Running k-means on t-SNE coordinates and reporting "we found 10 clusters" tells you about t-SNE's tendency to make
+islands as much as about your data. Cluster in the original (scaled) feature space, or a PCA projection of it, then
+*use* t-SNE to look at the result.
+:::
+
+## UMAP
+
+**UMAP** (uniform manifold approximation and projection, McInnes and colleagues, 2018) is a newer method with the
+same goal and a different mathematical construction: it builds a nearest-neighbour graph in the original space and
+lays that graph out in 2-D. In practice:
+
+- it is usually **much faster** than t-SNE on large datasets, and tends to keep a little more of the global layout;
+- it can `transform` new points into an existing embedding;
+- it comes from the separate `umap-learn` package, not scikit-learn (and is not available in this site's browser
+  Python), with `n_neighbors` (like perplexity) and `min_dist` (how tightly points pack) as its main settings.
+
+The t-SNE caveats above apply to UMAP too: sizes and between-cluster distances are not to be trusted, and the result
+depends on settings and seed.
+
+## Which to use?
+
+| Goal | Tool |
+|---|---|
+| A quick, honest first look; reduce dimensions before another model | PCA |
+| See local structure and groups in a picture | t-SNE or UMAP (several settings and seeds) |
+| Reduce dimensions as input features for clustering or a model | PCA (not t-SNE) |
+
+A good habit: standardise the features, run PCA first (to, say, 50 components if you have hundreds of features), then
+run t-SNE or UMAP on that. It is faster and removes some noise.
+
+## Try it
+
+<CodeExercise id="f8-visualising-high-dimensional-data-01" />
+
+<CodeExercise id="f8-visualising-high-dimensional-data-02" />
+
+## Summary
+
+- PCA gives the best linear 2-D view; its explained variance ratio says how much is lost (72% for the digits).
+- t-SNE matches neighbour probabilities between the original space and 2-D, so local neighbourhoods survive and groups
+  appear as islands. UMAP has the same goal, is faster, and lives in `umap-learn`.
+- In t-SNE and UMAP plots, cluster sizes and distances between clusters are not reliable; check several perplexities
+  and seeds, and never cluster on the 2-D coordinates.
+- Use PCA for features and preprocessing, t-SNE/UMAP for pictures.

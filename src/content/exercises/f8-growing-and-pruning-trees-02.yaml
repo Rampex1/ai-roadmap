@@ -1,0 +1,62 @@
+id: f8-growing-and-pruning-trees-02
+lesson: foundations/f8/growing-and-pruning-trees
+title: Walk a fitted tree by hand
+prompt: |
+  A fitted scikit-learn tree stores its nodes in parallel arrays in `model.tree_`. For node `i`:
+
+  - `feature[i]` and `threshold[i]`: the question "is `x[feature[i]] <= threshold[i]`?"
+  - `children_left[i]` (go here on yes) and `children_right[i]` (on no). At a leaf both are `-1`.
+  - `value[i]`: the leaf's prediction. For a regressor, `value[i][0][0]` is the mean target of the leaf.
+
+  The root is node 0. Write `predict_one(model, x)` that starts at the root, follows the questions down to a leaf
+  for a single feature vector `x`, and returns that leaf's `value[i][0][0]` as a float. Don't call
+  `model.predict`; the tests compare your walk with it.
+starter: |
+  import numpy as np
+  from sklearn.tree import DecisionTreeRegressor
+
+  def predict_one(model, x):
+      t = model.tree_
+      node = 0
+      # TODO: move left or right until you reach a leaf
+      return float(t.value[node][0][0])
+
+  rng = np.random.default_rng(0)
+  X = rng.uniform(0, 6, (200, 2))
+  y = np.sin(X[:, 0]) + X[:, 1] + rng.normal(0, 0.3, 200)
+  model = DecisionTreeRegressor(max_depth=3, random_state=0).fit(X, y)
+  print(predict_one(model, X[0]), model.predict(X[:1])[0])
+solution: |
+  import numpy as np
+  from sklearn.tree import DecisionTreeRegressor
+
+  def predict_one(model, x):
+      t = model.tree_
+      node = 0
+      while t.children_left[node] != -1:
+          if x[t.feature[node]] <= t.threshold[node]:
+              node = t.children_left[node]
+          else:
+              node = t.children_right[node]
+      return float(t.value[node][0][0])
+
+  rng = np.random.default_rng(0)
+  X = rng.uniform(0, 6, (200, 2))
+  y = np.sin(X[:, 0]) + X[:, 1] + rng.normal(0, 0.3, 200)
+  model = DecisionTreeRegressor(max_depth=3, random_state=0).fit(X, y)
+  print(predict_one(model, X[0]), model.predict(X[:1])[0])
+tests: |
+  import numpy as np
+  from sklearn.tree import DecisionTreeRegressor
+  _rng = np.random.default_rng(11)
+  for _depth, _d in [(3, 2), (None, 3), (1, 4)]:
+      _X = _rng.uniform(-2, 2, (120, _d))
+      _y = _X[:, 0] ** 2 - _X[:, -1] + _rng.normal(0, 0.2, 120)
+      _m = DecisionTreeRegressor(max_depth=_depth, random_state=0).fit(_X, _y)
+      _Xq = _rng.uniform(-2.5, 2.5, (40, _d))
+      _want = _m.predict(_Xq)
+      _got = np.array([predict_one(_m, _row) for _row in _Xq])
+      assert np.allclose(_got, _want), f"With max_depth={_depth} and {_d} features, predict_one disagrees with model.predict on {int(np.sum(~np.isclose(_got, _want)))} of 40 rows"
+hints:
+  - "Loop while children_left[node] is not -1."
+  - "Compare x[t.feature[node]] with t.threshold[node]: less than or equal goes left."

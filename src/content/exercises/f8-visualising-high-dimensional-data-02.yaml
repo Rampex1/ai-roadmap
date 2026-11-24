@@ -1,0 +1,51 @@
+id: f8-visualising-high-dimensional-data-02
+lesson: foundations/f8/visualising-high-dimensional-data
+title: How many components for 90%?
+prompt: |
+  Write `n_components_for(X, threshold)` that returns the **smallest** number of principal components whose
+  explained variance ratios add up to at least `threshold` (for example `0.9`).
+
+  Fit `PCA()` (all components) to `X`, take the cumulative sum of `explained_variance_ratio_` with `np.cumsum`, and
+  find the first position where it reaches the threshold. Return it as a count (so the first component counts as 1).
+
+  Check: for `load_digits` and `0.9` the answer is `21`, as in the lesson.
+starter: |
+  import numpy as np
+  from sklearn.decomposition import PCA
+  from sklearn.datasets import load_digits
+
+  def n_components_for(X, threshold):
+      # TODO
+      return X.shape[1]
+
+  X, _ = load_digits(return_X_y=True)
+  print(n_components_for(X, 0.9))
+solution: |
+  import numpy as np
+  from sklearn.decomposition import PCA
+  from sklearn.datasets import load_digits
+
+  def n_components_for(X, threshold):
+      cum = np.cumsum(PCA().fit(X).explained_variance_ratio_)
+      return int(np.argmax(cum >= threshold) + 1)
+
+  X, _ = load_digits(return_X_y=True)
+  print(n_components_for(X, 0.9))
+tests: |
+  import numpy as np
+  from sklearn.decomposition import PCA
+  from sklearn.datasets import load_digits
+  _X, _ = load_digits(return_X_y=True)
+  _got = n_components_for(_X, 0.9)
+  assert _got == 21, f"Digits need 21 components for 90% of the variance, got {_got}. Did you count from 1?"
+  _rng = np.random.default_rng(0)
+  _A = _rng.normal(size=(300, 12)) @ np.diag([10, 8, 6, 3, 2, 1, 0.5, 0.5, 0.3, 0.2, 0.1, 0.1])
+  for _t in [0.5, 0.8, 0.95, 0.99]:
+      _ref = PCA(n_components=_t).fit(_A).n_components_
+      _g = n_components_for(_A, _t)
+      assert _g == _ref, f"For threshold {_t} expected {_ref} components, got {_g}"
+  _B = _rng.normal(size=(200, 6)) @ np.diag([5, 0.1, 0.1, 0.1, 0.1, 0.1])
+  assert n_components_for(_B, 0.9) == 1, "When one direction holds almost all the variance, one component is enough"
+hints:
+  - "cum = np.cumsum(PCA().fit(X).explained_variance_ratio_)."
+  - "np.argmax(cum >= threshold) is the index of the first True; add 1 to turn it into a count."

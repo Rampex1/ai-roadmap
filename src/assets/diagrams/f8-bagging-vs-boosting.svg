@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" width="720" height="290" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title>Left, bagging: the training data feeds three bootstrap resamples in parallel, each grows a deep tree independently, and their predictions are averaged. Right, boosting: trees are built one after another; tree 1 fits the data, tree 2 fits what tree 1 got wrong, tree 3 fits what remains, and the prediction is the sum of all trees, each scaled by the learning rate</title>
+<defs><marker id="f8bb-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#8b93b8"/></marker></defs>
+<text x="170" y="22" font-size="16" font-weight="700" fill="#64748b" text-anchor="middle">Bagging / random forest</text>
+<text x="540" y="22" font-size="16" font-weight="700" fill="#64748b" text-anchor="middle">Boosting</text>
+<line x1="360" y1="10" x2="360" y2="280" stroke="#8b93b8" stroke-width="1" stroke-dasharray="4 4"/>
+<rect x="100" y="36" width="140" height="36" rx="8" fill="#0f766e"/>
+<text x="170" y="59" font-size="14" font-weight="700" fill="#ffffff" text-anchor="middle">training data</text>
+<g stroke="#8b93b8" stroke-width="1.6" marker-end="url(#f8bb-a)">
+<line x1="170" y1="72" x2="65" y2="112"/><line x1="170" y1="72" x2="170" y2="112"/><line x1="170" y1="72" x2="275" y2="112"/>
+<line x1="65" y1="160" x2="155" y2="210"/><line x1="170" y1="160" x2="170" y2="210"/><line x1="275" y1="160" x2="185" y2="210"/>
+</g>
+<rect x="20" y="114" width="90" height="46" rx="8" fill="#4f46e5"/>
+<rect x="125" y="114" width="90" height="46" rx="8" fill="#4f46e5"/>
+<rect x="230" y="114" width="90" height="46" rx="8" fill="#4f46e5"/>
+<text x="65" y="134" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">deep tree 1</text>
+<text x="170" y="134" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">deep tree 2</text>
+<text x="275" y="134" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">deep tree 3</text>
+<text x="65" y="151" font-size="11" fill="#e0e7ff" text-anchor="middle">resample 1</text>
+<text x="170" y="151" font-size="11" fill="#e0e7ff" text-anchor="middle">resample 2</text>
+<text x="275" y="151" font-size="11" fill="#e0e7ff" text-anchor="middle">resample 3</text>
+<rect x="100" y="212" width="140" height="36" rx="8" fill="#d97706"/>
+<text x="170" y="235" font-size="14" font-weight="700" fill="#ffffff" text-anchor="middle">average</text>
+<text x="170" y="272" font-size="12" fill="#64748b" text-anchor="middle">independent, in parallel: cuts variance</text>
+<rect x="400" y="36" width="140" height="36" rx="8" fill="#0f766e"/>
+<text x="470" y="59" font-size="14" font-weight="700" fill="#ffffff" text-anchor="middle">training data</text>
+<g stroke="#8b93b8" stroke-width="1.6" marker-end="url(#f8bb-a)">
+<line x1="470" y1="72" x2="470" y2="90"/>
+<line x1="470" y1="126" x2="470" y2="144"/>
+<line x1="470" y1="180" x2="470" y2="198"/>
+<line x1="540" y1="108" x2="610" y2="212"/><line x1="540" y1="162" x2="615" y2="212"/><line x1="540" y1="216" x2="600" y2="226"/>
+</g>
+<rect x="400" y="92" width="140" height="34" rx="8" fill="#4f46e5"/>
+<rect x="400" y="146" width="140" height="34" rx="8" fill="#4f46e5"/>
+<rect x="400" y="200" width="140" height="34" rx="8" fill="#4f46e5"/>
+<text x="470" y="114" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">small tree 1</text>
+<text x="470" y="168" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">tree 2 fits residuals</text>
+<text x="470" y="222" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">tree 3 fits residuals</text>
+<rect x="602" y="212" width="108" height="36" rx="8" fill="#d97706"/>
+<text x="656" y="235" font-size="14" font-weight="700" fill="#ffffff" text-anchor="middle">add up</text>
+<text x="540" y="272" font-size="12" fill="#64748b" text-anchor="middle">one after another: cuts bias</text>
+</svg>

@@ -1,0 +1,71 @@
+id: f8-growing-and-pruning-trees-01
+lesson: foundations/f8/growing-and-pruning-trees
+title: Pick a depth with cross-validation
+prompt: |
+  Write `choose_depth(X, y, depths)` that returns the value in `depths` (which may include `None`, meaning
+  unlimited) whose `DecisionTreeRegressor(max_depth=d, random_state=0)` has the **lowest mean cross-validated
+  MSE** on `X, y`.
+
+  Use exactly this splitter so results are reproducible: `cv = KFold(n_splits=5, shuffle=True, random_state=0)`,
+  and `cross_val_score(model, X, y, cv=cv, scoring="neg_mean_squared_error")`. Remember that the scores are
+  **negated** MSEs: the best depth has the highest mean score. If two depths tie, return the one that comes first
+  in `depths`.
+
+  The starter prints your choice on the lesson's sine data. It should not be `None`.
+starter: |
+  import numpy as np
+  from sklearn.tree import DecisionTreeRegressor
+  from sklearn.model_selection import KFold, cross_val_score
+
+  def choose_depth(X, y, depths):
+      # TODO: return the depth with the lowest mean 5-fold CV MSE
+      return depths[-1]
+
+  rng = np.random.default_rng(0)
+  x = rng.uniform(0, 6, 200)
+  X, y = x.reshape(-1, 1), np.sin(x) + rng.normal(0, 0.3, 200)
+  print(choose_depth(X, y, [1, 2, 3, 4, 6, 8, None]))
+solution: |
+  import numpy as np
+  from sklearn.tree import DecisionTreeRegressor
+  from sklearn.model_selection import KFold, cross_val_score
+
+  def choose_depth(X, y, depths):
+      cv = KFold(n_splits=5, shuffle=True, random_state=0)
+      best_d, best_score = None, -np.inf
+      for d in depths:
+          model = DecisionTreeRegressor(max_depth=d, random_state=0)
+          score = cross_val_score(model, X, y, cv=cv, scoring="neg_mean_squared_error").mean()
+          if score > best_score:
+              best_d, best_score = d, score
+      return best_d
+
+  rng = np.random.default_rng(0)
+  x = rng.uniform(0, 6, 200)
+  X, y = x.reshape(-1, 1), np.sin(x) + rng.normal(0, 0.3, 200)
+  print(choose_depth(X, y, [1, 2, 3, 4, 6, 8, None]))
+tests: |
+  import numpy as np
+  from sklearn.tree import DecisionTreeRegressor
+  from sklearn.model_selection import KFold, cross_val_score
+  def _ref(X, y, depths):
+      cv = KFold(n_splits=5, shuffle=True, random_state=0)
+      s = [cross_val_score(DecisionTreeRegressor(max_depth=d, random_state=0), X, y, cv=cv, scoring="neg_mean_squared_error").mean() for d in depths]
+      return depths[int(np.argmax(s))]
+  _rng = np.random.default_rng(0)
+  _x = _rng.uniform(0, 6, 200)
+  _X, _y = _x.reshape(-1, 1), np.sin(_x) + _rng.normal(0, 0.3, 200)
+  _ds = [1, 2, 3, 4, 6, 8, None]
+  _got = choose_depth(_X, _y, _ds)
+  assert _got is not None, "On noisy sine data the unlimited tree overfits; choose_depth should not return None. Is a higher (less negative) score better in your comparison?"
+  assert _got == _ref(_X, _y, _ds), f"Expected depth {_ref(_X, _y, _ds)}, got {_got}"
+  _rng = np.random.default_rng(5)
+  _X2 = _rng.uniform(-3, 3, (300, 2))
+  _y2 = np.where(_X2[:, 0] > 0, 2.0, -1.0) + np.where(_X2[:, 1] > 1, 1.5, 0.0) + _rng.normal(0, 0.1, 300)
+  _ds2 = [None, 1, 2, 3, 5]
+  assert choose_depth(_X2, _y2, _ds2) == _ref(_X2, _y2, _ds2), f"On a second dataset expected depth {_ref(_X2, _y2, _ds2)}, got {choose_depth(_X2, _y2, _ds2)}"
+  _X3 = _rng.uniform(0, 1, (150, 1)); _y3 = 5 * _X3[:, 0] + _rng.normal(0, 1.0, 150)
+  assert choose_depth(_X3, _y3, [8, 1, 2]) == _ref(_X3, _y3, [8, 1, 2]), f"On a third dataset expected {_ref(_X3, _y3, [8, 1, 2])}, got {choose_depth(_X3, _y3, [8, 1, 2])}"
+hints:
+  - "Create cv = KFold(n_splits=5, shuffle=True, random_state=0) once and reuse it for every depth."
+  - "cross_val_score returns one negated MSE per fold; take .mean() and keep the depth with the largest mean."

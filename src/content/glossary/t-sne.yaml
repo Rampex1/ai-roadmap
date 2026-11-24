@@ -1,0 +1,7 @@
+term: "t-SNE"
+short: "A non-linear method that places high-dimensional points in 2-D so that points that are near neighbours stay near each other, used for visualisation."
+body: |
+  t-distributed stochastic neighbour embedding preserves local neighbourhoods but not global geometry: cluster sizes
+  and distances between clusters in the picture mean little, and the result depends on the perplexity setting and
+  the random seed. Use it to look at data, not as features for a model.
+related: ["pca", "k-means"]

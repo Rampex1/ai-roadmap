@@ -1,0 +1,206 @@
+---
+title: "Boosting: AdaBoost and gradient boosting"
+module: f8
+order: 4
+estMinutes: 17
+objectives:
+  - "Explain how boosting builds a strong model from weak learners added in sequence, and how it differs from bagging"
+  - "Implement gradient boosting for regression by repeatedly fitting small trees to residuals"
+  - "Tune the learning rate and number of trees with early stopping, and use HistGradientBoosting in scikit-learn"
+goDeeper: statquest-gradient-boost
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import Figure from '@/components/Figure.astro';
+import bbImg from '@/assets/diagrams/f8-bagging-vs-boosting.svg';
+
+Random forests average many strong, independent trees. **Boosting** does the opposite: it adds many *weak* trees
+one after another, and each new tree concentrates on what the ensemble so far gets wrong. On tabular data, gradient
+boosted trees are usually the most accurate models you can train, which is why they win so many
+competitions and run so many production systems.
+
+<Figure
+  src={bbImg}
+  alt="Left: training data feeds three deep trees in parallel, whose outputs are averaged. Right: training data feeds small tree 1, then tree 2 fits residuals, then tree 3 fits residuals, and all three are added up"
+  caption="Bagging trains independent deep trees and averages them. Boosting trains small trees in sequence, each fixing the errors of the sum so far."
+/>
+
+## AdaBoost: the original idea
+
+The first practical boosting method, **AdaBoost** (Freund and Schapire, 1995), works for classification with a very
+weak learner, often a **stump** (a tree with a single split):
+
+1. Give every training row the same weight.
+2. Fit a stump using the weights, so it tries hardest on heavily weighted rows.
+3. Give the stump a vote proportional to how accurate it was.
+4. **Increase the weights of the rows it got wrong**, decrease the others, and go back to step 2.
+
+The final classifier is a weighted vote of all the stumps. Each new stump is forced to focus on the hard cases the
+previous ones missed. A single stump is barely better than guessing, but hundreds of them, each patching the others'
+mistakes, can carve out a complicated boundary. scikit-learn has `AdaBoostClassifier`, but in practice AdaBoost has
+been overtaken by the more general idea below.
+
+## Gradient boosting: fit the residuals
+
+Take regression with squared error. Start with the simplest prediction, a constant: $F_0(x) = \bar{y}$, the mean of
+the targets. The **residuals** $r_i = y_i - F_0(x_i)$ are what this model gets wrong. So fit a small regression tree
+$h_1$ to predict the *residuals* from $x$, and add it:
+
+$$
+F_1(x) = F_0(x) + \eta\, h_1(x)
+$$
+
+Then compute new residuals $y_i - F_1(x_i)$, fit $h_2$ to them, add it, and so on:
+
+$$
+F_m(x) = F_{m-1}(x) + \eta\, h_m(x), \qquad h_m \text{ fitted to } y_i - F_{m-1}(x_i)
+$$
+
+$\eta$ is the **learning rate** (also called shrinkage), between 0 and 1. Each tree corrects only a fraction of the
+remaining error, leaving room for later trees to refine it.
+
+Why "gradient"? For the squared loss $\ell = \frac{1}{2}(y - F)^2$, the derivative with respect to the prediction
+$F$ is $-(y - F)$, so the residual is exactly the **negative gradient** of the loss. Each tree is a step of gradient
+descent from [F6](/foundations/f6/gradient-descent/), taken not in parameter space but in the space of predictions:
+"move each prediction a little in the direction that lowers the loss". For other losses you fit the tree to the
+negative gradient of *that* loss. For classification with log loss (cross-entropy) the trees predict log-odds,
+and the negative gradient is $y_i - p_i$, the label minus the predicted probability.
+
+Here it is from scratch on the noisy sine data from lesson 2, with depth-2 trees and $\eta = 0.1$:
+
+```python
+import numpy as np
+from sklearn.tree import DecisionTreeRegressor
+
+rng = np.random.default_rng(0)
+def make(n):
+    x = rng.uniform(0, 6, n)
+    return x.reshape(-1, 1), np.sin(x) + rng.normal(0, 0.3, n)
+X_train, y_train = make(200)
+X_test, y_test = make(1000)
+
+lr, n_trees = 0.1, 100
+pred_train = np.full(len(y_train), y_train.mean())      # F0: the mean
+pred_test = np.full(len(y_test), y_train.mean())
+for m in range(1, n_trees + 1):
+    residual = y_train - pred_train
+    tree = DecisionTreeRegressor(max_depth=2, random_state=0).fit(X_train, residual)
+    pred_train += lr * tree.predict(X_train)
+    pred_test += lr * tree.predict(X_test)
+    if m in [1, 5, 20, 50, 100]:
+        print(f"{m:3d} trees: train MSE {np.mean((y_train - pred_train) ** 2):.3f}, "
+              f"test MSE {np.mean((y_test - pred_test) ** 2):.3f}")
+```
+
+```text title="Output"
+  1 trees: train MSE 0.497, test MSE 0.536
+  5 trees: train MSE 0.282, test MSE 0.310
+ 20 trees: train MSE 0.099, test MSE 0.118
+ 50 trees: train MSE 0.073, test MSE 0.102
+100 trees: train MSE 0.061, test MSE 0.103
+```
+
+Ten lines of code, and the test MSE of 0.102 beats the best single tree from lesson 2 (0.108). scikit-learn's
+`GradientBoostingRegressor(n_estimators=100, learning_rate=0.1, max_depth=2)` produces *exactly* the same predictions
+on this data: it runs the same algorithm.
+
+:::note[Bias, not variance]
+A depth-2 tree is a weak, high-bias model. Boosting reduces **bias**: each round adds capacity where the model is
+still wrong. That is why boosting uses small trees (depth 2 to 8, or a limit on leaves) while forests use deep ones.
+It also means boosting *can* overfit if you keep going.
+:::
+
+## Learning rate and number of trees
+
+The two main knobs pull in opposite directions. A smaller learning rate needs more trees but usually generalises a
+little better. Fit 1,000 trees at several learning rates and track the test error after each tree with
+`staged_predict`:
+
+```python
+from sklearn.ensemble import GradientBoostingRegressor
+
+for lr in [1.0, 0.3, 0.1, 0.03]:
+    g = GradientBoostingRegressor(n_estimators=1000, learning_rate=lr, max_depth=2,
+                                  random_state=0).fit(X_train, y_train)
+    test_mse = [np.mean((y_test - p) ** 2) for p in g.staged_predict(X_test)]
+    best = int(np.argmin(test_mse))
+    print(f"learning_rate={lr:<4}: best test MSE {test_mse[best]:.3f} at {best + 1:4d} trees, "
+          f"after 1000 trees {test_mse[-1]:.3f}")
+```
+
+```text title="Output"
+learning_rate=1.0 : best test MSE 0.113 at    5 trees, after 1000 trees 0.176
+learning_rate=0.3 : best test MSE 0.099 at   12 trees, after 1000 trees 0.175
+learning_rate=0.1 : best test MSE 0.101 at   40 trees, after 1000 trees 0.154
+learning_rate=0.03: best test MSE 0.101 at  136 trees, after 1000 trees 0.119
+```
+
+- The best number of trees grows roughly like $1/\eta$: 5, 12, 40, 136.
+- With too many trees, every learning rate eventually overfits: the large ones climb back to the 0.176 of the
+  memorising tree, smaller ones more slowly, so they are more forgiving.
+- With $\eta = 1$ (no shrinkage) the best result is clearly worse.
+
+We peeked at the test set to draw this picture. In practice you pick the number of trees with **early stopping**
+on a validation set, exactly as in neural network training: hold out some training data, keep adding trees while the
+validation loss improves, stop when it has not improved for a set number of rounds. The usual recipe: fix a small
+learning rate (0.05 to 0.1), set a large maximum number of trees, and let early stopping choose.
+
+## HistGradientBoosting: the one to use
+
+`GradientBoostingRegressor` tries every threshold, which gets slow with many rows. Modern libraries first **bin**
+each feature into at most 255 buckets (by quantiles) and only consider bucket edges as thresholds. With
+little loss of accuracy this is many times faster on large data. In scikit-learn that is
+`HistGradientBoostingClassifier` and `HistGradientBoostingRegressor`:
+
+```python
+from sklearn.datasets import make_friedman1
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import HistGradientBoostingRegressor
+
+X, y = make_friedman1(n_samples=1000, n_features=10, noise=1.0, random_state=0)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+hgb = HistGradientBoostingRegressor(max_iter=1000, learning_rate=0.1, early_stopping=True,
+                                    random_state=0).fit(X_train, y_train)
+print(f"{hgb.n_iter_} trees, test R2 {hgb.score(X_test, y_test):.3f}")
+```
+
+```text title="Output"
+123 trees, test R2 0.918
+```
+
+On the same data the random forest of lesson 3 reached 0.848. Things worth knowing (scikit-learn 1.8):
+
+- `max_iter` is the maximum number of trees. With `early_stopping=True` it holds out 10% of the training data
+  (`validation_fraction`) and stops after 10 rounds without improvement (`n_iter_no_change`). The default,
+  `"auto"`, switches early stopping on only when there are more than 10,000 rows.
+- Trees are limited by `max_leaf_nodes` (default 31) rather than depth. `min_samples_leaf` and `l2_regularization`
+  also regularise.
+- **Missing values are handled natively**: at each split the tree learns whether rows with `NaN` should go left or
+  right. No imputation step is needed.
+- **Categorical features** can be used directly. With a pandas DataFrame, columns of `category` dtype are treated as
+  categorical by default (`categorical_features="from_dtype"`).
+
+:::tip[XGBoost, LightGBM and CatBoost]
+Three dedicated libraries implement the same idea with extra engineering, and dominate tabular competitions:
+**XGBoost**, **LightGBM** (which inspired scikit-learn's histogram version) and **CatBoost** (strong
+handling of categorical features). Each has a scikit-learn-style `fit`/`predict` interface. As of late 2026 they are
+often faster than scikit-learn on large datasets and offer GPU training, but on small and medium data the accuracy
+differences are usually small. Learn the ideas here; switching library later is a few lines of code.
+:::
+
+## Try it
+
+<CodeExercise id="f8-gradient-boosting-01" />
+
+<CodeExercise id="f8-gradient-boosting-02" />
+
+## Summary
+
+- Boosting adds weak learners in sequence, each focusing on the current ensemble's errors. AdaBoost does it by
+  reweighting misclassified rows.
+- Gradient boosting starts from a constant and repeatedly fits a small tree to the negative gradient of the loss
+  (the residuals, for squared error), adding it scaled by a learning rate $\eta$.
+- Boosting mainly reduces bias, uses small trees, and **can** overfit: choose the number of trees by early stopping.
+  Smaller $\eta$ needs more trees but is more forgiving.
+- Use `HistGradientBoostingClassifier` / `Regressor`: fast binned splits, early stopping, native missing values and
+  categorical features. XGBoost, LightGBM and CatBoost are popular alternatives.

@@ -1,0 +1,68 @@
+id: f8-k-means-clustering-02
+lesson: foundations/f8/k-means-clustering
+title: The silhouette score from scratch
+prompt: |
+  Write `silhouette(X, labels)` that returns the mean silhouette of a clustering, using Euclidean distances. For
+  each point $i$:
+
+  - $a_i$: the mean distance from $i$ to the **other** points of its own cluster;
+  - $b_i$: for every other cluster, the mean distance from $i$ to its points; $b_i$ is the **smallest** of these;
+  - $s_i = (b_i - a_i) / \max(a_i, b_i)$, except that $s_i = 0$ when $i$ is alone in its cluster.
+
+  Return the mean of $s_i$ over all points. You may assume at least 2 clusters. Tip: build the full distance matrix
+  once with broadcasting, `D = np.sqrt(((X[:, None, :] - X[None, :, :]) ** 2).sum(axis=2))`.
+
+  The tests compare your result with `sklearn.metrics.silhouette_score`.
+starter: |
+  import numpy as np
+
+  def silhouette(X, labels):
+      X, labels = np.asarray(X, dtype=float), np.asarray(labels)
+      D = np.sqrt(((X[:, None, :] - X[None, :, :]) ** 2).sum(axis=2))
+      s = np.zeros(len(X))
+      # TODO: fill s[i] for every point
+      return float(s.mean())
+
+  X = np.array([[0.0, 0.0], [0.0, 1.0], [5.0, 0.0], [5.0, 1.0]])
+  print(silhouette(X, [0, 0, 1, 1]))
+solution: |
+  import numpy as np
+
+  def silhouette(X, labels):
+      X, labels = np.asarray(X, dtype=float), np.asarray(labels)
+      D = np.sqrt(((X[:, None, :] - X[None, :, :]) ** 2).sum(axis=2))
+      s = np.zeros(len(X))
+      for i in range(len(X)):
+          same = labels == labels[i]
+          if same.sum() == 1:
+              continue
+          a = D[i, same].sum() / (same.sum() - 1)
+          b = min(D[i, labels == c].mean() for c in np.unique(labels) if c != labels[i])
+          s[i] = (b - a) / max(a, b)
+      return float(s.mean())
+
+  X = np.array([[0.0, 0.0], [0.0, 1.0], [5.0, 0.0], [5.0, 1.0]])
+  print(silhouette(X, [0, 0, 1, 1]))
+tests: |
+  import math
+  import numpy as np
+  from sklearn.metrics import silhouette_score
+  from sklearn.datasets import make_blobs
+  _X = np.array([[0.0, 0.0], [0.0, 1.0], [5.0, 0.0], [5.0, 1.0]])
+  _want = silhouette_score(_X, [0, 0, 1, 1])
+  _got = silhouette(_X, [0, 0, 1, 1])
+  assert math.isclose(_got, _want, rel_tol=1e-9), f"For the four-point example expected {_want:.4f}, got {_got}. Remember that a excludes the point itself."
+  _rng = np.random.default_rng(0)
+  for _seed, _k in [(7, 4), (1, 3), (2, 2)]:
+      _Xb, _ = make_blobs(n_samples=120, centers=_k, random_state=_seed)
+      for _lab in [_rng.integers(0, _k, 120), (np.arange(120) % _k)]:
+          _w = silhouette_score(_Xb, _lab)
+          _g = silhouette(_Xb, _lab)
+          assert math.isclose(_g, _w, rel_tol=1e-7, abs_tol=1e-9), f"On a {_k}-cluster labelling expected {_w:.5f}, got {_g}"
+  _Xs = np.array([[0.0], [1.0], [2.0], [10.0]])
+  _w = silhouette_score(_Xs, [0, 0, 0, 1])
+  assert math.isclose(silhouette(_Xs, [0, 0, 0, 1]), _w, rel_tol=1e-9), f"A point alone in its cluster has silhouette 0: expected {_w:.4f}, got {silhouette(_Xs, [0, 0, 0, 1])}"
+hints:
+  - "For point i, same = labels == labels[i]; a is D[i, same].sum() divided by (same.sum() - 1), because D[i, i] is 0."
+  - "b is the minimum over the other clusters c of D[i, labels == c].mean()."
+  - "Skip points that are alone in their cluster: their s stays 0."

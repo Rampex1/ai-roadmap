@@ -1,0 +1,252 @@
+---
+title: "Clustering with k-means (and a look at hierarchical clustering and DBSCAN)"
+module: f8
+order: 6
+estMinutes: 17
+objectives:
+  - "Run the k-means algorithm by hand: assign points to the nearest centroid, move centroids to the mean, repeat"
+  - "Explain inertia, local minima and why k-means++ initialisation with several restarts helps"
+  - "Choose k with the elbow method and the silhouette score, and recognise data where k-means fails"
+goDeeper: sklearn-clustering-guide
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Everything so far was **supervised**: each training row came with a label to predict. Often there is no label. A
+shop has purchase histories but nobody has written "bargain hunter" or "loyal regular" next to each customer.
+**Clustering** looks for groups of similar rows on its own. It is a tool for *exploring* data: the groups it finds are
+suggestions that a human must interpret, not ground truth.
+
+## The k-means objective
+
+<Term id="k-means" /> splits $n$ points into $k$ groups, each with a **centroid** $\boldsymbol{\mu}_j$ (its centre),
+and every point belongs to the cluster of its nearest centroid. It looks for the centroids that minimise the
+**inertia**, the total squared distance from each point to its centroid:
+
+$$
+\text{inertia} = \sum_{i=1}^{n} \lVert \mathbf{x}_i - \boldsymbol{\mu}_{c(i)} \rVert^2
+$$
+
+where $c(i)$ is the cluster of point $i$ and $\lVert \cdot \rVert$ is the Euclidean length from
+[F3](/foundations/f3/vectors/). Small inertia means tight clusters.
+
+## The algorithm (Lloyd's algorithm)
+
+Finding the best centroids exactly is computationally hard, so k-means uses a simple alternating heuristic:
+
+1. **Initialise**: pick $k$ starting centroids, for example $k$ random data points.
+2. **Assign**: put each point in the cluster of its nearest centroid.
+3. **Update**: move each centroid to the mean of the points assigned to it.
+4. Repeat 2 and 3 until the centroids stop moving.
+
+Each step can only lower the inertia (or leave it unchanged): the assign step picks the closest centroid for each
+point, and the mean is the point that minimises the sum of squared distances to a group. Since there are finitely many
+ways to assign points, the algorithm always stops. Here it is in NumPy on 300 points drawn around 4 centres:
+
+```python
+import numpy as np
+from sklearn.datasets import make_blobs
+
+X, true = make_blobs(n_samples=300, centers=4, cluster_std=1.0, random_state=7)
+
+def kmeans(X, k, rng, n_iter=100, verbose=True):
+    centroids = X[rng.choice(len(X), size=k, replace=False)]           # k random points
+    for it in range(n_iter):
+        d = ((X[:, None, :] - centroids[None, :, :]) ** 2).sum(axis=2)  # (n, k) squared distances
+        labels = d.argmin(axis=1)                                        # assign step
+        inertia = d[np.arange(len(X)), labels].sum()
+        if verbose:
+            print(f"iteration {it}: inertia {inertia:.1f}")
+        new = np.array([X[labels == j].mean(axis=0) for j in range(k)])  # update step
+        if np.allclose(new, centroids):
+            break
+        centroids = new
+    return labels, centroids, inertia
+
+labels, centroids, inertia = kmeans(X, 4, np.random.default_rng(0))
+```
+
+```text title="Output"
+iteration 0: inertia 12861.3
+iteration 1: inertia 3065.5
+iteration 2: inertia 571.3
+```
+
+The distance line uses broadcasting from F2: `X[:, None, :]` has shape $(n, 1, d)$ and `centroids[None, :, :]` has
+shape $(1, k, d)$, so their difference has shape $(n, k, d)$, every point minus every centroid. Converged in three
+iterations.
+
+## Local minima and k-means++
+
+Run the same code from different random starts:
+
+```python
+for seed in range(4):
+    print(seed, round(kmeans(X, 4, np.random.default_rng(seed), verbose=False)[2], 1))
+```
+
+```text title="Output"
+0 571.3
+1 2450.1
+2 2450.7
+3 2451.1
+```
+
+Three of four starts got **stuck** with an inertia over four times worse. Typically two starting centroids land in the
+same true group and one centroid ends up covering two groups. Neither step can fix that: k-means only finds a **local
+minimum** of the inertia, just like gradient descent on a non-convex loss in F6.
+
+Two standard fixes:
+
+- **k-means++ initialisation**: pick the first centroid at random, then pick each next one at random with probability
+  proportional to its squared distance from the nearest centroid already chosen. Starting centroids are spread out, so
+  bad starts become much rarer.
+- **Several restarts** (`n_init`): run the whole algorithm several times and keep the run with the lowest inertia.
+
+In scikit-learn 1.8, k-means++ is the default `init`, but the default `n_init="auto"` runs it only **once**, so pass
+`n_init=10` (as the later examples in this lesson do) when you want restarts.
+
+```python
+from sklearn.cluster import KMeans
+
+for seed in range(5):
+    r = KMeans(n_clusters=4, init="random", n_init=1, random_state=seed).fit(X)
+    p = KMeans(n_clusters=4, init="k-means++", n_init=1, random_state=seed).fit(X)
+    print(f"seed {seed}: random init {r.inertia_:7.1f}, k-means++ {p.inertia_:7.1f}")
+```
+
+```text title="Output"
+seed 0: random init  2448.1, k-means++   571.3
+seed 1: random init   571.3, k-means++   571.3
+seed 2: random init  2451.3, k-means++   571.3
+seed 3: random init   571.3, k-means++   571.3
+seed 4: random init  2450.1, k-means++   571.3
+```
+
+After fitting, `km.labels_` holds each training point's cluster, `km.cluster_centers_` the centroids, `km.inertia_` the
+inertia, and `km.predict(X_new)` assigns new points to the nearest centroid. Cluster numbers are arbitrary: cluster 0
+in one run may be cluster 2 in another.
+
+## Choosing k
+
+k-means needs $k$ up front, and the inertia cannot choose it: more clusters always means smaller distances, down to 0
+when every point is its own cluster. Two common aids:
+
+- **The elbow method**: plot inertia against $k$ and look for the "elbow" where adding clusters stops helping much.
+- **The <Term id="silhouette-score" />**: for each point, let $a$ be its mean distance to the other points in its own
+  cluster and $b$ its mean distance to the points in the **nearest other** cluster. Its silhouette is
+
+$$
+s = \frac{b - a}{\max(a, b)}
+$$
+
+which is near 1 when the point sits well inside its cluster ($a \ll b$), near 0 when it is on a border, and
+negative when it is probably in the wrong cluster. The silhouette score is the mean of $s$ over all points. Pick
+the $k$ with the highest score.
+
+```python
+from sklearn.metrics import silhouette_score
+
+for k in range(1, 9):
+    m = KMeans(n_clusters=k, n_init=10, random_state=0).fit(X)
+    s = f"{silhouette_score(X, m.labels_):.3f}" if k > 1 else "  -  "
+    print(f"k={k}: inertia {m.inertia_:7.1f}, silhouette {s}")
+```
+
+```text title="Output"
+k=1: inertia 22312.3, silhouette   -  
+k=2: inertia  9027.1, silhouette 0.594
+k=3: inertia  2503.3, silhouette 0.766
+k=4: inertia   571.3, silhouette 0.807
+k=5: inertia   511.1, silhouette 0.707
+k=6: inertia   453.5, silhouette 0.615
+k=7: inertia   400.2, silhouette 0.487
+k=8: inertia   347.5, silhouette 0.356
+```
+
+The inertia drops steeply up to $k = 4$ and slowly after it: the elbow. The silhouette peaks at $k = 4$. Both agree
+with how the data were generated. On real data the elbow is often blurry and the silhouette fairly flat; then let
+the purpose decide (how many customer segments can the marketing team actually use?). The silhouette needs at least 2
+clusters, which is why $k = 1$ has none.
+
+## Scale your features first
+
+k-means works with distances, so it has the same weakness as [k-NN](/foundations/f7/k-nearest-neighbours/): a feature measured in large units dominates.
+Clustering customers on annual spend (thousands) and number of visits (tens) without scaling means clustering on spend
+alone. Standardise first (`StandardScaler`, ideally in a pipeline), unless the features already share a meaningful unit.
+
+## When k-means fails
+
+k-means makes strong assumptions. Each cluster is described only by its centre, and the boundary between two clusters
+is the straight line halfway between their centroids. So it expects clusters that are:
+
+- **roughly round** (the same spread in every direction), not elongated or curved;
+- **of similar size and spread**: a big diffuse cluster next to a small tight one gets cut in the wrong place;
+- **free of far outliers**, which drag the means.
+
+It will also always return exactly $k$ clusters, even for data with no clusters at all.
+
+Two interleaving half-moons show the problem:
+
+```python
+from sklearn.datasets import make_moons
+from sklearn.cluster import DBSCAN, AgglomerativeClustering
+from sklearn.metrics import adjusted_rand_score
+
+Xm, ym = make_moons(n_samples=300, noise=0.06, random_state=0)
+for name, model in [("k-means", KMeans(n_clusters=2, n_init=10, random_state=0)),
+                    ("single linkage", AgglomerativeClustering(n_clusters=2, linkage="single")),
+                    ("DBSCAN", DBSCAN(eps=0.2, min_samples=5))]:
+    lab = model.fit_predict(Xm)
+    print(f"{name:15s} ARI {adjusted_rand_score(ym, lab):.2f}, "
+          f"clusters {len(set(lab) - {-1})}, noise points {(lab == -1).sum()}")
+```
+
+```text title="Output"
+k-means         ARI 0.23, clusters 2, noise points 0
+single linkage  ARI 1.00, clusters 2, noise points 0
+DBSCAN          ARI 1.00, clusters 2, noise points 0
+```
+
+The **adjusted Rand index** (ARI) compares a clustering with known groups: 1 is a perfect match, about 0 is no better
+than random. k-means cuts both moons in half with a straight line. Worse, the silhouette score *prefers* that wrong
+answer (0.49 for k-means against 0.33 for the true moons), because the silhouette also rewards compact, round groups.
+Every clustering score bakes in a notion of what a cluster is.
+
+## Two other families, briefly
+
+**Hierarchical (agglomerative) clustering** starts with every point as its own cluster and repeatedly merges the two
+closest clusters until one is left. The full history of merges is a tree called a **dendrogram**; cutting it at some
+height gives a clustering, so you can look at several values of $k$ at once (`scipy.cluster.hierarchy.dendrogram` draws
+it). The **linkage** defines "closest clusters": *single* linkage uses the closest pair of points (follows chains and
+curves, as with the moons, but is fooled by noise bridging two clusters), *complete* the farthest pair, *average* the
+mean distance, and *Ward* (scikit-learn's default) the merge that increases inertia least, which behaves much like
+k-means. It needs all pairwise distances, so it suits thousands of points, not millions.
+
+**DBSCAN** defines clusters as dense regions. A point with at least `min_samples` neighbours within distance `eps` is a
+**core point**; clusters grow by chaining core points that are within `eps` of each other, and points in no dense
+region are labelled **noise** (`-1`). It finds clusters of any shape, does not need $k$, and flags outliers, but it
+struggles when clusters have very different densities, and `eps` must be tuned to the scale of the (standardised)
+data. HDBSCAN, also in scikit-learn, relaxes the single-`eps` limitation.
+
+:::tip[Which clustering method?]
+Start with k-means on standardised features: it is fast and the centroids are easy to describe ("high spend, few
+visits"). If plots suggest curved or uneven clusters or lots of noise, try DBSCAN/HDBSCAN or agglomerative clustering.
+In every case, look at the clusters and check whether they mean something.
+:::
+
+## Try it
+
+<CodeExercise id="f8-k-means-clustering-01" />
+
+<CodeExercise id="f8-k-means-clustering-02" />
+
+## Summary
+
+- k-means minimises inertia, the sum of squared distances to the nearest centroid, by alternating "assign to nearest
+  centroid" and "move centroid to the mean". Each step lowers inertia, but it only finds a local minimum.
+- k-means++ (the default) starts with spread-out centroids; pass `n_init=10` to get restarts and keep the best run.
+- Inertia always falls as $k$ grows; choose $k$ by the elbow, the silhouette score $(b - a)/\max(a, b)$, and the
+  purpose of the analysis. Standardise features first.
+- k-means assumes round, similar-sized clusters. Hierarchical clustering (with a dendrogram) and DBSCAN (density, with
+  noise points) handle other shapes.

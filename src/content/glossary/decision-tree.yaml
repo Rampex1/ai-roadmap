@@ -1,0 +1,8 @@
+term: "Decision tree"
+short: "A model that predicts by asking a sequence of yes/no threshold questions about single features, ending at a leaf that gives the answer."
+body: |
+  Each internal node compares one feature with a threshold and each leaf predicts the majority class (classification)
+  or the mean target (regression) of the training rows that reached it. Trees are trained greedily by choosing, at
+  each node, the split that most reduces impurity. They need no feature scaling but overfit easily unless their
+  depth or leaf size is limited.
+related: ["gini-impurity", "information-gain", "random-forest", "overfitting"]

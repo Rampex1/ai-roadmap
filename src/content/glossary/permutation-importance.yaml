@@ -1,0 +1,7 @@
+term: "Permutation importance"
+short: "How much a fitted model's score drops when one feature's column is randomly shuffled, breaking its link with the target."
+body: |
+  It works for any model and should be measured on held-out data. Unlike impurity-based importance it does not
+  favour features with many distinct values, but correlated features share credit: shuffling one leaves its twin
+  to carry the same information, so both can look unimportant.
+related: ["random-forest", "permutation-test"]

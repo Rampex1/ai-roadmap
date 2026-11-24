@@ -1,0 +1,7 @@
+term: "Gini impurity"
+short: "A measure of how mixed the classes in a node are: 1 minus the sum of squared class proportions."
+body: |
+  $\text{Gini} = 1 - \sum_k p_k^2$. It is the probability that two rows drawn at random from the node belong to
+  different classes: 0 for a pure node and 0.5 for an even two-class mix. It is scikit-learn's default split
+  criterion for classification trees.
+related: ["decision-tree", "entropy", "information-gain"]

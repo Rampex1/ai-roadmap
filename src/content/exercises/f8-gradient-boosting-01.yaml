@@ -1,0 +1,87 @@
+id: f8-gradient-boosting-01
+lesson: foundations/f8/gradient-boosting
+title: Gradient boosting with stumps, by hand
+prompt: |
+  Implement gradient boosting for regression with squared error, using **stumps** (depth-1 trees) as weak learners.
+
+  `fit_boost(X, y, n_trees, lr)` returns a tuple `(f0, trees)`:
+
+  1. `f0` is the mean of `y`, the starting prediction for every row.
+  2. Repeat `n_trees` times: compute the residuals `y - pred`, fit
+     `DecisionTreeRegressor(max_depth=1, random_state=0)` to `(X, residuals)`, append it to `trees`, and update
+     `pred += lr * tree.predict(X)`.
+
+  `predict_boost(f0, trees, lr, X)` returns `f0` plus `lr` times the sum of every tree's prediction on `X`.
+
+  The tests compare your predictions with scikit-learn's
+  `GradientBoostingRegressor(n_estimators=n_trees, learning_rate=lr, max_depth=1)`, which runs the same algorithm.
+starter: |
+  import numpy as np
+  from sklearn.tree import DecisionTreeRegressor
+
+  def fit_boost(X, y, n_trees, lr):
+      f0 = 0.0
+      trees = []
+      # TODO
+      return f0, trees
+
+  def predict_boost(f0, trees, lr, X):
+      # TODO
+      return np.full(len(X), f0)
+
+  rng = np.random.default_rng(0)
+  X = rng.uniform(0, 6, (200, 1))
+  y = np.sin(X[:, 0]) + rng.normal(0, 0.3, 200)
+  f0, trees = fit_boost(X, y, 50, 0.1)
+  print("train MSE:", np.mean((y - predict_boost(f0, trees, 0.1, X)) ** 2))
+solution: |
+  import numpy as np
+  from sklearn.tree import DecisionTreeRegressor
+
+  def fit_boost(X, y, n_trees, lr):
+      f0 = float(np.mean(y))
+      pred = np.full(len(y), f0)
+      trees = []
+      for _ in range(n_trees):
+          tree = DecisionTreeRegressor(max_depth=1, random_state=0).fit(X, y - pred)
+          trees.append(tree)
+          pred += lr * tree.predict(X)
+      return f0, trees
+
+  def predict_boost(f0, trees, lr, X):
+      pred = np.full(len(X), f0)
+      for tree in trees:
+          pred += lr * tree.predict(X)
+      return pred
+
+  rng = np.random.default_rng(0)
+  X = rng.uniform(0, 6, (200, 1))
+  y = np.sin(X[:, 0]) + rng.normal(0, 0.3, 200)
+  f0, trees = fit_boost(X, y, 50, 0.1)
+  print("train MSE:", np.mean((y - predict_boost(f0, trees, 0.1, X)) ** 2))
+tests: |
+  import math
+  import numpy as np
+  from sklearn.ensemble import GradientBoostingRegressor
+  _rng = np.random.default_rng(0)
+  _X = _rng.uniform(0, 6, (200, 1))
+  _y = np.sin(_X[:, 0]) + _rng.normal(0, 0.3, 200)
+  _f0, _trees = fit_boost(_X, _y, 50, 0.1)
+  assert math.isclose(_f0, _y.mean()), f"f0 should be the mean of y, {_y.mean():.4f}, got {_f0}"
+  assert len(_trees) == 50, f"Expected 50 trees, got {len(_trees)}"
+  assert all(t.get_depth() <= 1 for t in _trees), "Every tree should be a stump: max_depth=1"
+  for _n, _lr, _d, _seed in [(50, 0.1, 1, 0), (30, 0.5, 3, 1), (80, 0.05, 2, 2)]:
+      _r = np.random.default_rng(_seed)
+      _X = _r.uniform(-2, 2, (150, _d))
+      _y = _X[:, 0] ** 2 + np.sin(3 * _X[:, -1]) + _r.normal(0, 0.2, 150)
+      _Xq = _r.uniform(-2, 2, (60, _d))
+      _f0, _trees = fit_boost(_X, _y, _n, _lr)
+      _got = np.asarray(predict_boost(_f0, _trees, _lr, _Xq), dtype=float)
+      _sk = GradientBoostingRegressor(n_estimators=_n, learning_rate=_lr, max_depth=1, random_state=0).fit(_X, _y)
+      _want = _sk.predict(_Xq)
+      assert _got.shape == (60,), f"predict_boost should return one prediction per row, got shape {_got.shape}"
+      assert np.allclose(_got, _want, atol=1e-6), f"n_trees={_n}, lr={_lr}, {_d} features: predictions differ from GradientBoostingRegressor by up to {np.abs(_got - _want).max():.4f}. Fit each stump to the current residuals y - pred."
+hints:
+  - "Keep a running pred array that starts as np.full(len(y), f0)."
+  - "Each stump is fitted to y - pred, then pred += lr * tree.predict(X)."
+  - "predict_boost repeats the same additions on new X, starting from f0."

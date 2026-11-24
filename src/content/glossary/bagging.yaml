@@ -1,0 +1,7 @@
+term: "Bagging"
+short: "Bootstrap aggregating: train the same model on many bootstrap resamples of the data and average (or vote on) their predictions."
+body: |
+  Each model sees a slightly different dataset, so their errors are partly independent and averaging cancels some of
+  them. Bagging mainly reduces variance, so it helps most with unstable models such as deep decision trees. The rows
+  left out of each resample give a free validation estimate, the out-of-bag error.
+related: ["bootstrap", "random-forest", "out-of-bag-error", "ensemble"]

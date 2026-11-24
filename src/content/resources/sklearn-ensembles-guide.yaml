@@ -1,0 +1,5 @@
+title: "scikit-learn user guide: Ensembles (gradient boosting, random forests, bagging)"
+url: https://scikit-learn.org/stable/modules/ensemble.html
+kind: tool
+free: true
+modules: [f8]

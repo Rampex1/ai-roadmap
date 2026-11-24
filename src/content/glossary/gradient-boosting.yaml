@@ -1,0 +1,8 @@
+term: "Gradient boosting"
+short: "Building a model as a sum of small trees, each fitted to the errors (negative gradients of the loss) left by the trees before it."
+body: |
+  With squared error each new tree fits the current residuals, and its predictions are added after shrinking by a
+  learning rate. More trees and a smaller learning rate usually generalise better but cost more time; early stopping
+  on validation data chooses the number of trees. scikit-learn's `HistGradientBoostingClassifier`, XGBoost and
+  LightGBM are popular implementations.
+related: ["ensemble", "decision-tree", "learning-rate", "early-stopping"]

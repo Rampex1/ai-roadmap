@@ -4,15 +4,15 @@ items:
     prompt: "In gradient boosting for regression with squared error, what does each new tree try to predict?"
     explanation: "Each tree is fitted to the residuals $y_i - F_{m-1}(x_i)$ of the current ensemble, which are the negative gradient of the squared loss."
     options:
+      - text: The predictions of the previous tree
+        why: Copying the previous tree would add nothing new.
       - text: The residuals of the current ensemble
         correct: true
         why: It learns what the model so far still gets wrong.
-      - text: The original targets y
-        why: Only the first tree after the constant start effectively sees the raw targets minus their mean.
       - text: A bootstrap resample of the targets
         why: Resampling is bagging; boosting fits errors.
-      - text: The predictions of the previous tree
-        why: Copying the previous tree would add nothing new.
+      - text: The original targets y
+        why: Only the first tree after the constant start effectively sees the raw targets minus their mean.
   - id: f8-gradient-boosting-02
     type: numeric
     prompt: "Boosting starts at $F_0 = 10$ for a row with target $y = 14$. The first tree predicts the residual perfectly, and the learning rate is 0.1. What is the prediction $F_1$ for that row?"
@@ -24,80 +24,82 @@ items:
     prompt: "Which statements contrast boosting with random forests correctly?"
     explanation: "Forests train deep trees independently and average them (variance reduction, no overfitting from more trees). Boosting trains small trees in sequence (bias reduction) and can overfit with too many trees."
     options:
-      - text: Boosting trains trees in sequence; a forest trains them independently
-        correct: true
-        why: Each boosting tree depends on the previous ones' errors.
       - text: Boosting typically uses small trees; forests use deep ones
         correct: true
         why: Boosting reduces bias with weak learners; forests reduce the variance of strong ones.
+      - text: Boosting cannot be used for classification
+        why: AdaBoost and gradient boosting with log loss are both classifiers.
       - text: Adding too many trees can make boosting overfit, but not a forest
         correct: true
         why: Each boosting tree adds capacity; each forest tree only stabilises an average.
-      - text: Boosting cannot be used for classification
-        why: AdaBoost and gradient boosting with log loss are both classifiers.
+      - text: Boosting trains trees in sequence; a forest trains them independently
+        correct: true
+        why: Each boosting tree depends on the previous ones' errors.
   - id: f8-gradient-boosting-04
     type: mcq
     prompt: "You halve the learning rate of a gradient boosting model. To reach a similar accuracy you will typically need…"
     explanation: "Each tree now corrects half as much, so roughly twice as many trees are needed; the best number of trees scales roughly like 1/η."
     options:
+      - text: the same number of trees
+        why: The learning rate scales every tree's contribution down.
+      - text: about half as many trees
+        why: Smaller steps make progress more slowly, not faster.
+      - text: deeper trees and no change in their number
+        why: Depth and learning rate are separate knobs.
       - text: about twice as many trees
         correct: true
         why: Smaller steps need more of them.
-      - text: about half as many trees
-        why: Smaller steps make progress more slowly, not faster.
-      - text: the same number of trees
-        why: The learning rate scales every tree's contribution down.
-      - text: deeper trees and no change in their number
-        why: Depth and learning rate are separate knobs.
   - id: f8-gradient-boosting-05
     type: mcq
     prompt: "Why is the residual called a **gradient** in gradient boosting?"
     explanation: "For $\\ell = \\frac{1}{2}(y - F)^2$, $\\partial \\ell / \\partial F = -(y - F)$, so the residual $y - F$ is the negative gradient of the loss with respect to the prediction."
     options:
-      - text: It is the negative derivative of the squared loss with respect to the prediction
-        correct: true
-        why: Fitting it moves each prediction downhill on the loss, like a gradient descent step.
-      - text: It is the slope of the regression line
-        why: There is no regression line; trees predict piecewise constants.
       - text: The trees are trained with gradient descent on their weights
         why: Trees are grown by greedy splitting; the gradient is in prediction space.
       - text: It is the derivative of the tree with respect to the features
         why: Trees are step functions; that derivative is zero almost everywhere.
+      - text: It is the slope of the regression line
+        why: There is no regression line; trees predict piecewise constants.
+      - text: It is the negative derivative of the squared loss with respect to the prediction
+        correct: true
+        why: Fitting it moves each prediction downhill on the loss, like a gradient descent step.
   - id: f8-gradient-boosting-06
     type: mcq
     prompt: "What does AdaBoost do after fitting each stump?"
     explanation: "AdaBoost increases the weight of misclassified rows (and decreases correctly classified ones), so the next stump concentrates on the hard cases."
     options:
+      - text: Prunes the stump
+        why: A stump has a single split; there is nothing to prune.
       - text: Increases the weights of the rows that stump misclassified
         correct: true
         why: The next stump is pushed to get those rows right.
-      - text: Removes the misclassified rows from the data
-        why: The hard rows are emphasised, not dropped.
       - text: Draws a new bootstrap sample
         why: That is bagging.
-      - text: Prunes the stump
-        why: A stump has a single split; there is nothing to prune.
+      - text: Removes the misclassified rows from the data
+        why: The hard rows are emphasised, not dropped.
   - id: f8-gradient-boosting-07
     type: multi
     prompt: "Which are features of scikit-learn's `HistGradientBoostingClassifier`?"
     explanation: "It bins features into at most 255 buckets for speed, supports early stopping, and handles missing values and categorical features natively. It still benefits from tuning."
     options:
+      - text: It can stop adding trees early when a validation score stops improving
+        correct: true
+        why: Set early_stopping=True, or rely on the auto setting for large data.
+      - text: Features must be standardised first
+        why: Tree splits do not care about feature scale.
       - text: Features are binned into at most 255 buckets to find splits quickly
         correct: true
         why: Only bucket edges are tried as thresholds.
       - text: Missing values (NaN) are handled without imputation
         correct: true
         why: Each split learns which side missing values go to.
-      - text: It can stop adding trees early when a validation score stops improving
-        correct: true
-        why: Set early_stopping=True, or rely on the auto setting for large data.
-      - text: Features must be standardised first
-        why: Tree splits do not care about feature scale.
   - id: f8-gradient-boosting-08
     type: mcq
     prompt: "What is the recommended way to choose the number of boosting rounds?"
     explanation: "Fix a modest learning rate, allow many trees, and stop when the validation loss stops improving. The test set stays untouched."
     options:
+      - text: Always use exactly 100
+        why: The right number depends on the learning rate and the data.
       - text: Early stopping on a validation set with a large maximum number of trees
         correct: true
         why: The validation curve tells you when more trees start to overfit.
@@ -105,8 +107,6 @@ items:
         why: Unlike forests, boosting overfits with too many trees.
       - text: Pick the number with the lowest test error
         why: Tuning on the test set makes the final estimate optimistic.
-      - text: Always use exactly 100
-        why: The right number depends on the learning rate and the data.
   - id: f8-gradient-boosting-09
     type: output
     prompt: "What does this print?"
@@ -129,7 +129,7 @@ items:
         why: That is the negative gradient of the log loss with respect to the log-odds.
       - text: The class labels directly
         why: Later trees fit what the ensemble still gets wrong.
-      - text: The number of misclassified rows
-        why: The target is per row and continuous.
       - text: The probability that each row is in the bootstrap sample
         why: Boosting does not need bootstrap samples.
+      - text: The number of misclassified rows
+        why: The target is per row and continuous.

@@ -1,0 +1,63 @@
+id: f8-decision-trees-01
+lesson: foundations/f8/decision-trees
+title: Impurity of a node
+prompt: |
+  Write two functions that take the **class counts** of a node, for example `[6, 4]` for 6 stayers and 4 churners,
+  and return its impurity as a float:
+
+  - `gini(counts)`: $1 - \sum_k p_k^2$
+  - `entropy(counts)`: $-\sum_k p_k \log_2 p_k$, in bits
+
+  where $p_k$ is count $k$ divided by the total. Counts can be zero (a class absent from this node): it must
+  contribute nothing, and the result must never be `nan`.
+
+  Check: `gini([6, 4])` is `0.48`, `entropy([6, 4])` is about `0.971`, and both are `0.0` for `[5, 0]`.
+starter: |
+  import numpy as np
+
+  def gini(counts):
+      p = np.asarray(counts, dtype=float)
+      return 1 - np.sum(p ** 2)
+
+  def entropy(counts):
+      p = np.asarray(counts, dtype=float)
+      return -np.sum(p * np.log2(p))
+solution: |
+  import numpy as np
+
+  def gini(counts):
+      p = np.asarray(counts, dtype=float)
+      p = p / p.sum()
+      return float(1 - np.sum(p ** 2))
+
+  def entropy(counts):
+      p = np.asarray(counts, dtype=float)
+      p = p / p.sum()
+      p = p[p > 0]
+      return float(-np.sum(p * np.log2(p)))
+tests: |
+  import math
+  import warnings
+  import numpy as np
+  warnings.simplefilter("ignore")
+  assert math.isclose(gini([6, 4]), 0.48, abs_tol=1e-9), f"gini([6, 4]) should be 0.48, got {gini([6, 4])}. Did you divide the counts by their total?"
+  assert math.isclose(entropy([6, 4]), 0.9709505944546686, abs_tol=1e-9), f"entropy([6, 4]) should be about 0.971, got {entropy([6, 4])}"
+  assert math.isclose(gini([5, 0]), 0.0, abs_tol=1e-12), f"A pure node has Gini 0, got {gini([5, 0])}"
+  _e = entropy([5, 0])
+  assert not math.isnan(_e), "entropy([5, 0]) is nan: leave out zero counts before taking the log"
+  assert math.isclose(_e, 0.0, abs_tol=1e-12), f"A pure node has entropy 0, got {_e}"
+  assert math.isclose(gini([3, 3]), 0.5, abs_tol=1e-9) and math.isclose(entropy([3, 3]), 1.0, abs_tol=1e-9), "A 50/50 node has Gini 0.5 and entropy 1 bit"
+  assert math.isclose(entropy([2, 2, 2, 2]), 2.0, abs_tol=1e-9), f"Four equal classes have entropy 2 bits, got {entropy([2, 2, 2, 2])}"
+  assert math.isclose(gini([2, 2, 2, 2]), 0.75, abs_tol=1e-9), f"Four equal classes have Gini 0.75, got {gini([2, 2, 2, 2])}"
+  _rng = np.random.default_rng(3)
+  for _ in range(20):
+      _c = _rng.integers(0, 20, size=_rng.integers(2, 6))
+      _c[0] += 1
+      _p = _c / _c.sum()
+      _g = 1 - np.sum(_p ** 2)
+      _h = -np.sum(_p[_p > 0] * np.log2(_p[_p > 0]))
+      assert math.isclose(gini(_c), _g, abs_tol=1e-9), f"gini({_c.tolist()}) should be {_g:.6f}, got {gini(_c)}"
+      assert math.isclose(entropy(_c), _h, abs_tol=1e-9), f"entropy({_c.tolist()}) should be {_h:.6f}, got {entropy(_c)}"
+hints:
+  - "Turn counts into proportions first: p = p / p.sum()."
+  - "For entropy, keep only the positive proportions with p[p > 0] before calling np.log2."
