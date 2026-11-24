@@ -1,0 +1,28 @@
+id: b8-preference-evaluation-pairs-01
+lesson: research/b8/preference-evaluation-pairs
+title: Implement preference evaluation pairs
+prompt: Implement preference_counts(judgments). Return candidate, baseline, tie and missing counts with zero-valued keys included. None or the explicit string missing counts as missing. Reject any other unknown label.
+starter: |
+  def preference_counts(judgments):
+      raise NotImplementedError
+solution: |
+  def preference_counts(judgments):
+      counts = dict.fromkeys(("candidate","baseline","tie","missing"),0)
+      for judgment in judgments:
+          label = "missing" if judgment is None else judgment
+          if label not in counts:
+              raise ValueError("unknown judgment")
+          counts[label] += 1
+      return counts
+tests: |
+  assert preference_counts(["candidate","tie",None,"baseline","candidate"])=={"candidate":2,"baseline":1,"tie":1,"missing":1}
+  assert preference_counts([])==dict.fromkeys(("candidate","baseline","tie","missing"),0)
+  assert preference_counts(["missing"])["missing"]==1
+  try:
+      preference_counts(["left"])
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("use model-oriented labels")
+hints:
+  - Separate unavailable judgments from ties.

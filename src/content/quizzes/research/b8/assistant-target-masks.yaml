@@ -1,0 +1,92 @@
+items:
+  - id: b8-assistant-target-masks-01
+    type: mcq
+    prompt: Why keep prompt tokens in the input?
+    explanation: Loss masking should not remove context.
+    options:
+      - text: They condition the answer
+        why: Loss masking should not remove context.
+        correct: true
+      - text: They are always supervised targets
+        why: This policy excludes their losses.
+      - text: Prompts are a separate set of model parameters
+        why: They are input data.
+  - id: b8-assistant-target-masks-02
+    type: mcq
+    prompt: Which position supplies the shifted validity flag?
+    explanation: The objective scores the successor.
+    options:
+      - text: The target token position
+        why: The objective scores the successor.
+        correct: true
+      - text: The last nonpadding token always
+        why: Each target has its own flag.
+      - text: The preceding input token position
+        why: That would misalign the desired supervision.
+  - id: b8-assistant-target-masks-03
+    type: mcq
+    prompt: Should EOS always be supervised?
+    explanation: The training policy should specify it.
+    options:
+      - text: It depends on the template and objective
+        why: The training policy should specify it.
+        correct: true
+      - text: Never in a causal model
+        why: EOS can be a meaningful target.
+      - text: Always including padding after EOS
+        why: Padding normally stays excluded.
+  - id: b8-assistant-target-masks-04
+    type: mcq
+    prompt: What catches a role-mask alignment error?
+    explanation: This reveals off-by-one inclusion.
+    options:
+      - text: Decode an example and display each target flag
+        why: This reveals off-by-one inclusion.
+        correct: true
+      - text: Only count unique file paths
+        why: Those do not show target alignment.
+      - text: Only inspect training elapsed time
+        why: Runtime can look normal despite a mask bug.
+  - id: b8-assistant-target-masks-05
+    type: multi
+    prompt: What remains separate?
+    explanation: It controls what input context is read. It controls the training objective.
+    options:
+      - text: Attention visibility
+        why: It controls what input context is read.
+        correct: true
+      - text: A guarantee that masking alone fixes every boundary
+        why: Chat data still needs explicit inspection.
+      - text: Target contribution to loss
+        why: It controls the training objective.
+        correct: true
+  - id: b8-assistant-target-masks-06
+    type: cloze
+    prompt: Ignoring prompt targets while retaining context is assistant-only ______.
+    accept:
+      - loss
+      - supervision
+      - training
+      - loss masking
+    explanation: The objective only includes the declared answer targets.
+  - id: b8-assistant-target-masks-07
+    type: order
+    prompt: Order an explicit instruction example.
+    items:
+      - Render messages and record token roles
+      - Form shifted input and target tokens and align the mask with the targets
+      - Sum the losses for included targets and count those targets
+      - Normalize loss over included targets
+    explanation: The mask follows the targets.
+  - id: b8-assistant-target-masks-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def supervised_targets(tokens,answer_positions):
+          if len(tokens)!=len(answer_positions):
+              raise ValueError("unaligned roles")
+          return tokens[:-1],tokens[1:],answer_positions[1:]
+
+      print(supervised_targets([3, 4], [True, False])[2])
+    answer: "[False]"
+    explanation: The sole target is token four, whose flag is false.

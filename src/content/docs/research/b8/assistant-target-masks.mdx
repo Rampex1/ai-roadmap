@@ -1,0 +1,42 @@
+---
+title: Train on assistant answer tokens
+module: b8
+order: 3
+estMinutes: 8
+objectives:
+  - Distinguish pretraining and supervised instruction objectives
+  - Align the target-side loss mask after shifting
+goDeeper: instructgpt-paper
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Supervised fine-tuning teaches response behavior from demonstrations. The input still contains the prompt and earlier context, but <Term id="assistant-target-masks" /> includes only selected answer targets. Keep a token-aligned role mask from chat templating. A mask on position i applies to the token at i, so when targets shift forward, shift the validity mask with them.
+
+For tokens [BOS,user,request,answer,EOS,pad], you might enable loss on answer and its EOS while excluding prompt and padding. Then the input at request predicts answer and contributes loss. Prompt tokens remain visible context subject to the attention mask.
+
+The fixture accepts already-labelled token positions, where true means a valid target before shifting. It does not determine chat roles or whether EOS is supervised. Inspect actual decoded examples and their masks before training.
+
+## Worked example
+
+The answer and EOS are the only enabled targets.
+
+```python
+def supervised_targets(tokens,answer_positions):
+    if len(tokens)!=len(answer_positions):
+        raise ValueError("unaligned roles")
+    return tokens[:-1],tokens[1:],answer_positions[1:]
+
+print(supervised_targets([0,4,9,1,7],[False,False,True,True,False]))
+```
+
+```text title="Output"
+([0, 4, 9, 1], [4, 9, 1, 7], [False, True, True, False])
+```
+
+Verify attention visibility and supervised-loss masks separately.
+
+## Try it
+
+<CodeExercise id="b8-assistant-target-masks-01" />

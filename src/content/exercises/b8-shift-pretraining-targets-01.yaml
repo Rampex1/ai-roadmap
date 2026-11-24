@@ -1,0 +1,17 @@
+id: b8-shift-pretraining-targets-01
+lesson: research/b8/shift-pretraining-targets
+title: Implement shift pretraining targets
+prompt: Implement shifted_example(tokens) for a list of integer IDs. Return (inputs, targets) lists with the one-position shift. Empty or singleton sequences produce two empty lists.
+starter: |
+  def shifted_example(tokens):
+      raise NotImplementedError
+solution: |
+  def shifted_example(tokens):
+      return tokens[:-1],tokens[1:]
+tests: |
+  assert shifted_example([0,4,5,1])==([0,4,5],[4,5,1])
+  assert shifted_example([1,2])==([1],[2])
+  assert shifted_example([1])==([],[])
+  assert shifted_example([])==([],[])
+hints:
+  - Drop the last input and the first target.

@@ -1,0 +1,46 @@
+---
+title: Learn and replay subword merges
+module: b8
+order: 1
+estMinutes: 8
+objectives:
+  - Count adjacent pairs within strings
+  - Keep tokenization and dataset splitting reproducible
+goDeeper: neural-machine-translation-bpe
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A model trains on integer token IDs, so vocabulary construction is part of data design. A common subword strategy, <Term id="merge-subword-pairs" />, starts with small units and learns frequent adjacent merges. The training step counts pairs over the corpus, picks a pair, merges its occurrences and repeats. Inference uses the learned merge ranks rather than learning new pairs from requests.
+
+This exercise counts weighted pair occurrences within symbol sequences. A word observed ten times contributes ten times as much as one observed once. Do not count across separate sequence boundaries. Implement a stable tie rule, because changing merge order can change the vocabulary and downstream IDs.
+
+Production tokenizers may begin with bytes and add pretokenization or special tokens. Record normalization, vocabulary IDs, merge rules and corpus version. Fit the tokenizer on training data, and keep near-duplicate documents together or deduplicate before splitting.
+
+## Worked example
+
+The b–a pair appears in both rows.
+
+```python
+def choose_pair(rows):
+    from collections import Counter
+    counts = Counter()
+    for symbols,frequency in rows:
+        if frequency:
+            for pair in zip(symbols,symbols[1:]):
+                counts[pair] += frequency
+    return min(counts,key=lambda pair:(-counts[pair],pair),default=None)
+
+print(choose_pair([(["a","b","a"],2),(["b","a"],3)]))
+```
+
+```text title="Output"
+('b', 'a')
+```
+
+Version every tokenizer choice that affects model input IDs.
+
+## Try it
+
+<CodeExercise id="b8-merge-subword-pairs-01" />

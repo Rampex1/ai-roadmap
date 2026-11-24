@@ -1,0 +1,87 @@
+items:
+  - id: b8-shift-pretraining-targets-01
+    type: mcq
+    prompt: What is target at first input position for BOS,a,b?
+    explanation: BOS supplies context for its successor.
+    options:
+      - text: a
+        why: BOS supplies context for its successor.
+        correct: true
+      - text: BOS
+        why: That trains token copying at position zero.
+      - text: b
+        why: That shifts two positions.
+  - id: b8-shift-pretraining-targets-02
+    type: mcq
+    prompt: What happens if labels are shifted twice?
+    explanation: The target moves away from the immediate successor.
+    options:
+      - text: Training predicts the wrong offset
+        why: The target moves away from the immediate successor.
+        correct: true
+      - text: The original next-token target is preserved
+        why: Each shift changes alignment.
+      - text: Only token vocabulary changes
+        why: The ID map is unchanged.
+  - id: b8-shift-pretraining-targets-03
+    type: mcq
+    prompt: How should corpus perplexity be computed?
+    explanation: The denominator weights each token equally.
+    options:
+      - text: Average all batch perplexities equally
+        why: Exponentiation and averaging do not commute.
+      - text: Exponentiate total token loss divided by valid token count
+        why: The denominator weights each token equally.
+        correct: true
+      - text: Exponentiate token count first
+        why: The exponent is mean loss.
+  - id: b8-shift-pretraining-targets-04
+    type: mcq
+    prompt: Why keep document boundaries explicit?
+    explanation: Later tokens may read unrelated previous content.
+    options:
+      - text: Cross-document visibility can change the learned task
+        why: Later tokens may read unrelated previous content.
+        correct: true
+      - text: It removes the need for labels
+        why: Each token still needs an aligned target.
+      - text: It always increases model width
+        why: Packing changes sequence handling.
+  - id: b8-shift-pretraining-targets-05
+    type: multi
+    prompt: Which must be audited for causal pretraining?
+    explanation: They control visibility. It defines the predictive objective.
+    options:
+      - text: Input/target offset
+        why: It defines the predictive objective.
+        correct: true
+      - text: Allowed context positions
+        why: They control visibility.
+        correct: true
+      - text: Only file extension
+        why: It cannot establish either semantic rule.
+  - id: b8-shift-pretraining-targets-06
+    type: cloze
+    prompt: There is one forecast target per valid next ______.
+    accept:
+      - token
+    explanation: The objective predicts the following token.
+  - id: b8-shift-pretraining-targets-07
+    type: order
+    prompt: Order explicit construction.
+    items:
+      - Read one tokenized document
+      - Form inputs and next-token targets
+      - Apply visibility and loss masks
+      - Aggregate token loss
+    explanation: The denominator comes from valid target positions.
+  - id: b8-shift-pretraining-targets-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def shifted_example(tokens):
+          return tokens[:-1],tokens[1:]
+
+      print(shifted_example([0, 8]))
+    answer: ([0], [8])
+    explanation: The pair contains one input and one successor.

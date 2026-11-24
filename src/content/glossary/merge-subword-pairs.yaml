@@ -1,0 +1,4 @@
+term: "Byte pair encoding"
+short: "A subword procedure that learns frequent adjacent merges and replays them in learned order."
+body: "Byte pair encoding starts from characters or bytes and repeatedly merges the most frequent adjacent pair into a new symbol, recording each merge in order. Tokenising new text replays those merges by rank, so the merge list and its order define the vocabulary."
+related: ["token","dataset-manifest"]

@@ -1,0 +1,24 @@
+id: b8-merge-subword-pairs-01
+lesson: research/b8/merge-subword-pairs
+title: Implement merge subword pairs
+prompt: Implement choose_pair(rows) for (list of string symbols, nonnegative frequency) pairs. Count adjacent pairs within each row with frequency weighting. Ignore zero-frequency rows. Return the most frequent pair, breaking ties lexicographically, or None.
+starter: |
+  def choose_pair(rows):
+      raise NotImplementedError
+solution: |
+  def choose_pair(rows):
+      from collections import Counter
+      counts = Counter()
+      for symbols,frequency in rows:
+          if frequency:
+              for pair in zip(symbols,symbols[1:]):
+                  counts[pair] += frequency
+      return min(counts,key=lambda pair:(-counts[pair],pair),default=None)
+tests: |
+  assert choose_pair([(["a","b","a"],2),(["b","a"],3)])==("b","a")
+  assert choose_pair([(["c","a","z"],1)])==("a","z")
+  assert choose_pair([(["a"],1),(["b","a"],0)]) is None
+  assert choose_pair([(["a","a","a"],2),(["b","c"],3)])==("a","a")
+  assert choose_pair([(["a","b"],1),(["c","d"],2)])==("c","d"), "weight each pair by its row frequency"
+hints:
+  - Count positions, including adjacent overlapping occurrences, before applying a merge.

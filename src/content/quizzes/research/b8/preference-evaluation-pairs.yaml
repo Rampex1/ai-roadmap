@@ -1,0 +1,95 @@
+items:
+  - id: b8-preference-evaluation-pairs-01
+    type: mcq
+    prompt: Why hide model identity from judges?
+    explanation: Blinding reduces one irrelevant cue.
+    options:
+      - text: Known identities can bias preferences
+        why: Blinding reduces one irrelevant cue.
+        correct: true
+      - text: It guarantees all preferences are correct
+        why: Judges can still err.
+      - text: It changes model output tokens already generated
+        why: The test compares fixed outputs.
+  - id: b8-preference-evaluation-pairs-02
+    type: mcq
+    prompt: Why record ties separately?
+    explanation: Those cases have different meanings.
+    options:
+      - text: A tie was adjudicated rather than missing
+        why: Those cases have different meanings.
+        correct: true
+      - text: Every tie is a candidate win
+        why: No preference was recorded.
+      - text: Ties indicate an invalid dataset always
+        why: A rubric can allow equal quality.
+  - id: b8-preference-evaluation-pairs-03
+    type: mcq
+    prompt: What should be held out?
+    explanation: Evaluation should not be repeatedly tuned against.
+    options:
+      - text: The rubric until after grading
+        why: That allows inconsistent judgment.
+      - text: Only token vocabulary IDs
+        why: IDs are not independent cases.
+      - text: Prompts used to make the release judgment
+        why: Evaluation should not be repeatedly tuned against.
+        correct: true
+  - id: b8-preference-evaluation-pairs-04
+    type: mcq
+    prompt: Can a positive win rate hide serious regressions?
+    explanation: Critical slices need their own gates.
+    options:
+      - text: Only if there are no judged pairs
+        why: No judged pairs means no win estimate.
+      - text: No, one win proves all outputs improve
+        why: Opposite outcomes can coexist.
+      - text: Yes, it aggregates across cases
+        why: Critical slices need their own gates.
+        correct: true
+  - id: b8-preference-evaluation-pairs-05
+    type: multi
+    prompt: Which improve preference evaluation?
+    explanation: Side bias can be measured and reduced. It checks whether automated judgment matches criteria.
+    options:
+      - text: Reuse the fine-tuning examples as final evidence
+        why: That undermines independence.
+      - text: Human rubric calibration
+        why: It checks whether automated judgment matches criteria.
+        correct: true
+      - text: Randomized candidate side
+        why: Side bias can be measured and reduced.
+        correct: true
+  - id: b8-preference-evaluation-pairs-06
+    type: cloze
+    prompt: Comparing both systems on the same prompt is a ______ comparison.
+    accept:
+      - paired
+      - pairwise
+      - head-to-head
+    explanation: Prompt difficulty is shared.
+  - id: b8-preference-evaluation-pairs-07
+    type: order
+    prompt: Order a preference evaluation.
+    items:
+      - Freeze held-out prompts and rubric
+      - Collect responses from both systems
+      - Blind and judge each pair
+      - Summarize wins ties missing cases and slices
+    explanation: Keep selection evidence separate from training preferences.
+  - id: b8-preference-evaluation-pairs-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def preference_counts(judgments):
+          counts = dict.fromkeys(("candidate","baseline","tie","missing"),0)
+          for judgment in judgments:
+              label = "missing" if judgment is None else judgment
+              if label not in counts:
+                  raise ValueError("unknown judgment")
+              counts[label] += 1
+          return counts
+
+      print(preference_counts([None, "tie"])["candidate"])
+    answer: "0"
+    explanation: Neither observed item is a win for the candidate.

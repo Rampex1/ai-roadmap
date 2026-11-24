@@ -1,0 +1,46 @@
+---
+title: Compare post-training on paired prompts
+module: b8
+order: 4
+estMinutes: 8
+objectives:
+  - Separate preference objectives from evaluation evidence
+  - Count wins, losses, ties and missing judgments
+goDeeper: instructgpt-paper
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A common post-training pipeline starts with supervised demonstrations and then uses preference evidence. One approach trains a reward model and optimizes a policy against it under a constraint; DPO instead uses chosen and rejected outputs with a reference policy. Neither makes the training preference a substitute for independent release evidence.
+
+Use <Term id="preference-evaluation-pairs" /> on prompts held out from training and tuning. Randomize or counterbalance candidate order, hide model identity when possible and measure agreement with human rubric decisions. Preferences can reflect verbosity or presentation bias rather than correctness.
+
+Retain ties and unavailable judgments explicitly. Report quality slices, critical regressions and failure outcomes alongside any win rate. The exercise accepts already-oriented judgments, where candidate means a win regardless of the side on which that response was displayed.
+
+## Worked example
+
+Both outputs were assessed on the same prompts.
+
+```python
+def preference_counts(judgments):
+    counts = dict.fromkeys(("candidate","baseline","tie","missing"),0)
+    for judgment in judgments:
+        label = "missing" if judgment is None else judgment
+        if label not in counts:
+            raise ValueError("unknown judgment")
+        counts[label] += 1
+    return counts
+
+print(preference_counts(["candidate","tie",None,"baseline","candidate"]))
+```
+
+```text title="Output"
+{'candidate': 2, 'baseline': 1, 'tie': 1, 'missing': 1}
+```
+
+Define win-rate denominators and check critical quality slices before promoting a candidate.
+
+## Try it
+
+<CodeExercise id="b8-preference-evaluation-pairs-01" />

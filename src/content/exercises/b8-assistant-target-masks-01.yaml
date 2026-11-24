@@ -1,0 +1,24 @@
+id: b8-assistant-target-masks-01
+lesson: research/b8/assistant-target-masks
+title: Implement assistant target masks
+prompt: Implement supervised_targets(tokens, answer_positions). Return explicit inputs, shifted targets and shifted target mask. Reject unequal lengths.
+starter: |
+  def supervised_targets(tokens,answer_positions):
+      raise NotImplementedError
+solution: |
+  def supervised_targets(tokens,answer_positions):
+      if len(tokens)!=len(answer_positions):
+          raise ValueError("unaligned roles")
+      return tokens[:-1],tokens[1:],answer_positions[1:]
+tests: |
+  assert supervised_targets([0,4,9,1,7],[False,False,True,True,False])==([0,4,9,1],[4,9,1,7],[False,True,True,False])
+  assert supervised_targets([1],[True])==([],[],[])
+  assert supervised_targets([],[])==([],[],[])
+  try:
+      supervised_targets([1],[])
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject role length mismatch")
+hints:
+  - A training position inherits validity from its target token, not its input token.

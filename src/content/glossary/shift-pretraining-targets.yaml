@@ -1,0 +1,4 @@
+term: "Next-token objective"
+short: "Training a causal sequence model to predict the token immediately following each input position."
+body: "For a sequence x1…xn, the model reads x1…x(n−1) and each position is scored on the token that follows it, using cross-entropy averaged over valid targets. Inputs and targets are the same sequence offset by one position."
+related: ["causal-mask","mask-padded-token-loss"]

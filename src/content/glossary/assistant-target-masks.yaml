@@ -1,0 +1,4 @@
+term: "Assistant-only loss"
+short: "A supervised training objective that includes assistant target tokens while excluding prompt and padding targets."
+body: "In supervised fine-tuning on chat data, the whole conversation is fed as input, but loss is computed only on targets that belong to assistant turns (often including the end-of-turn token). Prompt, system and padding targets get zero weight, for example label −100."
+related: ["supervised-fine-tuning","mask-padded-token-loss"]

@@ -1,0 +1,93 @@
+items:
+  - id: b8-merge-subword-pairs-01
+    type: mcq
+    prompt: Why weight pair counts by word frequency?
+    explanation: A compressed corpus representation preserves multiplicity.
+    options:
+      - text: Repeated words contribute repeated evidence
+        why: A compressed corpus representation preserves multiplicity.
+        correct: true
+      - text: It removes all ties automatically
+        why: Equal totals are possible.
+      - text: Rare words must have infinite weight
+        why: No such rule is used.
+  - id: b8-merge-subword-pairs-02
+    type: mcq
+    prompt: Where should pair counting stop here?
+    explanation: Pairs must be within a row.
+    options:
+      - text: Only when an index is odd
+        why: No parity rule applies.
+      - text: Across all rows without delimiters
+        why: That would invent adjacency.
+      - text: At each sequence boundary
+        why: Pairs must be within a row.
+        correct: true
+  - id: b8-merge-subword-pairs-03
+    type: mcq
+    prompt: Why save merge order?
+    explanation: Later merges depend on earlier symbols.
+    options:
+      - text: It dictates model gradient clipping
+        why: That is separate.
+      - text: It is irrelevant after learning the final token count
+        why: The same count can encode different rules.
+      - text: Order can change the tokenization
+        why: Later merges depend on earlier symbols.
+        correct: true
+  - id: b8-merge-subword-pairs-04
+    type: mcq
+    prompt: What does the fixture do with overlapping identical adjacent pairs?
+    explanation: Counting precedes any merge pass.
+    options:
+      - text: Merge immediately during counting
+        why: That would change the statistics.
+      - text: Count each adjacent position
+        why: Counting precedes any merge pass.
+        correct: true
+      - text: Count only one pair per row
+        why: That ignores repeated positions.
+  - id: b8-merge-subword-pairs-05
+    type: multi
+    prompt: Which are tokenizer artifacts?
+    explanation: They determine model inputs. They reproduce segmentation.
+    options:
+      - text: Vocabulary and ID mapping
+        why: They determine model inputs.
+        correct: true
+      - text: Ordered merge rules
+        why: They reproduce segmentation.
+        correct: true
+      - text: Only the final validation accuracy
+        why: That cannot reconstruct tokens.
+  - id: b8-merge-subword-pairs-06
+    type: cloze
+    prompt: The merge-based subword procedure is commonly abbreviated ______.
+    accept:
+      - bpe
+    explanation: BPE stands for byte pair encoding.
+  - id: b8-merge-subword-pairs-07
+    type: order
+    prompt: Order one tokenizer training iteration.
+    items:
+      - Read current symbol sequences
+      - Count within-sequence adjacent pairs
+      - Choose the weighted winning pair
+      - Merge selected occurrences
+    explanation: Later counts use the updated symbols.
+  - id: b8-merge-subword-pairs-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def choose_pair(rows):
+          from collections import Counter
+          counts = Counter()
+          for symbols,frequency in rows:
+              if frequency:
+                  for pair in zip(symbols,symbols[1:]):
+                      counts[pair] += frequency
+          return min(counts,key=lambda pair:(-counts[pair],pair),default=None)
+
+      print(choose_pair([(["x", "y"], 0)]))
+    answer: None
+    explanation: A zero-frequency row adds no candidates.

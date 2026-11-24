@@ -4,5 +4,7 @@ title: "Pretraining and post-training"
 order: 9
 prereqs: ["b7"]
 objectives:
-  - "Explain the core ideas of pretraining and post-training"
-  - "Derive or implement the key methods of pretraining and post-training"
+  - Build reproducible subword tokenization artifacts
+  - Construct shifted causal pretraining examples
+  - Align assistant-only target masks for supervised fine-tuning
+  - Evaluate post-training outcomes with blinded paired prompts

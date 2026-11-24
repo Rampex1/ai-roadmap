@@ -1,0 +1,40 @@
+---
+title: Build next-token pretraining examples
+module: b8
+order: 2
+estMinutes: 8
+objectives:
+  - Align each input position with its next token
+  - Compute corpus perplexity using a token-weighted mean
+goDeeper: karpathy-lets-build-gpt
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+The <Term id="shift-pretraining-targets" /> predicts a token from its prefix. Given [BOS,a,b,EOS], use inputs [BOS,a,b] and targets [a,b,EOS]. Position zero scores a, not BOS. Shift exactly once. Some training APIs expect unshifted labels and perform the shift internally; this exercise returns explicitly shifted inputs and targets.
+
+Keep document boundaries explicit when packing examples. Allowing attention across independent documents changes the task. If boundaries should reset context, apply the appropriate attention mask or handle documents separately. Padding contributes neither loss nor valid token count.
+
+Perplexity is the exponential of mean token negative log likelihood in natural-log units. Aggregate total loss and valid count before exponentiating, rather than averaging per-batch perplexities. Comparisons across tokenizers need care because the unit being predicted changes.
+
+## Worked example
+
+Each output position predicts its immediate successor.
+
+```python
+def shifted_example(tokens):
+    return tokens[:-1],tokens[1:]
+
+print(shifted_example([0,4,5,1]))
+```
+
+```text title="Output"
+([0, 4, 5], [4, 5, 1])
+```
+
+Audit target alignment before training and compare losses using an explicit token denominator.
+
+## Try it
+
+<CodeExercise id="b8-shift-pretraining-targets-01" />

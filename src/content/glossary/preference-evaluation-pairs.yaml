@@ -1,0 +1,4 @@
+term: "Paired preference evaluation"
+short: "Comparing two model outputs for the same prompt under an explicit judging rubric."
+body: "Both systems answer the same held-out prompts, and a blinded judge (human or model) picks the better response or declares a tie. Display order is randomised. Results are reported as wins, losses, ties and missing judgments, with an explicit win-rate denominator."
+related: ["dpo","judge-calibration"]
