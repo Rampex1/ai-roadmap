@@ -1,0 +1,26 @@
+id: a12-audit-coverage-and-errors-01
+lesson: mle/a12/audit-coverage-and-errors
+title: Count per-slice missed positive outcomes
+prompt: Implement slice_errors for (group, actual, predicted) rows. Actual is 0, 1 or None and predicted is 0 or 1. Report attempted, unlabelled, positive and false_negative counts by observed group.
+starter: |
+  def slice_errors(rows):
+      raise NotImplementedError
+solution: |
+  def slice_errors(rows):
+      counts = {}
+      for group, actual, predicted in rows:
+          summary = counts.setdefault(group, {"attempted":0,"unlabelled":0,"positive":0,"false_negative":0})
+          summary["attempted"] += 1
+          if actual is None:
+              summary["unlabelled"] += 1
+          elif actual == 1:
+              summary["positive"] += 1
+              summary["false_negative"] += predicted == 0
+      return counts
+tests: |
+  assert slice_errors([("a",1,0),("a",1,1),("a",None,0),("a",0,1)]) == {"a":{"attempted":4,"unlabelled":1,"positive":2,"false_negative":1}}
+  assert slice_errors([("b",None,1)]) == {"b":{"attempted":1,"unlabelled":1,"positive":0,"false_negative":0}}
+  assert slice_errors([]) == {}
+  assert slice_errors([("a",0,0),("b",1,0)]) == {"a":{"attempted":1,"unlabelled":0,"positive":0,"false_negative":0},"b":{"attempted":1,"unlabelled":0,"positive":1,"false_negative":1}}
+hints:
+  - Unknown actual labels count toward attempts and unlabelled only.

@@ -1,0 +1,22 @@
+id: a12-ship-with-gates-and-rollback-01
+lesson: mle/a12/ship-with-gates-and-rollback
+title: Decide whether a release can advance
+prompt: Implement release_status(labelled, minimum, score, threshold, critical_incident). Roll back immediately on a critical incident. Otherwise hold for too few labelled cases or a missing score. On adequate data promote at or above threshold, otherwise roll back.
+starter: |
+  def release_status(labelled, minimum, score, threshold, critical_incident):
+      raise NotImplementedError
+solution: |
+  def release_status(labelled, minimum, score, threshold, critical_incident):
+      if critical_incident:
+          return "rollback"
+      if labelled < minimum or score is None:
+          return "hold"
+      return "promote" if score >= threshold else "rollback"
+tests: |
+  assert release_status(2,100,None,0.9,True) == "rollback"
+  assert release_status(50,100,1,0.9,False) == "hold"
+  assert release_status(100,100,None,0.9,False) == "hold"
+  assert release_status(100,100,0.9,0.9,False) == "promote"
+  assert release_status(100,100,0.89,0.9,False) == "rollback"
+hints:
+  - Critical incidents take priority over sample and score checks.

@@ -1,0 +1,19 @@
+id: a12-own-the-decision-01
+lesson: mle/a12/own-the-decision
+title: Check minimum model-card fields
+prompt: "Implement missing_card_fields(card). Return the missing, nonstring or blank keys in order: owner, intended_use, out_of_scope, training_snapshot, eval_report, fallback. Allow additional fields."
+starter: |
+  def missing_card_fields(card):
+      raise NotImplementedError
+solution: |
+  def missing_card_fields(card):
+      required = ("owner", "intended_use", "out_of_scope", "training_snapshot", "eval_report", "fallback")
+      return [field for field in required
+              if not isinstance(card.get(field), str) or not card[field].strip()]
+tests: |
+  filled = {"owner":"Ops","intended_use":"route","out_of_scope":"denials","training_snapshot":"v1","eval_report":"e1","fallback":"manual"}
+  assert missing_card_fields(filled) == []
+  assert missing_card_fields({**filled,"owner":" ","fallback":0}) == ["owner","fallback"]
+  assert missing_card_fields({"owner":"Ops"}) == ["intended_use","out_of_scope","training_snapshot","eval_report","fallback"]
+hints:
+  - Check the type before stripping whitespace.

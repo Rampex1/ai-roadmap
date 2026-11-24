@@ -1,0 +1,42 @@
+---
+title: Assign ownership and document intended use
+module: a12
+order: 1
+estMinutes: 8
+objectives:
+  - State the decision a model is authorized to support
+  - Identify responsible owners and escalation paths
+goDeeper: model-cards-reporting
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="model-card" /> records a deployment decision that another team member can revisit. Describe the user, decision, population and deployment setting. A ticket classifier can propose a queue for staff to review. That is a different authority boundary from automatically denying service or closing cases.
+
+Name the team responsible for the training data, the owner of the release, the people reading monitoring alerts and the fallback operator. Make handoffs explicit. An ownership chart is useful only if someone can act when a monitored signal leaves bounds. A card should also state how to pause the model, how to find its version and when to revisit the decision.
+
+Include evaluation split versions and sample counts for affected groups. Write limitations where users or operators can find them. The following minimal metadata check catches empty fields. It does not judge whether the stated use or evidence is adequate.
+
+## Worked example
+
+Naming an owner and a use still leaves other fields missing.
+
+```python
+def missing_card_fields(card):
+    required = ("owner", "intended_use", "out_of_scope", "training_snapshot", "eval_report", "fallback")
+    return [field for field in required
+            if not isinstance(card.get(field), str) or not card[field].strip()]
+
+print(missing_card_fields({"owner":"Support Ops","intended_use":"Recommend a queue"}))
+```
+
+```text title="Output"
+['out_of_scope', 'training_snapshot', 'eval_report', 'fallback']
+```
+
+Make the owner and fallback actionable before adding model authority.
+
+## Try it
+
+<CodeExercise id="a12-own-the-decision-01" />

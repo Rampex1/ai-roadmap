@@ -1,0 +1,89 @@
+items:
+  - id: a12-own-the-decision-01
+    type: mcq
+    prompt: Why name an operational owner?
+    explanation: A concrete owner turns alerts into action.
+    options:
+      - text: Someone must decide and act when the system degrades
+        why: A concrete owner turns alerts into action.
+        correct: true
+      - text: Ownership automatically improves accuracy
+        why: Ownership changes operations, not model scores.
+      - text: It removes the need for any fallback
+        why: The owner may need to activate one.
+  - id: a12-own-the-decision-02
+    type: mcq
+    prompt: What belongs under intended use?
+    explanation: Scope defines where the evidence applies.
+    options:
+      - text: The decision and context supported by the model
+        why: Scope defines where the evidence applies.
+        correct: true
+      - text: Only the parameter count
+        why: Size does not specify authority.
+      - text: Only the training time
+        why: Training cost is not intended use.
+  - id: a12-own-the-decision-03
+    type: mcq
+    prompt: What does the metadata check establish?
+    explanation: Substantive review is still needed.
+    options:
+      - text: Every deployment is fair
+        why: Metadata presence cannot establish fairness.
+      - text: The fallback has been tested
+        why: A string can name an untested process.
+      - text: Required fields contain nonblank strings
+        why: Substantive review is still needed.
+        correct: true
+  - id: a12-own-the-decision-04
+    type: mcq
+    prompt: Why document out-of-scope cases?
+    explanation: Evidence rarely covers every use.
+    options:
+      - text: To limit where model output may be relied on
+        why: Evidence rarely covers every use.
+        correct: true
+      - text: To increase the number of authorized decisions
+        why: Scope limits authority.
+      - text: To hide limitations from operators
+        why: The purpose is to communicate limits.
+  - id: a12-own-the-decision-05
+    type: multi
+    prompt: Which make a model card useful?
+    explanation: They show what was actually measured. They clarify action during failures.
+    options:
+      - text: Only a catchy model name
+        why: A name does not describe intended use.
+      - text: Evaluation evidence and its dataset identity
+        why: They show what was actually measured.
+        correct: true
+      - text: A named owner and fallback
+        why: They clarify action during failures.
+        correct: true
+  - id: a12-own-the-decision-06
+    type: cloze
+    prompt: A model’s intended use, limits and evidence can be summarized in a model ______.
+    accept:
+      - card
+    explanation: The card documents deployment-relevant information.
+  - id: a12-own-the-decision-07
+    type: order
+    prompt: Order a deployment handoff that records the assigned owners and uses the completed decision record to rehearse the fallback.
+    items:
+      - Define the decision and supported population
+      - Assign data, model and operating owners for that decision
+      - Have those owners record evidence, limitations and fallback
+      - Verify that operators can execute the recorded fallback
+    explanation: Owners can only be assigned once the decision exists. They then write the record, and its fallback is what operators rehearse.
+  - id: a12-own-the-decision-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def missing_card_fields(card):
+          required = ("owner", "intended_use", "out_of_scope", "training_snapshot", "eval_report", "fallback")
+          return [field for field in required
+                  if not isinstance(card.get(field), str) or not card[field].strip()]
+
+      print(missing_card_fields({"fallback":"manual review"}))
+    answer: "['owner', 'intended_use', 'out_of_scope', 'training_snapshot', 'eval_report']"
+    explanation: Only the fallback field is filled.

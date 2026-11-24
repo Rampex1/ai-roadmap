@@ -1,0 +1,33 @@
+id: a12-route-to-human-review-01
+lesson: mle/a12/route-to-human-review
+title: Apply an explicit review band
+prompt: Implement route_ticket(probability, supported, lower, upper). Require valid 0 <= lower < upper <= 1. Unsupported cases or missing scores go to review. For supported scores, reject values outside [0,1]. Return standard at or below lower, urgent at or above upper, and review in between.
+starter: |
+  def route_ticket(probability, supported, lower, upper):
+      raise NotImplementedError
+solution: |
+  def route_ticket(probability, supported, lower, upper):
+      if not 0 <= lower < upper <= 1:
+          raise ValueError("invalid review band")
+      if not supported or probability is None:
+          return "review"
+      if not 0 <= probability <= 1:
+          raise ValueError("invalid probability")
+      if probability <= lower:
+          return "standard"
+      return "urgent" if probability >= upper else "review"
+tests: |
+  assert route_ticket(0.2,True,0.2,0.8) == "standard"
+  assert route_ticket(0.8,True,0.2,0.8) == "urgent"
+  assert route_ticket(0.5,True,0.2,0.8) == "review"
+  assert route_ticket(0.99,False,0.2,0.8) == "review"
+  assert route_ticket(None,True,0.2,0.8) == "review"
+  for args in [(2,True,0.2,0.8),(0.5,True,0.8,0.2),(-0.1,True,0.2,0.8),(0.5,True,0.5,0.5)]:
+      try:
+          route_ticket(*args)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError("reject invalid probabilities or bounds")
+hints:
+  - Check support before using the confidence score.

@@ -1,0 +1,96 @@
+items:
+  - id: a12-audit-coverage-and-errors-01
+    type: mcq
+    prompt: What is the denominator of false-negative rate?
+    explanation: It measures missed cases among positives.
+    options:
+      - text: Every requested prediction
+        why: That denominator defines a different rate.
+      - text: Predicted positives
+        why: That denominator relates to precision.
+      - text: Known positives
+        why: It measures missed cases among positives.
+        correct: true
+  - id: a12-audit-coverage-and-errors-02
+    type: mcq
+    prompt: How should unknown labels be treated?
+    explanation: They do not establish positives or negatives.
+    options:
+      - text: Count them all as negative
+        why: This introduces unsupported labels.
+      - text: Pretend their rows did not exist
+        why: That hides coverage.
+      - text: Count them as unlabelled without assuming an outcome
+        why: They do not establish positives or negatives.
+        correct: true
+  - id: a12-audit-coverage-and-errors-03
+    type: mcq
+    prompt: What if a slice has no known positives?
+    explanation: The denominator is zero.
+    options:
+      - text: The denominator becomes the model size
+        why: Model size is unrelated.
+      - text: The false-negative rate is undefined
+        why: The denominator is zero.
+        correct: true
+      - text: The model recalls every positive
+        why: There is no positive evidence.
+  - id: a12-audit-coverage-and-errors-04
+    type: mcq
+    prompt: Why retain denominators for small slices?
+    explanation: Precision depends on sample counts.
+    options:
+      - text: A change of one case can move a rate sharply
+        why: Precision depends on sample counts.
+        correct: true
+      - text: A denominator corrects every source of bias
+        why: Sampling and labels still matter.
+      - text: A small slice always has worse accuracy
+        why: No such guarantee exists.
+  - id: a12-audit-coverage-and-errors-05
+    type: multi
+    prompt: Which belong in a slice report?
+    explanation: They define the miss rate. They expose measurement coverage.
+    options:
+      - text: Only a pooled percentage
+        why: That hides group differences.
+      - text: Known-positive and missed-positive counts
+        why: They define the miss rate.
+        correct: true
+      - text: Unlabelled attempts
+        why: They expose measurement coverage.
+        correct: true
+  - id: a12-audit-coverage-and-errors-06
+    type: cloze
+    prompt: A positive example predicted negative is a false ______.
+    accept:
+      - negative
+    explanation: The prediction wrongly misses a positive outcome.
+  - id: a12-audit-coverage-and-errors-07
+    type: order
+    prompt: Order a slice audit.
+    items:
+      - Define relevant groups and harms
+      - Collect outcomes and track missing labels
+      - Compute per-slice counts and rates
+      - Investigate large or consequential differences
+    explanation: Investigation starts from interpretable counts.
+  - id: a12-audit-coverage-and-errors-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def slice_errors(rows):
+          counts = {}
+          for group, actual, predicted in rows:
+              summary = counts.setdefault(group, {"attempted":0,"unlabelled":0,"positive":0,"false_negative":0})
+              summary["attempted"] += 1
+              if actual is None:
+                  summary["unlabelled"] += 1
+              elif actual == 1:
+                  summary["positive"] += 1
+                  summary["false_negative"] += predicted == 0
+          return counts
+
+      print(slice_errors([("g", 1, 1), ("g", None, 0)])["g"]["false_negative"])
+    answer: "0"
+    explanation: The only known positive is correctly predicted.

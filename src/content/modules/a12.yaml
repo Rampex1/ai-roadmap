@@ -4,6 +4,9 @@ title: "Teams and responsible deployment"
 order: 12
 prereqs: ["a11"]
 objectives:
-  - "Explain the core ideas of teams and responsible deployment"
-  - "Apply teams and responsible deployment to a working ML project"
+  - Define model ownership, decision boundaries and intended use
+  - Report evaluation coverage and critical slice regressions
+  - Route uncertain decisions to review within operational constraints
+  - Choose rollback and incident actions from independent validation signals
+
 capstone: mle-capstone

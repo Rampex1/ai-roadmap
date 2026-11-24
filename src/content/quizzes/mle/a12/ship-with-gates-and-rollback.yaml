@@ -1,0 +1,91 @@
+items:
+  - id: a12-ship-with-gates-and-rollback-01
+    type: mcq
+    prompt: What does hold mean in a release gate?
+    explanation: A choice can await more labels.
+    options:
+      - text: The candidate automatically passed
+        why: It has not met prerequisites.
+      - text: A critical incident was ignored
+        why: Critical incidents trigger rollback in this rule.
+      - text: There is not enough evidence to advance
+        why: A choice can await more labels.
+        correct: true
+  - id: a12-ship-with-gates-and-rollback-02
+    type: mcq
+    prompt: Why keep feature schema in the rollback bundle?
+    explanation: Restoring only weights can break input assumptions.
+    options:
+      - text: Only weights can affect inferences
+        why: Inputs and thresholds change decisions.
+      - text: Older models may require compatible preprocessing
+        why: Restoring only weights can break input assumptions.
+        correct: true
+      - text: Every schema changes the network address
+        why: Schema describes the data.
+  - id: a12-ship-with-gates-and-rollback-03
+    type: mcq
+    prompt: Why predefine a critical stop?
+    explanation: The condition takes priority over sample counts.
+    options:
+      - text: A critical stop estimates tail latency
+        why: It is an operational rule.
+      - text: Critical incidents are always harmless at small scale
+        why: Impact can occur before large exposure.
+      - text: Some failures warrant action before aggregate metrics stabilize
+        why: The condition takes priority over sample counts.
+        correct: true
+  - id: a12-ship-with-gates-and-rollback-04
+    type: mcq
+    prompt: What should be tested after rollback?
+    explanation: Both need to operate under realistic load.
+    options:
+      - text: Only the candidate’s training accuracy
+        why: That does not verify remediation.
+      - text: Whether all incident traces were deleted
+        why: Evidence can be retained under proper policy.
+      - text: The fallback path and compatible restored configuration
+        why: Both need to operate under realistic load.
+        correct: true
+  - id: a12-ship-with-gates-and-rollback-05
+    type: multi
+    prompt: Which should an incident record preserve?
+    explanation: They support diagnosis. Operations need accountability.
+    options:
+      - text: Deployment version and relevant known impact
+        why: They support diagnosis.
+        correct: true
+      - text: The owner and action taken
+        why: Operations need accountability.
+        correct: true
+      - text: Raw data beyond operational need
+        why: Unnecessary data should not be retained.
+  - id: a12-ship-with-gates-and-rollback-06
+    type: cloze
+    prompt: A condition checked before promotion is a release ______.
+    accept:
+      - gate
+    explanation: The gate blocks advancement until its requirements are met.
+  - id: a12-ship-with-gates-and-rollback-07
+    type: order
+    prompt: Order a release rehearsal.
+    items:
+      - Name the exact bundle to be released
+      - Write gates and fallback conditions for that named bundle
+      - Rehearse promotion and rollback against those gates in a safe environment
+      - Advance production only after the rehearsed checks pass
+    explanation: Each step uses the previous one. Gates refer to a specific bundle, the rehearsal exercises those gates, and production advances only on checks that were rehearsed.
+  - id: a12-ship-with-gates-and-rollback-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def release_status(labelled, minimum, score, threshold, critical_incident):
+          if critical_incident:
+              return "rollback"
+          if labelled < minimum or score is None:
+              return "hold"
+          return "promote" if score >= threshold else "rollback"
+
+      print(release_status(10, 10, 1.0, 0.9, True))
+    answer: rollback
+    explanation: An observed critical incident overrides the metric and count.

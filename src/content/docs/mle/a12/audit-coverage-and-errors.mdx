@@ -1,0 +1,49 @@
+---
+title: Audit errors and missing outcomes by slice
+module: a12
+order: 2
+estMinutes: 8
+objectives:
+  - Report false negatives with the correct denominator
+  - Track missing labels separately from known outcomes
+goDeeper: model-cards-reporting
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A pooled accuracy score can hide poor performance on a rare but consequential group. Choose slices based on the deployment problem and review enough examples to interpret rates. If a classifier flags urgent tickets, the cost of failing to flag a truly urgent ticket can differ from the cost of a false alarm.
+
+The <Term id="false-negative-rate" /> divides false negatives by known positives. If outcomes have not arrived, unknown examples belong in coverage reporting rather than being silently considered negative. A slice with no known positives has undefined false-negative rate. Small denominators warrant further evidence instead of overconfident claims.
+
+Report how groups were recorded and which cases were omitted, and examine review differences and delayed labels as potential signals. A disparity metric alone does not identify its cause or establish that a deployed process is appropriate. Pair counts with investigation of the workflow and expected harms.
+
+## Worked example
+
+The two groups have different known-positive and coverage counts.
+
+```python
+def slice_errors(rows):
+    counts = {}
+    for group, actual, predicted in rows:
+        summary = counts.setdefault(group, {"attempted":0,"unlabelled":0,"positive":0,"false_negative":0})
+        summary["attempted"] += 1
+        if actual is None:
+            summary["unlabelled"] += 1
+        elif actual == 1:
+            summary["positive"] += 1
+            summary["false_negative"] += predicted == 0
+    return counts
+
+print(slice_errors([("mobile",1,0),("mobile",None,1),("web",0,1)]))
+```
+
+```text title="Output"
+{'mobile': {'attempted': 2, 'unlabelled': 1, 'positive': 1, 'false_negative': 1}, 'web': {'attempted': 1, 'unlabelled': 0, 'positive': 0, 'false_negative': 0}}
+```
+
+Show count and coverage information alongside each subgroup rate.
+
+## Try it
+
+<CodeExercise id="a12-audit-coverage-and-errors-01" />

@@ -1,0 +1,44 @@
+---
+title: Use release gates and practice rollback
+module: a12
+order: 4
+estMinutes: 8
+objectives:
+  - Separate insufficient evidence from a failed gate
+  - React to critical incidents even when sample counts are small
+goDeeper: model-cards-reporting
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="release-gate" /> ties deployment authority to evidence. Require test and canary measures appropriate to the decision, plus review capacity and a working fallback. Hold when data are insufficient. A predefined critical incident can require rollback before there is enough evidence to estimate an aggregate rate.
+
+Define the stop mechanism and a known previous bundle. The bundle can include model weights, preprocessing, feature schema, thresholds and serving configuration. Test restoration and compatibility together. Log the incident, known impact, version and who has suspended the rollout. Keep monitoring the fallback so remediation does not create a new operational failure.
+
+This fixture makes three factors explicit: whether there is enough labelled data, whether the score passes a threshold and whether a critical incident has occurred. A production gate may include several independent slice and reliability signals.
+
+## Worked example
+
+Observed high performance is still insufficient with too few labelled cases.
+
+```python
+def release_status(labelled, minimum, score, threshold, critical_incident):
+    if critical_incident:
+        return "rollback"
+    if labelled < minimum or score is None:
+        return "hold"
+    return "promote" if score >= threshold else "rollback"
+
+print(release_status(50, 100, 0.97, 0.95, False))
+```
+
+```text title="Output"
+hold
+```
+
+Verify rollback and fallback before granting the candidate more authority.
+
+## Try it
+
+<CodeExercise id="a12-ship-with-gates-and-rollback-01" />

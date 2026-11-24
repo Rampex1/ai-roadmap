@@ -2,8 +2,35 @@ id: mle-capstone
 module: a12
 kind: capstone
 title: "ML Engineering capstone: a served, tested, monitored classifier"
-brief: "Placeholder brief. Written when module a12 ships."
+brief: |
+  Train and operate a small support-ticket classifier on synthetic examples. Compare it with
+  an always-standard baseline, write a drift report, then package it as a FastAPI service in a
+  local Docker container with pytest tests, a GitHub Actions CI workflow and an MLflow run.
+  Use the deployment evidence to decide whether to hold, promote or roll back.
+
+  **Offline core (standard library, local Jupyter or Colab)**
+
+  1. **Train and select.** Fit a text classifier on the training split. Choose a review band on validation only.
+  2. **Freeze an artifact.** Record the model, preprocessing, training and validation dataset identities, and thresholds under one digest.
+  3. **Serve and test.** Implement a prediction contract that reads thresholds from the artifact, rejects malformed requests with 400 and returns an explicit review outcome.
+  4. **Monitor on a shared holdout.** Report coverage, manual review and urgent misses by channel, preserving unknown outcomes.
+  5. **Rehearse rollback.** Implement the release gate and apply it to the holdout counts.
+  6. **Write a drift report.** Compare channel mix and unfamiliar-vocabulary rate between a reference and a current window with total variation distance, and flag an alert above a stated threshold.
+
+  **Package it (pinned packages, your own machine for Docker and CI)**
+
+  7. **Package it.** The notebook writes a `capstone/` project: `core.py` and `model.json` from your frozen artifact, a FastAPI `app.py` with `/predict` and `/health`, a `Dockerfile` (pinned slim Python base, non-root user), pinned `requirements.txt`, pytest tests using FastAPI's TestClient, and `.github/workflows/ci.yml`. Run `docker build -t ticket-clf . && docker run -p 8000:8000 ticket-clf`, then call `/health` and `/predict` with curl. Push the folder to a GitHub repository and watch CI run.
+  8. **Track the run.** Log the band, validation cost and holdout counts, and the artifact and drift report, to a local MLflow store.
+
+  **Deliverables:** the completed notebook; the `capstone/` folder (app, Dockerfile, requirements, tests, CI workflow, `model.json`, `drift_report.json`); the MLflow run ID; a link to a CI run; and a deployment note in the notebook's final Markdown section covering scope, owners, safeguards, the drift report and remaining evidence gaps.
 notebook: /homework/mle-capstone.ipynb
 rubric:
-  - "Placeholder rubric item"
-compute: "Placeholder; set when the capstone is written."
+  - "The model trains on the training split and the review band is chosen on validation only."
+  - "The prediction handler reads thresholds from the artifact, returns its version, rejects malformed requests with 400 without echoing the ticket and routes unknown text to review."
+  - "The holdout report compares both systems on the same cases and preserves per-channel denominators and unknown outcomes."
+  - "The drift report uses total variation on normalised histograms and states its counts, threshold and alert."
+  - "Docker image builds and serves /predict locally, and /health returns the same model version as the notebook."
+  - "pytest tests cover /health, /predict and invalid requests, and pass locally."
+  - "CI workflow runs tests; MLflow run records band, metrics and artifact."
+  - "The deployment note names the owner and rollback route, applies the release gate and lists evidence gaps."
+compute: "Offline core: any laptop. Packaging: local Docker + GitHub Actions (free); about 4–5 h."

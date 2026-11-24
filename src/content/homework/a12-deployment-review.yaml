@@ -1,0 +1,22 @@
+id: a12-deployment-review
+module: a12
+kind: homework
+title: Write a responsible deployment review
+brief: |-
+  Use an offline support-ticket routing fixture to describe a model, measure labelled slices, choose a manual review path and apply a release gate.
+
+  1. Check decision ownership and minimum model documentation.
+  2. Measure errors and missing labels per slice.
+  3. Route low-confidence cases to review.
+  4. Apply a safety and quality gate before increasing traffic.
+  5. Combine review routing with an evidence gate, holding the release when review demand exceeds capacity.
+
+  Write a deployment decision for a support team with limited review capacity. Record what the classifier may decide, who owns the fallback and one condition for withdrawing the model.
+notebook: /homework/a12-deployment-review.ipynb
+rubric:
+  - The model card states scope and owner.
+  - Rates include denominators and missing labels.
+  - Uncertainty and unsupported inputs lead to review, and review overflow holds the release.
+  - Release gates block critical avoidable harms.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

@@ -1,0 +1,95 @@
+items:
+  - id: a12-route-to-human-review-01
+    type: mcq
+    prompt: Why can a high score still require review?
+    explanation: A score does not establish eligibility.
+    options:
+      - text: The request may be outside supported use
+        why: A score does not establish eligibility.
+        correct: true
+      - text: Every high score is automatically calibrated
+        why: Calibration must be checked.
+      - text: A high score removes the need for an owner
+        why: Someone must still own operations.
+  - id: a12-route-to-human-review-02
+    type: mcq
+    prompt: What happens with a wider review band?
+    explanation: Fewer scores are automatically routed.
+    options:
+      - text: More cases may go to human review
+        why: Fewer scores are automatically routed.
+        correct: true
+      - text: Review workload always goes down
+        why: A wider band can include more cases.
+      - text: No threshold can affect staffing
+        why: Review volume depends on routing.
+  - id: a12-route-to-human-review-03
+    type: mcq
+    prompt: What should a review handoff include?
+    explanation: The reviewer needs enough information to act.
+    options:
+      - text: All private data regardless of need
+        why: Minimize what is shared.
+      - text: Only a raw probability without context
+        why: That may not support a decision.
+      - text: Permitted context and an accountable decision owner
+        why: The reviewer needs enough information to act.
+        correct: true
+  - id: a12-route-to-human-review-04
+    type: mcq
+    prompt: Where should threshold candidates be tuned?
+    explanation: Holdout cases are reserved for final assessment.
+    options:
+      - text: On validation with realistic workload
+        why: Holdout cases are reserved for final assessment.
+        correct: true
+      - text: On repeatedly checked test answers
+        why: That adapts thresholds to the test.
+      - text: Only using model training loss
+        why: Loss alone does not estimate review load.
+  - id: a12-route-to-human-review-05
+    type: multi
+    prompt: Which should be monitored for a review queue?
+    explanation: The workflow must meet capacity and deadlines. They help detect downstream harm.
+    options:
+      - text: Only the maximum predicted score
+        why: A score does not measure queue health.
+      - text: Volume and waiting time
+        why: The workflow must meet capacity and deadlines.
+        correct: true
+      - text: Review outcomes on relevant slices
+        why: They help detect downstream harm.
+        correct: true
+  - id: a12-route-to-human-review-06
+    type: cloze
+    prompt: The path for scores inside the uncertainty band here is human ______.
+    accept:
+      - review
+    explanation: A person handles cases the automatic policy abstains from.
+  - id: a12-route-to-human-review-07
+    type: order
+    prompt: Order a fallback design.
+    items:
+      - Define when automatic routing is permitted
+      - Estimate review workload from the cases left outside automatic routing
+      - Assign a review owner and deadline sized to that workload
+      - Test the staffed path on representative cases
+    explanation: The review workload depends on the automatic band, staffing depends on the workload, and only a staffed path can be tested.
+  - id: a12-route-to-human-review-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def route_ticket(probability, supported, lower, upper):
+          if not 0 <= lower < upper <= 1:
+              raise ValueError("invalid review band")
+          if not supported or probability is None:
+              return "review"
+          if not 0 <= probability <= 1:
+              raise ValueError("invalid probability")
+          if probability <= lower:
+              return "standard"
+          return "urgent" if probability >= upper else "review"
+
+      print(route_ticket(0.8, True, 0.3, 0.8))
+    answer: urgent
+    explanation: The score equals the upper boundary and routes urgent.

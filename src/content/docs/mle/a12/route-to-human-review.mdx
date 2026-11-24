@@ -1,0 +1,48 @@
+---
+title: Design a review path and fallback
+module: a12
+order: 3
+estMinutes: 8
+objectives:
+  - Distinguish uncertain predictions from unsupported requests
+  - Use review bands and account for workload
+goDeeper: model-cards-reporting
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+<Term id="human-review" /> is useful when predictions are uncertain, cases are outside the documented scope or a decision requires judgement. Forward enough permitted context for a reviewer to act. Define the response deadline and what happens if the reviewer is unavailable. A fallback that no one can operate is not a release control.
+
+A confidence threshold changes both prediction risk and review load. Choose it on validation using a realistic workload, then assess how it affects relevant slices. Confidence is only useful when its meaning is stable enough for the task. A high score on an unsupported input does not make it eligible for automation.
+
+This fixture uses a binary probability and a review band. Low values select standard handling and high values select urgent handling. Interior values or unsupported requests go to a reviewer. Equal boundary values are assigned to their adjacent automatic outcome by contract.
+
+## Worked example
+
+The case is unsupported, so the high score cannot authorize automatic routing.
+
+```python
+def route_ticket(probability, supported, lower, upper):
+    if not 0 <= lower < upper <= 1:
+        raise ValueError("invalid review band")
+    if not supported or probability is None:
+        return "review"
+    if not 0 <= probability <= 1:
+        raise ValueError("invalid probability")
+    if probability <= lower:
+        return "standard"
+    return "urgent" if probability >= upper else "review"
+
+print(route_ticket(0.95, False, 0.2, 0.8))
+```
+
+```text title="Output"
+review
+```
+
+Measure review load and response time alongside the quality of automatic decisions.
+
+## Try it
+
+<CodeExercise id="a12-route-to-human-review-01" />

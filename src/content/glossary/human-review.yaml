@@ -1,4 +1,4 @@
 term: "Human review"
 short: "A workflow in which a designated person makes or checks decisions outside the model’s automatic policy."
-body: "Measure review load and response time alongside the quality of automatic decisions."
+body: "A designated person decides cases the automatic policy abstains on (uncertain scores, unsupported inputs, judgement calls) within a stated deadline, with only the context they need; its capacity and latency are part of the system."
 related: ["model-card","calibration"]
