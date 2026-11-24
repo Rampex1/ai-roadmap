@@ -1,0 +1,266 @@
+---
+title: "Array maths and broadcasting"
+module: f2
+order: 3
+estMinutes: 16
+objectives:
+  - "Apply universal functions such as np.sqrt, np.exp and np.log to whole arrays"
+  - "Predict the result shape of an operation using the broadcasting rules, or say why it fails"
+  - "Standardise the columns of a 2D array by broadcasting a row of means and standard deviations"
+goDeeper: numpy-broadcasting
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import broadcastingImg from '@/assets/diagrams/f2-broadcasting.svg';
+
+You can already add two arrays of the same shape. This lesson covers the rest of everyday array
+maths: functions that work on every element, and **broadcasting**, NumPy's rule for combining arrays
+of *different* shapes. Broadcasting sounds technical, but it is behind a large share of all
+machine-learning code, so it is worth getting really comfortable with.
+
+## Universal functions
+
+The `math` module from F1 works on one number at a time. NumPy has matching functions that work on
+every element of an array at once. They are called **universal functions**, or ufuncs:
+
+```python
+import numpy as np
+
+x = np.array([1.0, 4.0, 9.0])
+print(np.sqrt(x))
+print(np.exp(np.array([0.0, 1.0])))
+print(np.log(np.array([1.0, np.e])))
+print(np.abs(np.array([-2, 3])))
+print(np.round(np.array([1.234, 5.678]), 1))
+```
+
+```text title="Output"
+[1. 2. 3.]
+[1.         2.71828183]
+[0. 1.]
+[2 3]
+[1.2 5.7]
+```
+
+`np.log` is the natural logarithm (base $e$), the same as `math.log`. Do not pass arrays to `math.sqrt`
+or `math.exp`: they only accept single numbers and raise a `TypeError` for an array of several values.
+
+With ufuncs and arithmetic you can evaluate a whole formula over many points at once. Here is
+$y = 3x^2 - 2x + 1$ at five points:
+
+```python
+x = np.linspace(-2, 2, 5)
+y = 3 * x ** 2 - 2 * x + 1
+print(x)
+print(y)
+```
+
+```text title="Output"
+[-2. -1.  0.  1.  2.]
+[17.  6.  1.  2.  9.]
+```
+
+That is how you will draw the graph of a function in the matplotlib lesson: make many `x` values with
+`linspace`, compute all the `y` values in one line, and plot.
+
+### Division by zero does not crash
+
+Plain Python raises `ZeroDivisionError`. NumPy prints a `RuntimeWarning` and carries on, putting `inf`
+(infinity) or `nan` ("not a number") in the result:
+
+```python
+print(np.array([1.0, 0.0]) / 0.0)
+```
+
+```text title="Output"
+[inf nan]
+```
+
+That is convenient for big computations, but it means a mistake can spread silently. If `nan` shows up
+in your results (or as a training loss of `nan` later in the course), look for a division by zero or a
+log of zero or of a negative number.
+
+## Broadcasting: combining different shapes
+
+You have already used broadcasting without the name. In `np.array([1, 2, 3]) + 10`, the single number
+10 is combined with every element. NumPy behaves as if 10 were stretched into `[10, 10, 10]`.
+
+The same idea works between arrays. Add a row of three numbers to a 2-by-3 array and the row is added
+to **each** row:
+
+```python
+m = np.array([[1, 2, 3],
+              [4, 5, 6]])
+row = np.array([10, 20, 30])
+print(m + row)
+```
+
+```text title="Output"
+[[11 22 33]
+ [14 25 36]]
+```
+
+<Figure
+  src={broadcastingImg}
+  alt="A 2 by 3 array with values 1 to 6, plus a row 10, 20, 30. The row is shown repeated as a faded second row, and the sum is 11, 22, 33 over 14, 25, 36."
+  caption="Broadcasting stretches the row across the rows of m. Nothing is really copied; NumPy just reuses the row."
+/>
+
+This is <Term id="broadcasting" />: NumPy stretches dimensions of size 1 (or missing dimensions) to
+match the other array, without actually copying any data.
+
+### The rules
+
+To decide whether two shapes work together, line them up **from the right** and compare each pair of
+dimensions. A pair is compatible when:
+
+1. the two sizes are equal, or
+2. one of them is 1.
+
+A missing dimension (when one array has fewer dimensions) counts as 1. The result takes the larger size
+in each position. If any pair fails both tests, NumPy raises an error.
+
+| Shape A | Shape B | Result |
+|---|---|---|
+| `(2, 3)` | `(3,)` | `(2, 3)`: B becomes `(1, 3)` and is stretched down |
+| `(2, 3)` | `(2, 1)` | `(2, 3)`: B is stretched across |
+| `(3, 1)` | `(2,)` | `(3, 2)`: both are stretched |
+| `(3,)` | `(2,)` | error: 3 and 2 differ and neither is 1 |
+| `(3, 4)` | `(3,)` | error: lined up from the right, 4 and 3 differ |
+
+The second row of the table adds a **column** to every column:
+
+```python
+col = np.array([[100], [200]])
+print(col.shape)
+print(m + col)
+```
+
+```text title="Output"
+(2, 1)
+[[101 102 103]
+ [204 205 206]]
+```
+
+The third row makes a whole table from a column and a row, like a times table:
+
+```python
+col = np.array([[1], [2], [3]])
+row = np.array([10, 20])
+print(col * row)
+print((col * row).shape)
+```
+
+```text title="Output"
+[[10 20]
+ [20 40]
+ [30 60]]
+(3, 2)
+```
+
+And here is a failure:
+
+```python
+a = np.array([1, 2, 3])
+b = np.array([10, 20])
+try:
+    a + b
+except ValueError as e:
+    print("ValueError:", e)
+```
+
+```text title="Output"
+ValueError: operands could not be broadcast together with shapes (3,) (2,)
+```
+
+When you see this error, print the shapes and line them up from the right. The last row of the table is
+the classic trap: you want to add one value per **row** of a `(3, 4)` array, but a shape `(3,)` lines up
+with the columns. Turn it into a column of shape `(3, 1)` first, with `.reshape(3, 1)` or `[:, None]`
+(lesson 5 explains both):
+
+```python
+m = np.ones((3, 4))
+per_row = np.array([1, 2, 3])
+print((m + per_row[:, None]).shape)
+```
+
+```text title="Output"
+(3, 4)
+```
+
+## Worked example: standardising features
+
+Many ML algorithms work best when every feature (column) is on a similar scale. A height in
+centimetres (around 170) and a weight in kilograms (around 60) differ a lot in size. The fix is to
+**standardise** each column: subtract the column's mean and divide by its standard deviation,
+
+$$z = \frac{x - \mu}{\sigma}$$
+
+where $x$ is a value, $\mu$ (mu) is its column's mean and $\sigma$ (sigma) is its column's standard
+deviation, a measure of spread you will meet properly in lesson 4 and in F5. After this, each column has
+mean 0 and standard deviation 1.
+
+With broadcasting it takes two lines. `data.mean(axis=0)` gives the mean of each column (lesson 4
+explains `axis`), which is a row of shape `(2,)`:
+
+```python
+data = np.array([[170.0, 65.0],
+                 [160.0, 50.0],
+                 [180.0, 80.0],
+                 [150.0, 45.0]])
+means = data.mean(axis=0)
+stds = data.std(axis=0)
+print(means, stds)
+z = (data - means) / stds
+print(z.round(2))
+```
+
+```text title="Output"
+[165.  60.] [11.18033989 13.69306394]
+[[ 0.45  0.37]
+ [-0.45 -0.73]
+ [ 1.34  1.46]
+ [-1.34 -1.1 ]]
+```
+
+`data` has shape `(4, 2)` and `means` has shape `(2,)`, so the means row is broadcast down all four rows:
+each column has its own mean subtracted. Now a value of 1.34 means "1.34 standard deviations above
+average" in either column, and the two features are comparable. scikit-learn's `StandardScaler`, which you
+will use in F7, does exactly this.
+
+## Element-wise * is not matrix multiplication
+
+One warning before you meet linear algebra in F3. For 2D arrays, `*` still multiplies element by element.
+Matrix multiplication is a different operation, written `@`:
+
+```python
+a = np.array([[1, 2], [3, 4]])
+b = np.array([[10, 20], [30, 40]])
+print(a * b)
+print(a @ b)
+```
+
+```text title="Output"
+[[ 10  40]
+ [ 90 160]]
+[[ 70 100]
+ [150 220]]
+```
+
+F3 explains what `@` computes and why it matters. For now, just remember they are different.
+
+## Try it
+
+<CodeExercise id="f2-broadcasting-01" />
+
+<CodeExercise id="f2-broadcasting-02" />
+
+## Summary
+
+- Ufuncs such as `np.sqrt`, `np.exp`, `np.log` and `np.abs` act on every element. Use them, not `math`, on arrays.
+- Division by zero gives `inf` or `nan` with a warning, not an error. Watch for `nan` spreading.
+- Broadcasting: line shapes up from the right; each pair must be equal or contain a 1. Missing dimensions count as 1.
+- A row of shape `(n,)` is broadcast down the rows of an `(m, n)` array; a column `(m, 1)` is broadcast across.
+- Standardise columns with `(X - X.mean(axis=0)) / X.std(axis=0)`.
+- `*` is element-wise; `@` is matrix multiplication.

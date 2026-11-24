@@ -1,0 +1,5 @@
+title: "Group by: split-apply-combine (official pandas user guide)"
+url: https://pandas.pydata.org/docs/user_guide/groupby.html
+kind: course
+free: true
+modules: [f2]

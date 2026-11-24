@@ -1,0 +1,75 @@
+id: f2-matplotlib-02
+lesson: foundations/f2/matplotlib
+title: Two plots side by side
+prompt: |
+  Write `plot_overview(df)` for a table with columns `city` and `price`. Make a figure with **two axes side
+  by side** using `plt.subplots(1, 2)` and return the figure:
+
+  1. left: a **histogram** of `price` with 10 bins, x label `"price"`, y label `"count"`;
+  2. right: a **bar chart** of the **mean price per city** (use `groupby`), one bar per city in the order
+     groupby returns them, with y label `"mean price"`.
+starter: |
+  import numpy as np
+  import pandas as pd
+  import matplotlib.pyplot as plt
+
+  def plot_overview(df):
+      """Histogram of price (left) and bar chart of mean price per city (right); return the figure."""
+      fig, axes = plt.subplots(1, 2, figsize=(9, 3.5))
+      # TODO: draw on axes[0] and axes[1]
+      return fig
+
+  rng = np.random.default_rng(0)
+  df = pd.DataFrame({
+      "city": rng.choice(["Bath", "Leeds", "York"], size=60),
+      "price": rng.normal(250, 60, size=60).round(),
+  })
+  plot_overview(df)
+solution: |
+  import numpy as np
+  import pandas as pd
+  import matplotlib.pyplot as plt
+
+  def plot_overview(df):
+      """Histogram of price (left) and bar chart of mean price per city (right); return the figure."""
+      fig, axes = plt.subplots(1, 2, figsize=(9, 3.5))
+      axes[0].hist(df["price"], bins=10)
+      axes[0].set_xlabel("price")
+      axes[0].set_ylabel("count")
+      means = df.groupby("city")["price"].mean()
+      axes[1].bar(means.index, means.values)
+      axes[1].set_ylabel("mean price")
+      fig.tight_layout()
+      return fig
+
+  rng = np.random.default_rng(0)
+  df = pd.DataFrame({
+      "city": rng.choice(["Bath", "Leeds", "York"], size=60),
+      "price": rng.normal(250, 60, size=60).round(),
+  })
+  plot_overview(df)
+tests: |
+  import numpy as np
+  import pandas as pd
+  import matplotlib.pyplot as plt
+  def _check(_df):
+      _fig = plot_overview(_df)
+      assert _fig is not None and hasattr(_fig, "axes"), "plot_overview should return the figure"
+      assert len(_fig.axes) == 2, f"Use plt.subplots(1, 2) to make two axes, found {len(_fig.axes)}"
+      _h, _b = _fig.axes
+      assert len(_h.patches) == 10, f"The left histogram should have 10 bins (bars), found {len(_h.patches)}"
+      assert sum(p.get_height() for p in _h.patches) == len(_df), "The histogram should count every price once"
+      assert _h.get_xlabel() == "price" and _h.get_ylabel() == "count", f"Left axis labels should be 'price' and 'count', got {_h.get_xlabel()!r} and {_h.get_ylabel()!r}"
+      _want = _df.groupby("city")["price"].mean()
+      _heights = [p.get_height() for p in _b.patches]
+      assert len(_heights) == len(_want), f"The right plot should have one bar per city ({len(_want)}), found {len(_heights)}"
+      np.testing.assert_allclose(_heights, _want.values, err_msg="Each bar should be the mean price of its city, in groupby order")
+      assert _b.get_ylabel() == "mean price", f"Right y label should be 'mean price', got {_b.get_ylabel()!r}"
+      return _fig
+  _rng = np.random.default_rng(0)
+  _check(pd.DataFrame({"city": _rng.choice(["Bath", "Leeds", "York"], size=60), "price": _rng.normal(250, 60, size=60).round()}))
+  plt.close(_check(pd.DataFrame({"city": ["A", "B", "A", "C", "B", "D"], "price": [1.0, 2.0, 3.0, 4.0, 6.0, 5.0]})))
+hints:
+  - "`axes[0].hist(df[\"price\"], bins=10)` draws the histogram on the left axes."
+  - "`means = df.groupby(\"city\")[\"price\"].mean()` is a Series: its index holds the cities and `.values` the means."
+  - "`axes[1].bar(means.index, means.values)` draws one bar per city."

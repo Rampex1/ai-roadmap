@@ -1,0 +1,36 @@
+id: f2-indexing-and-masks-01
+lesson: foundations/f2/indexing-and-masks
+title: Clip negatives without side effects
+prompt: |
+  Write `clip_negatives(x)` that returns a **new** array where every negative value is replaced
+  by 0. The array passed in must not change.
+
+  For example `clip_negatives(np.array([3, -1, 2, -5]))` returns `array([3, 0, 2, 0])`.
+  Use a boolean mask or `np.where`, not a loop.
+starter: |
+  import numpy as np
+
+  def clip_negatives(x):
+      """Return a copy of x with negative values replaced by 0."""
+      x[x < 0] = 0
+      return x
+solution: |
+  import numpy as np
+
+  def clip_negatives(x):
+      """Return a copy of x with negative values replaced by 0."""
+      return np.where(x < 0, 0, x)
+tests: |
+  import numpy as np
+  _x = np.array([3, -1, 2, -5])
+  _r = clip_negatives(_x)
+  np.testing.assert_array_equal(_r, [3, 0, 2, 0], err_msg="Negative values should become 0")
+  np.testing.assert_array_equal(_x, [3, -1, 2, -5], err_msg="clip_negatives changed the array passed in. Work on a copy (x.copy()) or build a new one with np.where")
+  _y = np.array([-0.5, 1.5, -2.0])
+  np.testing.assert_allclose(clip_negatives(_y), [0.0, 1.5, 0.0], err_msg="It should work for float arrays too")
+  _m = np.array([[1, -2], [-3, 4]])
+  np.testing.assert_array_equal(clip_negatives(_m), [[1, 0], [0, 4]], err_msg="It should work for 2D arrays too")
+  np.testing.assert_array_equal(clip_negatives(np.array([1, 2])), [1, 2], err_msg="Arrays with no negatives come back unchanged")
+hints:
+  - "The starter changes x in place, which changes the caller array. Either start with `x = x.copy()`, or build a new array."
+  - "`np.where(x < 0, 0, x)` picks 0 where the condition is True and the original value elsewhere."

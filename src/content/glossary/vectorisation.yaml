@@ -1,0 +1,7 @@
+term: "Vectorisation"
+short: "Writing whole-array operations such as a * b instead of explicit Python loops, so NumPy runs the loop in fast compiled code."
+body: |
+  `prices * 1.2` multiplies every element of a NumPy array at once. The loop still happens, but inside NumPy's
+  compiled code rather than the Python interpreter, which is typically tens of times faster and shorter to write.
+  pandas columns and PyTorch tensors work the same way. Also spelled vectorization.
+related: ["ndarray", "broadcasting", "loop"]

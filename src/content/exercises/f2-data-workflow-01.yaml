@@ -1,0 +1,95 @@
+id: f2-data-workflow-01
+lesson: foundations/f2/data-workflow
+title: Clean, then compare
+prompt: |
+  Write two functions for a bike-rental table with columns `day`, `temp` and `rentals`.
+
+  `clean_rentals(raw)` returns a cleaned copy:
+
+  1. remove exact duplicate rows,
+  2. remove rows with negative `rentals`,
+  3. remove rows with a missing `temp`,
+  4. tidy `day` with `.str.strip().str.title()`, so `" sat"` and `"SAT"` both become `"Sat"`.
+
+  `weekend_lift(df)` takes a **cleaned** table and returns mean rentals on `"Sat"`/`"Sun"` days divided by
+  mean rentals on other days. For example 1.5 means weekends are 50% busier.
+
+  For the small table below, cleaning leaves 4 rows and the lift is `150 / 100 = 1.5`.
+starter: |
+  import numpy as np
+  import pandas as pd
+
+  raw = pd.DataFrame({
+      "day": ["Mon", "SAT", "Tue", "Mon", "sun ", "Wed", "Thu"],
+      "temp": [12.0, 15.0, np.nan, 12.0, 18.0, 10.0, 14.0],
+      "rentals": [90, 140, 120, 90, 160, -1, 110],
+  })
+
+  def clean_rentals(raw):
+      """Return raw without duplicates, negative rentals or missing temp, with tidy day names."""
+      return raw
+
+  def weekend_lift(df):
+      """Return mean weekend rentals divided by mean weekday rentals."""
+      return 1.0
+
+  clean = clean_rentals(raw)
+  print(clean)
+  print(weekend_lift(clean))
+solution: |
+  import numpy as np
+  import pandas as pd
+
+  raw = pd.DataFrame({
+      "day": ["Mon", "SAT", "Tue", "Mon", "sun ", "Wed", "Thu"],
+      "temp": [12.0, 15.0, np.nan, 12.0, 18.0, 10.0, 14.0],
+      "rentals": [90, 140, 120, 90, 160, -1, 110],
+  })
+
+  def clean_rentals(raw):
+      """Return raw without duplicates, negative rentals or missing temp, with tidy day names."""
+      df = raw.drop_duplicates()
+      df = df[df["rentals"] >= 0]
+      df = df.dropna(subset=["temp"]).copy()
+      df["day"] = df["day"].str.strip().str.title()
+      return df
+
+  def weekend_lift(df):
+      """Return mean weekend rentals divided by mean weekday rentals."""
+      is_weekend = df["day"].isin(["Sat", "Sun"])
+      return df.loc[is_weekend, "rentals"].mean() / df.loc[~is_weekend, "rentals"].mean()
+
+  clean = clean_rentals(raw)
+  print(clean)
+  print(weekend_lift(clean))
+tests: |
+  import math
+  import numpy as np
+  import pandas as pd
+  _raw = pd.DataFrame({"day": ["Mon", "SAT", "Tue", "Mon", "sun ", "Wed", "Thu"], "temp": [12.0, 15.0, np.nan, 12.0, 18.0, 10.0, 14.0], "rentals": [90, 140, 120, 90, 160, -1, 110]})
+  _c = clean_rentals(_raw)
+  assert len(_c) == 4, f"Expected 4 rows after cleaning (one duplicate Mon, the -1 rentals row and the missing temp row removed), got {len(_c)}"
+  assert sorted(_c["day"].tolist()) == ["Mon", "Sat", "Sun", "Thu"], f"Day names should be tidied to Mon, Sat, Sun, Thu; got {sorted(_c['day'].tolist())}"
+  assert (_c["rentals"] >= 0).all() and _c["temp"].notna().all(), "No negative rentals or missing temps should remain"
+  assert len(_raw) == 7 and _raw["day"].tolist()[1] == "SAT", "clean_rentals changed the table passed in: work on a copy"
+  assert math.isclose(weekend_lift(_c), 150 / 100), f"Weekend mean is (140 + 160) / 2 = 150 and weekday mean (90 + 110) / 2 = 100, so the lift is 1.5; got {weekend_lift(_c)!r}"
+  _r = np.random.default_rng(1)
+  _n = 120
+  _d = _r.choice(["Mon", "Tue", "Wed", "Sat", "Sun"], size=_n)
+  _raw2 = pd.DataFrame({"day": _d, "temp": _r.normal(15, 5, _n).round(1), "rentals": (100 + 50 * np.isin(_d, ["Sat", "Sun"]) + _r.normal(0, 10, _n)).round()})
+  _raw2.loc[[3, 4], "day"] = [" mon", "SUN"]
+  _raw2.loc[7, "temp"] = np.nan
+  _raw2.loc[9, "rentals"] = -5
+  _raw2 = pd.concat([_raw2, _raw2.iloc[[0]]], ignore_index=True)
+  _c2 = clean_rentals(_raw2)
+  _want = _raw2.drop_duplicates()
+  _want = _want[(_want["rentals"] >= 0) & _want["temp"].notna()].copy()
+  _want["day"] = _want["day"].str.strip().str.title()
+  assert len(_c2) == len(_want), f"On a bigger table expected {len(_want)} rows after cleaning, got {len(_c2)}"
+  assert set(_c2["day"]) == {"Mon", "Tue", "Wed", "Sat", "Sun"}, f"Unexpected day names after tidying: {sorted(set(_c2['day']))}"
+  _w = _want["day"].isin(["Sat", "Sun"])
+  assert math.isclose(weekend_lift(_c2), _want.loc[_w, "rentals"].mean() / _want.loc[~_w, "rentals"].mean()), "weekend_lift is wrong on a bigger table"
+hints:
+  - "Chain the steps: `drop_duplicates()`, a mask `df[df[\"rentals\"] >= 0]`, then `dropna(subset=[\"temp\"])`, and add `.copy()` before changing a column."
+  - "`df[\"day\"].str.strip().str.title()` tidies every day name at once."
+  - "Make a mask `is_weekend = df[\"day\"].isin([\"Sat\", \"Sun\"])` and compare the mean rentals where it is True and where it is False."

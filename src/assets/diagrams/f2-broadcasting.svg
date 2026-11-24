@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 230" width="640" height="230" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Broadcasting: a 2 by 3 array plus a length-3 row. The row is stretched down to 2 rows, then the arrays are added element by element to give a 2 by 3 result.</title>
+  <g font-size="13" fill="#8b93b8" text-anchor="middle">
+    <text x="95" y="22">m, shape (2, 3)</text>
+    <text x="300" y="22">row, shape (3,)</text>
+    <text x="530" y="22">m + row, shape (2, 3)</text>
+  </g>
+  <g font-size="17" font-weight="700" fill="#ffffff" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace">
+    <rect x="20" y="34" width="48" height="40" rx="6" fill="#0f766e"/><text x="44" y="60">1</text>
+    <rect x="72" y="34" width="48" height="40" rx="6" fill="#0f766e"/><text x="96" y="60">2</text>
+    <rect x="124" y="34" width="48" height="40" rx="6" fill="#0f766e"/><text x="148" y="60">3</text>
+    <rect x="20" y="78" width="48" height="40" rx="6" fill="#0f766e"/><text x="44" y="104">4</text>
+    <rect x="72" y="78" width="48" height="40" rx="6" fill="#0f766e"/><text x="96" y="104">5</text>
+    <rect x="124" y="78" width="48" height="40" rx="6" fill="#0f766e"/><text x="148" y="104">6</text>
+
+    <rect x="224" y="34" width="48" height="40" rx="6" fill="#4f46e5"/><text x="248" y="60">10</text>
+    <rect x="276" y="34" width="48" height="40" rx="6" fill="#4f46e5"/><text x="300" y="60">20</text>
+    <rect x="328" y="34" width="48" height="40" rx="6" fill="#4f46e5"/><text x="352" y="60">30</text>
+    <g opacity="0.45">
+      <rect x="224" y="78" width="48" height="40" rx="6" fill="#4f46e5"/><text x="248" y="104">10</text>
+      <rect x="276" y="78" width="48" height="40" rx="6" fill="#4f46e5"/><text x="300" y="104">20</text>
+      <rect x="328" y="78" width="48" height="40" rx="6" fill="#4f46e5"/><text x="352" y="104">30</text>
+    </g>
+
+    <rect x="454" y="34" width="48" height="40" rx="6" fill="#b45309"/><text x="478" y="60">11</text>
+    <rect x="506" y="34" width="48" height="40" rx="6" fill="#b45309"/><text x="530" y="60">22</text>
+    <rect x="558" y="34" width="48" height="40" rx="6" fill="#b45309"/><text x="582" y="60">33</text>
+    <rect x="454" y="78" width="48" height="40" rx="6" fill="#b45309"/><text x="478" y="104">14</text>
+    <rect x="506" y="78" width="48" height="40" rx="6" fill="#b45309"/><text x="530" y="104">25</text>
+    <rect x="558" y="78" width="48" height="40" rx="6" fill="#b45309"/><text x="582" y="104">36</text>
+  </g>
+  <g font-size="28" font-weight="700" fill="#8b93b8" text-anchor="middle">
+    <text x="198" y="87">+</text>
+    <text x="415" y="87">=</text>
+  </g>
+  <g font-size="13" fill="#8b93b8" text-anchor="middle">
+    <text x="300" y="138">faded row: repeated, not copied</text>
+  </g>
+  <g font-size="14" fill="#8b93b8" font-family="ui-monospace, Menlo, Consolas, monospace">
+    <text x="20" y="176">compare shapes from the right:</text>
+    <text x="20" y="200">  m     (2, 3)</text>
+    <text x="20" y="220">  row      (3)   → treated as (1, 3) → stretched to (2, 3)</text>
+  </g>
+</svg>

@@ -1,0 +1,301 @@
+---
+title: "NumPy arrays and vectorisation"
+module: f2
+order: 1
+estMinutes: 16
+objectives:
+  - "Explain why vectorised NumPy code is faster and shorter than Python loops"
+  - "Create arrays with np.array, np.zeros, np.ones, np.arange and np.linspace"
+  - "Read an array's shape, ndim, size and dtype, and predict the dtype NumPy picks"
+  - "Do element-wise arithmetic on whole arrays without writing a loop"
+goDeeper: numpy-absolute-beginners
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+At the end of F1 you met NumPy briefly ([Modules, the standard library and reading code](/foundations/f1/modules/)).
+This module makes it your everyday tool. Almost every piece of numerical Python you will meet
+from here on, from pandas to scikit-learn to PyTorch, is built on the same idea: put the numbers in
+an **array** and let fast compiled code do the looping for you.
+
+## One operation, a whole array at once
+
+Suppose you have some prices and want each one with 20% tax added. With a list you write a loop,
+or a list comprehension:
+
+```python
+prices = [12.5, 8.0, 15.25, 3.75]
+with_tax = [p * 1.2 for p in prices]
+print(with_tax)
+```
+
+```text title="Output"
+[15.0, 9.6, 18.3, 4.5]
+```
+
+With NumPy you turn the list into an array and multiply the array:
+
+```python
+import numpy as np
+
+arr = np.array(prices)
+print(arr * 1.2)
+```
+
+```text title="Output"
+[15.   9.6 18.3  4.5]
+```
+
+`arr * 1.2` multiplies **every element** by 1.2. There is still a loop, but it runs inside NumPy, in
+compiled C code, not in Python. Writing whole-array operations instead of explicit loops is called
+<Term id="vectorisation" />. The NumPy array type is called the <Term id="ndarray" /> ("n-dimensional array").
+
+Arrays print without commas, and NumPy pads the numbers so they line up. `15.` is just `15.0`.
+
+## Element-wise arithmetic
+
+Arithmetic between two arrays of the same length works **element by element**, pairing up
+position 0 with position 0, position 1 with position 1, and so on:
+
+```python
+a = np.array([1, 2, 3, 4])
+b = np.array([10, 20, 30, 40])
+print(a + b)
+print(a * b)
+print(b / a)
+print(a ** 2)
+print(a > 2)
+```
+
+```text title="Output"
+[11 22 33 44]
+[ 10  40  90 160]
+[10. 10. 10. 10.]
+[ 1  4  9 16]
+[False False  True  True]
+```
+
+Comparisons are element-wise too: `a > 2` gives an array of booleans, one per element. That turns
+out to be extremely useful for filtering, as you will see in the next lesson.
+
+:::caution[Lists and arrays disagree about + and *]
+For lists, `+` joins and `*` repeats. For arrays, they do maths. This trips up everyone once:
+
+```python
+print([1, 2, 3] + [4, 5, 6])
+print(np.array([1, 2, 3]) + np.array([4, 5, 6]))
+print([1, 2, 3] * 2)
+print(np.array([1, 2, 3]) * 2)
+```
+
+```text title="Output"
+[1, 2, 3, 4, 5, 6]
+[5 7 9]
+[1, 2, 3, 1, 2, 3]
+[2 4 6]
+```
+:::
+
+A small worked example. Convert temperatures from Celsius to Fahrenheit with
+$F = \frac{9}{5}C + 32$, where $C$ is the temperature in Celsius and $F$ in Fahrenheit:
+
+```python
+temps_c = np.array([18.5, 21.0, 25.5, 30.0])
+temps_f = temps_c * 9 / 5 + 32
+print(temps_f)
+print(temps_c.mean(), temps_c.max(), temps_c.sum())
+print(len(temps_c))
+```
+
+```text title="Output"
+[65.3 69.8 77.9 86. ]
+23.75 30.0 95.0
+4
+```
+
+The formula reads exactly like the maths, and it works for four temperatures or four million.
+Arrays also come with methods such as `.mean()`, `.max()` and `.sum()`; lesson 4 covers them properly.
+
+## Why it is faster
+
+A Python loop does a lot of work on every pass: it looks up what type each value is, finds the right
+`*` for that type, creates a new Python number object for the result, and so on. A NumPy array
+instead stores raw numbers of **one type** packed side by side in memory, so the compiled code can
+run through them without any of that bookkeeping.
+
+You can measure the difference with `time.perf_counter()`, which reads a precise clock:
+
+```python
+import time
+import numpy as np
+
+n = 1_000_000
+xs = list(range(n))
+arr = np.arange(n)
+
+t0 = time.perf_counter()
+squares = [x * x for x in xs]
+t1 = time.perf_counter()
+squares_np = arr * arr
+t2 = time.perf_counter()
+
+print(f"list comprehension: {t1 - t0:.4f} s")
+print(f"NumPy:              {t2 - t1:.4f} s")
+print(f"speed-up:           {(t1 - t0) / (t2 - t1):.0f}x")
+```
+
+```text title="Output (one run on a laptop; your numbers will differ)"
+list comprehension: 0.1198 s
+NumPy:              0.0063 s
+speed-up:           19x
+```
+
+Speed-ups of 10 to 100 times are typical, depending on the operation and the machine. For a
+neural network doing billions of multiplications, that is the difference between seconds and hours.
+(`1_000_000` is just a million; Python ignores underscores in numbers, so you can group digits.)
+
+The other benefit is shorter code. Fewer loops means fewer places for an off-by-one error or a
+misplaced `total = 0` to hide.
+
+## Creating arrays
+
+You will create arrays in a handful of ways over and over:
+
+```python
+print(np.zeros(3))
+print(np.ones((2, 3)))
+print(np.full(4, 7))
+print(np.arange(5))
+print(np.arange(2, 10, 3))
+print(np.linspace(0, 1, 5))
+```
+
+```text title="Output"
+[0. 0. 0.]
+[[1. 1. 1.]
+ [1. 1. 1.]]
+[7 7 7 7]
+[0 1 2 3 4]
+[2 5 8]
+[0.   0.25 0.5  0.75 1.  ]
+```
+
+- `np.array(a_list)` converts a list (or a list of lists) into an array.
+- `np.zeros(n)` and `np.ones(n)` fill with 0.0 or 1.0. Pass a tuple like `(2, 3)` for 2 rows and 3 columns.
+- `np.full(n, value)` fills with any value.
+- `np.arange(start, stop, step)` works like `range`: it stops **before** `stop`.
+- `np.linspace(start, stop, num)` gives `num` evenly spaced points and **includes** `stop`.
+  Use it when you care about how many points you get, for example when plotting a curve.
+
+## Shape, dimensions and size
+
+An array can have more than one dimension. A list of lists becomes a 2D array, like a table or a matrix:
+
+```python
+m = np.array([[1, 2, 3], [4, 5, 6]])
+print(m)
+print(m.shape, m.ndim, m.size)
+v = np.array([7, 8, 9])
+print(v.shape, v.ndim)
+```
+
+```text title="Output"
+[[1 2 3]
+ [4 5 6]]
+(2, 3) 2 6
+(3,) 1
+```
+
+- `shape` is a tuple with the length along each dimension: `(rows, columns)` for 2D.
+- `ndim` is the number of dimensions, which is `len(shape)`.
+- `size` is the total number of elements, the product of the shape.
+
+A 1D array's shape is `(3,)`: a tuple with one item (the comma makes it a tuple, as you saw in
+[Tuples and sets](/foundations/f1/tuples-and-sets/)). Shape is the first thing to check when NumPy
+code misbehaves. Experienced practitioners print shapes constantly.
+
+## dtype: one type for the whole array
+
+Every array has a single **dtype** (data type) shared by all its elements. NumPy picks one that can
+hold everything you give it:
+
+```python
+y = np.array([1.0, 2, 3])
+print(y, y.dtype)
+z = np.array([1, 2.5, True])
+print(z, z.dtype)
+s = np.array([1, "two", 3])
+print(s, s.dtype)
+print(np.array([True, False]).dtype)
+```
+
+```text title="Output (on a Mac; in the browser the number after <U may differ)"
+[1. 2. 3.] float64
+[1.  2.5 1. ] float64
+['1' 'two' '3'] <U21
+bool
+```
+
+One float makes the whole array `float64` (64-bit floating-point numbers). `True` becomes `1.0`.
+A string makes everything a string (`<U21` means Unicode text of up to 21 characters), and then maths no
+longer works. When an array of numbers unexpectedly has a string dtype, there is a bad value hiding in your data.
+
+:::note[int64 or int32?]
+An array of whole numbers gets an integer dtype. On your Mac (and in Colab) `np.array([1, 2, 3]).dtype`
+is `int64`. The browser exercises on this site run a 32-bit build of Python, where the default is
+`int32`. The numbers behave the same for everything in this module; just do not be surprised by the label.
+:::
+
+You can convert with `.astype(...)`. Converting floats to integers **truncates** toward zero, it does not round:
+
+```python
+c = np.array([1.7, -2.9, 3.5])
+print(c.astype(int))
+```
+
+```text title="Output"
+[ 1 -2  3]
+```
+
+Fixed-size types can also overflow. A `uint8` (an unsigned 8-bit integer, as used for image pixels)
+only holds 0 to 255, and wraps around past that, silently:
+
+```python
+small = np.array([200, 100], dtype=np.uint8)
+print(small + small)
+```
+
+```text title="Output"
+[144 200]
+```
+
+200 + 200 = 400, which wraps to 400 − 256 = 144. Python's own integers never do this; NumPy's do,
+because a fixed size is the price of speed. Convert image pixels to `float` before doing maths on them.
+
+## From array back to list
+
+`.tolist()` converts an array back to an ordinary Python list of ordinary Python numbers, which is
+handy for printing or saving as JSON:
+
+```python
+r = np.arange(4)
+print(r.tolist())
+```
+
+```text title="Output"
+[0, 1, 2, 3]
+```
+
+## Try it
+
+<CodeExercise id="f2-numpy-arrays-01" />
+
+<CodeExercise id="f2-numpy-arrays-02" />
+
+## Summary
+
+- An ndarray holds many numbers of **one dtype**, packed in memory. `import numpy as np`.
+- Arithmetic and comparisons on arrays work element-wise. This is vectorisation: no Python loop, much faster.
+- For lists `+` joins and `*` repeats; for arrays they do maths.
+- Create arrays with `np.array`, `np.zeros`, `np.ones`, `np.full`, `np.arange` (excludes stop) and `np.linspace` (includes stop).
+- Check `shape`, `ndim`, `size` and `dtype` whenever something looks wrong.

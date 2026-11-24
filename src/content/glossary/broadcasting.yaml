@@ -1,0 +1,7 @@
+term: "Broadcasting"
+short: "NumPy's rule for combining arrays of different shapes by stretching size-1 or missing dimensions to match."
+body: |
+  Line the shapes up from the right; each pair of sizes must be equal or one of them must be 1. So a `(4, 3)` array plus a
+  `(3,)` row adds the row to every row, and a `(4, 1)` column is added across every column. Nothing is actually copied.
+  Shapes like `(3,)` and `(2,)` cannot be broadcast and raise a ValueError.
+related: ["ndarray", "vectorisation", "axis"]

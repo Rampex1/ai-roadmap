@@ -1,0 +1,64 @@
+id: f2-pandas-dataframes-03
+lesson: foundations/f2/pandas-dataframes
+title: Load and summarise CSV text
+prompt: |
+  Write `summarise(csv_text)` that reads CSV text (with columns `city` and `price`) into a DataFrame
+  using `pd.read_csv(io.StringIO(csv_text))`, and returns a dict with:
+
+  - `"rows"`: the number of rows,
+  - `"mean_price"`: the mean of the price column,
+  - `"top_city"`: the city that appears most often.
+
+  For the text below that is `{"rows": 4, "mean_price": 245.0, "top_city": "York"}`.
+starter: |
+  import io
+  import pandas as pd
+
+  csv_text = """city,price
+  York,320
+  Leeds,180
+  York,150
+  Bath,330
+  """
+
+  def summarise(csv_text):
+      """Return the row count, mean price and most common city of the CSV text."""
+      return {"rows": 0, "mean_price": 0.0, "top_city": ""}
+
+  print(summarise(csv_text))
+solution: |
+  import io
+  import pandas as pd
+
+  csv_text = """city,price
+  York,320
+  Leeds,180
+  York,150
+  Bath,330
+  """
+
+  def summarise(csv_text):
+      """Return the row count, mean price and most common city of the CSV text."""
+      df = pd.read_csv(io.StringIO(csv_text))
+      return {
+          "rows": len(df),
+          "mean_price": df["price"].mean(),
+          "top_city": df["city"].value_counts().index[0],
+      }
+
+  print(summarise(csv_text))
+tests: |
+  import math
+  _t1 = "city,price\nYork,320\nLeeds,180\nYork,150\nBath,330\n"
+  _r = summarise(_t1)
+  assert isinstance(_r, dict), "Return a dict"
+  assert _r.get("rows") == 4, f"rows should be 4, got {_r.get('rows')!r}"
+  assert math.isclose(_r.get("mean_price", -1), 245.0), f"mean_price should be 245.0, got {_r.get('mean_price')!r}"
+  assert _r.get("top_city") == "York", f"top_city should be 'York', got {_r.get('top_city')!r}"
+  _t2 = "city,price\nBath,100\nHull,200\nHull,600\nHull,300\nBath,300\n"
+  _r2 = summarise(_t2)
+  assert _r2.get("rows") == 5 and math.isclose(_r2.get("mean_price", -1), 300.0) and _r2.get("top_city") == "Hull", f"For a different CSV expected rows 5, mean_price 300.0, top_city Hull; got {_r2}"
+hints:
+  - "`df = pd.read_csv(io.StringIO(csv_text))` turns the text into a DataFrame."
+  - "`len(df)` counts rows and `df[\"price\"].mean()` averages the column."
+  - "`value_counts()` sorts the most common value first, so its index[0] is the top city."

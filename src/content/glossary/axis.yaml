@@ -1,0 +1,7 @@
+term: "Axis"
+short: "One dimension of an array. Aggregating along an axis collapses it: on a (rows, cols) array, axis=0 gives one value per column."
+body: |
+  Axis 0 runs down the rows and axis 1 along the columns. `X.mean(axis=0)` averages over the rows, giving one mean per
+  column (per feature, in ML data), while `X.sum(axis=1)` gives one total per row. `keepdims=True` keeps the collapsed axis
+  with size 1 so the result broadcasts back against the original.
+related: ["ndarray", "broadcasting"]

@@ -1,0 +1,48 @@
+id: f2-aggregations-01
+lesson: foundations/f2/aggregations
+title: Accuracy from scores
+prompt: |
+  A classifier gives `scores`, a 2D array with one row per example and one column per class.
+  The predicted class of an example is the column with the highest score.
+
+  Write `accuracy(scores, labels)` that returns the fraction of examples whose predicted class
+  equals the true label in `labels` (a 1D array of class numbers). No loops.
+
+  For the scores below the predictions are `[0, 1, 2]` and the labels `[0, 1, 1]`, so the
+  accuracy is `2/3`.
+starter: |
+  import numpy as np
+
+  scores = np.array([[0.9, 0.05, 0.05],
+                     [0.2, 0.7, 0.1],
+                     [0.1, 0.3, 0.6]])
+  labels = np.array([0, 1, 1])
+
+  def accuracy(scores, labels):
+      """Return the fraction of rows whose highest-scoring column equals the label."""
+      pred = scores.argmax()
+      return 0.0
+solution: |
+  import numpy as np
+
+  scores = np.array([[0.9, 0.05, 0.05],
+                     [0.2, 0.7, 0.1],
+                     [0.1, 0.3, 0.6]])
+  labels = np.array([0, 1, 1])
+
+  def accuracy(scores, labels):
+      """Return the fraction of rows whose highest-scoring column equals the label."""
+      pred = scores.argmax(axis=1)
+      return (pred == labels).mean()
+tests: |
+  import math
+  import numpy as np
+  _s = np.array([[0.9, 0.05, 0.05], [0.2, 0.7, 0.1], [0.1, 0.3, 0.6]])
+  assert math.isclose(accuracy(_s, np.array([0, 1, 1])), 2 / 3), f"Expected 2/3 for the example, got {accuracy(_s, np.array([0, 1, 1]))!r}"
+  assert math.isclose(accuracy(_s, np.array([0, 1, 2])), 1.0), "When every prediction is right the accuracy is 1.0"
+  assert math.isclose(accuracy(_s, np.array([2, 2, 0])) + 1, 1.0), "When every prediction is wrong the accuracy is 0.0"
+  _s2 = np.array([[1.0, 3.0], [5.0, 2.0], [0.0, 0.5], [2.0, 1.0]])
+  assert math.isclose(accuracy(_s2, np.array([1, 0, 0, 0])), 0.75), "Two classes, four examples: predictions are [1, 0, 1, 0], so 3 of 4 match [1, 0, 0, 0]"
+hints:
+  - "Without an axis, argmax looks at the whole flattened array. You want one prediction per row: `argmax(axis=1)`."
+  - "`pred == labels` is a boolean array; its mean is the fraction that match."

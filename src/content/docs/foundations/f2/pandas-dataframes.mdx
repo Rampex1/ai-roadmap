@@ -1,0 +1,367 @@
+---
+title: "pandas: Series and DataFrames"
+module: f2
+order: 6
+estMinutes: 20
+objectives:
+  - "Build a DataFrame from a dict of lists or from CSV text, and inspect it with head, shape, dtypes, info and describe"
+  - "Select columns, and rows by label with .loc or by position with .iloc"
+  - "Filter rows with boolean conditions and sort with sort_values"
+  - "Add computed columns and count categories with value_counts"
+goDeeper: pandas-10-minutes
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+NumPy arrays are great for numbers of one type. Real data is messier: a table of houses has a city
+(text), a number of rooms (whole numbers) and a price (money), and each column has a *name*. **pandas**
+is the standard Python library for such tables. It is built on NumPy, so everything you learnt about masks,
+vectorised maths and aggregation carries straight over.
+
+By convention it is imported as `pd`:
+
+```python
+import pandas as pd
+```
+
+## Series: a labelled column
+
+A **Series** is a 1D array with a label for each value, called the **index**:
+
+```python
+s = pd.Series([3.5, 2.0, 4.25], index=["tea", "coffee", "cake"])
+print(s)
+print(s["coffee"], s.iloc[0])
+print(s * 2)
+```
+
+```text title="Output"
+tea       3.50
+coffee    2.00
+cake      4.25
+dtype: float64
+2.0 3.5
+tea       7.0
+coffee    4.0
+cake      8.5
+dtype: float64
+```
+
+It behaves like a cross between a dict (look up by label, `s["coffee"]`) and a NumPy array (vectorised
+maths, `s * 2`). `s.iloc[0]` gets a value by **position** instead of label.
+
+## DataFrame: a table
+
+A <Term id="dataframe" /> is a table: a set of Series that share one index, one Series per column. The
+easiest way to build one is from a dictionary of lists, one list per column:
+
+```python
+df = pd.DataFrame({
+    "city": ["Leeds", "York", "Leeds", "Bath", "York"],
+    "rooms": [2, 3, 4, 3, 1],
+    "area": [70, 95, 120, 88, 40],
+    "price": [180, 320, 300, 410, 150],
+})
+print(df)
+print(df.shape)
+```
+
+```text title="Output"
+    city  rooms  area  price
+0  Leeds      2    70    180
+1   York      3    95    320
+2  Leeds      4   120    300
+3   Bath      3    88    410
+4   York      1    40    150
+(5, 4)
+```
+
+Each row is a house: area in square metres and price in thousands of pounds. The numbers 0 to 4 on the left
+are the index. Each column is a Series with its own dtype. You can also build a DataFrame from a list of
+dicts, one dict per row, which is how data from a web API often arrives:
+`pd.DataFrame([{"name": "Ada", "age": 36}, {"name": "Alan", "age": 41}])`.
+
+### Loading CSV data
+
+Most real tables arrive as **CSV** files (comma-separated values): one line per row, commas between the values,
+and a header line with the column names. `pd.read_csv("houses.csv")` reads one from disk. The browser exercises
+on this site cannot read files, so here the CSV text sits in a string and `io.StringIO` makes the string behave
+like a file. The result is identical:
+
+```python
+import io
+
+csv_text = """city,rooms,area,price
+Leeds,2,70,180
+York,3,95,320
+Leeds,4,120,300
+Bath,3,88,410
+York,1,40,150
+"""
+df2 = pd.read_csv(io.StringIO(csv_text))
+print(df2.equals(df))
+```
+
+```text title="Output"
+True
+```
+
+In your own notebooks you will usually write `pd.read_csv("path/to/file.csv")`.
+
+## First look at a table
+
+Always start by looking at the data. Four tools cover most of it:
+
+```python
+print(df.head(2))
+print(df.dtypes)
+```
+
+```text title="Output"
+    city  rooms  area  price
+0  Leeds      2    70    180
+1   York      3    95    320
+city       str
+rooms    int64
+area     int64
+price    int64
+dtype: object
+```
+
+- `df.head(n)` shows the first `n` rows (5 by default); `df.tail(n)` the last ones. A real table may have
+  millions of rows, so you never print the whole thing.
+- `df.dtypes` lists each column's type. Text columns show as `str` in pandas 3 (the current version as of
+  late 2026); older versions show `object`. A number column showing `str` means some value could not be read
+  as a number.
+
+```python
+df.info()
+```
+
+```text title="Output (the memory figure may differ on your machine)"
+<class 'pandas.DataFrame'>
+RangeIndex: 5 entries, 0 to 4
+Data columns (total 4 columns):
+ #   Column  Non-Null Count  Dtype
+---  ------  --------------  -----
+ 0   city    5 non-null      str  
+ 1   rooms   5 non-null      int64
+ 2   area    5 non-null      int64
+ 3   price   5 non-null      int64
+dtypes: int64(3), str(1)
+memory usage: 212.0 bytes
+```
+
+`df.info()` prints a summary, including how many values in each column are **not** missing. If a column has
+fewer non-null values than there are rows, some data is missing (lesson 7 deals with that).
+
+```python
+print(df.describe())
+```
+
+```text title="Output"
+          rooms        area       price
+count  5.000000    5.000000    5.000000
+mean   2.600000   82.600000  272.000000
+std    1.140175   29.812749  106.630202
+min    1.000000   40.000000  150.000000
+25%    2.000000   70.000000  180.000000
+50%    3.000000   88.000000  300.000000
+75%    3.000000   95.000000  320.000000
+max    4.000000  120.000000  410.000000
+```
+
+`describe()` gives summary statistics for every number column: the count, mean, standard deviation, minimum,
+maximum and the quartiles (25% of values are below the "25%" row; the "50%" row is the median). It is a quick
+way to spot nonsense, such as a negative price or a 900-room house. pandas' `std` divides by $n - 1$, unlike
+NumPy's default (see [Aggregations along an axis](/foundations/f2/aggregations/)).
+
+## Selecting columns
+
+Square brackets with a column name give that column as a Series. A **list** of names gives a smaller DataFrame:
+
+```python
+print(df["price"])
+print(df[["city", "price"]])
+print(df["price"].mean())
+```
+
+```text title="Output"
+0    180
+1    320
+2    300
+3    410
+4    150
+Name: price, dtype: int64
+    city  price
+0  Leeds    180
+1   York    320
+2  Leeds    300
+3   Bath    410
+4   York    150
+272.0
+```
+
+Note the double brackets in `df[["city", "price"]]`: the outer pair is the selection, the inner pair is a Python
+list. `df.price` also works for simple column names, but `df["price"]` always works, so prefer it.
+
+## Selecting rows: loc and iloc
+
+- `df.loc[...]` selects by **label**: index labels for rows, names for columns.
+- `df.iloc[...]` selects by **position**, exactly like NumPy (`i` for integer).
+
+Both take `[rows, columns]`, like a 2D array:
+
+```python
+print(df.loc[1, "price"])
+print(df.loc[1:3, ["city", "price"]])
+print(df.iloc[0:2, 0:2])
+```
+
+```text title="Output"
+320
+    city  price
+1   York    320
+2  Leeds    300
+3   Bath    410
+    city  rooms
+0  Leeds      2
+1   York      3
+```
+
+:::caution[loc slices include the end]
+`df.loc[1:3]` gives rows labelled 1, 2 **and 3**: label slices include the end. `df.iloc[0:2]` gives positions 0
+and 1: position slices exclude the end, like everywhere else in Python. Here the labels happen to equal the
+positions, but after filtering or sorting they no longer do, so pick the one you mean.
+:::
+
+## Filtering rows
+
+Boolean masks work just as in [NumPy](/foundations/f2/indexing-and-masks/). A comparison on a column gives a
+boolean Series, and putting it in square brackets keeps the matching rows:
+
+```python
+print(df[df["price"] > 200])
+print(df[(df["city"] == "York") & (df["rooms"] >= 2)])
+print(df[df["city"].isin(["Bath", "York"])].shape)
+```
+
+```text title="Output"
+    city  rooms  area  price
+1   York      3    95    320
+2  Leeds      4   120    300
+3   Bath      3    88    410
+   city  rooms  area  price
+1  York      3    95    320
+(3, 4)
+```
+
+The same rules apply: `&`, `|` and `~`, with brackets around each comparison. `isin` checks membership in a list.
+Notice the filtered rows keep their original index labels (1, 2, 3), which is why `loc` and `iloc` differ after filtering.
+
+To filter rows and pick columns in one go, use `loc` with a mask:
+
+```python
+print(df.loc[df["price"] > 300, "city"].tolist())
+```
+
+```text title="Output"
+['York', 'Bath']
+```
+
+## Sorting
+
+```python
+print(df.sort_values("price", ascending=False))
+```
+
+```text title="Output"
+    city  rooms  area  price
+3   Bath      3    88    410
+1   York      3    95    320
+2  Leeds      4   120    300
+0  Leeds      2    70    180
+4   York      1    40    150
+```
+
+`sort_values` returns a **new**, sorted DataFrame; `df` itself is unchanged. Pass a list, such as
+`sort_values(["city", "price"])`, to sort by city and then by price within each city. Combine it with `head`
+for a "top 3" table: `df.sort_values("price", ascending=False).head(3)`.
+
+## New columns
+
+Assigning to a new column name adds a column. The right-hand side is usually a vectorised expression on other
+columns, just like NumPy:
+
+```python
+df["price_per_m2"] = df["price"] * 1000 / df["area"]
+df["big"] = df["rooms"] >= 3
+print(df.round(1))
+```
+
+```text title="Output"
+    city  rooms  area  price  price_per_m2    big
+0  Leeds      2    70    180        2571.4  False
+1   York      3    95    320        3368.4   True
+2  Leeds      4   120    300        2500.0   True
+3   Bath      3    88    410        4659.1   True
+4   York      1    40    150        3750.0  False
+```
+
+Price per square metre is in pounds here (price was in thousands, hence the `* 1000`). Computing a more useful
+column from existing ones like this is called **feature engineering**, and it is often the most valuable step in a
+machine-learning project.
+
+To change some existing values, use `loc` with a mask on the left:
+
+```python
+df.loc[df["city"] == "Bath", "price"] = 400
+print(df["price"].tolist())
+```
+
+```text title="Output"
+[180, 320, 300, 400, 150]
+```
+
+:::note[Copies of filtered tables]
+In pandas 3, a filtered table like `cheap = df[df["price"] < 200]` behaves as an independent copy: changing
+`cheap` never changes `df`. Older pandas versions sometimes did and warned with a `SettingWithCopyWarning`, which
+you will see in older tutorials. Either way, to change `df`, use `df.loc[mask, column] = value` on `df` itself.
+:::
+
+## Counting categories
+
+```python
+print(df["city"].value_counts())
+print(df["city"].nunique())
+```
+
+```text title="Output"
+city
+Leeds    2
+York     2
+Bath     1
+Name: count, dtype: int64
+3
+```
+
+`value_counts` counts each distinct value, most common first: the pandas version of `Counter`. `nunique` counts
+how many distinct values there are. Next lesson goes further: not just *how many* houses per city, but the average
+price per city.
+
+## Try it
+
+<CodeExercise id="f2-pandas-dataframes-01" />
+
+<CodeExercise id="f2-pandas-dataframes-02" />
+
+<CodeExercise id="f2-pandas-dataframes-03" />
+
+## Summary
+
+- A Series is a labelled 1D array; a DataFrame is a table of Series sharing an index. `import pandas as pd`.
+- Build with `pd.DataFrame({col: list, ...})` or `pd.read_csv(...)`. Inspect with `head`, `shape`, `dtypes`, `info`, `describe`.
+- `df["col"]` is a Series; `df[["a", "b"]]` a smaller DataFrame.
+- `loc` selects by label (slices include the end); `iloc` by position (slices exclude it).
+- Filter with `df[mask]` using `&`, `|`, `~` and brackets; sort with `sort_values`.
+- Add columns with `df["new"] = expression`; change values with `df.loc[mask, "col"] = value`.

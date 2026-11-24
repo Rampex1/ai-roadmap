@@ -1,0 +1,98 @@
+items:
+  - id: f2-data-workflow-01
+    type: order
+    prompt: "Put the steps of a data analysis in the order this lesson recommends."
+    explanation: "Decide what you want to know, get the data, look at it, fix what you found, compute the answer, visualise it, and write it up."
+    items:
+      - Write down the question
+      - Load the data
+      - Inspect shape, types, missing values and summaries
+      - Clean the problems inspection found
+      - Group and aggregate to analyse
+      - Plot the results
+      - Write conclusions with caveats
+  - id: f2-data-workflow-02
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import pandas as pd
+      s = pd.Series([" sat", "SAT", "Sat "])
+      print(s.str.strip().str.title().nunique())
+    answer: "1"
+    explanation: "Stripping spaces and title-casing turns all three into \"Sat\", so there is one distinct value."
+  - id: f2-data-workflow-03
+    type: mcq
+    prompt: "`df.describe()` shows a minimum age of -1 and a maximum of 999. What is the best next step?"
+    explanation: "Impossible values are usually codes for unknown or data-entry errors. Find out what they mean and treat them as missing or remove them, and record the decision."
+    options:
+      - text: Investigate those values, treat them as missing or remove them, and record how many rows were affected
+        correct: true
+        why: They are almost certainly placeholders or errors, and they would distort means and plots.
+      - text: Ignore them; describe always shows a few odd values
+        why: Two placeholder values can shift a mean a lot, and 999 would wreck any plot's scale.
+      - text: Replace them with the mean age
+        why: The mean is itself distorted by these values; and first you should understand what they mean.
+  - id: f2-data-workflow-04
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import pandas as pd
+      df = pd.DataFrame({"a": [1, 1, 2], "b": ["x", "x", "y"]})
+      print(len(df.drop_duplicates()))
+    answer: "2"
+    explanation: "The first two rows are identical, so one of them is dropped, leaving 2 rows."
+  - id: f2-data-workflow-05
+    type: multi
+    prompt: "Which of these are good habits when writing up findings?"
+    explanation: "Specific numbers, group sizes and stated limitations let readers judge how far to trust a finding."
+    options:
+      - text: Give the actual numbers being compared, not just "higher"
+        correct: true
+        why: Readers can then judge whether the difference matters.
+      - text: Give the number of rows behind each group
+        correct: true
+        why: Averages over small groups are unreliable.
+      - text: Say how many rows cleaning removed and why
+        correct: true
+        why: Cleaning choices can change conclusions.
+      - text: Say that one variable causes the other whenever they are correlated
+        why: Observational data shows association; causes need experiments or much stronger arguments.
+  - id: f2-data-workflow-06
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import pandas as pd
+      temps = pd.Series([5, 15, 25])
+      print(pd.cut(temps, bins=[0, 10, 20, 30], labels=["cold", "mild", "warm"]).tolist())
+    answer: "['cold', 'mild', 'warm']"
+    explanation: "pd.cut places each value in the bin it falls into: 5 in (0, 10], 15 in (10, 20], 25 in (20, 30]."
+  - id: f2-data-workflow-07
+    type: mcq
+    prompt: "Why should you inspect `raw[\"day\"].unique()` before grouping by `day`?"
+    explanation: "Spelling, case and spacing variants of the same category create extra groups and split the data."
+    options:
+      - text: Variants like "Sat", "sat " and "SAT" would become separate groups
+        correct: true
+        why: groupby compares exact strings, so variants are counted as different days.
+      - text: groupby fails on text columns
+        why: groupby works fine on text; the problem is inconsistent text.
+      - text: unique() sorts the data, which groupby needs
+        why: groupby does not need sorted data.
+  - id: f2-data-workflow-08
+    type: numeric
+    prompt: "Weekend days average 180 rentals and weekdays average 120. By what percentage are weekends busier? (Enter a number, such as 25 for 25%.)"
+    answer: 50
+    tol: 0.5
+    explanation: "180 / 120 = 1.5, so weekends are 50% busier than weekdays."
+  - id: f2-data-workflow-09
+    type: mcq
+    prompt: "In observational data, warmer days have more rentals (correlation 0.66). Which conclusion is best supported?"
+    explanation: "Correlation in observational data shows association; other factors such as holidays or season may contribute."
+    options:
+      - text: Warmer days are associated with more rentals
+        correct: true
+        why: This states what the data shows without claiming a cause.
+      - text: Raising the temperature by 10 degrees would add a fixed number of rentals
+        why: That is a causal prediction the data cannot support on its own.
+      - text: Temperature is the only thing that affects rentals
+        why: A correlation of 0.66 leaves plenty of variation unexplained, and other factors such as weekends clearly matter.

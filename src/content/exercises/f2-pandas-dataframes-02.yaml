@@ -1,0 +1,61 @@
+id: f2-pandas-dataframes-02
+lesson: foundations/f2/pandas-dataframes
+title: Add computed columns
+prompt: |
+  Write `add_features(df)` that returns a **new** DataFrame with two extra columns:
+
+  - `price_per_m2`: `price * 1000 / area`, rounded to 1 decimal place with `.round(1)`;
+  - `size`: the text `"large"` when `area` is at least 100, otherwise `"small"`.
+
+  The DataFrame passed in must not change. Start with `out = df.copy()`.
+starter: |
+  import numpy as np
+  import pandas as pd
+
+  df = pd.DataFrame({
+      "city": ["Leeds", "York", "Leeds"],
+      "area": [70, 95, 120],
+      "price": [180, 320, 300],
+  })
+
+  def add_features(df):
+      """Return a copy of df with price_per_m2 and size columns added."""
+      out = df.copy()
+      # TODO: add the two columns
+      return out
+
+  print(add_features(df))
+solution: |
+  import numpy as np
+  import pandas as pd
+
+  df = pd.DataFrame({
+      "city": ["Leeds", "York", "Leeds"],
+      "area": [70, 95, 120],
+      "price": [180, 320, 300],
+  })
+
+  def add_features(df):
+      """Return a copy of df with price_per_m2 and size columns added."""
+      out = df.copy()
+      out["price_per_m2"] = (out["price"] * 1000 / out["area"]).round(1)
+      out["size"] = np.where(out["area"] >= 100, "large", "small")
+      return out
+
+  print(add_features(df))
+tests: |
+  import pandas as pd
+  _df = pd.DataFrame({"city": ["Leeds", "York", "Leeds"], "area": [70, 95, 120], "price": [180, 320, 300]})
+  _r = add_features(_df)
+  assert "price_per_m2" in _r.columns, "Add a column called price_per_m2"
+  assert "size" in _r.columns, "Add a column called size"
+  assert _r["price_per_m2"].tolist() == [2571.4, 3368.4, 2500.0], f"price_per_m2 should be [2571.4, 3368.4, 2500.0], got {_r['price_per_m2'].tolist()}"
+  assert _r["size"].tolist() == ["small", "small", "large"], f"size should be ['small', 'small', 'large'], got {_r['size'].tolist()}"
+  assert list(_df.columns) == ["city", "area", "price"], "add_features changed the DataFrame passed in: add the columns to a copy"
+  _d2 = pd.DataFrame({"city": ["Hull", "Bath"], "area": [100, 50], "price": [150, 410]})
+  _r2 = add_features(_d2)
+  assert _r2["size"].tolist() == ["large", "small"], "An area of exactly 100 counts as large"
+  assert _r2["price_per_m2"].tolist() == [1500.0, 8200.0]
+hints:
+  - "A new column is just an assignment: `out[\"price_per_m2\"] = (out[\"price\"] * 1000 / out[\"area\"]).round(1)`."
+  - "`np.where(condition, \"large\", \"small\")` from the NumPy lessons builds the size column in one line."

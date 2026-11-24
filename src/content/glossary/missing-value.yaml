@@ -1,0 +1,7 @@
+term: "Missing value (NaN)"
+short: "A gap in the data, which pandas and NumPy mark as NaN (not a number); None in a text column also counts as missing."
+body: |
+  Find them with `df.isna().sum()`. pandas aggregations skip NaN by default, while plain NumPy aggregations return NaN. You
+  can drop affected rows (`dropna`) or fill them (`fillna`); both change the data, so record what you did. Values missing for
+  a reason, such as people skipping a hard question, can bias results either way.
+related: ["dataframe", "floating-point"]

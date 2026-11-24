@@ -1,0 +1,105 @@
+items:
+  - id: f2-pandas-groupby-01
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import pandas as pd
+      df = pd.DataFrame({"team": ["a", "b", "a", "b", "a"], "pts": [1, 2, 3, 4, 5]})
+      print(df.groupby("team")["pts"].sum().tolist())
+    answer: "[9, 6]"
+    explanation: "Team a has 1 + 3 + 5 = 9 and team b has 2 + 4 = 6. Groups come out sorted by key."
+  - id: f2-pandas-groupby-02
+    type: order
+    prompt: "Put the three steps of a groupby in the order pandas performs them."
+    explanation: "Split the rows into groups by key, apply the aggregation to each group, then combine the per-group results into one table."
+    items:
+      - Split the rows into groups by the key column
+      - Apply the aggregation function to each group
+      - Combine the results into a Series or DataFrame indexed by group
+  - id: f2-pandas-groupby-03
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      import pandas as pd
+      s = pd.Series([10, np.nan, 20, np.nan])
+      print(s.mean(), s.count(), len(s))
+    answer: "15.0 2 4"
+    explanation: "pandas skips NaN by default, so the mean is over 10 and 20. count() counts non-missing values; len counts all rows."
+  - id: f2-pandas-groupby-04
+    type: mcq
+    prompt: "A table has 1000 rows and 12 columns. Each column has about 5% missing values, scattered at random. What is the main risk of `df.dropna()`?"
+    explanation: "dropna drops a row if any column is missing. With many columns, most rows have at least one gap, so a large share of the data can vanish."
+    options:
+      - text: It may throw away far more rows than 5%, because a row goes if any of its 12 columns is missing
+        correct: true
+        why: The chance that a row has no gaps at all is about 0.95 to the power 12, roughly 54%, so nearly half the rows go.
+      - text: It replaces missing values with zeros
+        why: dropna removes rows; fillna is what fills values.
+      - text: It changes df in place and cannot be undone
+        why: dropna returns a new DataFrame and leaves df as it was.
+  - id: f2-pandas-groupby-05
+    type: numeric
+    prompt: "`s = pd.Series([2.0, None, 6.0, None])`. After `s = s.fillna(s.mean())`, what is `s.sum()`?"
+    answer: 16
+    tol: 0.0001
+    explanation: "The mean of the known values is 4, so both gaps become 4: 2 + 4 + 6 + 4 = 16."
+  - id: f2-pandas-groupby-06
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import pandas as pd
+      left = pd.DataFrame({"id": [1, 2, 3], "x": ["a", "b", "c"]})
+      right = pd.DataFrame({"id": [2, 3, 4], "y": [20, 30, 40]})
+      print(len(left.merge(right, on="id")), len(left.merge(right, on="id", how="left")), len(left.merge(right, on="id", how="outer")))
+    answer: "2 3 4"
+    explanation: "Inner keeps ids in both (2 and 3). Left keeps every left row (1, 2, 3). Outer keeps every id from either table (1, 2, 3, 4)."
+  - id: f2-pandas-groupby-07
+    type: mcq
+    prompt: "After `orders.merge(customers, on=\"customer_id\", how=\"left\")` your table has more rows than `orders` had. What is the likely cause?"
+    explanation: "A left join keeps each left row once per match. If a key appears twice in the right table, those rows are duplicated."
+    options:
+      - text: Some customer_id values appear more than once in customers
+        correct: true
+        why: Each order is matched with every customer row sharing its id, multiplying rows.
+      - text: Some orders have no matching customer
+        why: Unmatched rows are kept once with NaN; they do not add rows.
+      - text: A left join always adds the right table's rows
+        why: A left join never adds rows for keys found only in the right table; an outer join does.
+  - id: f2-pandas-groupby-08
+    type: multi
+    prompt: "`df` has columns `city` and `price`. Which of these give the mean price per city?"
+    explanation: "All three correct forms group by city and average price; they differ only in the shape of the result."
+    options:
+      - text: "df.groupby(\"city\")[\"price\"].mean()"
+        correct: true
+        why: A Series indexed by city.
+      - text: "df.groupby(\"city\").agg(avg=(\"price\", \"mean\"))"
+        correct: true
+        why: A DataFrame with one column named avg, indexed by city.
+      - text: "df.groupby(\"city\", as_index=False)[\"price\"].mean()"
+        correct: true
+        why: A DataFrame with city as an ordinary column.
+      - text: "df[\"price\"].mean()"
+        why: That is one overall mean, not one per city.
+  - id: f2-pandas-groupby-09
+    type: mcq
+    prompt: "A groupby shows that region X has the highest average sales. The count column shows region X has 2 rows; other regions have about 300 each. What should you conclude?"
+    explanation: "An average over 2 rows is very sensitive to chance; it is too little evidence to rank X first."
+    options:
+      - text: The ranking of X is unreliable because its average rests on only 2 rows
+        correct: true
+        why: Small groups have noisy averages; one unusual row can put them on top.
+      - text: X is clearly the best region
+        why: With 2 rows, chance alone could explain the high average.
+      - text: The groupby must have a bug
+        why: The computation is fine; the issue is how much the result can be trusted.
+  - id: f2-pandas-groupby-10
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import pandas as pd
+      df = pd.DataFrame({"g": ["x", None, "x"], "v": [1, 2, 3]})
+      print(df.groupby("g")["v"].sum().tolist())
+    answer: "[4]"
+    explanation: "By default groupby drops rows whose key is missing, so only the x group (1 + 3) remains. Pass dropna=False to keep a NaN group."

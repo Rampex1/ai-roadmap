@@ -1,0 +1,6 @@
+term: "Histogram"
+short: "A chart that splits a numeric range into bins and shows how many values fall into each, revealing a variable's distribution."
+body: |
+  Draw one with `ax.hist(values, bins=30)`. It shows where values cluster, how spread out they are, whether the distribution
+  is symmetric, and any outliers. The shape depends on the bin count: too few bins hide detail, too many turn it into noise.
+related: ["dataframe"]

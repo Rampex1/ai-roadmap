@@ -1,0 +1,50 @@
+id: f2-pandas-groupby-03
+lesson: foundations/f2/pandas-groupby
+title: Add a column from another table
+prompt: |
+  Write `add_region(houses, regions)` that adds the `region` column from `regions` to **every** house,
+  matching on `city`. Houses whose city is not in `regions` must be kept, with region `"unknown"`.
+  The result must have exactly as many rows as `houses`.
+
+  For the tables below, Hull gets `"unknown"`.
+starter: |
+  import pandas as pd
+
+  houses = pd.DataFrame({"city": ["Leeds", "York", "Bath", "Hull"], "price": [180, 320, 410, 120]})
+  regions = pd.DataFrame({"city": ["Leeds", "York", "Bath", "Oxford"],
+                          "region": ["North", "North", "South West", "South East"]})
+
+  def add_region(houses, regions):
+      """Return houses with a region column; unmatched cities get "unknown"."""
+      return houses.merge(regions, on="city")
+
+  print(add_region(houses, regions))
+solution: |
+  import pandas as pd
+
+  houses = pd.DataFrame({"city": ["Leeds", "York", "Bath", "Hull"], "price": [180, 320, 410, 120]})
+  regions = pd.DataFrame({"city": ["Leeds", "York", "Bath", "Oxford"],
+                          "region": ["North", "North", "South West", "South East"]})
+
+  def add_region(houses, regions):
+      """Return houses with a region column; unmatched cities get "unknown"."""
+      out = houses.merge(regions, on="city", how="left")
+      out["region"] = out["region"].fillna("unknown")
+      return out
+
+  print(add_region(houses, regions))
+tests: |
+  import pandas as pd
+  _h = pd.DataFrame({"city": ["Leeds", "York", "Bath", "Hull"], "price": [180, 320, 410, 120]})
+  _g = pd.DataFrame({"city": ["Leeds", "York", "Bath", "Oxford"], "region": ["North", "North", "South West", "South East"]})
+  _r = add_region(_h, _g)
+  assert len(_r) == 4, f"Every house must be kept (4 rows), got {len(_r)}. An inner join drops Hull: use how=\"left\""
+  assert _r["city"].tolist() == ["Leeds", "York", "Bath", "Hull"], "Keep the houses in their original order"
+  assert _r["region"].tolist() == ["North", "North", "South West", "unknown"], f"Expected regions North, North, South West, unknown; got {_r['region'].tolist()}"
+  assert "Oxford" not in _r["city"].tolist(), "Oxford has no house, so it should not appear: a left join keeps only the houses"
+  _h2 = pd.DataFrame({"city": ["Bath", "Bath", "Derby"], "price": [1, 2, 3]})
+  _r2 = add_region(_h2, _g)
+  assert _r2["region"].tolist() == ["South West", "South West", "unknown"] and _r2["price"].tolist() == [1, 2, 3], "It should work for other tables too"
+hints:
+  - "The default merge is an inner join, which drops Hull. Pass `how=\"left\"` to keep every house."
+  - "After the merge, unmatched rows have NaN in region: fill them with `fillna(\"unknown\")`."

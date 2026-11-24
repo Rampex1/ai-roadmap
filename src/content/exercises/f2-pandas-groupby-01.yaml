@@ -1,0 +1,57 @@
+id: f2-pandas-groupby-01
+lesson: foundations/f2/pandas-groupby
+title: Summary per city
+prompt: |
+  Write `city_summary(df)` that returns a DataFrame with **one row per city** (the city as the index)
+  and two columns:
+
+  - `n`: the number of houses in that city,
+  - `avg_price`: the mean price in that city,
+
+  sorted by `avg_price`, highest first. Use `groupby` with named aggregation.
+
+  For the table below the cities come out as `Bath, Leeds, York` with `n` equal to `2, 3, 2`.
+starter: |
+  import pandas as pd
+
+  df = pd.DataFrame({
+      "city": ["Leeds", "York", "Leeds", "Bath", "York", "Bath", "Leeds"],
+      "rooms": [2, 3, 4, 3, 1, 2, 3],
+      "price": [180, 320, 300, 410, 150, 290, 240],
+  })
+
+  def city_summary(df):
+      """Return n and avg_price per city, highest avg_price first."""
+      return df.groupby("city")["price"].mean()
+
+  print(city_summary(df))
+solution: |
+  import pandas as pd
+
+  df = pd.DataFrame({
+      "city": ["Leeds", "York", "Leeds", "Bath", "York", "Bath", "Leeds"],
+      "rooms": [2, 3, 4, 3, 1, 2, 3],
+      "price": [180, 320, 300, 410, 150, 290, 240],
+  })
+
+  def city_summary(df):
+      """Return n and avg_price per city, highest avg_price first."""
+      out = df.groupby("city").agg(n=("price", "size"), avg_price=("price", "mean"))
+      return out.sort_values("avg_price", ascending=False)
+
+  print(city_summary(df))
+tests: |
+  import pandas as pd
+  _df = pd.DataFrame({"city": ["Leeds", "York", "Leeds", "Bath", "York", "Bath", "Leeds"], "rooms": [2, 3, 4, 3, 1, 2, 3], "price": [180, 320, 300, 410, 150, 290, 240]})
+  _r = city_summary(_df)
+  assert isinstance(_r, pd.DataFrame), f"Return a DataFrame with columns n and avg_price, got a {type(_r).__name__}"
+  assert sorted(_r.columns) == ["avg_price", "n"], f"The columns should be n and avg_price, got {list(_r.columns)}"
+  assert list(_r.index) == ["Bath", "Leeds", "York"], f"Expected cities as the index in the order Bath, Leeds, York; got {list(_r.index)}"
+  assert _r["n"].tolist() == [2, 3, 2], f"n should be [2, 3, 2], got {_r['n'].tolist()}"
+  assert _r["avg_price"].tolist() == [350.0, 240.0, 235.0], f"avg_price should be [350.0, 240.0, 235.0], got {_r['avg_price'].tolist()}"
+  _d2 = pd.DataFrame({"city": ["A", "B", "B", "B"], "rooms": [1, 1, 1, 1], "price": [100, 300, 500, 400]})
+  _r2 = city_summary(_d2)
+  assert list(_r2.index) == ["B", "A"] and _r2["n"].tolist() == [3, 1] and _r2["avg_price"].tolist() == [400.0, 100.0], "It should work for any table with city and price columns"
+hints:
+  - "Named aggregation: `df.groupby(\"city\").agg(n=(\"price\", \"size\"), avg_price=(\"price\", \"mean\"))`."
+  - "Then `.sort_values(\"avg_price\", ascending=False)`."

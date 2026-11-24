@@ -1,0 +1,34 @@
+id: f2-data-analysis
+module: f2
+kind: homework
+title: "Analyse exam results: from messy table to findings"
+brief: |
+  Carry out a complete small data analysis with NumPy, pandas and matplotlib. The dataset is a synthetic table
+  of 300 students from three schools (study hours, sleep, exam score), generated with a fixed seed and made messy
+  on purpose. The question: **how are study hours, sleep and school related to exam scores?**
+
+  Download the notebook and open it in [Google Colab](https://colab.research.google.com/) (File > Upload notebook),
+  where everything is already installed. Or run it locally: in your project folder from F0 run
+  `uv add numpy pandas matplotlib`, then `uv run --with jupyter jupyter lab`.
+
+  Each task has a `TODO` cell and a check cell that prints `OK` when your code is right:
+
+  1. **Inspect**: count rows, duplicates, missing values, school spellings and impossible scores.
+  2. **Clean**: write `clean(df)` to drop duplicates, impossible scores and rows missing study hours, and tidy school names.
+  3. **New columns**: add `passed` and a `study_band` made with `pd.cut`.
+  4. **Merge**: add each school's type and town with a left join, keeping every student.
+  5. **Correlation with NumPy**: standardise with broadcasting and compute correlations without loops.
+  6. **Group and compare**: summary tables per school, study band and school type with `groupby`.
+  7. **Plot**: one figure with a histogram, a scatter plot and a bar chart, all labelled.
+  8. **Findings**: write three findings with numbers and group sizes, plus limitations.
+
+  Stretch tasks compare dropping with filling missing values and ask what this data can and cannot say about school type.
+notebook: /homework/f2-data-analysis.ipynb
+rubric:
+  - "Every check cell for Tasks 1 to 7 prints OK after restarting and running all cells"
+  - "clean returns a new table and leaves students_raw unchanged (304 rows)"
+  - "Task 5 computes Z, zy and r with NumPy arrays and broadcasting, with no Python loop"
+  - "Every plot in Task 7 has a title and axis labels (with units where there are any), and the scatter plot has a legend"
+  - "Each of the three findings quotes a specific number and the number of students behind it, and uses association rather than causal language"
+  - "The Limitations paragraph states how many rows cleaning removed and at least one reason the results may not carry over to real schools"
+compute: "Any laptop or free Colab, no GPU; every cell runs in a few seconds, so about 1 to 2 hours of your time"

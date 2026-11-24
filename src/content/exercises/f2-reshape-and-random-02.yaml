@@ -1,0 +1,43 @@
+id: f2-reshape-and-random-02
+lesson: foundations/f2/reshape-and-random
+title: Simulate dice
+prompt: |
+  How often do two dice add up to 7? Answer by simulation. Write `sevens_fraction(n_rolls, seed)` that:
+
+  1. creates a generator with `np.random.default_rng(seed)`;
+  2. rolls two dice `n_rolls` times **in one call**, as an array of shape `(n_rolls, 2)` with
+     `rng.integers(...)` (each die shows 1 to 6);
+  3. returns the fraction of rolls whose two dice sum to 7.
+
+  With many rolls the answer should be close to the exact value $6/36 \approx 0.167$.
+starter: |
+  import numpy as np
+
+  def sevens_fraction(n_rolls, seed):
+      """Return the fraction of n_rolls rolls of two dice that sum to 7."""
+      rng = np.random.default_rng(seed)
+      rolls = rng.integers(1, 6, size=(n_rolls, 2))
+      return 0.0
+solution: |
+  import numpy as np
+
+  def sevens_fraction(n_rolls, seed):
+      """Return the fraction of n_rolls rolls of two dice that sum to 7."""
+      rng = np.random.default_rng(seed)
+      rolls = rng.integers(1, 7, size=(n_rolls, 2))
+      return (rolls.sum(axis=1) == 7).mean()
+tests: |
+  import math
+  import numpy as np
+  def _ref(n, s):
+      _r = np.random.default_rng(s).integers(1, 7, size=(n, 2))
+      return (_r.sum(axis=1) == 7).mean()
+  _f = sevens_fraction(100_000, 0)
+  assert 0 <= _f <= 1, f"A fraction must be between 0 and 1, got {_f!r}"
+  assert abs(_f - 1 / 6) < 0.01, f"With 100000 rolls the fraction should be close to 0.167, got {_f!r}"
+  for _n, _s in [(100_000, 0), (50, 1), (1000, 42)]:
+      assert math.isclose(sevens_fraction(_n, _s), _ref(_n, _s)), f"For n_rolls={_n}, seed={_s} the result differs from rng.integers(1, 7, size=(n_rolls, 2)). Remember that the high value is excluded"
+  assert sevens_fraction(1000, 5) == sevens_fraction(1000, 5), "The same seed must give the same answer"
+hints:
+  - "`rng.integers(low, high)` excludes high, so a die is `integers(1, 7)`."
+  - "Sum each roll with `.sum(axis=1)`, compare with 7 to get a mask, and take its mean."

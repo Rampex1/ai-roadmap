@@ -1,0 +1,43 @@
+id: f2-indexing-and-masks-02
+lesson: foundations/f2/indexing-and-masks
+title: Filter rows of a table
+prompt: |
+  `data` is a 2D array with one row per example. Write `select_rows(data, col, threshold)` that
+  returns only the rows whose value in column `col` is **greater than** `threshold`, keeping
+  every column.
+
+  For the data below, `select_rows(data, 1, 50)` keeps the rows `[2, 65, 1]` and `[3, 80, 0]`.
+starter: |
+  import numpy as np
+
+  data = np.array([[1, 40, 0],
+                   [2, 65, 1],
+                   [3, 80, 0],
+                   [4, 50, 1]])
+
+  def select_rows(data, col, threshold):
+      """Return the rows of data whose column col is greater than threshold."""
+      return data
+solution: |
+  import numpy as np
+
+  data = np.array([[1, 40, 0],
+                   [2, 65, 1],
+                   [3, 80, 0],
+                   [4, 50, 1]])
+
+  def select_rows(data, col, threshold):
+      """Return the rows of data whose column col is greater than threshold."""
+      return data[data[:, col] > threshold]
+tests: |
+  import numpy as np
+  _d = np.array([[1, 40, 0], [2, 65, 1], [3, 80, 0], [4, 50, 1]])
+  np.testing.assert_array_equal(select_rows(_d, 1, 50), [[2, 65, 1], [3, 80, 0]], err_msg="Keep rows whose column 1 is greater than 50 (50 itself is not greater)")
+  np.testing.assert_array_equal(select_rows(_d, 2, 0), [[2, 65, 1], [4, 50, 1]], err_msg="select_rows(data, 2, 0) should keep the rows where column 2 is 1")
+  _r = select_rows(_d, 0, 10)
+  assert _r.shape == (0, 3), f"When no row qualifies, return an empty array with 3 columns (shape (0, 3)); got shape {_r.shape}"
+  _f = np.array([[0.5, 1.0], [2.5, 0.0]])
+  np.testing.assert_allclose(select_rows(_f, 0, 1.0), [[2.5, 0.0]], err_msg="It should work for any 2D array and column")
+hints:
+  - "`data[:, col]` is the whole column; compare it with threshold to get a mask with one value per row."
+  - "Index the 2D array with that 1D mask: `data[mask]` keeps the matching rows."

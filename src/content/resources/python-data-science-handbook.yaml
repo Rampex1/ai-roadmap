@@ -1,0 +1,5 @@
+title: "Python Data Science Handbook (Jake VanderPlas, free online)"
+url: https://jakevdp.github.io/PythonDataScienceHandbook/
+kind: book
+free: true
+modules: [f2]

@@ -1,0 +1,7 @@
+term: "DataFrame"
+short: "pandas' table type: named columns, each a Series with its own dtype, sharing one row index."
+body: |
+  Build one with `pd.DataFrame({"col": [...]})` or `pd.read_csv(...)`. `df["col"]` gives a column, `df.loc` selects by
+  label and `df.iloc` by position, and `df[mask]` filters rows. Most tabular machine-learning data is loaded and cleaned as
+  a DataFrame before being turned into NumPy arrays.
+related: ["ndarray", "dictionary", "groupby"]

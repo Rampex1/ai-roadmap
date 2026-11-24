@@ -1,0 +1,110 @@
+items:
+  - id: f2-broadcasting-01
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      m = np.array([[1, 2], [3, 4]])
+      print(m + np.array([10, 100]))
+    answer: |
+      [[ 11 102]
+       [ 13 104]]
+    explanation: "The row [10, 100] is broadcast down both rows: 10 is added to column 0 and 100 to column 1."
+  - id: f2-broadcasting-02
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      m = np.array([[1, 2], [3, 4]])
+      print(m + np.array([[10], [100]]))
+    answer: |
+      [[ 11  12]
+       [103 104]]
+    explanation: "A column of shape (2, 1) is broadcast across the columns: 10 is added to row 0 and 100 to row 1."
+  - id: f2-broadcasting-03
+    type: mcq
+    prompt: "What is the shape of `np.ones((4, 1)) + np.ones(3)`?"
+    explanation: "Line up (4, 1) and (3,) from the right: 1 and 3 give 3, and the missing dimension against 4 gives 4. The result is (4, 3)."
+    options:
+      - text: "(4, 3)"
+        correct: true
+        why: Both arrays are stretched, the column across and the row down.
+      - text: "(4, 1)"
+        why: The size-1 dimension is stretched to match the 3, so the result is wider.
+      - text: "(3, 4)"
+        why: Shapes are lined up from the right, so the 3 ends up as the last dimension.
+      - text: It raises an error
+        why: 1 and 3 are compatible because one of them is 1.
+  - id: f2-broadcasting-04
+    type: multi
+    prompt: "Which pairs of shapes can be broadcast together?"
+    explanation: "Compare from the right: each pair of sizes must be equal or contain a 1, and missing dimensions count as 1."
+    options:
+      - text: "(5, 3) and (3,)"
+        correct: true
+        why: 3 matches 3, and the missing dimension counts as 1.
+      - text: "(5, 3) and (5, 1)"
+        correct: true
+        why: 1 is stretched to 3, and 5 matches 5.
+      - text: "(5, 3) and (5,)"
+        why: Lined up from the right, 3 meets 5 and neither is 1.
+      - text: "(2, 3) and (3, 2)"
+        why: 3 meets 2 in the last position, and neither is 1.
+  - id: f2-broadcasting-05
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      print(np.sqrt(np.array([16.0, 25.0])) + 1)
+    answer: "[5. 6.]"
+    explanation: "`np.sqrt` works element-wise, giving [4. 5.], and adding 1 is broadcast to every element."
+  - id: f2-broadcasting-06
+    type: output
+    prompt: "What does this print? (Ignore any warning.)"
+    code: |
+      import numpy as np
+      import warnings
+      warnings.simplefilter("ignore")
+      print(np.array([2.0, -2.0, 0.0]) / 0.0)
+    answer: "[ inf -inf  nan]"
+    explanation: "NumPy does not raise ZeroDivisionError. A positive number over 0 gives inf, a negative one gives -inf, and 0 / 0 gives nan."
+  - id: f2-broadcasting-07
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      col = np.array([[1], [2], [3]])
+      row = np.array([1, 10])
+      print((col * row).shape)
+    answer: "(3, 2)"
+    explanation: "(3, 1) times (2,) broadcasts to (3, 2): every row value is multiplied by every column value."
+  - id: f2-broadcasting-08
+    type: numeric
+    prompt: "After `X = X - X.mean(axis=0)` on a data array `X`, what is the mean of each column of `X`?"
+    answer: 0
+    tol: 0.000001
+    explanation: "Subtracting each column's own mean shifts every column so that its mean is exactly 0 (up to rounding)."
+  - id: f2-broadcasting-09
+    type: mcq
+    prompt: "For two 2D arrays `a` and `b` of shape (2, 2), what does `a * b` compute?"
+    explanation: "`*` is always element-wise in NumPy. Matrix multiplication is written `a @ b` and is covered in F3."
+    options:
+      - text: The element-wise product, multiplying matching positions
+        correct: true
+        why: Every arithmetic operator on arrays works element by element.
+      - text: The matrix product
+        why: That is a @ b, a different operation.
+      - text: An error, because 2D arrays cannot be multiplied with *
+        why: Same-shape arrays always combine element-wise.
+  - id: f2-broadcasting-10
+    type: mcq
+    prompt: "`X` has shape (100, 3) and `w` has shape (100,). You want to multiply each **row** of X by its own value in `w`. What do you write?"
+    explanation: "`w` must be a column of shape (100, 1) to be stretched across the 3 columns. As a plain (100,) row it lines up against the 3 columns and fails."
+    options:
+      - text: "X * w[:, None]"
+        correct: true
+        why: w[:, None] has shape (100, 1), which broadcasts across the 3 columns.
+      - text: "X * w"
+        why: (100, 3) and (100,) line up 3 against 100, so broadcasting fails.
+      - text: "X @ w"
+        why: That is matrix multiplication, which needs w to match the 3 columns, and computes something else.

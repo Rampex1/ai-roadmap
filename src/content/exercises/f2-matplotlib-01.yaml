@@ -1,0 +1,68 @@
+id: f2-matplotlib-01
+lesson: foundations/f2/matplotlib
+title: Plot training curves
+prompt: |
+  Write `plot_losses(train, val)` that draws both loss curves on **one** axes and returns the figure:
+
+  - x values are the epochs `1, 2, ..., len(train)`;
+  - two lines, labelled `"train"` and `"validation"`, with a legend;
+  - x-axis label `"epoch"`, y-axis label `"loss"`, and any title.
+
+  Start with `fig, ax = plt.subplots()` and finish with `return fig`. The last line calls your function so
+  you can see the plot.
+starter: |
+  import numpy as np
+  import matplotlib.pyplot as plt
+
+  def plot_losses(train, val):
+      """Draw train and validation loss against epoch on one axes; return the figure."""
+      fig, ax = plt.subplots()
+      ax.plot(train)
+      return fig
+
+  train = np.array([1.2, 0.8, 0.6, 0.5, 0.45, 0.42])
+  val = np.array([1.3, 0.9, 0.75, 0.72, 0.74, 0.78])
+  plot_losses(train, val)
+solution: |
+  import numpy as np
+  import matplotlib.pyplot as plt
+
+  def plot_losses(train, val):
+      """Draw train and validation loss against epoch on one axes; return the figure."""
+      fig, ax = plt.subplots()
+      epochs = np.arange(1, len(train) + 1)
+      ax.plot(epochs, train, marker="o", label="train")
+      ax.plot(epochs, val, marker="o", label="validation")
+      ax.set_xlabel("epoch")
+      ax.set_ylabel("loss")
+      ax.set_title("Training and validation loss")
+      ax.legend()
+      return fig
+
+  train = np.array([1.2, 0.8, 0.6, 0.5, 0.45, 0.42])
+  val = np.array([1.3, 0.9, 0.75, 0.72, 0.74, 0.78])
+  plot_losses(train, val)
+tests: |
+  import numpy as np
+  import matplotlib.pyplot as plt
+  def _check(_tr, _va):
+      _fig = plot_losses(_tr, _va)
+      assert _fig is not None and hasattr(_fig, "axes"), "plot_losses should return the figure from plt.subplots()"
+      assert len(_fig.axes) >= 1, "The figure has no axes"
+      _ax = _fig.axes[0]
+      assert len(_ax.lines) == 2, f"Draw exactly two lines (train and validation), found {len(_ax.lines)}"
+      _l1, _l2 = _ax.lines
+      np.testing.assert_allclose(_l1.get_xdata(), np.arange(1, len(_tr) + 1), err_msg="The x values should be the epochs 1, 2, ..., len(train)")
+      np.testing.assert_allclose(_l1.get_ydata(), _tr, err_msg="The first line should show the train losses")
+      np.testing.assert_allclose(_l2.get_ydata(), _va, err_msg="The second line should show the validation losses")
+      assert [_l1.get_label(), _l2.get_label()] == ["train", "validation"], f"Label the lines 'train' and 'validation', got {[_l1.get_label(), _l2.get_label()]}"
+      assert _ax.get_legend() is not None, "Add a legend with ax.legend()"
+      assert _ax.get_xlabel() == "epoch" and _ax.get_ylabel() == "loss", f"Axis labels should be 'epoch' and 'loss', got {_ax.get_xlabel()!r} and {_ax.get_ylabel()!r}"
+      assert _ax.get_title(), "Give the plot a title"
+      return _fig
+  _check(np.array([1.2, 0.8, 0.6, 0.5, 0.45, 0.42]), np.array([1.3, 0.9, 0.75, 0.72, 0.74, 0.78]))
+  plt.close(_check(np.array([3.0, 2.0, 1.0]), np.array([3.5, 2.5, 2.0])))
+hints:
+  - "Make the epochs with `np.arange(1, len(train) + 1)` and pass them as the x values."
+  - "Give each `ax.plot` a `label=...`, then call `ax.legend()`."
+  - "`ax.set_xlabel`, `ax.set_ylabel` and `ax.set_title` add the text."

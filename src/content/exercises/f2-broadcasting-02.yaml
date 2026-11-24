@@ -1,0 +1,46 @@
+id: f2-broadcasting-02
+lesson: foundations/f2/broadcasting
+title: A difference table
+prompt: |
+  Write `difference_table(a, b)` that takes two 1D arrays and returns a 2D array `d` with
+  `d[i, j] = a[i] - b[j]`. Its shape must be `(len(a), len(b))`.
+
+  For `a = np.array([10, 20, 30])` and `b = np.array([1, 2])` the result is
+
+  ```
+  [[ 9  8]
+   [19 18]
+   [29 28]]
+  ```
+
+  Use broadcasting, with no loop: turn `a` into a column first.
+starter: |
+  import numpy as np
+
+  def difference_table(a, b):
+      """Return the table d with d[i, j] = a[i] - b[j]."""
+      return a - b
+solution: |
+  import numpy as np
+
+  def difference_table(a, b):
+      """Return the table d with d[i, j] = a[i] - b[j]."""
+      return a[:, None] - b
+tests: |
+  import numpy as np
+  _a = np.array([10, 20, 30])
+  _b = np.array([1, 2])
+  try:
+      _d = difference_table(_a, _b)
+  except ValueError as _e:
+      raise AssertionError("Shapes (3,) and (2,) cannot broadcast. Make a a column of shape (3, 1) with a[:, None]") from None
+  assert _d.shape == (3, 2), f"The shape should be (len(a), len(b)) = (3, 2), got {_d.shape}"
+  np.testing.assert_array_equal(_d, [[9, 8], [19, 18], [29, 28]], err_msg="d[i, j] should be a[i] - b[j]")
+  _d2 = difference_table(np.array([0.5, 1.5]), np.array([0.5, 1.0, 2.0, 3.0]))
+  assert _d2.shape == (2, 4), f"For lengths 2 and 4 the shape should be (2, 4), got {_d2.shape}"
+  np.testing.assert_allclose(_d2, [[0.0, -0.5, -1.5, -2.5], [1.0, 0.5, -0.5, -1.5]])
+  _d3 = difference_table(np.array([5, 7]), np.array([1, 2]))
+  np.testing.assert_array_equal(_d3, [[4, 3], [6, 5]], err_msg="With equal lengths, still build the full table, not the element-wise difference")
+hints:
+  - "`a[:, None]` has shape (len(a), 1): a column."
+  - "A column of shape (3, 1) minus a row of shape (2,) broadcasts to shape (3, 2)."

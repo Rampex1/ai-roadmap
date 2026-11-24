@@ -1,0 +1,63 @@
+id: f2-pandas-groupby-02
+lesson: foundations/f2/pandas-groupby
+title: Clean missing values
+prompt: |
+  Write `clean(df)` that returns a cleaned **copy** of a table with columns `name`, `age`, `team` and `score`:
+
+  1. drop the rows where `score` is missing (we cannot use them),
+  2. then fill missing `age` values with the **median** age of the remaining rows,
+  3. and fill missing `team` values with `"unknown"`.
+
+  The table passed in must not change. For the data below the result has 4 rows (Di has no score), and
+  Ben's and Ed's missing ages become `31.5`: the median of the ages still known after dropping Di, 34 and 29.
+starter: |
+  import numpy as np
+  import pandas as pd
+
+  raw = pd.DataFrame({
+      "name": ["Ada", "Ben", "Cy", "Di", "Ed"],
+      "age": [34, np.nan, 29, 41, np.nan],
+      "team": ["red", "blue", None, "red", "blue"],
+      "score": [88, 92, 75, np.nan, 81],
+  })
+
+  def clean(df):
+      """Drop rows without a score, then fill missing age (median) and team ("unknown")."""
+      return df.dropna()
+
+  print(clean(raw))
+solution: |
+  import numpy as np
+  import pandas as pd
+
+  raw = pd.DataFrame({
+      "name": ["Ada", "Ben", "Cy", "Di", "Ed"],
+      "age": [34, np.nan, 29, 41, np.nan],
+      "team": ["red", "blue", None, "red", "blue"],
+      "score": [88, 92, 75, np.nan, 81],
+  })
+
+  def clean(df):
+      """Drop rows without a score, then fill missing age (median) and team ("unknown")."""
+      out = df.dropna(subset=["score"]).copy()
+      out["age"] = out["age"].fillna(out["age"].median())
+      out["team"] = out["team"].fillna("unknown")
+      return out
+
+  print(clean(raw))
+tests: |
+  import numpy as np
+  import pandas as pd
+  _raw = pd.DataFrame({"name": ["Ada", "Ben", "Cy", "Di", "Ed"], "age": [34, np.nan, 29, 41, np.nan], "team": ["red", "blue", None, "red", "blue"], "score": [88, 92, 75, np.nan, 81]})
+  _r = clean(_raw)
+  assert _r["name"].tolist() == ["Ada", "Ben", "Cy", "Ed"], f"Only Di has no score, so keep Ada, Ben, Cy and Ed; got {_r['name'].tolist()}"
+  assert _r.isna().sum().sum() == 0, "After cleaning there should be no missing values left"
+  assert _r["age"].tolist() == [34.0, 31.5, 29.0, 31.5], f"After dropping Di the known ages are 34 and 29, so the median is 31.5; got ages {_r['age'].tolist()}"
+  assert _r["team"].tolist() == ["red", "blue", "unknown", "blue"], f"Cy has no team and should get 'unknown'; got {_r['team'].tolist()}"
+  assert _raw["age"].isna().sum() == 2 and len(_raw) == 5, "clean changed the DataFrame passed in: work on a copy"
+  _d2 = pd.DataFrame({"name": ["A", "B", "C"], "age": [np.nan, 20.0, 40.0], "team": ["x", None, "y"], "score": [1.0, 2.0, 3.0]})
+  _r2 = clean(_d2)
+  assert _r2["age"].tolist() == [30.0, 20.0, 40.0] and _r2["team"].tolist() == ["x", "unknown", "y"], "With no missing scores, keep every row and fill age with the median (30.0)"
+hints:
+  - "`df.dropna()` drops a row if ANY column is missing. Use `dropna(subset=[\"score\"])` and add `.copy()`."
+  - "Compute the median after dropping: `out[\"age\"].fillna(out[\"age\"].median())`."

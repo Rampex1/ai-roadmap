@@ -1,0 +1,57 @@
+id: f2-pandas-dataframes-01
+lesson: foundations/f2/pandas-dataframes
+title: Filter, select and sort
+prompt: |
+  Write `big_houses(df, min_rooms)` that takes a houses DataFrame like the one below and returns a
+  DataFrame with:
+
+  - only the houses with **at least** `min_rooms` rooms,
+  - only the columns `city` and `price`, in that order,
+  - sorted by price, most expensive first.
+
+  For `min_rooms=3` the cities come out as `Bath, York, Leeds`.
+starter: |
+  import pandas as pd
+
+  df = pd.DataFrame({
+      "city": ["Leeds", "York", "Leeds", "Bath", "York"],
+      "rooms": [2, 3, 4, 3, 1],
+      "area": [70, 95, 120, 88, 40],
+      "price": [180, 320, 300, 410, 150],
+  })
+
+  def big_houses(df, min_rooms):
+      """Return city and price of houses with at least min_rooms rooms, priciest first."""
+      return df
+
+  print(big_houses(df, 3))
+solution: |
+  import pandas as pd
+
+  df = pd.DataFrame({
+      "city": ["Leeds", "York", "Leeds", "Bath", "York"],
+      "rooms": [2, 3, 4, 3, 1],
+      "area": [70, 95, 120, 88, 40],
+      "price": [180, 320, 300, 410, 150],
+  })
+
+  def big_houses(df, min_rooms):
+      """Return city and price of houses with at least min_rooms rooms, priciest first."""
+      big = df[df["rooms"] >= min_rooms]
+      return big[["city", "price"]].sort_values("price", ascending=False)
+
+  print(big_houses(df, 3))
+tests: |
+  import pandas as pd
+  _df = pd.DataFrame({"city": ["Leeds", "York", "Leeds", "Bath", "York"], "rooms": [2, 3, 4, 3, 1], "area": [70, 95, 120, 88, 40], "price": [180, 320, 300, 410, 150]})
+  _r = big_houses(_df, 3)
+  assert isinstance(_r, pd.DataFrame), f"Return a DataFrame, got {type(_r).__name__}"
+  assert list(_r.columns) == ["city", "price"], f"Keep only the columns ['city', 'price'], got {list(_r.columns)}"
+  assert _r["city"].tolist() == ["Bath", "York", "Leeds"], f"For min_rooms=3 expected cities Bath, York, Leeds (priciest first), got {_r['city'].tolist()}"
+  assert _r["price"].tolist() == [410, 320, 300], f"Expected prices [410, 320, 300], got {_r['price'].tolist()}"
+  assert big_houses(_df, 4)["city"].tolist() == ["Leeds"], "With min_rooms=4 only the 4-room house in Leeds qualifies (at least means >=)"
+  assert big_houses(_df, 1)["price"].tolist() == [410, 320, 300, 180, 150], "With min_rooms=1 every house qualifies, sorted by price descending"
+  assert len(big_houses(_df, 9)) == 0, "With min_rooms=9 no house qualifies, so the result is empty"
+hints:
+  - "Filter first: `df[df[\"rooms\"] >= min_rooms]`."
+  - "Select columns with a list inside the brackets, `[[\"city\", \"price\"]]`, then `.sort_values(\"price\", ascending=False)`."

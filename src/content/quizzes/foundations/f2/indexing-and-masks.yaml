@@ -1,0 +1,107 @@
+items:
+  - id: f2-indexing-and-masks-01
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      m = np.array([[1, 2, 3], [4, 5, 6]])
+      print(m[1, 0], m[0, -1])
+    answer: "4 3"
+    explanation: "`m[1, 0]` is row 1, column 0, which is 4. `m[0, -1]` is the last element of row 0, which is 3."
+  - id: f2-indexing-and-masks-02
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      m = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+      print(m[:, 2])
+    answer: "[3 6 9]"
+    explanation: "The `:` selects every row and 2 selects the third column, so you get the last column."
+  - id: f2-indexing-and-masks-03
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      a = np.array([1, 2, 3, 4])
+      b = a[:2]
+      b[0] = 100
+      print(a)
+    answer: "[100   2   3   4]"
+    explanation: "A slice of an array is a view onto the same memory, so changing `b` changes `a`. NumPy pads the numbers to line up, hence the extra spaces."
+  - id: f2-indexing-and-masks-04
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      x = np.array([4, 9, 1, 7, 3])
+      print(x[x > 3])
+    answer: "[4 9 7]"
+    explanation: "`x > 3` is the mask [True, True, False, True, False], which keeps 4, 9 and 7 in their original order."
+  - id: f2-indexing-and-masks-05
+    type: numeric
+    prompt: "What is `(np.array([2, 8, 5, 10]) > 4).mean()`?"
+    answer: 0.75
+    tol: 0.001
+    explanation: "The mask is [False, True, True, True]. True counts as 1, so the mean is 3 / 4 = 0.75: the fraction of values above 4."
+  - id: f2-indexing-and-masks-06
+    type: mcq
+    prompt: "You want the values of array `x` that are between 0 and 10. Which line works?"
+    explanation: "On arrays use `&` with each comparison in brackets. `and` only works on single booleans, and without brackets operator precedence breaks the expression."
+    options:
+      - text: "x[(x > 0) & (x < 10)]"
+        correct: true
+        why: Each comparison makes a mask, and & combines them element by element.
+      - text: "x[x > 0 and x < 10]"
+        why: Python's and needs a single True or False, so on arrays it raises a ValueError about ambiguous truth values.
+      - text: "x[x > 0 & x < 10]"
+        why: The & operator binds more tightly than the comparisons, so this is parsed as x > (0 & x) < 10, which raises an error.
+      - text: "x[0 < x < 10]"
+        why: A chained comparison uses and behind the scenes, so it fails on arrays in the same way.
+  - id: f2-indexing-and-masks-07
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      x = np.array([-2, 5, -1, 3])
+      print(np.where(x < 0, 0, x))
+    answer: "[0 5 0 3]"
+    explanation: "`np.where` takes 0 where the condition is True and the original value where it is False."
+  - id: f2-indexing-and-masks-08
+    type: multi
+    prompt: "Which of these give an array that does **not** share memory with `a`, so changing it leaves `a` alone?"
+    explanation: "Basic slices are views. Copies come from `.copy()`, from boolean-mask indexing and from fancy indexing with a list of positions."
+    options:
+      - text: "a[1:3].copy()"
+        correct: true
+        why: copy() makes an independent array.
+      - text: "a[a > 0]"
+        correct: true
+        why: Mask indexing always builds a new array.
+      - text: "a[[0, 2]]"
+        correct: true
+        why: Fancy indexing with a list of positions returns a copy.
+      - text: "a[1:3]"
+        why: A plain slice is a view onto the original data.
+  - id: f2-indexing-and-masks-09
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      m = np.array([[1, 10], [2, 20], [3, 30]])
+      print(m[m[:, 0] >= 2, 1])
+    answer: "[20 30]"
+    explanation: "The mask from column 0 is [False, True, True], which selects rows 1 and 2; the 1 then takes column 1 of those rows."
+  - id: f2-indexing-and-masks-10
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      a = np.array([10, 20, 30])
+      print(a[[2, 2, 0]])
+    answer: "[30 30 10]"
+    explanation: "Indexing with a list picks those positions in that order, and positions may repeat."
+  - id: f2-indexing-and-masks-11
+    type: cloze
+    prompt: "An array of True/False values used to select elements, as in `x[x > 0]`, is called a boolean ____ ."
+    accept: ["mask"]
+    explanation: "A boolean mask keeps the elements where it is True."

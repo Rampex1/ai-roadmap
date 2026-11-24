@@ -1,0 +1,7 @@
+term: "Boolean mask"
+short: "An array of True/False values used as an index to keep only the elements where it is True, as in x[x > 0]."
+body: |
+  A comparison on an array, such as `scores >= 60`, gives a mask of the same shape. Indexing with it filters, summing it
+  counts the True values, and its mean is the fraction that are True. Combine masks with `&`, `|` and `~`, with brackets
+  around each comparison. pandas filters rows the same way.
+related: ["ndarray", "boolean"]

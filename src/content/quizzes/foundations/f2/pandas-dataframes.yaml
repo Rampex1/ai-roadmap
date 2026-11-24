@@ -1,0 +1,99 @@
+items:
+  - id: f2-pandas-dataframes-01
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import pandas as pd
+      df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+      print(df.shape)
+    answer: "(3, 2)"
+    explanation: "Each list becomes a column, so there are 3 rows and 2 columns."
+  - id: f2-pandas-dataframes-02
+    type: mcq
+    prompt: "What type is `df[\"price\"]` for a DataFrame `df`?"
+    explanation: "One column name in square brackets gives a Series. A list of names gives a DataFrame."
+    options:
+      - text: A pandas Series
+        correct: true
+        why: A single column is a labelled 1D array, which is a Series.
+      - text: A DataFrame with one column
+        why: That is what df[["price"]] (with a list) gives.
+      - text: A Python list
+        why: Use .tolist() if you want a plain list.
+  - id: f2-pandas-dataframes-03
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import pandas as pd
+      df = pd.DataFrame({"x": [10, 20, 30, 40]})
+      print(len(df.loc[1:2]), len(df.iloc[1:2]))
+    answer: "2 1"
+    explanation: "loc slices by label and includes the end (labels 1 and 2). iloc slices by position and excludes the end (position 1 only)."
+  - id: f2-pandas-dataframes-04
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import pandas as pd
+      df = pd.DataFrame({"name": ["a", "b", "c", "d"], "score": [50, 80, 65, 90]})
+      print(df[df["score"] > 60]["name"].tolist())
+    answer: "['b', 'c', 'd']"
+    explanation: "The mask keeps rows whose score is above 60 (80, 65 and 90), in their original order."
+  - id: f2-pandas-dataframes-05
+    type: mcq
+    prompt: "Which line keeps the rows where `age` is over 30 **and** `city` is \"York\"?"
+    explanation: "As in NumPy, combine masks with & and put brackets around each comparison."
+    options:
+      - text: "df[(df[\"age\"] > 30) & (df[\"city\"] == \"York\")]"
+        correct: true
+        why: Two bracketed masks combined element-wise with &.
+      - text: "df[df[\"age\"] > 30 and df[\"city\"] == \"York\"]"
+        why: Python's and cannot combine whole Series and raises a ValueError.
+      - text: "df[df[\"age\"] > 30 & df[\"city\"] == \"York\"]"
+        why: Without brackets, & is applied before the comparisons, which gives an error or a wrong mask.
+  - id: f2-pandas-dataframes-06
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import pandas as pd
+      df = pd.DataFrame({"n": [3, 1, 2]})
+      df.sort_values("n")
+      print(df["n"].tolist())
+    answer: "[3, 1, 2]"
+    explanation: "sort_values returns a new sorted DataFrame and leaves df unchanged. The result was thrown away; write df = df.sort_values(\"n\") to keep it."
+  - id: f2-pandas-dataframes-07
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import pandas as pd
+      df = pd.DataFrame({"w": [2, 4], "h": [3, 5]})
+      df["area"] = df["w"] * df["h"]
+      print(df["area"].tolist())
+    answer: "[6, 20]"
+    explanation: "Column arithmetic is vectorised and pairs up rows: 2 × 3 and 4 × 5."
+  - id: f2-pandas-dataframes-08
+    type: multi
+    prompt: "You load a CSV and `df.dtypes` shows the `price` column as `str` instead of a number type. What could explain it?"
+    explanation: "If any value cannot be read as a number, pandas keeps the whole column as text. Look for typos, units or placeholders in the data. Standard markers such as NA, n/a or null are read as missing (NaN), so they do not cause this."
+    options:
+      - text: "Some prices contain text such as \"£300\" or \"unknown\""
+        correct: true
+        why: One unreadable value makes the whole column text.
+      - text: "Some prices have a unit after them, such as \"300 GBP\""
+        correct: true
+        why: Text after the number makes the value unreadable as a number, so the whole column stays text.
+      - text: The column has more than 1000 rows
+        why: Size has nothing to do with the dtype.
+  - id: f2-pandas-dataframes-09
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import pandas as pd
+      s = pd.Series(["cat", "dog", "cat", "cat"])
+      print(s.value_counts()["cat"], s.nunique())
+    answer: "3 2"
+    explanation: "value_counts counts each value (cat appears 3 times), and nunique counts the distinct values (cat and dog)."
+  - id: f2-pandas-dataframes-10
+    type: cloze
+    prompt: "To select rows and columns by **position** (like NumPy) rather than by label, use `df.____[...]`."
+    accept: ["iloc", ".iloc", "iloc[]"]
+    explanation: "iloc is integer-position based; loc is label based."

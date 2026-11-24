@@ -1,0 +1,104 @@
+items:
+  - id: f2-numpy-arrays-01
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      a = np.array([1, 2, 3])
+      print(a * 2)
+    answer: "[2 4 6]"
+    explanation: "Multiplying an array by a number multiplies every element. Arrays print without commas."
+  - id: f2-numpy-arrays-02
+    type: output
+    prompt: "What does this print? (Careful: these are lists, not arrays.)"
+    code: |
+      a = [1, 2, 3]
+      print(a * 2)
+    answer: "[1, 2, 3, 1, 2, 3]"
+    explanation: "For a list, `* 2` repeats the list. Only NumPy arrays do element-wise maths."
+  - id: f2-numpy-arrays-03
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      a = np.array([1, 2, 3])
+      b = np.array([10, 20, 30])
+      print(a + b)
+    answer: "[11 22 33]"
+    explanation: "Two arrays of the same shape are added element by element: 1 + 10, 2 + 20, 3 + 30."
+  - id: f2-numpy-arrays-04
+    type: mcq
+    prompt: "What is the shape of `np.array([[1, 2, 3], [4, 5, 6]])`?"
+    explanation: "The outer list holds 2 rows and each row has 3 numbers, so the shape is (rows, columns) = (2, 3)."
+    options:
+      - text: "(2, 3)"
+        correct: true
+        why: Two inner lists become two rows, each with three columns.
+      - text: "(3, 2)"
+        why: That would be three rows of two. Shape lists rows first.
+      - text: "(6,)"
+        why: That is the shape of a flat 1D array of six numbers; this one is 2D.
+      - text: "6"
+        why: 6 is the size (total number of elements), not the shape. Shape is always a tuple.
+  - id: f2-numpy-arrays-05
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      print(np.array([1, 2.5, 3]).dtype)
+    answer: "float64"
+    explanation: "An array has one dtype for every element. One float forces the whole array to float64."
+  - id: f2-numpy-arrays-06
+    type: numeric
+    prompt: "How many elements does `np.linspace(0, 10, 6)` contain?"
+    answer: 6
+    tol: 0
+    explanation: "The third argument of linspace is the number of points: 0, 2, 4, 6, 8, 10. Both ends are included."
+  - id: f2-numpy-arrays-07
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      print(np.arange(1, 10, 3))
+    answer: "[1 4 7]"
+    explanation: "Like `range`, `np.arange` stops before the stop value: 1, 4, 7, and 10 is excluded."
+  - id: f2-numpy-arrays-08
+    type: multi
+    prompt: "Why is `arr * 2` on a large NumPy array much faster than `[x * 2 for x in lst]` on a list of the same numbers?"
+    explanation: "The array stores raw numbers of a single type side by side, and the loop runs in compiled code without per-element Python bookkeeping."
+    options:
+      - text: The loop over elements runs in compiled code instead of the Python interpreter
+        correct: true
+        why: NumPy's inner loops are written in C, so each element costs a few machine instructions.
+      - text: All elements share one dtype, so NumPy does not check each value's type
+        correct: true
+        why: A list can hold anything, so Python must check every item; an array cannot.
+      - text: NumPy skips some of the elements to save time
+        why: Every element is computed; the speed comes from how, not from doing less.
+      - text: NumPy uses the GPU automatically
+        why: NumPy runs on the CPU. Libraries such as PyTorch are what move work to a GPU.
+  - id: f2-numpy-arrays-09
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      print(np.array([2.9, -1.9]).astype(int))
+    answer: "[ 2 -1]"
+    explanation: "Converting floats to int truncates toward zero, so 2.9 becomes 2 and -1.9 becomes -1. It does not round."
+  - id: f2-numpy-arrays-10
+    type: cloze
+    prompt: "Replacing an explicit Python loop with whole-array operations such as `a * b` is called ____ ."
+    accept: ["vectorisation", "vectorization", "vectorising", "vectorizing"]
+    explanation: "Vectorisation lets NumPy run the loop in compiled code, which is both faster and shorter."
+  - id: f2-numpy-arrays-11
+    type: mcq
+    prompt: "`np.array([5, \"x\", 7])` creates an array. What goes wrong if you then try `arr + 1`?"
+    explanation: "Mixing a string with numbers makes NumPy store everything as strings, so arithmetic fails with an error."
+    options:
+      - text: It raises an error, because every element became a string
+        correct: true
+        why: The array gets a string dtype like <U21, and you cannot add 1 to text.
+      - text: It gives [6, "x", 8]
+        why: Arrays have one dtype; they cannot hold numbers and strings side by side like a list can.
+      - text: It silently drops the "x" and returns [6 8]
+        why: NumPy never drops elements; it converts them all to a common type.

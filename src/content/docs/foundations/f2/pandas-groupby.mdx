@@ -1,0 +1,307 @@
+---
+title: "Grouping, missing values and merging"
+module: f2
+order: 7
+estMinutes: 19
+objectives:
+  - "Summarise a table per category with groupby and agg (split, apply, combine)"
+  - "Find missing values with isna and handle them with dropna or fillna, explaining the trade-off"
+  - "Combine two tables on a shared column with merge, and choose between inner, left and outer joins"
+goDeeper: pandas-groupby-guide
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+The questions people ask of data are usually comparisons between groups. Which city is most expensive?
+Do customers on the annual plan stay longer? Which class does the model get wrong most often? In pandas,
+the answer to all of these starts with `groupby`. This lesson also covers the two chores that come before
+almost any real analysis: dealing with missing values and joining tables together.
+
+We will use a slightly bigger houses table (prices in thousands):
+
+```python
+import numpy as np
+import pandas as pd
+
+df = pd.DataFrame({
+    "city": ["Leeds", "York", "Leeds", "Bath", "York", "Bath", "Leeds"],
+    "rooms": [2, 3, 4, 3, 1, 2, 3],
+    "price": [180, 320, 300, 410, 150, 290, 240],
+})
+```
+
+## groupby: split, apply, combine
+
+```python
+print(df.groupby("city")["price"].mean())
+```
+
+```text title="Output"
+city
+Bath     350.0
+Leeds    240.0
+York     235.0
+Name: price, dtype: float64
+```
+
+Read it as "group the rows by city, take the price column, and average it within each group". Behind the
+scenes, <Term id="groupby" /> does three steps:
+
+1. **Split** the rows into groups, one per distinct city.
+2. **Apply** a function (here `mean`) to each group's prices.
+3. **Combine** the results into a new Series, indexed by city.
+
+In F1 you would have written this with a dictionary of lists and a loop
+([Dictionaries](/foundations/f1/dictionaries/)). One line now does it.
+
+### Several summaries at once
+
+`agg` applies several functions. Give it a list of names:
+
+```python
+print(df.groupby("city")["price"].agg(["count", "mean", "max"]))
+```
+
+```text title="Output"
+       count   mean  max
+city                    
+Bath       2  350.0  410
+Leeds      3  240.0  300
+York       2  235.0  320
+```
+
+For full control over column names, use **named aggregation**: `new_name=(column, function)`:
+
+```python
+summary = df.groupby("city").agg(
+    n=("price", "size"),
+    avg_price=("price", "mean"),
+    max_rooms=("rooms", "max"),
+)
+print(summary.sort_values("avg_price"))
+```
+
+```text title="Output"
+       n  avg_price  max_rooms
+city                          
+York   2      235.0          3
+Leeds  3      240.0          4
+Bath   2      350.0          3
+```
+
+Always look at the **count** next to a group average. An average over 2 houses is much less trustworthy
+than one over 200; with tiny groups, a single unusual house can change the ranking.
+
+### Grouping by more than one column
+
+Pass a list to group by combinations:
+
+```python
+print(df.groupby(["city", "rooms"])["price"].mean())
+```
+
+```text title="Output"
+city   rooms
+Bath   2        290.0
+       3        410.0
+Leeds  2        180.0
+       3        240.0
+       4        300.0
+York   1        150.0
+       3        320.0
+Name: price, dtype: float64
+```
+
+The result has a two-level index (city, then rooms). If you would rather have ordinary columns, which is
+easier to plot or merge, pass `as_index=False`, or call `.reset_index()` on the result:
+
+```python
+print(df.groupby("city", as_index=False)["price"].mean())
+```
+
+```text title="Output"
+    city  price
+0   Bath  350.0
+1  Leeds  240.0
+2   York  235.0
+```
+
+## Missing values
+
+Real data has gaps: a sensor dropped out, someone skipped a question, two systems did not match up. pandas
+marks a <Term id="missing-value" /> as `NaN` (the same "not a number" you met in NumPy). You can type a gap in a text column as `None`; pandas stores it as missing too:
+
+```python
+raw = pd.DataFrame({
+    "name": ["Ada", "Ben", "Cy", "Di", "Ed"],
+    "age": [34, np.nan, 29, 41, np.nan],
+    "team": ["red", "blue", None, "red", "blue"],
+    "score": [88, 92, 75, np.nan, 81],
+})
+print(raw)
+print(raw.isna().sum())
+```
+
+```text title="Output"
+  name   age  team  score
+0  Ada  34.0   red   88.0
+1  Ben   NaN  blue   92.0
+2   Cy  29.0   NaN   75.0
+3   Di  41.0   red    NaN
+4   Ed   NaN  blue   81.0
+name     0
+age      2
+team     1
+score    1
+dtype: int64
+```
+
+`isna()` gives a True/False table, and `.sum()` counts the missing values per column. Run this on every new
+dataset. Notice that `age` and `score` became floats (`34.0`): `NaN` is a float, so a whole-number column with
+a gap is stored as floats.
+
+pandas aggregations **skip** missing values by default:
+
+```python
+print(raw["score"].mean(), raw["score"].count(), len(raw))
+```
+
+```text title="Output"
+84.0 4 5
+```
+
+The mean is over the 4 known scores, not 5. `count()` counts non-missing values, while `len` counts rows.
+Convenient, but think about it: if the missing scores are missing for a reason (say, people who did badly
+skipped the test), the average of the rest is biased upward.
+
+### Dropping or filling
+
+You have two basic options. **Drop** rows with missing values:
+
+```python
+print(raw.dropna())
+print(raw.dropna(subset=["score"]).shape)
+```
+
+```text title="Output"
+  name   age team  score
+0  Ada  34.0  red   88.0
+(4, 4)
+```
+
+`dropna()` removes every row with **any** missing value, which here leaves just one row of five. That is
+often far too aggressive. `subset=["score"]` only drops rows where the score is missing.
+
+Or **fill** them with a sensible value:
+
+```python
+filled = raw.copy()
+filled["age"] = filled["age"].fillna(filled["age"].mean())
+filled["team"] = filled["team"].fillna("unknown")
+print(filled)
+```
+
+```text title="Output"
+  name        age     team  score
+0  Ada  34.000000      red   88.0
+1  Ben  34.666667     blue   92.0
+2   Cy  29.000000  unknown   75.0
+3   Di  41.000000      red    NaN
+4   Ed  34.666667     blue   81.0
+```
+
+Filling with the mean (or median) keeps the rows but invents values, and it makes the column look less
+spread out than it really is. Filling text with `"unknown"` keeps the fact that it was missing visible.
+
+:::tip[Which one?]
+There is no universal right answer. Drop when few rows are affected and you have plenty of data. Fill when
+dropping would lose too much. Either way, **write down what you did and how many rows it touched**, because it
+can change your conclusions. F7 shows how to do this properly inside a model pipeline.
+:::
+
+### Missing groups in groupby
+
+By default `groupby` silently leaves out rows whose group key is missing:
+
+```python
+print(raw.groupby("team")["score"].mean())
+print(raw.groupby("team", dropna=False)["score"].mean())
+```
+
+```text title="Output"
+team
+blue    86.5
+red     88.0
+Name: score, dtype: float64
+team
+blue    86.5
+red     88.0
+NaN     75.0
+Name: score, dtype: float64
+```
+
+Cy has no team, so Cy's score vanishes from the first summary. `dropna=False` keeps a group for the missing key.
+
+## Merging tables
+
+Data often lives in several tables. One has houses, another maps each city to its region. `merge` joins them on
+a shared column, like matching rows by key:
+
+```python
+houses = pd.DataFrame({"city": ["Leeds", "York", "Bath", "Hull"], "price": [180, 320, 410, 120]})
+regions = pd.DataFrame({"city": ["Leeds", "York", "Bath", "Oxford"],
+                        "region": ["North", "North", "South West", "South East"]})
+print(houses.merge(regions, on="city"))
+```
+
+```text title="Output"
+    city  price      region
+0  Leeds    180       North
+1   York    320       North
+2   Bath    410  South West
+```
+
+For each house, pandas finds the row of `regions` with the same city and glues the columns together. Hull has
+no region and Oxford has no house, so both disappear: this default is an **inner** join, which keeps only keys
+found in both tables.
+
+The `how` argument changes that:
+
+```python
+print(houses.merge(regions, on="city", how="left"))
+```
+
+```text title="Output"
+    city  price      region
+0  Leeds    180       North
+1   York    320       North
+2   Bath    410  South West
+3   Hull    120         NaN
+```
+
+- `how="inner"` (default): only keys in both tables.
+- `how="left"`: every row of the left table (`houses`), with `NaN` where the right table has no match.
+  This is the usual choice when adding information to a main table, because no rows go missing.
+- `how="outer"`: every key from either table, with `NaN` wherever there is no match.
+
+:::caution[Check the row count after a merge]
+If the key is repeated in the right-hand table (say Leeds appears twice in `regions`), every Leeds house is matched
+twice and your table silently grows. Compare `len()` before and after every merge; a left join should never add rows
+unless you expected duplicates.
+:::
+
+## Try it
+
+<CodeExercise id="f2-pandas-groupby-01" />
+
+<CodeExercise id="f2-pandas-groupby-02" />
+
+<CodeExercise id="f2-pandas-groupby-03" />
+
+## Summary
+
+- `df.groupby("key")["col"].mean()` splits by key, applies the function to each group and combines the results.
+- `agg(["count", "mean"])` or named aggregation `agg(new=("col", "func"))` gives several summaries. Always check group sizes.
+- `isna().sum()` counts missing values per column. pandas aggregations skip `NaN` by default.
+- `dropna(subset=[...])` drops rows; `fillna(value)` fills gaps. Both change your data, so record what you did.
+- `a.merge(b, on="key", how="left")` adds columns from `b` to every row of `a`. Check the row count afterwards.

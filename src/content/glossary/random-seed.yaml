@@ -1,0 +1,7 @@
+term: "Random seed"
+short: "The starting number for a pseudo-random generator; the same seed always produces the same sequence of random numbers."
+body: |
+  In NumPy, `rng = np.random.default_rng(42)` creates a generator seeded with 42. Fixing seeds makes shuffles, data splits
+  and weight initialisations reproducible, so you and others can rerun an experiment and get the same result. Results that
+  only hold for one seed are fragile, so experiments are often repeated with several seeds.
+related: ["ndarray"]

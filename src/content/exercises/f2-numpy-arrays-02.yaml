@@ -1,0 +1,39 @@
+id: f2-numpy-arrays-02
+lesson: foundations/f2/numpy-arrays
+title: Mean squared error
+prompt: |
+  The **mean squared error** measures how far predictions are from the true values:
+
+  $$\text{MSE} = \frac{1}{n}\sum_{i=1}^{n} (y_i - \hat{y}_i)^2$$
+
+  where $y_i$ is the true value, $\hat{y}_i$ the prediction and $n$ the number of values.
+  It is the most common loss for predicting numbers.
+
+  Write `mse(y_true, y_pred)` without a loop. The inputs may be plain lists, so convert them
+  with `np.array` first. Return a single number.
+
+  For example `mse([1, 2, 3], [1, 2, 5])` is `(0 + 0 + 4) / 3`, about `1.333`.
+starter: |
+  import numpy as np
+
+  def mse(y_true, y_pred):
+      """Return the mean squared error between y_true and y_pred."""
+      return 0.0
+solution: |
+  import numpy as np
+
+  def mse(y_true, y_pred):
+      """Return the mean squared error between y_true and y_pred."""
+      y_true = np.array(y_true)
+      y_pred = np.array(y_pred)
+      return ((y_true - y_pred) ** 2).mean()
+tests: |
+  import math
+  import numpy as np
+  assert math.isclose(mse([1, 2, 3], [1, 2, 5]), 4 / 3), f"mse([1, 2, 3], [1, 2, 5]) should be about 1.333, got {mse([1, 2, 3], [1, 2, 5])!r}"
+  assert math.isclose(mse([2.5, 0.0], [3.0, -1.0]), 0.625), "mse([2.5, 0.0], [3.0, -1.0]) should be (0.25 + 1) / 2 = 0.625"
+  assert math.isclose(mse(np.array([4.0, 4.0]), np.array([4.0, 4.0])) + 1, 1), "Perfect predictions give an MSE of 0"
+  assert math.isclose(mse([0, 0, 0, 0], [1, -1, 2, -2]), 2.5), "Squaring makes negative errors count too: mse([0, 0, 0, 0], [1, -1, 2, -2]) is 2.5"
+hints:
+  - "Start with `y_true = np.array(y_true)` and the same for y_pred, so list inputs work."
+  - "`(y_true - y_pred) ** 2` gives the squared errors as an array; arrays have a `.mean()` method."

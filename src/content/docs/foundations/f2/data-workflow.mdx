@@ -1,0 +1,229 @@
+---
+title: "A mini data analysis, start to finish"
+module: f2
+order: 9
+estMinutes: 12
+objectives:
+  - "Follow the workflow question, load, inspect, clean, analyse, plot, conclude on a small dataset"
+  - "Clean common problems: duplicates, impossible values, missing values and inconsistent text"
+  - "Write findings that state numbers, group sizes and limitations honestly"
+goDeeper: python-data-science-handbook
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+You now have all the pieces: NumPy for fast maths, pandas for tables, matplotlib for pictures. This last lesson
+puts them together in the order a real analysis follows. The same steps, at a larger scale, start every machine
+learning project, and they are exactly what the homework asks you to do.
+
+## The workflow
+
+1. **Question.** Write down what you want to know before touching the data.
+2. **Load.** Get the data into a DataFrame.
+3. **Inspect.** Look at it: shape, first rows, types, missing values, summary statistics.
+4. **Clean.** Fix what inspection found, and record every change.
+5. **Analyse.** Group, aggregate, compare.
+6. **Plot.** Check the numbers visually, and make the figure that shows the answer.
+7. **Conclude.** State findings with numbers, group sizes and caveats.
+
+It is rarely a straight line: plotting often reveals something that sends you back to cleaning. That is normal.
+
+## 1. Question
+
+A bike-hire scheme has a record of daily rentals. **Do more bikes get rented at weekends, and on warmer days?**
+
+## 2. Load
+
+Real data would come from `pd.read_csv`. Here we generate a realistic dataset with a seeded generator, so you
+get exactly the same numbers, and then damage it on purpose in the ways real data is usually damaged:
+
+```python
+import numpy as np
+import pandas as pd
+
+rng = np.random.default_rng(3)
+n = 200
+day = rng.choice(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], size=n)
+temp = rng.normal(15, 6, size=n).round(1)
+weekend = np.isin(day, ["Sat", "Sun"])
+rentals = (40 + 6 * temp + 60 * weekend + rng.normal(0, 25, size=n)).round()
+raw = pd.DataFrame({"day": day, "temp": temp, "rentals": rentals})
+
+# make it messy, the way real data is
+raw.loc[[5, 17, 42], "temp"] = np.nan
+raw.loc[8, "rentals"] = -1
+raw.loc[[11, 60], "day"] = ["sat ", "SUN"]
+raw = pd.concat([raw, raw.iloc[[0, 1]]], ignore_index=True)
+```
+
+`np.isin(day, [...])` is the NumPy version of pandas' `isin`. `pd.concat` stacks DataFrames on top of each other
+(like `np.concatenate`), here adding copies of the first two rows as accidental duplicates.
+
+## 3. Inspect
+
+```python
+print(raw.shape)
+print(raw.head())
+```
+
+```text title="Output"
+(202, 3)
+   day  temp  rentals
+0  Sat  22.3    235.0
+1  Mon  19.5    101.0
+2  Tue  16.3    123.0
+3  Tue  13.1    123.0
+4  Tue  16.8    112.0
+```
+
+```python
+print(raw.isna().sum())
+print(sorted(raw["day"].unique()))
+print(raw.describe().round(1))
+```
+
+```text title="Output"
+day        0
+temp       3
+rentals    0
+dtype: int64
+['Fri', 'Mon', 'SUN', 'Sat', 'Sun', 'Thu', 'Tue', 'Wed', 'sat ']
+        temp  rentals
+count  199.0    202.0
+mean    15.9    151.8
+std      5.8     50.5
+min      1.3     -1.0
+25%     12.1    115.5
+50%     15.8    151.0
+75%     19.6    188.0
+max     30.3    290.0
+```
+
+Three problems jump out, and a fourth is hidden:
+
+- `temp` has 3 missing values.
+- `day` has 9 distinct values, not 7: `"SUN"` and `"sat "` (with a trailing space) are the same days written differently.
+  Grouping now would split Saturday into two groups.
+- `rentals` has a minimum of −1, which is impossible. It is probably a code for "not recorded".
+- The hidden one: duplicate rows. `raw.duplicated().sum()` would show 2.
+
+## 4. Clean
+
+```python
+df = raw.drop_duplicates()
+df = df[df["rentals"] >= 0]
+df = df.dropna(subset=["temp"])
+df["day"] = df["day"].str.strip().str.title()
+print(raw.shape, df.shape)
+print(sorted(df["day"].unique()))
+```
+
+```text title="Output"
+(202, 3) (196, 3)
+['Fri', 'Mon', 'Sat', 'Sun', 'Thu', 'Tue', 'Wed']
+```
+
+- `drop_duplicates()` removes rows that exactly repeat an earlier row.
+- A mask removes the impossible rental count.
+- `dropna(subset=["temp"])` drops the 3 days with no temperature. Dropping 3 of 200 rows is safe; filling them in
+  would barely change anything either.
+- `.str` gives a column access to string methods, applied to every value: `.str.strip()` removes surrounding spaces and
+  `.str.title()` makes `"SUN"` and `"sat"` into `"Sun"` and `"Sat"`. These are the string methods from
+  [Strings](/foundations/f1/strings/), vectorised.
+
+We started with 202 rows and kept 196: 2 duplicates, 1 impossible value and 3 missing temperatures removed. Write
+that sentence in your notebook; it belongs in the conclusions.
+
+## 5. Analyse
+
+First question: weekends.
+
+```python
+df["weekend"] = df["day"].isin(["Sat", "Sun"])
+print(df.groupby("weekend")["rentals"].agg(["count", "mean"]).round(1))
+```
+
+```text title="Output"
+         count   mean
+weekend              
+False      142  136.6
+True        54  194.8
+```
+
+Second question: temperature. Temperature is a number, not a category, so to group by it we first cut it into bands
+with `pd.cut`, which assigns each value to a range:
+
+```python
+df["temp_band"] = pd.cut(df["temp"], bins=[-10, 10, 20, 40], labels=["cold", "mild", "warm"])
+print(df.groupby("temp_band", observed=True)["rentals"].agg(["count", "mean"]).round(1))
+print(round(df["temp"].corr(df["rentals"]), 2))
+```
+
+```text title="Output"
+           count   mean
+temp_band              
+cold          28  105.7
+mild         126  148.0
+warm          42  197.9
+0.66
+```
+
+The bins are $(-10, 10]$, $(10, 20]$ and $(20, 40]$ degrees Celsius. `observed=True` tells pandas to show only bands that
+actually occur. The last line is the **correlation** between temperature and rentals: a number from −1 to 1 measuring how
+closely two variables follow a straight-line relationship (1 is a perfect upward line, 0 no linear relationship). F5
+defines it properly; 0.66 is a fairly strong positive relationship.
+
+## 6. Plot
+
+```python
+import matplotlib.pyplot as plt
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+for is_weekend, group in df.groupby("weekend"):
+    axes[0].scatter(group["temp"], group["rentals"], alpha=0.6,
+                    label="weekend" if is_weekend else "weekday")
+axes[0].set_xlabel("temperature (°C)")
+axes[0].set_ylabel("rentals per day")
+axes[0].set_title("Rentals against temperature")
+axes[0].legend()
+
+means = df.groupby("weekend")["rentals"].mean()
+axes[1].bar(["weekday", "weekend"], means.values)
+axes[1].set_ylabel("mean rentals per day")
+axes[1].set_title("Weekday against weekend")
+fig.tight_layout()
+```
+
+Looping over a `groupby` gives `(key, sub-table)` pairs, which is a handy way to draw one coloured series per group.
+Run the code of this lesson in a notebook to see the plot. The scatter plot shows two
+upward-sloping clouds, the weekend cloud sitting above the weekday one. That tells you both effects are present at the
+same time, which suggests neither effect is simply explained by the other.
+
+## 7. Conclude
+
+Good findings are specific, quantified and honest about their limits:
+
+1. **Weekends are busier.** Mean rentals were 194.8 per day at weekends against 136.6 on weekdays (54 and 142 days),
+   about 43% more.
+2. **Warmer days are busier.** Mean rentals rose from 105.7 on cold days (10 °C or below, 28 days) to 197.9 on warm days
+   (above 20 °C, 42 days); the correlation between temperature and rentals was 0.66.
+3. **Both effects appear together.** In the scatter plot, weekend days sit above weekday days across the whole temperature range.
+
+**Limitations:** 6 of 202 rows were removed during cleaning (duplicates, one impossible value, missing temperatures). This
+is observational data, so it shows association, not cause: warm weekends might also be holidays, for instance. And the
+dataset is synthetic; real data would need checking against how it was collected.
+
+Notice what the findings do *not* say: "warm weather causes rentals", or numbers without group sizes. Compare this with the
+<Term id="missing-value" /> discussion in [lesson 7](/foundations/f2/pandas-groupby/): every cleaning choice is stated.
+
+## Try it
+
+<CodeExercise id="f2-data-workflow-01" />
+
+## Summary
+
+- Question, load, inspect, clean, analyse, plot, conclude. Expect to loop back.
+- Inspect with `shape`, `head`, `isna().sum()`, `unique()` on text columns and `describe()` for impossible values.
+- Clean with `drop_duplicates`, masks, `dropna`/`fillna` and `.str` methods, and count the rows each step removes.
+- Group numeric variables with `pd.cut`; check group counts alongside means.
+- Findings: specific numbers, group sizes, limitations, and association rather than causation.

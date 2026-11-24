@@ -1,0 +1,7 @@
+term: "NumPy array (ndarray)"
+short: "NumPy's n-dimensional array: a grid of numbers that all share one dtype, with a shape such as (rows, columns)."
+body: |
+  Create one with `np.array(a_list)`, `np.zeros`, `np.arange` or `np.linspace`. Its `shape`, `ndim`, `size` and
+  `dtype` describe it. Unlike a list it holds a single type, does element-wise maths with `+` and `*`, and slicing it
+  gives a view that shares memory with the original.
+related: ["vectorisation", "list", "data-type"]

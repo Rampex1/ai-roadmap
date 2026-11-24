@@ -1,0 +1,7 @@
+term: "groupby"
+short: "pandas' split-apply-combine operation: split rows into groups by a key, apply an aggregation to each group, combine the results."
+body: |
+  `df.groupby("city")["price"].mean()` gives the mean price per city. `agg` computes several summaries at once, for example
+  `agg(n=("price", "size"), avg=("price", "mean"))`. Always check how many rows are in each group: an average over a handful
+  of rows is unreliable.
+related: ["dataframe", "missing-value"]

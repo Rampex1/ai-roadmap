@@ -1,0 +1,203 @@
+---
+title: "Plotting with matplotlib"
+module: f2
+order: 8
+estMinutes: 16
+objectives:
+  - "Make line, scatter, histogram and bar charts with the figure-and-axes interface"
+  - "Label every plot with axis labels, units, a title and a legend, and arrange several plots with subplots"
+  - "Pick the right chart for a question, and spot misleading choices such as a truncated axis or a bad bin count"
+goDeeper: matplotlib-quick-start
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import plotKinds from '@/assets/diagrams/f2-plot-kinds.svg';
+import honestAxis from '@/assets/diagrams/f2-honest-axis.svg';
+
+A table of numbers hides its shape. A plot shows it at a glance: a trend, a cluster, an outlier, a
+training run that has stopped improving. **matplotlib** is the standard Python plotting library, and pandas
+and most ML libraries draw with it behind the scenes. You already drew a parabola with it in F0. This lesson
+covers the four chart types you will use constantly, how to label them, and how to read them honestly.
+
+## Figures and axes
+
+```python
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots()
+ax.plot([1, 2, 3, 4], [10, 7, 5, 4], marker="o", label="train")
+ax.plot([1, 2, 3, 4], [11, 9, 8, 8], marker="o", label="validation")
+ax.set_xlabel("epoch")
+ax.set_ylabel("loss")
+ax.set_title("Loss per epoch")
+ax.legend()
+print(len(ax.lines), ax.get_xlabel())
+```
+
+```text title="Output"
+2 epoch
+```
+
+- `plt.subplots()` creates a **figure** (the whole image) and an **axes** (one plot inside it, with its own
+  x and y axis). Most matplotlib code follows this pattern: make `fig, ax`, then call methods on `ax`.
+- `ax.plot(x, y)` draws a line through the points. Calling it again adds a second line to the same axes.
+- `label=` names a line, and `ax.legend()` shows those names in a box.
+- `set_xlabel`, `set_ylabel` and `set_title` add the text.
+
+In a notebook the figure appears below the cell. In a script, call `plt.show()` to open a window, or
+`fig.savefig("loss.png", dpi=150)` to save it. The exercise boxes on this site show figures automatically.
+
+You will also see a shorter style that calls `plt.plot(...)`, `plt.xlabel(...)` and so on directly, as you did
+in F0. It draws on "the current axes" and is fine for a quick look. The `fig, ax` style is clearer as soon as
+there is more than one plot, so prefer it.
+
+## Four charts for four questions
+
+Each chart type answers a different kind of question:
+
+| Question | Chart | Call |
+|---|---|---|
+| How does a value change over time or steps? | line | `ax.plot(x, y)` |
+| How are two numeric variables related? | scatter | `ax.scatter(x, y)` |
+| How is one numeric variable distributed? | <Term id="histogram" /> | `ax.hist(values, bins=30)` |
+| How do categories compare on one number? | bar | `ax.bar(categories, values)` |
+
+Here are all four in one figure, using `plt.subplots(2, 2)` to make a grid of axes:
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+rng = np.random.default_rng(0)
+epochs = np.arange(1, 11)
+loss = 2.0 * 0.75 ** epochs + 0.1
+area = rng.uniform(40, 140, size=50)
+price = 2.5 * area + rng.normal(0, 30, size=50)
+heights = rng.normal(170, 10, size=1000)
+cities = ["Bath", "Leeds", "York"]
+avg_price = [350, 240, 235]
+
+fig, axes = plt.subplots(2, 2, figsize=(9, 6))
+
+axes[0, 0].plot(epochs, loss, marker="o")
+axes[0, 0].set_title("Line: loss per epoch")
+axes[0, 0].set_xlabel("epoch")
+axes[0, 0].set_ylabel("loss")
+
+axes[0, 1].scatter(area, price, alpha=0.7)
+axes[0, 1].set_title("Scatter: price against area")
+axes[0, 1].set_xlabel("area (m²)")
+axes[0, 1].set_ylabel("price (£k)")
+
+axes[1, 0].hist(heights, bins=30)
+axes[1, 0].set_title("Histogram: 1000 heights")
+axes[1, 0].set_xlabel("height (cm)")
+axes[1, 0].set_ylabel("count")
+
+axes[1, 1].bar(cities, avg_price)
+axes[1, 1].set_title("Bar: average price per city")
+axes[1, 1].set_ylabel("price (£k)")
+
+fig.tight_layout()
+```
+
+<Figure
+  src={plotKinds}
+  alt="Four plots in a 2 by 2 grid. Top left, a line falling steeply then flattening: loss per epoch. Top right, a cloud of points rising from lower left to upper right: price against area. Bottom left, a bell-shaped histogram of heights centred near 170 cm. Bottom right, three bars for Bath, Leeds and York, with Bath tallest."
+  caption="The output of the code above: one figure, four axes, four chart types."
+/>
+
+Some details worth knowing:
+
+- `plt.subplots(2, 2)` returns `axes` as a 2-by-2 **NumPy array** of axes, so you index it like any 2D array:
+  `axes[1, 0]` is bottom left. With `plt.subplots(1, 3)` it is a 1D array: `axes[0]`, `axes[1]`, `axes[2]`.
+- `figsize=(width, height)` is in inches. `fig.tight_layout()` nudges the plots so labels do not overlap.
+- `alpha=0.7` makes points slightly see-through, so overlapping points show up as darker areas.
+- `rng.uniform(low, high, size)` draws numbers spread evenly between `low` and `high`.
+
+### Reading each one
+
+- **Line**: the loss falls fast, then flattens. A line chart is for ordered x values; joining points with a line
+  claims "there is something in between", which is true for time, not for categories.
+- **Scatter**: bigger houses cost more, roughly in a straight line, with scatter around it. Each dot is one house.
+  This is the picture behind linear regression in F7.
+- **Histogram**: splits the range into bins and counts how many values fall into each. Heights pile up around 170
+  and thin out symmetrically: the bell shape of the normal distribution.
+- **Bar**: one bar per category. Bath's average is highest. (Remember from the last lesson to check how many houses
+  are behind each bar.)
+
+## Plotting straight from pandas
+
+DataFrames and Series have a `.plot` accessor that calls matplotlib for you, labelling the axes with column names:
+
+```python
+import pandas as pd
+
+df = pd.DataFrame({"area": [70, 95, 120, 88, 40], "price": [180, 320, 300, 410, 150]})
+ax = df.plot.scatter(x="area", y="price")
+print(ax.get_xlabel(), ax.get_ylabel())
+```
+
+```text title="Output"
+area price
+```
+
+It returns an ordinary axes, so you can carry on with `ax.set_title(...)`. A typical analysis line is
+`df.groupby("city")["price"].mean().plot.bar()`. Other kinds include `.plot.line()`, `.plot.hist(bins=20)` and
+`df["price"].plot.box()`.
+
+## Reading a plot honestly
+
+A plot is an argument. The same numbers can tell different stories depending on choices that are easy to miss.
+Check these every time you make or read one.
+
+### Where does the axis start?
+
+<Figure
+  src={honestAxis}
+  alt="Two bar charts of the same accuracies, 0.91 for model A and 0.93 for model B. On the left the y-axis runs from 0.90 to 0.935 and B's bar looks three times as tall as A's. On the right the y-axis runs from 0 to 1 and the bars look almost equal."
+  caption="The same two numbers, 0.91 and 0.93. Left: the axis starts at 0.90, so B looks three times better. Right: the axis starts at 0."
+/>
+
+A bar's **length** encodes its value, so bar charts should start at zero. On the left, cutting the axis at 0.90 makes a
+2-point difference look enormous. Line charts and scatter plots are different: they encode values by **position**, so
+zooming in to see detail is fine, as long as the axis labels make the range clear. matplotlib usually picks a sensible
+range, but when it does not, `ax.set_ylim(0, None)` fixes the bottom at 0.
+
+### How many bins?
+
+A histogram's shape depends on its bin count. Too few bins (say 3) hide the shape; too many (say 500 for 1000 values)
+turn it into noise, with most bins holding 0, 1 or 2 values. Try a couple of values. If a feature looks different with 20
+and 50 bins, be cautious about what you claim.
+
+### Is the scale right?
+
+Data that spans several orders of magnitude, such as incomes or city populations, squashes most points into a corner. A
+log scale (`ax.set_yscale("log")`) spreads them out. It is legitimate, but say so in the axis label, because readers
+assume a linear scale. Loss curves are often plotted on a log scale for the same reason.
+
+### Labels and units
+
+An axis without a label and units cannot be checked. "price" could be pounds or thousands of pounds. Every plot you
+make in this course should have both axis labels (with units), a title, and a legend if there is more than one series.
+
+### Correlation is not causation
+
+A scatter plot that slopes upward shows that two variables move together, not that one causes the other. Ice-cream
+sales and drowning numbers rise together because both rise in summer. When you write up a finding, say "is associated
+with", not "causes", unless you ran an experiment. F5 and track B return to this.
+
+## Try it
+
+<CodeExercise id="f2-matplotlib-01" />
+
+<CodeExercise id="f2-matplotlib-02" />
+
+## Summary
+
+- `fig, ax = plt.subplots()`, then `ax.plot`, `ax.scatter`, `ax.hist`, `ax.bar`. `plt.subplots(r, c)` gives an array of axes.
+- Line for change over an ordered x; scatter for two numeric variables; histogram for one variable's distribution; bar for categories.
+- Always set axis labels with units, a title, and a legend for several series. `fig.tight_layout()` tidies the spacing.
+- pandas objects have `.plot` (for example `df.plot.scatter(x=..., y=...)`), which returns an ordinary axes.
+- Read honestly: bars start at 0, try more than one bin count, label log scales, and do not read causation into a scatter plot.

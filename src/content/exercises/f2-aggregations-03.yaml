@@ -1,0 +1,49 @@
+id: f2-aggregations-03
+lesson: foundations/f2/aggregations
+title: Distances to a point
+prompt: |
+  `points` is a 2D array with one point per row, such as `[[0, 0], [3, 4]]`. Write
+  `distances(points, centre)` that returns a 1D array with each point's straight-line
+  (Euclidean) distance to `centre`:
+
+  $$d = \sqrt{\sum_j (p_j - c_j)^2}$$
+
+  where $p_j$ and $c_j$ are the point's and the centre's $j$-th coordinates. Also write
+  `nearest(points, centre)` that returns the **index** of the closest point.
+
+  For `points = np.array([[0, 0], [3, 4], [1, 1]])` and `centre = np.array([0, 0])`, the distances
+  are `[0, 5, 1.414...]` and `nearest` is `0`. No loops.
+starter: |
+  import numpy as np
+
+  def distances(points, centre):
+      """Return the Euclidean distance from each row of points to centre."""
+      return np.zeros(len(points))
+
+  def nearest(points, centre):
+      """Return the index of the point closest to centre."""
+      return -1
+solution: |
+  import numpy as np
+
+  def distances(points, centre):
+      """Return the Euclidean distance from each row of points to centre."""
+      return np.sqrt(((points - centre) ** 2).sum(axis=1))
+
+  def nearest(points, centre):
+      """Return the index of the point closest to centre."""
+      return distances(points, centre).argmin()
+tests: |
+  import numpy as np
+  _p = np.array([[0, 0], [3, 4], [1, 1]])
+  np.testing.assert_allclose(distances(_p, np.array([0, 0])), [0.0, 5.0, np.sqrt(2)], err_msg="Subtract the centre, square, sum along axis=1, then take np.sqrt")
+  np.testing.assert_allclose(distances(_p, np.array([3, 4])), [5.0, 0.0, np.sqrt(13)], err_msg="It should work for any centre")
+  assert nearest(_p, np.array([0, 0])) == 0, "The point [0, 0] is closest to [0, 0]"
+  assert nearest(_p, np.array([2.5, 3.5])) == 1, "The point [3, 4] is closest to [2.5, 3.5]"
+  _q = np.array([[1.0, 2.0, 2.0], [0.0, 0.0, 1.0]])
+  np.testing.assert_allclose(distances(_q, np.array([0.0, 0.0, 0.0])), [3.0, 1.0], err_msg="Points can have any number of coordinates")
+  assert nearest(_q, np.array([0.0, 0.0, 0.0])) == 1
+hints:
+  - "`points - centre` broadcasts the centre against every row."
+  - "Square it, `.sum(axis=1)` to get one value per point, then `np.sqrt`."
+  - "`nearest` is the argmin of the distances."
