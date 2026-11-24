@@ -1,0 +1,6 @@
+title: scikit-learn GroupKFold reference
+url: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GroupKFold.html
+kind: tool
+free: true
+modules:
+  - a3

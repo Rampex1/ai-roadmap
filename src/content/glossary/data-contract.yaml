@@ -1,0 +1,4 @@
+term: "Data contract"
+short: "A documented agreement about the meaning, shape, valid values and delivery of data."
+body: "A versioned specification, agreed by a data producer and its consumers, of field names, types, units, allowed values, missingness, uniqueness and delivery timing. Consumers validate each batch against it on entry and quarantine or reject rows that break it; incompatible changes require a new version."
+related: ["schema","label-delay"]

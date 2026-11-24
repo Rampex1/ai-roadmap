@@ -4,5 +4,7 @@ title: "Data management"
 order: 3
 prereqs: ["a2"]
 objectives:
-  - "Explain the core ideas of data management"
-  - "Apply data management to a working ML project"
+  - Validate incoming rows with explicit data contracts
+  - Build reproducible splits that protect related observations
+  - Construct features using only information available at decision time
+  - Version a manifest that records dataset and split lineage

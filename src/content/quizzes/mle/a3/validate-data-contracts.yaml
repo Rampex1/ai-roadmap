@@ -1,0 +1,94 @@
+items:
+  - id: a3-validate-data-contracts-01
+    type: mcq
+    prompt: Why specify units in a data contract?
+    explanation: Type checks alone do not distinguish hours and minutes.
+    options:
+      - text: A numeric value can represent different scales
+        why: Type checks alone do not distinguish hours and minutes.
+        correct: true
+      - text: Units change every Python type
+        why: A numeric type can represent either.
+      - text: Unit changes are always obvious in model accuracy
+        why: A change may silently alter values.
+  - id: a3-validate-data-contracts-02
+    type: mcq
+    prompt: What does the fixture do with extra fields?
+    explanation: The contract permits additive metadata.
+    options:
+      - text: Uses them as outcomes
+        why: Only the named outcome is checked.
+      - text: Accepts them if required fields are valid
+        why: The contract permits additive metadata.
+        correct: true
+      - text: Rejects all unknown fields
+        why: That is not this policy.
+  - id: a3-validate-data-contracts-03
+    type: mcq
+    prompt: What can a rising missing-label count indicate?
+    explanation: Availability can change independently of the true outcome rate.
+    options:
+      - text: Delayed reporting or an upstream issue
+        why: Availability can change independently of the true outcome rate.
+        correct: true
+      - text: Guaranteed better prediction quality
+        why: Missing rows cannot establish accuracy.
+      - text: A valid outcome equal to zero
+        why: Missing and zero are different.
+  - id: a3-validate-data-contracts-04
+    type: mcq
+    prompt: What should a quarantine report include?
+    explanation: This reveals changes in usable coverage.
+    options:
+      - text: Only successful predictions
+        why: That hides invalid inputs.
+      - text: Raw identifiers by default
+        why: Aggregate diagnostics can minimize exposure.
+      - text: Counts and reasons for rejection
+        why: This reveals changes in usable coverage.
+        correct: true
+  - id: a3-validate-data-contracts-05
+    type: multi
+    prompt: Which belong in a contract?
+    explanation: They support correct interpretation. These define accepted rows.
+    options:
+      - text: Field meanings and units
+        why: They support correct interpretation.
+        correct: true
+      - text: Allowed values and missingness rules
+        why: These define accepted rows.
+        correct: true
+      - text: A guarantee that a model will generalize
+        why: That requires separate evaluation.
+  - id: a3-validate-data-contracts-06
+    type: cloze
+    prompt: A documented producer-consumer agreement is a data ______.
+    accept:
+      - contract
+    explanation: The contract defines what downstream code can assume.
+  - id: a3-validate-data-contracts-07
+    type: order
+    prompt: Order a record ingestion path.
+    items:
+      - Load source rows
+      - Check the versioned contract
+      - Quarantine or report invalid rows
+      - Transform accepted data
+    explanation: Validate before producing downstream features.
+  - id: a3-validate-data-contracts-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def appointment_errors(row):
+          errors = []
+          if "appointment_id" not in row or not isinstance(row["appointment_id"], str) or not row["appointment_id"].strip():
+              errors.append("invalid_id")
+          if "outcome" not in row:
+              errors.append("missing_outcome")
+          elif type(row["outcome"]) is not int or row["outcome"] not in (0, 1):
+              errors.append("invalid_outcome")
+          return errors
+
+      print(appointment_errors({"appointment_id":"B","outcome":1}))
+    answer: "[]"
+    explanation: The row satisfies the required fields.

@@ -1,0 +1,29 @@
+id: a3-split-by-group-and-time-01
+lesson: mle/a3/split-by-group-and-time
+title: Apply a trusted group assignment
+prompt: Implement partition_groups(rows, assignment). Return train, validation and test lists, including empty ones. Assign each row by its group, preserve input order within each split and reject missing assignments or unknown split names.
+starter: |
+  def partition_groups(rows, assignment):
+      raise NotImplementedError
+solution: |
+  def partition_groups(rows, assignment):
+      result = {"train": [], "validation": [], "test": []}
+      for row in rows:
+          split = assignment.get(row["group"])
+          if split not in result:
+              raise ValueError("unassigned group or unknown split")
+          result[split].append(row)
+      return result
+tests: |
+  rows = [{"group":"x","id":1},{"group":"y","id":2},{"group":"x","id":3}]
+  assert partition_groups(rows,{"x":"train","y":"test"}) == {"train":[rows[0],rows[2]],"validation":[],"test":[rows[1]]}
+  assert partition_groups([], {}) == {"train":[],"validation":[],"test":[]}
+  for assignments in ({}, {"x":"future"}):
+      try:
+          partition_groups(rows[:1], assignments)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError("Reject invalid assignments")
+hints:
+  - Apply one split assignment per group ID.

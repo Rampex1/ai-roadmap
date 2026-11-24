@@ -1,0 +1,22 @@
+id: a3-appointment-data-contract
+module: a3
+kind: homework
+title: Prepare a reproducible appointment dataset
+brief: |-
+  Use synthetic appointment records to validate an ingestion contract, avoid group leakage, check feature readiness and describe the resulting snapshot with a manifest.
+
+  1. Validate appointment record IDs and outcomes.
+  2. Assign related records to one split.
+  3. Select history available at prediction time.
+  4. Hash a complete dataset manifest for later comparison.
+  5. Validate, split and fingerprint a snapshot.
+
+  Write two deployment scenarios that call for different split rules. Explain which rows or features your pipeline would quarantine and what version would let a colleague reproduce the split.
+notebook: /homework/a3-appointment-data-contract.ipynb
+rubric:
+  - Validation distinguishes missing and invalid fields.
+  - Members of each group stay together.
+  - Event and availability timestamps both precede prediction.
+  - Manifest order and split identity are covered by tests.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

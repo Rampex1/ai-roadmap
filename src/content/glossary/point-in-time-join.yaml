@@ -1,0 +1,4 @@
+term: "Point-in-time join"
+short: "A join that uses only information that existed and was available at the decision timestamp."
+body: "For each prediction row, select the latest feature record for the same entity whose event time and availability (ingestion) time are both at or before the decision time. It stops later or late-arriving values from leaking into training features."
+related: ["label-delay","data-contract"]

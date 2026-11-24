@@ -1,0 +1,47 @@
+---
+title: Validate source rows with a data contract
+module: a3
+order: 1
+estMinutes: 8
+objectives:
+  - Check required types and ranges before transforming data
+  - Handle invalid records explicitly
+goDeeper: datasheets-for-datasets
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="data-contract" /> says what a producer supplies and what the consumer can assume. Define required fields, types, units and label meanings. Add checks around uniqueness, ranges and missing values. A schema can say an outcome is a small integer. Domain rules explain which integers are valid labels and when those labels exist.
+
+Run validation where data enters the pipeline. Decide what blocks an entire batch and what can be quarantined or investigated. An abrupt rise in missing outcomes may signal a producer delay rather than an improvement in no-show rates. Report rejected counts and reasons so the model evaluation denominator remains visible.
+
+The fixture uses an appointment identifier and a binary outcome. A Python boolean is not an accepted label for this contract. Unknown fields are permitted here to allow additive metadata. An incompatible meaning or type change should be versioned and tested before downstream code accepts it.
+
+## Worked example
+
+A valid ID does not make a boolean outcome an accepted integer label.
+
+```python
+def appointment_errors(row):
+    errors = []
+    if "appointment_id" not in row or not isinstance(row["appointment_id"], str) or not row["appointment_id"].strip():
+        errors.append("invalid_id")
+    if "outcome" not in row:
+        errors.append("missing_outcome")
+    elif type(row["outcome"]) is not int or row["outcome"] not in (0, 1):
+        errors.append("invalid_outcome")
+    return errors
+
+print(appointment_errors({"appointment_id":"A12","outcome":True}))
+```
+
+```text title="Output"
+['invalid_outcome']
+```
+
+Log contract failures before applying transformations that might hide their cause.
+
+## Try it
+
+<CodeExercise id="a3-validate-data-contracts-01" />

@@ -1,0 +1,4 @@
+term: "Dataset manifest"
+short: "A versioned inventory of data objects, checksums, schema and split information."
+body: "A deterministic, versioned record of exactly which data objects (with content digests), schema version, transformation code version and split membership produced a dataset. Hashing its canonical serialization gives one identifier for comparing or reproducing a snapshot."
+related: ["data-contract","group-split"]

@@ -1,0 +1,46 @@
+---
+title: Choose group and time boundaries
+module: a3
+order: 2
+estMinutes: 8
+objectives:
+  - Keep correlated observations together
+  - Match the split structure to the deployment question
+goDeeper: sklearn-group-kfold
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="group-split" /> protects evaluation when records share a patient, device, document or source image. A random row split can put closely related examples on both sides. When you want to predict for entirely new patients, keep each patient's rows in one split. Crops, augmentations or edited copies of a source must share its group. If the goal is to predict tomorrow for known patients, a chronological split with point-in-time features may be a better match.
+
+Sometimes deployment requires both dimensions. To evaluate new groups in a future interval, decide which groups qualify and impose the cutoff without allowing future observations into training. Document how records straddling the cutoff are handled. Sort or partition deterministically and verify group/time invariants on the final tables.
+
+The example maps group IDs to explicitly assigned destinations. Real allocation may use a seeded group-level sampler or a group-aware cross-validation splitter. Report class balance and group size after splitting. A valid boundary can still leave a rare class underrepresented.
+
+## Worked example
+
+The single group was explicitly assigned to test.
+
+```python
+def partition_groups(rows, assignment):
+    result = {"train": [], "validation": [], "test": []}
+    for row in rows:
+        split = assignment.get(row["group"])
+        if split not in result:
+            raise ValueError("unassigned group or unknown split")
+        result[split].append(row)
+    return result
+
+print(partition_groups([{"group":"g","id":4}], {"g":"test"}))
+```
+
+```text title="Output"
+{'train': [], 'validation': [], 'test': [{'group': 'g', 'id': 4}]}
+```
+
+A split should reflect who and when the deployed model is expected to predict.
+
+## Try it
+
+<CodeExercise id="a3-split-by-group-and-time-01" />

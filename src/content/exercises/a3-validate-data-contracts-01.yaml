@@ -1,0 +1,26 @@
+id: a3-validate-data-contracts-01
+lesson: mle/a3/validate-data-contracts
+title: Validate appointment records
+prompt: Implement appointment_errors(row). Report invalid_id for a missing, nonstring or blank ID. Then report missing_outcome when absent or invalid_outcome unless its value is integer 0 or 1, excluding booleans. Preserve this error order.
+starter: |
+  def appointment_errors(row):
+      raise NotImplementedError
+solution: |
+  def appointment_errors(row):
+      errors = []
+      if "appointment_id" not in row or not isinstance(row["appointment_id"], str) or not row["appointment_id"].strip():
+          errors.append("invalid_id")
+      if "outcome" not in row:
+          errors.append("missing_outcome")
+      elif type(row["outcome"]) is not int or row["outcome"] not in (0, 1):
+          errors.append("invalid_outcome")
+      return errors
+tests: |
+  assert appointment_errors({"appointment_id":"A","outcome":0,"extra":1}) == []
+  assert appointment_errors({"appointment_id":" ","outcome":True}) == ["invalid_id","invalid_outcome"]
+  assert appointment_errors({}) == ["invalid_id","missing_outcome"]
+  assert appointment_errors({"appointment_id":1,"outcome":2}) == ["invalid_id","invalid_outcome"]
+  assert appointment_errors({"appointment_id":"A","outcome":None}) == ["invalid_outcome"], "A present but null outcome is invalid_outcome, not missing_outcome"
+  assert appointment_errors({"appointment_id":"A","outcome":1.0}) == ["invalid_outcome"], "The outcome must be the integer 0 or 1: reject the float 1.0"
+hints:
+  - Check field presence before checking the outcome value.

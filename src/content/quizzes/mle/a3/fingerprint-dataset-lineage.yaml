@@ -1,0 +1,91 @@
+items:
+  - id: a3-fingerprint-dataset-lineage-01
+    type: mcq
+    prompt: Why is a fixed storage path insufficient?
+    explanation: The path need not identify a snapshot.
+    options:
+      - text: The contents can change without renaming the path
+        why: The path need not identify a snapshot.
+        correct: true
+      - text: Paths always contain cryptographic digests
+        why: Many are mutable aliases.
+      - text: Storage paths always have sorted keys
+        why: Paths are not manifests.
+  - id: a3-fingerprint-dataset-lineage-02
+    type: mcq
+    prompt: What does the fixture preserve?
+    explanation: Lists can encode the declared sequence.
+    options:
+      - text: List order
+        why: Lists can encode the declared sequence.
+        correct: true
+      - text: Insertion order of dictionary keys in the digest
+        why: Dictionary keys are sorted.
+      - text: Unserializable objects automatically
+        why: The contract uses JSON data.
+  - id: a3-fingerprint-dataset-lineage-03
+    type: mcq
+    prompt: What should a manifest include for reproducibility?
+    explanation: They point to specific contents and membership.
+    options:
+      - text: Only the model’s final accuracy
+        why: That does not identify input data.
+      - text: The latest mutable alias by itself
+        why: That can resolve to a different snapshot.
+      - text: Split identities and data object checksums
+        why: They point to specific contents and membership.
+        correct: true
+  - id: a3-fingerprint-dataset-lineage-04
+    type: mcq
+    prompt: What does a manifest digest alone establish?
+    explanation: Referenced data must be checked separately.
+    options:
+      - text: That the quality of all records is high
+        why: A hash is not a quality metric.
+      - text: Identity of the serialized manifest
+        why: Referenced data must be checked separately.
+        correct: true
+      - text: That every file still matches its declared digest
+        why: That requires reading and hashing each file.
+  - id: a3-fingerprint-dataset-lineage-05
+    type: multi
+    prompt: Which help reproduce a training dataset?
+    explanation: They define how rows were interpreted. They identify the data and partitions.
+    options:
+      - text: Schema and transformation versions
+        why: They define how rows were interpreted.
+        correct: true
+      - text: Immutable snapshot and split identities
+        why: They identify the data and partitions.
+        correct: true
+      - text: A nickname for the run only
+        why: A nickname cannot reconstruct inputs.
+  - id: a3-fingerprint-dataset-lineage-06
+    type: cloze
+    prompt: The inventory of dataset objects and provenance is a ______.
+    accept:
+      - manifest
+      - dataset manifest
+    explanation: It records the inputs and lineage.
+  - id: a3-fingerprint-dataset-lineage-07
+    type: order
+    prompt: Order a reproducible snapshot build.
+    items:
+      - Validate and materialize data
+      - Compute object digests and record split metadata
+      - Serialize the manifest deterministically
+      - Store and verify its digest
+    explanation: The manifest describes an already identified snapshot.
+  - id: a3-fingerprint-dataset-lineage-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def manifest_digest(manifest):
+          import hashlib
+          import json
+          encoded = json.dumps(manifest, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
+          return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+      print(manifest_digest({"x":[1,2]}) == manifest_digest({"x":[2,1]}))
+    answer: "False"
+    explanation: List order differs, so the canonical inputs differ.

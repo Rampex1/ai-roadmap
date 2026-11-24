@@ -1,0 +1,97 @@
+items:
+  - id: a3-split-by-group-and-time-01
+    type: mcq
+    prompt: Which split tests generalization to new patients?
+    explanation: The model sees no training rows from those patients.
+    options:
+      - text: Use every row for training
+        why: There would be no held-out patients.
+      - text: Hold out entire patient groups
+        why: The model sees no training rows from those patients.
+        correct: true
+      - text: Randomize appointment rows only
+        why: Related rows may cross the boundary.
+  - id: a3-split-by-group-and-time-02
+    type: mcq
+    prompt: Why use a chronological split for next-week deployment?
+    explanation: Time order can expose temporal drift.
+    options:
+      - text: It mimics training on earlier data and testing later
+        why: Time order can expose temporal drift.
+        correct: true
+      - text: It guarantees identical class balance
+        why: Prevalence can change over time.
+      - text: It makes feature availability irrelevant
+        why: Future feature data can still leak.
+  - id: a3-split-by-group-and-time-03
+    type: mcq
+    prompt: When should derived versions be grouped?
+    explanation: They are correlated with the source.
+    options:
+      - text: Only for old records
+        why: The relationship exists at any date.
+      - text: With their original source before splitting
+        why: They are correlated with the source.
+        correct: true
+      - text: Only after the test score is known
+        why: Leakage would already have affected the split.
+  - id: a3-split-by-group-and-time-04
+    type: mcq
+    prompt: What should you inspect after grouping?
+    explanation: Rare cases and uneven groups affect usefulness.
+    options:
+      - text: Class balance and group counts by split
+        why: Rare cases and uneven groups affect usefulness.
+        correct: true
+      - text: Only the split names
+        why: Names do not describe composition.
+      - text: Only total bytes on disk
+        why: Storage does not measure representation.
+  - id: a3-split-by-group-and-time-05
+    type: multi
+    prompt: Which can define a split constraint?
+    explanation: It keeps related observations together. It supports future-facing evaluation.
+    options:
+      - text: Entity group identity
+        why: It keeps related observations together.
+        correct: true
+      - text: Decision time
+        why: It supports future-facing evaluation.
+        correct: true
+      - text: The candidate’s final test errors
+        why: Using these to redefine splits leaks evaluation decisions.
+  - id: a3-split-by-group-and-time-06
+    type: cloze
+    prompt: Keeping all records of an entity together uses a ______ split.
+    accept:
+      - group
+      - grouped
+      - group-aware
+      - group-based
+      - entity
+    explanation: Entity membership determines allocation.
+  - id: a3-split-by-group-and-time-07
+    type: order
+    prompt: Order a split audit.
+    items:
+      - Describe the deployment population
+      - Define group or temporal rules
+      - Allocate source records
+      - Verify boundaries and slice counts
+    explanation: The split rules follow the deployment question.
+  - id: a3-split-by-group-and-time-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def partition_groups(rows, assignment):
+          result = {"train": [], "validation": [], "test": []}
+          for row in rows:
+              split = assignment.get(row["group"])
+              if split not in result:
+                  raise ValueError("unassigned group or unknown split")
+              result[split].append(row)
+          return result
+
+      print(partition_groups([], {})["test"])
+    answer: "[]"
+    explanation: There are no test rows, and the test key is retained.

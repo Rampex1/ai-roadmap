@@ -1,0 +1,42 @@
+---
+title: Join features at decision time
+module: a3
+order: 3
+estMinutes: 8
+objectives:
+  - Track when events occurred and when values were available
+  - Select the most recent eligible historical feature row
+goDeeper: sklearn-group-kfold
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="point-in-time-join" /> reproduces what a deployed predictor could know. An event can occur at noon but be ingested after 3 p.m. For a 2 p.m. decision, that event is historical by occurrence time and unavailable by ingestion time. Joining the latest event across the whole table leaks later information.
+
+For each prediction row, require the entity to match, event time to precede or equal the decision and availability time to precede or equal it. The exercise deliberately makes both inclusive. Real systems must specify tie-breaking, late arrivals, corrections and time zone handling. Store immutable versions so you can reconstruct historical availability.
+
+When several eligible events exist, choose the one with the newest event timestamp, then most recent available revision and a stable tie-breaker. If none qualify, apply the intended missing-data policy rather than falling back to a future value. Validate a few late-arrival examples with hand calculations.
+
+## Worked example
+
+The newer event happened before the decision but was ingested later.
+
+```python
+def available_value(rows, entity, decision):
+    eligible = [row for row in rows if row[0] == entity and row[1] <= decision and row[2] <= decision]
+    best = max(eligible, key=lambda row: (row[1], row[2], row[3]), default=None)
+    return best[4] if best is not None else None
+
+print(available_value([("a",1,2,"x",4),("a",3,8,"y",9)], "a", 5))
+```
+
+```text title="Output"
+4
+```
+
+A historical feature is valid only when its value would have been available at prediction time.
+
+## Try it
+
+<CodeExercise id="a3-join-point-in-time-features-01" />

@@ -1,0 +1,89 @@
+items:
+  - id: a3-join-point-in-time-features-01
+    type: mcq
+    prompt: Why is event time alone insufficient?
+    explanation: The model cannot use a value before it is available.
+    options:
+      - text: An event may be recorded later
+        why: The model cannot use a value before it is available.
+        correct: true
+      - text: Event timestamps never exist
+        why: Sources can provide them.
+      - text: Availability is defined as model accuracy
+        why: Availability here is a timestamp.
+  - id: a3-join-point-in-time-features-02
+    type: mcq
+    prompt: Which timestamps should the join compare with the decision time?
+    explanation: Both boundaries apply to each historical feature.
+    options:
+      - text: Event and value availability against decision time
+        why: Both boundaries apply to each historical feature.
+        correct: true
+      - text: Only the latest extraction date
+        why: That does not reconstruct past knowledge.
+      - text: Only the day model training began
+        why: Decision times vary by prediction.
+  - id: a3-join-point-in-time-features-03
+    type: mcq
+    prompt: What happens when no row qualifies?
+    explanation: A future value would leak information.
+    options:
+      - text: Use a value from a different patient
+        why: Entity identity must match.
+      - text: Return the defined missing result
+        why: A future value would leak information.
+        correct: true
+      - text: Load the latest future row
+        why: It was not available.
+  - id: a3-join-point-in-time-features-04
+    type: mcq
+    prompt: When are rows exactly on the prediction timestamp valid here?
+    explanation: This fixture defines inclusive boundaries.
+    options:
+      - text: Never in any system
+        why: Boundary conventions vary.
+      - text: Only if they belong to a different entity
+        why: The entity still has to match.
+      - text: When all required timestamps are at or before the decision
+        why: This fixture defines inclusive boundaries.
+        correct: true
+  - id: a3-join-point-in-time-features-05
+    type: multi
+    prompt: Which help audit a chronological feature?
+    explanation: They locate what happened when. They describe what could be known then.
+    options:
+      - text: Only a global row count
+        why: It cannot show leakage cases.
+      - text: Original event timestamps
+        why: They locate what happened when.
+        correct: true
+      - text: Availability and revision timestamps
+        why: They describe what could be known then.
+        correct: true
+  - id: a3-join-point-in-time-features-06
+    type: cloze
+    prompt: A historical join that reconstructs availability at prediction is point-in-______.
+    accept:
+      - time
+    explanation: It limits lookups to the decision timestamp.
+  - id: a3-join-point-in-time-features-07
+    type: order
+    prompt: Order a historical lookup.
+    items:
+      - Identify entity and decision time
+      - Filter by entity and both time bounds
+      - Rank eligible historical rows
+      - Return the value or a missing result
+    explanation: Rank only information available at prediction.
+  - id: a3-join-point-in-time-features-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def available_value(rows, entity, decision):
+          eligible = [row for row in rows if row[0] == entity and row[1] <= decision and row[2] <= decision]
+          best = max(eligible, key=lambda row: (row[1], row[2], row[3]), default=None)
+          return best[4] if best is not None else None
+
+      print(available_value([("a",1,5,"x",7)], "a", 4))
+    answer: None
+    explanation: The value was unavailable at decision time four.

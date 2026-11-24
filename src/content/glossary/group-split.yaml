@@ -1,0 +1,4 @@
+term: "Group split"
+short: "A partition that keeps all records sharing a declared group in the same subset."
+body: "Assigning whole groups (patient, device, source document) to train, validation or test, so correlated records never appear on both sides. It estimates performance on unseen groups; a random row split overstates it when group members resemble each other."
+related: ["held-out-set","data-contract"]
