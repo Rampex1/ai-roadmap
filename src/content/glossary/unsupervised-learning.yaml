@@ -1,0 +1,7 @@
+term: "Unsupervised learning"
+short: "Finding structure in data that has no labels, for example clusters or a lower-dimensional summary."
+body: |
+  There is only $X$, no $y$. Typical tasks are clustering (grouping similar rows), dimensionality
+  reduction such as PCA, and anomaly detection. Because there is no right answer to compare with,
+  evaluating unsupervised results is harder than in supervised learning.
+related: ["supervised-learning", "pca"]

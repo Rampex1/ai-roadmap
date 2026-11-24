@@ -1,0 +1,61 @@
+id: f7-what-is-machine-learning-01
+lesson: foundations/f7/what-is-machine-learning
+title: Your own estimator, scikit-learn style
+prompt: |
+  Write a class `MeanRegressor` that follows scikit-learn's estimator API. It is the simplest
+  possible model: it ignores the features and always predicts the mean of the training labels.
+  It is also a useful **baseline**: a real model that cannot beat it has learned nothing.
+
+  - `fit(X, y)` stores the mean of `y` in the attribute `mean_` and returns `self`
+    (so `MeanRegressor().fit(X, y).predict(X_new)` works).
+  - `predict(X)` returns a NumPy array with one prediction per **row** of `X`, all equal to `mean_`.
+
+  `X` is always 2-D, shape `(n, d)`.
+starter: |
+  import numpy as np
+
+  class MeanRegressor:
+      def fit(self, X, y):
+          # TODO: store the mean of y in self.mean_ and return self
+          pass
+
+      def predict(self, X):
+          # TODO: one prediction per row of X
+          return np.zeros(1)
+
+  X = np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+  y = np.array([10.0, 20.0, 60.0])
+  model = MeanRegressor()
+  print(model.fit(X, y).predict(np.array([[0.0, 0.0], [9.0, 9.0]])))
+solution: |
+  import numpy as np
+
+  class MeanRegressor:
+      def fit(self, X, y):
+          self.mean_ = float(np.mean(y))
+          return self
+
+      def predict(self, X):
+          return np.full(len(X), self.mean_)
+
+  X = np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+  y = np.array([10.0, 20.0, 60.0])
+  model = MeanRegressor()
+  print(model.fit(X, y).predict(np.array([[0.0, 0.0], [9.0, 9.0]])))
+tests: |
+  import numpy as np
+  _rng = np.random.default_rng(3)
+  for _n, _d, _m in [(5, 2, 4), (40, 3, 1), (7, 1, 10)]:
+      _X = _rng.normal(size=(_n, _d))
+      _y = _rng.normal(5, 2, _n)
+      _model = MeanRegressor()
+      _ret = _model.fit(_X, _y)
+      assert _ret is _model, "fit should end with `return self`"
+      assert hasattr(_model, "mean_"), "fit should set the attribute mean_"
+      assert np.isclose(_model.mean_, _y.mean()), f"mean_ should be the mean of y ({_y.mean():.4f}), got {_model.mean_}"
+      _p = np.asarray(_model.predict(_rng.normal(size=(_m, _d))))
+      assert _p.shape == (_m,), f"predict on {_m} rows should return shape ({_m},), got {_p.shape}"
+      np.testing.assert_allclose(_p, _y.mean(), err_msg="every prediction should equal the training mean")
+hints:
+  - "In fit, set self.mean_ = np.mean(y) and finish with return self."
+  - "np.full(len(X), self.mean_) makes one value per row."

@@ -1,0 +1,240 @@
+---
+title: "Feature engineering, preprocessing and leakage-free pipelines"
+module: f7
+order: 8
+estMinutes: 20
+objectives:
+  - "Scale numeric features and one-hot encode categorical ones, learning every statistic from training data only"
+  - "Build a Pipeline with a ColumnTransformer for a table with mixed column types and missing values"
+  - "Recognise data leakage, including preprocessing leakage and target leakage, and prevent it"
+  - "Create useful features from domain knowledge"
+goDeeper: sklearn-common-pitfalls
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Real tables are messier than the arrays so far. Columns come in different units, some hold text
+categories, and some cells are empty. Models want a clean numeric matrix. This lesson covers the
+conversion, and the one rule that makes it safe: **every statistic used to transform the data is
+learned from the training rows only.**
+
+## Scaling numeric features
+
+[F6](/foundations/f6/practical-optimisation/) introduced <Term id="feature-scaling" />: standardise each
+column to $z = (x - \mu)/\sigma$. In scikit-learn that is `StandardScaler`, a **transformer**: `fit`
+learns $\mu$ and $\sigma$ per column, `transform` applies them.
+
+```python
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+
+X_train = np.array([[50.0, 1], [70.0, 2], [90.0, 3]])
+X_test = np.array([[110.0, 2]])
+scaler = StandardScaler().fit(X_train)          # learn mean and std from TRAIN only
+print(scaler.mean_, scaler.scale_.round(3))
+print(scaler.transform(X_test).round(3))        # reuse them on test
+```
+
+```text title="Output"
+[70.  2.] [16.33   0.816]
+[[2.449 0.   ]]
+```
+
+The test row is transformed with the *training* mean and standard deviation, so it can land outside the
+training range (here 2.4 standard deviations above), which is fine. Fitting a new scaler on the test
+data would be wrong: the model learned its weights in the training scale.
+
+Which models need scaling?
+
+- **Yes:** anything distance-based (k-NN, lesson 9), anything penalised (ridge, lasso, logistic
+  regression, lesson 4), anything trained by gradient descent (F6, F9).
+- **No:** plain `LinearRegression` (the fit is the same up to rescaled weights) and tree-based models
+  (F8), which only compare a feature with thresholds.
+
+`MinMaxScaler` (to the range 0 to 1) is the main alternative; `RobustScaler` uses the median and
+interquartile range, which outliers barely move.
+
+## Encoding categories
+
+A model cannot multiply a weight by "York". The tempting fix, coding cities as 0, 1, 2, invents an
+order and a spacing that do not exist: a linear model would treat York as "twice Leeds". Instead use
+<Term id="one-hot-encoding" />: one 0/1 column per category.
+
+```python
+import pandas as pd
+from sklearn.preprocessing import OneHotEncoder
+
+train = pd.DataFrame({"city": ["Leeds", "York", "Leeds", "Hull"]})
+test = pd.DataFrame({"city": ["York", "Bath"]})        # Bath never appears in training
+enc = OneHotEncoder(handle_unknown="ignore", sparse_output=False).fit(train)
+print(enc.get_feature_names_out())
+print(enc.transform(test))
+```
+
+```text title="Output"
+['city_Hull' 'city_Leeds' 'city_York']
+[[0. 0. 1.]
+ [0. 0. 0.]]
+```
+
+The categories are learned from the training data. `handle_unknown="ignore"` gives an unseen category
+(Bath) a row of zeros instead of raising an error, which matters in production, where new values always
+turn up eventually. Two refinements:
+
+- If the categories *do* have an order (small < medium < large, or education levels), `OrdinalEncoder`
+  with an explicit order is appropriate.
+- A column with thousands of categories (postcodes, product IDs) explodes into thousands of columns.
+  Options: keep the most frequent ones (`OneHotEncoder(min_frequency=...)`), group them, or use target
+  encoding with care (it is easy to leak, see below).
+
+## Missing values
+
+Most scikit-learn models refuse `NaN`. `SimpleImputer` fills gaps with a statistic learned from the
+training data: the median for numbers (robust to outliers), the most frequent value for categories.
+Sometimes the fact that a value is missing is itself informative ("income not declared"); then add
+`SimpleImputer(add_indicator=True)`, which appends a 0/1 "was missing" column.
+[F2's data workflow](/foundations/f2/data-workflow/) covered finding missing values with pandas.
+
+## Feature engineering
+
+Preprocessing makes data usable; **feature engineering** makes it informative. A linear model can only
+add up its inputs, so give it inputs that matter:
+
+- **Ratios and differences:** debt / income says more than either alone; price per square metre.
+- **Transforms of skewed amounts:** $\log(1 + \text{income})$ turns a long right tail into something
+  closer to symmetric, so a few huge values do not dominate.
+- **Dates:** day of week, hour, month, "days since last purchase". A raw timestamp is almost useless.
+- **Interactions and polynomials** (lesson 2), when an effect depends on a combination.
+- **Domain knowledge:** body mass index from height and weight; whether a transaction's country differs
+  from the card's.
+
+Good features often beat a better model. They also need the same care as preprocessing: anything
+computed from data (a mean, a frequency) must come from training rows.
+
+## Putting it together: ColumnTransformer and Pipeline
+
+Different columns need different treatment. A `ColumnTransformer` routes each group of columns through
+its own steps and glues the results side by side; a <Term id="pipeline" /> then chains that with a
+model:
+
+```python
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline, make_pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split, cross_val_score
+
+rng = np.random.default_rng(0)
+n = 600
+df = pd.DataFrame({
+    "age": rng.integers(18, 80, n).astype(float),
+    "income": rng.lognormal(10, 0.5, n),
+    "plan": rng.choice(["basic", "plus", "pro"], n),
+    "region": rng.choice(["north", "south", "east", "west"], n),
+})
+df.loc[rng.random(n) < 0.05, "income"] = np.nan          # 5% missing incomes
+logit = 0.04 * (df["age"] - 50) + (df["plan"] == "basic") * 1.2 - 0.8
+y = (rng.random(n) < 1 / (1 + np.exp(-logit))).astype(int)
+
+numeric = ["age", "income"]
+categorical = ["plan", "region"]
+preprocess = ColumnTransformer([
+    ("num", make_pipeline(SimpleImputer(strategy="median"), StandardScaler()), numeric),
+    ("cat", OneHotEncoder(handle_unknown="ignore"), categorical),
+])
+model = Pipeline([("prep", preprocess), ("clf", LogisticRegression())])
+
+X_tr, X_te, y_tr, y_te = train_test_split(df, y, test_size=0.25, stratify=y, random_state=0)
+print("share of the majority class:", round(max(y.mean(), 1 - y.mean()), 3))
+print("CV accuracy:", cross_val_score(model, X_tr, y_tr, cv=5).mean().round(3))
+model.fit(X_tr, y_tr)
+print(model.named_steps["prep"].get_feature_names_out())
+print("test accuracy:", round(model.score(X_te, y_te), 3))
+```
+
+```text title="Output"
+share of the majority class: 0.572
+CV accuracy: 0.678
+['num__age' 'num__income' 'cat__plan_basic' 'cat__plan_plus'
+ 'cat__plan_pro' 'cat__region_east' 'cat__region_north'
+ 'cat__region_south' 'cat__region_west']
+test accuracy: 0.647
+```
+
+The whole thing is now **one estimator**. `model.fit(X_tr, y_tr)` learns the medians, means, standard
+deviations, categories and weights from the training rows; `model.predict(X_te)` applies all of them to
+new rows. It takes the raw DataFrame, so the same object can be saved and used in production on raw data.
+(The labels here are random draws from the probabilities, so even a perfect model would make mistakes;
+68% against a 57% baseline is about what this data allows.) In a pipeline, hyperparameters are named
+by step: `clf__C`, `prep__num__simpleimputer__strategy`.
+
+## Data leakage
+
+<Term id="data-leakage" text="Leakage" /> is information reaching the model during training that it
+would not have at prediction time. It produces scores that look great and models that fail in
+deployment. Three common forms:
+
+**1. Preprocessing on all the data before splitting.** Scaling or imputing with statistics from all rows
+lets the test rows influence training. For a scaler the effect is usually small, but for steps that look
+at the labels it is dramatic. Here is feature selection on pure noise:
+
+```python
+from sklearn.feature_selection import SelectKBest, f_classif
+
+rng = np.random.default_rng(0)
+X = rng.normal(size=(100, 5000))      # 5,000 features of pure noise
+y = rng.integers(0, 2, 100)           # random labels: nothing to learn
+
+# Leaky: pick the 20 "best" features using ALL rows, then cross-validate
+X_sel = SelectKBest(f_classif, k=20).fit_transform(X, y)
+print("leaky CV accuracy:  ", cross_val_score(LogisticRegression(), X_sel, y, cv=5).mean().round(3))
+
+# Correct: selection is a pipeline step, so it is refit inside each training fold
+pipe = make_pipeline(SelectKBest(f_classif, k=20), LogisticRegression())
+print("honest CV accuracy: ", cross_val_score(pipe, X, y, cv=5).mean().round(3))
+```
+
+```text title="Output"
+leaky CV accuracy:   0.85
+honest CV accuracy:  0.48
+```
+
+There is nothing to learn, yet the leaky version reports 85% accuracy. Among 5,000 noise features, some
+correlate with the labels *by chance*, including on the rows later used for validation; selecting them
+on all rows bakes that chance into the model. Inside a pipeline, selection only sees each training fold,
+and the honest score is at chance level, as it should be. **The fix for all preprocessing leakage is the
+same: put every learned step in the pipeline, and pass the pipeline to `cross_val_score` or
+`GridSearchCV`.**
+
+**2. Target leakage.** A feature that is only known *after* the outcome, or is a consequence of it. A
+model predicting pneumonia that uses "was given antibiotics"; a churn model that uses "account closed
+date"; a fraud model that uses "chargeback filed". The model scores brilliantly and is useless, because
+at prediction time the feature does not exist yet. Ask of every column: *would I know this at the moment
+I need the prediction?*
+
+**3. Leaky splits.** Duplicate or near-duplicate rows on both sides of a split; several rows from one
+patient split across train and test; random splits of time series. Lesson 7's `GroupKFold` and
+`TimeSeriesSplit` exist for these.
+
+:::caution[If it looks too good, it probably is]
+An unexpectedly high score is a reason to look for leakage before celebrating. Check which features
+the model relies on most; a single feature that predicts almost perfectly is often a leak.
+:::
+
+## Try it
+
+<CodeExercise id="f7-preprocessing-and-pipelines-01" />
+
+<CodeExercise id="f7-preprocessing-and-pipelines-02" />
+
+<CodeExercise id="f7-preprocessing-and-pipelines-03" />
+
+## Summary
+
+- Transformers learn statistics with `fit` and apply them with `transform`; learn from training rows only.
+- Scale for distance-based, penalised and gradient-trained models; one-hot encode categories, with
+  `handle_unknown="ignore"`; impute missing values with training statistics.
+- Feature engineering (ratios, logs, date parts, domain knowledge) often matters more than the model.
+- `ColumnTransformer` + `Pipeline` turn a raw DataFrame into predictions in one estimator.
+- Leakage: preprocessing outside the pipeline, features from the future (target leakage) and leaky
+  splits. Pipelines inside cross-validation prevent the first kind; thinking prevents the others.

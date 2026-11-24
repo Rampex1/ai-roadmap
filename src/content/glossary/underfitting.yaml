@@ -1,0 +1,7 @@
+term: "Underfitting"
+short: "When a model is too simple to capture the pattern in the data, so it does badly even on its training set."
+body: |
+  The symptom is high error on both the training and the validation data. A straight line fitted to a
+  curve underfits. Remedies are a more flexible model, better features or a weaker penalty. It is the
+  high-bias side of the bias–variance trade-off.
+related: ["overfitting", "bias-variance-trade-off"]

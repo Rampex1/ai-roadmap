@@ -1,0 +1,50 @@
+id: f7-k-nearest-neighbours-01
+lesson: foundations/f7/k-nearest-neighbours
+title: k-NN by hand
+prompt: |
+  Write `knn_predict(X_train, y_train, X_test, k)` for labels 0 and 1. For each test row, find the
+  `k` training rows with the smallest Euclidean distance and predict the majority label among them.
+  Return a 1-D array of predictions.
+
+  Try to compute all distances at once with broadcasting: `X_test[:, None, :] - X_train[None, :, :]`
+  has shape `(n_test, n_train, d)`. The tests use odd `k`, so there are no tied votes, and compare
+  with `KNeighborsClassifier`.
+starter: |
+  import numpy as np
+
+  def knn_predict(X_train, y_train, X_test, k):
+      # TODO
+      return np.zeros(len(X_test), dtype=int)
+
+  X_train = np.array([[1.0, 1.0], [2.0, 1.0], [4.0, 4.0], [5.0, 4.0], [5.0, 5.0]])
+  y_train = np.array([0, 0, 1, 1, 1])
+  print(knn_predict(X_train, y_train, np.array([[3.0, 2.0], [4.5, 4.5]]), 3))
+solution: |
+  import numpy as np
+
+  def knn_predict(X_train, y_train, X_test, k):
+      diff = X_test[:, None, :] - X_train[None, :, :]
+      dist = np.sqrt(np.sum(diff ** 2, axis=2))          # (n_test, n_train)
+      nearest = np.argsort(dist, axis=1)[:, :k]           # (n_test, k) indices
+      votes = y_train[nearest]                            # their labels
+      return (votes.mean(axis=1) > 0.5).astype(int)
+
+  X_train = np.array([[1.0, 1.0], [2.0, 1.0], [4.0, 4.0], [5.0, 4.0], [5.0, 5.0]])
+  y_train = np.array([0, 0, 1, 1, 1])
+  print(knn_predict(X_train, y_train, np.array([[3.0, 2.0], [4.5, 4.5]]), 3))
+tests: |
+  import numpy as np
+  from sklearn.neighbors import KNeighborsClassifier
+  from sklearn.datasets import make_moons
+  _Xa, _ya = make_moons(n_samples=300, noise=0.3, random_state=1)
+  for _k in [1, 5, 15]:
+      _Xtr, _ytr, _Xte = _Xa[:200], _ya[:200], _Xa[200:]
+      _want = KNeighborsClassifier(n_neighbors=_k).fit(_Xtr, _ytr).predict(_Xte)
+      _got = np.asarray(knn_predict(_Xtr, _ytr, _Xte, _k))
+      assert _got.shape == (100,), f"return one prediction per test row, shape (100,), got {_got.shape}"
+      _bad = int(np.sum(_got != _want))
+      assert _bad == 0, f"k={_k}: {_bad} of 100 predictions differ from KNeighborsClassifier"
+hints:
+  - "dist = np.sqrt(np.sum((X_test[:, None, :] - X_train[None, :, :]) ** 2, axis=2))"
+  - "np.argsort(dist, axis=1)[:, :k] gives the k nearest training indices for each test row; y_train[...] gives their labels."
+  - "With 0/1 labels and odd k, the majority is 1 exactly when the mean vote is above 0.5."

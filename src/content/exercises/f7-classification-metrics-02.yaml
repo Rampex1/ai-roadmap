@@ -1,0 +1,49 @@
+id: f7-classification-metrics-02
+lesson: foundations/f7/classification-metrics
+title: AUC as a ranking probability
+prompt: |
+  The area under the ROC curve equals the probability that a randomly chosen positive gets a higher
+  score than a randomly chosen negative, counting ties as half.
+
+  Write `auc(y_true, scores)` that computes it this way: compare **every** positive score with
+  **every** negative score (broadcasting makes this one line), count wins as 1 and ties as 0.5, and
+  average. The tests compare with `sklearn.metrics.roc_auc_score`.
+starter: |
+  import numpy as np
+
+  def auc(y_true, scores):
+      y_true, scores = np.asarray(y_true), np.asarray(scores)
+      pos = scores[y_true == 1]
+      neg = scores[y_true == 0]
+      # TODO: compare every pos with every neg
+      return 0.5
+
+  print(auc([0, 0, 1, 1], [0.1, 0.4, 0.35, 0.8]))
+solution: |
+  import numpy as np
+
+  def auc(y_true, scores):
+      y_true, scores = np.asarray(y_true), np.asarray(scores)
+      pos = scores[y_true == 1]
+      neg = scores[y_true == 0]
+      wins = pos[:, None] > neg[None, :]
+      ties = pos[:, None] == neg[None, :]
+      return float(np.mean(wins + 0.5 * ties))
+
+  print(auc([0, 0, 1, 1], [0.1, 0.4, 0.35, 0.8]))
+tests: |
+  import numpy as np
+  from sklearn.metrics import roc_auc_score
+  _rng = np.random.default_rng(6)
+  assert np.isclose(auc([0, 0, 1, 1], [0.1, 0.4, 0.35, 0.8]), 0.75), "for the example, 3 of the 4 positive-negative pairs are ordered correctly: 0.75"
+  for _n, _shift, _round in [(60, 1.0, False), (200, 0.3, False), (80, 2.0, True)]:
+      _y = _rng.integers(0, 2, _n)
+      _s = _rng.normal(size=_n) + _shift * _y
+      if _round:
+          _s = np.round(_s)      # many ties
+      _want = roc_auc_score(_y, _s)
+      assert np.isclose(auc(_y, _s), _want), f"expected AUC {_want:.4f}, got {auc(_y, _s)}"
+  assert np.isclose(auc([0, 1, 0, 1], [0.9, 0.1, 0.8, 0.2]), 0.0), "if every negative outscores every positive, the AUC is 0"
+hints:
+  - "pos[:, None] > neg[None, :] is a (number of positives, number of negatives) table of comparisons."
+  - "Add 0.5 times the equality table for ties, then take the mean."

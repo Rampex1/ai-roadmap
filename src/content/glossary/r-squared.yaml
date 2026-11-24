@@ -1,0 +1,7 @@
+term: "R² (coefficient of determination)"
+short: "The share of the variance in y that a regression explains: 1 − (sum of squared residuals) / (sum of squared deviations from the mean)."
+body: |
+  $R^2 = 1$ is a perfect fit, $R^2 = 0$ is no better than always predicting the mean, and it is negative
+  for predictions worse than that. scikit-learn regressors return it from `.score(X, y)`. Like any
+  metric, compute it on held-out data to judge generalisation.
+related: ["linear-regression"]

@@ -1,0 +1,48 @@
+id: f7-linear-regression-with-scikit-learn-01
+lesson: foundations/f7/linear-regression-with-scikit-learn
+title: The normal equations
+prompt: |
+  Write `fit_normal_equations(X, y)` that fits a linear regression **without** scikit-learn and
+  returns a tuple `(w, b)`: the weight vector of shape `(d,)` and the intercept as a number.
+
+  Append a column of ones to `X`, then solve the normal equations $A^\top A\,\mathbf{v} = A^\top\mathbf{y}$
+  with `np.linalg.solve`. The last entry of $\mathbf{v}$ is the intercept. The tests compare with
+  `LinearRegression`.
+starter: |
+  import numpy as np
+
+  def fit_normal_equations(X, y):
+      # TODO: build A = [X, 1], solve A^T A v = A^T y, split v into (w, b)
+      return np.zeros(X.shape[1]), 0.0
+
+  rng = np.random.default_rng(0)
+  X = rng.normal(size=(100, 2))
+  y = X @ np.array([1.5, -3.0]) + 7 + rng.normal(0, 0.1, 100)
+  print(fit_normal_equations(X, y))
+solution: |
+  import numpy as np
+
+  def fit_normal_equations(X, y):
+      A = np.column_stack([X, np.ones(len(X))])
+      v = np.linalg.solve(A.T @ A, A.T @ y)
+      return v[:-1], float(v[-1])
+
+  rng = np.random.default_rng(0)
+  X = rng.normal(size=(100, 2))
+  y = X @ np.array([1.5, -3.0]) + 7 + rng.normal(0, 0.1, 100)
+  print(fit_normal_equations(X, y))
+tests: |
+  import numpy as np
+  from sklearn.linear_model import LinearRegression
+  _rng = np.random.default_rng(11)
+  for _n, _d in [(50, 1), (200, 4), (30, 6)]:
+      _X = _rng.normal(size=(_n, _d)) * _rng.uniform(0.5, 5, _d)
+      _y = _X @ _rng.normal(size=_d) + _rng.normal() * 10 + _rng.normal(0, 1, _n)
+      _w, _b = fit_normal_equations(_X, _y)
+      _sk = LinearRegression().fit(_X, _y)
+      assert np.shape(_w) == (_d,), f"w should have shape ({_d},), got {np.shape(_w)}"
+      np.testing.assert_allclose(_w, _sk.coef_, rtol=1e-6, atol=1e-8, err_msg="w should match LinearRegression().coef_")
+      assert np.isclose(_b, _sk.intercept_, rtol=1e-6, atol=1e-8), f"b should be {_sk.intercept_:.5f} (LinearRegression().intercept_), got {_b}"
+hints:
+  - "A = np.column_stack([X, np.ones(len(X))])"
+  - "v = np.linalg.solve(A.T @ A, A.T @ y), then w = v[:-1] and b = v[-1]."

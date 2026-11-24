@@ -1,0 +1,7 @@
+term: "Supervised learning"
+short: "Learning a mapping from features to a known label, from examples where the right answer is given."
+body: |
+  Each training example is a pair $(\mathbf{x}, y)$: features and a label. The model learns a function
+  $f$ with $f(\mathbf{x}) \approx y$ and is judged on new examples it has not seen. When $y$ is a number
+  the task is **regression**; when $y$ is a category it is **classification**.
+related: ["unsupervised-learning", "feature", "label"]

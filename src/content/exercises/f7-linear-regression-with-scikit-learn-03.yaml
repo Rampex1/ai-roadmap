@@ -1,0 +1,58 @@
+id: f7-linear-regression-with-scikit-learn-03
+lesson: foundations/f7/linear-regression-with-scikit-learn
+title: Polynomial features by hand
+prompt: |
+  Write `poly_features(x, degree)` for a 1-D array `x` of length `n`. Return an `(n, degree)` array
+  whose columns are $x, x^2, \dots, x^{\text{degree}}$ (no column of ones). This is what
+  `PolynomialFeatures(degree, include_bias=False)` does for one feature.
+
+  The code below then fits a straight line to these features and plots the curve.
+starter: |
+  import numpy as np
+  import matplotlib.pyplot as plt
+  from sklearn.linear_model import LinearRegression
+
+  def poly_features(x, degree):
+      # TODO: columns x, x**2, ..., x**degree
+      return np.asarray(x).reshape(-1, 1)
+
+  rng = np.random.default_rng(1)
+  x = rng.uniform(-3, 3, 60)
+  y = 0.5 * x**2 - x + 2 + rng.normal(0, 0.5, 60)
+  model = LinearRegression().fit(poly_features(x, 2), y)
+  grid = np.linspace(-3, 3, 100)
+  plt.scatter(x, y, s=10)
+  plt.plot(grid, model.predict(poly_features(grid, 2)), color="C1")
+  plt.xlabel("x")
+  plt.ylabel("y")
+solution: |
+  import numpy as np
+  import matplotlib.pyplot as plt
+  from sklearn.linear_model import LinearRegression
+
+  def poly_features(x, degree):
+      x = np.asarray(x, dtype=float)
+      return np.column_stack([x ** p for p in range(1, degree + 1)])
+
+  rng = np.random.default_rng(1)
+  x = rng.uniform(-3, 3, 60)
+  y = 0.5 * x**2 - x + 2 + rng.normal(0, 0.5, 60)
+  model = LinearRegression().fit(poly_features(x, 2), y)
+  grid = np.linspace(-3, 3, 100)
+  plt.scatter(x, y, s=10)
+  plt.plot(grid, model.predict(poly_features(grid, 2)), color="C1")
+  plt.xlabel("x")
+  plt.ylabel("y")
+tests: |
+  import numpy as np
+  from sklearn.preprocessing import PolynomialFeatures
+  _rng = np.random.default_rng(2)
+  for _n, _deg in [(5, 1), (20, 3), (8, 6)]:
+      _x = _rng.uniform(-2, 2, _n)
+      _got = np.asarray(poly_features(_x, _deg))
+      assert _got.shape == (_n, _deg), f"for {_n} values and degree {_deg}, expected shape ({_n}, {_deg}), got {_got.shape}"
+      _want = PolynomialFeatures(_deg, include_bias=False).fit_transform(_x.reshape(-1, 1))
+      np.testing.assert_allclose(_got, _want, rtol=1e-12, err_msg=f"columns should be x, x**2, ..., x**{_deg}")
+hints:
+  - "A list comprehension over p in range(1, degree + 1) gives the columns x ** p."
+  - "np.column_stack turns a list of 1-D arrays into the columns of a 2-D array."

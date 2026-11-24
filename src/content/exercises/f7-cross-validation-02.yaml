@@ -1,0 +1,59 @@
+id: f7-cross-validation-02
+lesson: foundations/f7/cross-validation
+title: Cross-validation by hand
+prompt: |
+  Write `cv_mse(model, X, y, k)` that returns the mean validation MSE over `k` folds. Split with
+  `KFold(n_splits=k)` (no shuffling). For each fold, fit a **fresh copy** of the model,
+  `clone(model)`, on the training rows and compute the MSE on the validation rows. Then average.
+
+  Why `clone`? Fitting the same object again would work for most models, but a fresh copy guarantees
+  that nothing learned on one fold leaks into the next. The tests compare with
+  `cross_val_score(..., scoring="neg_mean_squared_error")`.
+starter: |
+  import numpy as np
+  from sklearn.base import clone
+  from sklearn.model_selection import KFold
+  from sklearn.linear_model import Ridge
+
+  def cv_mse(model, X, y, k):
+      errors = []
+      for train_idx, val_idx in KFold(n_splits=k).split(X):
+          pass  # TODO: fit clone(model) on the training rows, score on the validation rows
+      return 0.0
+
+  rng = np.random.default_rng(0)
+  X = rng.normal(size=(100, 3))
+  y = X @ np.array([1.0, -2.0, 0.5]) + rng.normal(0, 1, 100)
+  print(cv_mse(Ridge(alpha=1.0), X, y, 5))
+solution: |
+  import numpy as np
+  from sklearn.base import clone
+  from sklearn.model_selection import KFold
+  from sklearn.linear_model import Ridge
+
+  def cv_mse(model, X, y, k):
+      errors = []
+      for train_idx, val_idx in KFold(n_splits=k).split(X):
+          m = clone(model).fit(X[train_idx], y[train_idx])
+          errors.append(np.mean((m.predict(X[val_idx]) - y[val_idx]) ** 2))
+      return float(np.mean(errors))
+
+  rng = np.random.default_rng(0)
+  X = rng.normal(size=(100, 3))
+  y = X @ np.array([1.0, -2.0, 0.5]) + rng.normal(0, 1, 100)
+  print(cv_mse(Ridge(alpha=1.0), X, y, 5))
+tests: |
+  import numpy as np
+  from sklearn.model_selection import cross_val_score, KFold
+  from sklearn.linear_model import Ridge, LinearRegression
+  from sklearn.neighbors import KNeighborsRegressor
+  _rng = np.random.default_rng(14)
+  _X = _rng.normal(size=(90, 4))
+  _y = np.sin(_X[:, 0]) * 3 + _X[:, 1] + _rng.normal(0, 0.5, 90)
+  for _m, _k in [(LinearRegression(), 5), (Ridge(alpha=10.0), 3), (KNeighborsRegressor(n_neighbors=7), 6)]:
+      _want = -cross_val_score(_m, _X, _y, cv=KFold(n_splits=_k), scoring="neg_mean_squared_error").mean()
+      _got = cv_mse(_m, _X, _y, _k)
+      assert np.isclose(_got, _want, rtol=1e-8), f"{type(_m).__name__} with k={_k}: expected mean MSE {_want:.4f}, got {_got}"
+hints:
+  - "m = clone(model).fit(X[train_idx], y[train_idx])"
+  - "Append np.mean((m.predict(X[val_idx]) - y[val_idx]) ** 2), then return the mean of the list."

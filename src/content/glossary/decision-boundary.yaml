@@ -1,0 +1,7 @@
+term: "Decision boundary"
+short: "The surface in feature space where a classifier switches from predicting one class to another."
+body: |
+  For logistic regression at threshold 0.5 it is where $\mathbf{w}\cdot\mathbf{x} + b = 0$: a straight line
+  with two features, a flat hyperplane with more. Models such as k-nearest neighbours, or logistic
+  regression on polynomial features, can draw curved boundaries.
+related: ["logistic-regression", "k-nearest-neighbours"]

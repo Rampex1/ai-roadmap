@@ -1,0 +1,7 @@
+term: "ROC curve and AUC"
+short: "The curve of true positive rate against false positive rate over all thresholds; AUC is the area under it."
+body: |
+  Each threshold gives one (FPR, TPR) point. Random guessing follows the diagonal (AUC 0.5) and a perfect
+  ranking reaches the top-left corner (AUC 1). AUC equals the probability that a random positive is
+  scored above a random negative, so it measures ranking quality independent of any threshold.
+related: ["recall", "precision", "confusion-matrix"]

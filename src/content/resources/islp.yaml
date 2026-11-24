@@ -1,0 +1,5 @@
+title: "An Introduction to Statistical Learning, with Applications in Python (James, Witten, Hastie, Tibshirani and Taylor, free PDF)"
+url: https://www.statlearning.com/
+kind: book
+free: true
+modules: [f7, f8]

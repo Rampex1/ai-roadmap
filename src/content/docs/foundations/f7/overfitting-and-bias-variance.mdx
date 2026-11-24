@@ -1,0 +1,200 @@
+---
+title: "Train, validation and test sets; overfitting and the bias–variance trade-off"
+module: f7
+order: 3
+estMinutes: 16
+objectives:
+  - "Split data into training, validation and test sets, and say what each one is for"
+  - "Diagnose underfitting and overfitting from training and validation error"
+  - "Explain the bias–variance decomposition and measure bias² and variance by simulation"
+  - "List remedies for each failure: more data, a simpler or richer model, regularisation"
+goDeeper: islp
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import bvImg from '@/assets/diagrams/f7-bias-variance.svg';
+
+A student who memorises last year's exam answers can score 100% on last year's exam and fail this
+year's. A model can do the same: fit its training data perfectly and predict new data badly. This lesson
+is about catching that, and about the trade-off that causes it.
+
+## Three sets, three jobs
+
+Before fitting anything, split the rows:
+
+| Set | Used for | Typical share |
+|---|---|---|
+| **Training set** | fitting the model's parameters | 60–80% |
+| <Term id="validation-set" /> | comparing models and choosing hyperparameters (degree, penalty, $k$) | 10–20% |
+| <Term id="test-set" /> | one final, honest estimate of performance on new data | 10–20% |
+
+Why two held-out sets? Every time you pick the model that does best on some data, you fit that data
+a little. After trying fifty settings, the winner's validation score is optimistic: it was partly
+lucky on those particular rows. The test set is touched **once**, at the end, after every decision has
+been made, so its score is not biased by your choices. If you look at the test score and then go back
+and change the model, the test set has become a second validation set.
+
+scikit-learn's `train_test_split` shuffles and splits in one call. It returns the pieces in the order
+*train, test* for each array you pass:
+
+```python
+import numpy as np
+from sklearn.model_selection import train_test_split
+
+X = np.arange(20).reshape(10, 2)
+y = np.arange(10)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+print(X_train.shape, X_test.shape)
+print("test labels:", y_test)
+```
+
+```text title="Output"
+(7, 2) (3, 2)
+test labels: [2 8 4]
+```
+
+Rows stay paired with their labels, and `random_state` fixes the shuffle so you get the same split each
+run. For three sets, call it twice. For classification, `stratify=y` keeps the class proportions equal
+in every piece (lesson 6).
+
+:::caution[When a random split is wrong]
+A random split assumes rows are independent. If they are ordered in time (sales, prices), train on the
+past and test on the future, or the model gets to peek at tomorrow. If several rows come from the same
+patient or user, keep all of that person's rows on one side, or the test set contains people the model
+has already met.
+:::
+
+## Watching a model overfit
+
+Take 60 noisy points from the curve $y = \sin(3x)$, split 60/20/20, and fit polynomials of increasing
+degree (lesson 2):
+
+```python
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+
+rng = np.random.default_rng(0)
+def f(x):
+    return np.sin(3 * x)                     # the true pattern (unknown in real life)
+x = rng.uniform(-1, 1, 60)
+y = f(x) + rng.normal(0, 0.3, 60)            # noise with standard deviation 0.3
+X = x.reshape(-1, 1)
+
+# 60% train, 20% validation, 20% test: two calls to train_test_split
+X_tr, X_rest, y_tr, y_rest = train_test_split(X, y, test_size=0.4, random_state=0)
+X_val, X_te, y_val, y_te = train_test_split(X_rest, y_rest, test_size=0.5, random_state=0)
+print(len(y_tr), len(y_val), len(y_te))
+
+for degree in [1, 3, 5, 9, 15]:
+    model = make_pipeline(PolynomialFeatures(degree), LinearRegression()).fit(X_tr, y_tr)
+    tr = mean_squared_error(y_tr, model.predict(X_tr))
+    val = mean_squared_error(y_val, model.predict(X_val))
+    print(f"degree {degree:2d}  train MSE {tr:.3f}  validation MSE {val:.3f}")
+```
+
+```text title="Output"
+36 12 12
+degree  1  train MSE 0.244  validation MSE 0.581
+degree  3  train MSE 0.085  validation MSE 0.192
+degree  5  train MSE 0.072  validation MSE 0.157
+degree  9  train MSE 0.047  validation MSE 0.331
+degree 15  train MSE 0.036  validation MSE 23.622
+```
+
+Read it in two directions:
+
+- **Training error only goes down.** A degree-15 polynomial contains every lower-degree polynomial, so
+  it can always fit the training points at least as well. Training error alone would tell you to pick
+  the most complex model every time.
+- **Validation error falls, then rises.** Degree 1 is a straight line through a wave: it
+  <Term id="underfitting" text="underfits" />, with high error everywhere. Around degree 5 or 6 the
+  model follows the wave. By degree 15 it is threading through individual noisy points and swinging
+  wildly between them: it <Term id="overfitting" text="overfits" />, and its validation error is
+  hundreds of times worse than its training error.
+
+The noise variance is $0.3^2 = 0.09$, so a validation MSE near $0.15$ is close to the best possible
+with 36 training points. Some training error below the noise level is normal, because least squares
+fits a little of the noise in any sample. But a training MSE *far* below the noise level ($0.036$
+against $0.09$), and far below its validation error, is the sign that degree 15 has fitted noise.
+
+<Figure src={bvImg} alt="Left: 36 noisy training points from a sine-shaped curve with three polynomial fits. Degree 1 is a straight line that misses the curve. Degree 3 follows it. Degree 15 wiggles through the points and swings off the chart at the edges. Right: training and validation MSE on a log scale against degree 1 to 15. Training error falls steadily; validation error falls to its lowest at degree 6, then climbs to over 20 at degree 15." caption="The same experiment for every degree from 1 to 15. Training error keeps falling; validation error is U-shaped, lowest at degree 6. Left of the minimum the model underfits, right of it the model overfits." />
+
+| Symptom | Diagnosis | What helps |
+|---|---|---|
+| High training error, validation error about the same | Underfitting (high bias) | A more flexible model, better features, a weaker penalty |
+| Low training error, much higher validation error | Overfitting (high variance) | More data, a simpler model, regularisation (lesson 4), fewer features |
+| Both low and close | About right | Stop tuning; check the test set once |
+
+## The bias–variance trade-off
+
+Why does the U appear? Imagine collecting a fresh training set many times and refitting each time.
+Two things can go wrong with the prediction $\hat{f}(x)$ at some point $x$:
+
+- **Bias:** even averaged over all those training sets, the model may be systematically off. A straight
+  line cannot bend, so no amount of data fixes its error on a wave.
+- **Variance:** each training set gives a different fit. A flexible model chases each set's particular
+  noise, so its predictions jump around from one training set to the next.
+
+For squared error these add up exactly. With $\sigma^2$ the noise variance, at each $x$:
+
+$$
+\mathbb{E}\big[(y - \hat{f}(x))^2\big] = \underbrace{\big(\mathbb{E}[\hat{f}(x)] - f(x)\big)^2}_{\text{bias}^2} + \underbrace{\operatorname{Var}\big[\hat{f}(x)\big]}_{\text{variance}} + \underbrace{\sigma^2}_{\text{noise}}
+$$
+
+The expectation is over random training sets and the noise in $y$. The noise term is the floor nobody
+can beat. Making the model more flexible lowers bias and raises variance; the best test error is where
+their sum is smallest. That is the <Term id="bias-variance-trade-off" />.
+
+We can measure both terms by simulation, exactly as the definition says: draw 200 training sets, fit
+each, and look at the spread of predictions at 50 points ([F5](/foundations/f5/random-variables/) for
+expectation and variance):
+
+```python
+rng = np.random.default_rng(1)
+x_grid = np.linspace(-0.9, 0.9, 50).reshape(-1, 1)   # points where we measure the error
+
+for degree in [1, 3, 9]:
+    preds = []
+    for trial in range(200):                          # 200 different training sets
+        x = rng.uniform(-1, 1, 30)
+        y = f(x) + rng.normal(0, 0.3, 30)
+        model = make_pipeline(PolynomialFeatures(degree), LinearRegression())
+        preds.append(model.fit(x.reshape(-1, 1), y).predict(x_grid))
+    preds = np.array(preds)                           # shape (200, 50)
+    avg = preds.mean(axis=0)                          # the average model
+    bias2 = np.mean((avg - f(x_grid.ravel())) ** 2)
+    var = np.mean(preds.var(axis=0))
+    print(f"degree {degree}:  bias² {bias2:.4f}  variance {var:.4f}  sum {bias2 + var:.4f}")
+```
+
+```text title="Output"
+degree 1:  bias² 0.1269  variance 0.0179  sum 0.1448
+degree 3:  bias² 0.0019  variance 0.0130  sum 0.0149
+degree 9:  bias² 0.0072  variance 0.9623  sum 0.9696
+```
+
+Degree 1 is all bias; degree 9 is all variance (a few wild fits even drag its average away from the
+truth); degree 3 keeps both small. Add the noise $0.09$ to each sum and you get the expected test MSE.
+
+:::tip[More data is a variance cure]
+Variance comes from having too little data to pin down a flexible model. With 3,000 training points
+instead of 30, the degree-9 polynomial would be fine. When a model overfits, collecting more data is
+often the best fix; when it underfits, more data does nothing, because the bias stays.
+:::
+
+## Try it
+
+<CodeExercise id="f7-overfitting-and-bias-variance-01" />
+
+<CodeExercise id="f7-overfitting-and-bias-variance-02" />
+
+## Summary
+
+- Fit on the training set, choose on the validation set, and report the test set once at the end.
+- Training error always falls with complexity; validation error is U-shaped.
+- Underfitting: both errors high. Overfitting: training error low, validation error much higher.
+- Expected squared error = bias² + variance + noise. Flexibility trades bias for variance.
+- Split by time or by group when rows are not independent.

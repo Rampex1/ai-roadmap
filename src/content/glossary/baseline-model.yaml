@@ -1,0 +1,7 @@
+term: "Baseline model"
+short: "A deliberately trivial model, such as always predicting the mean or the most common class, that any real model must beat."
+body: |
+  Baselines turn a score into information: 95% accuracy is unimpressive if 94% of examples belong to one
+  class. scikit-learn provides `DummyRegressor` and `DummyClassifier`. Report the baseline next to every
+  model you evaluate.
+related: ["class-imbalance"]

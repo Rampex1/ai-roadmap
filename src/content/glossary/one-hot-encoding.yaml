@@ -1,0 +1,8 @@
+term: "One-hot encoding"
+short: "Turning a categorical feature into one 0/1 column per category, so a model sees no false ordering."
+body: |
+  A column with values Leeds, York and Hull becomes three columns, with a single 1 in each row. Integer
+  codes (Hull = 0, Leeds = 1, York = 2) would wrongly tell a linear model that York is "twice" Leeds.
+  The categories are learned from the training data; scikit-learn's `OneHotEncoder(handle_unknown="ignore")`
+  gives unseen categories a row of zeros.
+related: ["feature", "pipeline"]

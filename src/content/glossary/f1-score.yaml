@@ -1,0 +1,6 @@
+term: "F1 score"
+short: "The harmonic mean of precision and recall, 2PR / (P + R): high only when both are high."
+body: |
+  Unlike accuracy, F1 ignores true negatives, so it is not inflated by a large majority class. The
+  harmonic mean punishes imbalance: precision 1.0 with recall 0.1 gives F1 of about 0.18, not 0.55.
+related: ["precision", "recall", "class-imbalance"]

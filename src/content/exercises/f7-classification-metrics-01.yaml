@@ -1,0 +1,53 @@
+id: f7-classification-metrics-01
+lesson: foundations/f7/classification-metrics
+title: Accuracy, precision, recall and F1 from scratch
+prompt: |
+  Write `binary_metrics(y_true, y_pred)` for 0/1 arrays. Count TP, FP, FN and TN, then return a dict
+  with the keys `"accuracy"`, `"precision"`, `"recall"` and `"f1"`.
+
+  When a ratio has a zero denominator (no positive predictions, or no actual positives), return
+  `0.0` for it, as scikit-learn does with `zero_division=0`. F1 is $\frac{2PR}{P + R}$, or `0.0` when
+  $P + R = 0$.
+starter: |
+  import numpy as np
+
+  def binary_metrics(y_true, y_pred):
+      y_true, y_pred = np.asarray(y_true), np.asarray(y_pred)
+      # TODO: count TP, FP, FN, TN
+      return {"accuracy": 0.0, "precision": 0.0, "recall": 0.0, "f1": 0.0}
+
+  print(binary_metrics([1, 1, 0, 0, 1, 0], [1, 0, 0, 1, 1, 0]))
+solution: |
+  import numpy as np
+
+  def binary_metrics(y_true, y_pred):
+      y_true, y_pred = np.asarray(y_true), np.asarray(y_pred)
+      tp = np.sum((y_true == 1) & (y_pred == 1))
+      fp = np.sum((y_true == 0) & (y_pred == 1))
+      fn = np.sum((y_true == 1) & (y_pred == 0))
+      tn = np.sum((y_true == 0) & (y_pred == 0))
+      accuracy = (tp + tn) / len(y_true)
+      precision = tp / (tp + fp) if tp + fp > 0 else 0.0
+      recall = tp / (tp + fn) if tp + fn > 0 else 0.0
+      f1 = 2 * precision * recall / (precision + recall) if precision + recall > 0 else 0.0
+      return {"accuracy": float(accuracy), "precision": float(precision),
+              "recall": float(recall), "f1": float(f1)}
+
+  print(binary_metrics([1, 1, 0, 0, 1, 0], [1, 0, 0, 1, 1, 0]))
+tests: |
+  import numpy as np
+  from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+  _rng = np.random.default_rng(4)
+  _cases = [(_rng.integers(0, 2, 50), _rng.integers(0, 2, 50)),
+            (np.r_[np.ones(5), np.zeros(95)].astype(int), np.zeros(100, int)),
+            (np.zeros(10, int), np.r_[1, 1, np.zeros(8)].astype(int)),
+            (np.array([1, 0, 1, 1]), np.array([1, 0, 1, 1]))]
+  for _t, _p in _cases:
+      _m = binary_metrics(_t, _p)
+      for _k, _fn in [("accuracy", accuracy_score), ("precision", precision_score), ("recall", recall_score), ("f1", f1_score)]:
+          assert _k in _m, f"the dict needs the key {_k!r}"
+          _want = _fn(_t, _p) if _k == "accuracy" else _fn(_t, _p, zero_division=0)
+          assert np.isclose(_m[_k], _want), f"{_k} should be {_want:.4f} for y_true={_t.tolist()[:12]}... and y_pred={_p.tolist()[:12]}..., got {_m[_k]}"
+hints:
+  - "tp = np.sum((y_true == 1) & (y_pred == 1)), and similarly for fp, fn and tn."
+  - "Guard each division: precision = tp / (tp + fp) if tp + fp > 0 else 0.0"

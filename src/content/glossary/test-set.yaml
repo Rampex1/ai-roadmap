@@ -1,0 +1,7 @@
+term: "Test set"
+short: "Data set aside at the start and used once, at the very end, to estimate how the final model performs on new data."
+body: |
+  Every decision made while looking at a dataset (features, model, hyperparameters, threshold) fits that
+  data a little. The test set stays untouched by all of them, so its score is an honest estimate of
+  performance on unseen data. Using it to make choices turns it into another validation set.
+related: ["validation-set", "data-leakage"]

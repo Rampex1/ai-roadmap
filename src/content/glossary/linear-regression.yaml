@@ -1,0 +1,8 @@
+term: "Linear regression"
+short: "Predicting a number as a weighted sum of the features plus a bias, ŷ = w·x + b, usually fitted by least squares."
+body: |
+  Least squares chooses $\mathbf{w}$ and $b$ to minimise the mean squared error. The minimum solves the
+  normal equations $X^\top X \mathbf{w} = X^\top \mathbf{y}$ (with a column of ones for the bias), so there is
+  a closed form; gradient descent reaches the same answer. "Linear" means linear in the weights, so
+  polynomial features still give a linear regression.
+related: ["loss-function", "gradient-descent", "polynomial-features", "r-squared"]

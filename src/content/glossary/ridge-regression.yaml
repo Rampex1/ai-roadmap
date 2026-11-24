@@ -1,0 +1,8 @@
+term: "Ridge regression"
+short: "Linear regression with an L2 penalty α‖w‖² that shrinks all weights towards zero."
+body: |
+  scikit-learn's `Ridge` minimises $\lVert \mathbf{y} - X\mathbf{w} - b \rVert^2 + \alpha\lVert \mathbf{w} \rVert^2$,
+  with the intercept unpenalised. On centred data the solution is
+  $\mathbf{w} = (X^\top X + \alpha I)^{-1} X^\top \mathbf{y}$. Larger $\alpha$ means smaller weights, less
+  variance and more bias. Standardise features first, because the penalty depends on their units.
+related: ["regularisation", "lasso", "linear-regression"]

@@ -1,0 +1,74 @@
+id: f7-logistic-regression-02
+lesson: foundations/f7/logistic-regression
+title: Train logistic regression by gradient descent
+prompt: |
+  Write `fit_logistic(X, y, lr=0.5, steps=3000)` that trains logistic regression with full-batch
+  gradient descent from `w = 0`, `b = 0` and returns `(w, b)`. Each step computes
+  $\mathbf{p} = \sigma(X\mathbf{w} + b)$ and moves `w` and `b` against the gradients from the lesson.
+
+  The tests compare with `LogisticRegression(C=1e6)`, which is almost unpenalised, so both should
+  find the same minimum of the log loss. The plot shows the data and your decision boundary
+  $w_1 x_1 + w_2 x_2 + b = 0$.
+starter: |
+  import numpy as np
+  import matplotlib.pyplot as plt
+
+  def sigmoid(z):
+      return 1 / (1 + np.exp(-z))
+
+  def fit_logistic(X, y, lr=0.5, steps=3000):
+      w, b = np.zeros(X.shape[1]), 0.0
+      # TODO: gradient descent on the mean log loss
+      return w, b
+
+  rng = np.random.default_rng(0)
+  X = rng.normal(size=(200, 2))
+  y = (X @ np.array([2.0, -1.0]) + 0.5 + rng.normal(0, 1.0, 200) > 0).astype(int)
+  w, b = fit_logistic(X, y)
+  print(w, b)
+  plt.scatter(X[:, 0], X[:, 1], c=y, cmap="coolwarm", s=12)
+  xs = np.linspace(-3, 3, 2)
+  if w[1] != 0:
+      plt.plot(xs, -(w[0] * xs + b) / w[1], color="k")
+  plt.ylim(-3, 3)
+solution: |
+  import numpy as np
+  import matplotlib.pyplot as plt
+
+  def sigmoid(z):
+      return 1 / (1 + np.exp(-z))
+
+  def fit_logistic(X, y, lr=0.5, steps=3000):
+      w, b = np.zeros(X.shape[1]), 0.0
+      n = len(y)
+      for _ in range(steps):
+          p = sigmoid(X @ w + b)
+          w = w - lr * X.T @ (p - y) / n
+          b = b - lr * np.mean(p - y)
+      return w, b
+
+  rng = np.random.default_rng(0)
+  X = rng.normal(size=(200, 2))
+  y = (X @ np.array([2.0, -1.0]) + 0.5 + rng.normal(0, 1.0, 200) > 0).astype(int)
+  w, b = fit_logistic(X, y)
+  print(w, b)
+  plt.scatter(X[:, 0], X[:, 1], c=y, cmap="coolwarm", s=12)
+  xs = np.linspace(-3, 3, 2)
+  if w[1] != 0:
+      plt.plot(xs, -(w[0] * xs + b) / w[1], color="k")
+  plt.ylim(-3, 3)
+tests: |
+  import numpy as np
+  from sklearn.linear_model import LogisticRegression
+  _rng = np.random.default_rng(31)
+  for _d, _tw in [(2, np.array([1.0, 1.5])), (3, np.array([-1.0, 0.5, 2.0]))]:
+      _X = _rng.normal(size=(150, _d))
+      _y = (_X @ _tw - 0.3 + _rng.normal(0, 1.0, 150) > 0).astype(int)
+      _w, _b = fit_logistic(_X, _y)
+      _sk = LogisticRegression(C=1e6).fit(_X, _y)
+      assert np.shape(_w) == (_d,), f"w should have shape ({_d},), got {np.shape(_w)}"
+      np.testing.assert_allclose(_w, _sk.coef_[0], atol=0.02, err_msg="w should be close to sklearn's unpenalised coef_")
+      assert abs(_b - _sk.intercept_[0]) < 0.02, f"b should be close to {_sk.intercept_[0]:.3f}, got {_b}"
+hints:
+  - "Inside the loop: p = sigmoid(X @ w + b), then update w and b."
+  - "w = w - lr * X.T @ (p - y) / n and b = b - lr * np.mean(p - y)."

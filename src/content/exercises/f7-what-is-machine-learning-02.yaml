@@ -1,0 +1,49 @@
+id: f7-what-is-machine-learning-02
+lesson: foundations/f7/what-is-machine-learning
+title: Fit and predict with one feature
+prompt: |
+  Write `predict_rent(area, rent, new_areas)`. All three arguments are **1-D** arrays: floor areas,
+  the matching rents, and some new floor areas. Fit a scikit-learn `LinearRegression` on
+  `(area, rent)` and return its predictions for `new_areas` as a 1-D array.
+
+  The catch: scikit-learn wants `X` as a 2-D array of shape `(n_samples, n_features)`, even with a
+  single feature.
+starter: |
+  import numpy as np
+  from sklearn.linear_model import LinearRegression
+
+  def predict_rent(area, rent, new_areas):
+      model = LinearRegression()
+      model.fit(area, rent)          # fails: area is 1-D
+      return model.predict(new_areas)
+
+  area = np.array([30, 45, 50, 70, 85, 100])
+  rent = np.array([900, 1150, 1250, 1600, 1800, 2100])
+  print(predict_rent(area, rent, np.array([60, 120])))
+solution: |
+  import numpy as np
+  from sklearn.linear_model import LinearRegression
+
+  def predict_rent(area, rent, new_areas):
+      model = LinearRegression()
+      model.fit(np.asarray(area).reshape(-1, 1), rent)
+      return model.predict(np.asarray(new_areas).reshape(-1, 1))
+
+  area = np.array([30, 45, 50, 70, 85, 100])
+  rent = np.array([900, 1150, 1250, 1600, 1800, 2100])
+  print(predict_rent(area, rent, np.array([60, 120])))
+tests: |
+  import numpy as np
+  _rng = np.random.default_rng(1)
+  for _slope, _icpt in [(17.0, 300.0), (-2.0, 50.0)]:
+      _a = _rng.uniform(20, 150, 30)
+      _r = _slope * _a + _icpt + _rng.normal(0, 5, 30)
+      _new = np.array([25.0, 80.0, 140.0])
+      _got = np.asarray(predict_rent(_a, _r, _new))
+      assert _got.shape == (3,), f"return one prediction per new area, shape (3,), got {_got.shape}"
+      _A = np.column_stack([_a, np.ones(30)])
+      _w = np.linalg.lstsq(_A, _r)[0]
+      np.testing.assert_allclose(_got, _w[0] * _new + _w[1], rtol=1e-6, err_msg="predictions should match a least-squares line through (area, rent)")
+hints:
+  - "x.reshape(-1, 1) turns a 1-D array of n values into an (n, 1) column."
+  - "Reshape both area (for fit) and new_areas (for predict)."

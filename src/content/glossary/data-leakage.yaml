@@ -1,0 +1,7 @@
+term: "Data leakage"
+short: "When information that would not be available at prediction time, often from the test or validation data, sneaks into training, making scores look better than they will be."
+body: |
+  Common causes: fitting a scaler, imputer or feature selector on all the data before splitting; features
+  that are recorded after the outcome (target leakage); random splits of time-ordered data; and duplicate
+  rows across splits. Putting every learned preprocessing step inside a pipeline prevents the first kind.
+related: ["test-set", "cross-validation", "pipeline"]

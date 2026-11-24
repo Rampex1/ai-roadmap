@@ -1,0 +1,7 @@
+term: "Recall"
+short: "Of the actual positives, the share the model catches: TP / (TP + FN). Also called sensitivity or true positive rate."
+body: |
+  High recall means few missed positives, which matters when a miss is costly (screening for disease,
+  fraud). Predicting everything as positive gives recall 1, so recall is always read together with
+  precision or the false positive rate.
+related: ["precision", "f1-score", "roc-curve", "confusion-matrix"]

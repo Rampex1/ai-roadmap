@@ -1,0 +1,87 @@
+id: f7-preprocessing-and-pipelines-03
+lesson: foundations/f7/preprocessing-and-pipelines
+title: A leakage-free pipeline for a mixed table
+prompt: |
+  Write `make_model(numeric, categorical)` that returns an **unfitted** `Pipeline` for a pandas
+  DataFrame with the given numeric and categorical column names:
+
+  1. a `ColumnTransformer` that sends the numeric columns through `SimpleImputer(strategy="median")`
+     then `StandardScaler()`, and the categorical columns through
+     `SimpleImputer(strategy="most_frequent")` then `OneHotEncoder(handle_unknown="ignore")`;
+  2. a `LogisticRegression()` at the end.
+
+  Because every learned step is inside the pipeline, `fit` learns medians, means and categories from
+  the training rows only. The tests fit it on a table with missing values and score it on rows that
+  include a category never seen in training.
+starter: |
+  import numpy as np
+  import pandas as pd
+  from sklearn.pipeline import Pipeline, make_pipeline
+  from sklearn.compose import ColumnTransformer
+  from sklearn.impute import SimpleImputer
+  from sklearn.preprocessing import StandardScaler, OneHotEncoder
+  from sklearn.linear_model import LogisticRegression
+
+  def make_model(numeric, categorical):
+      # TODO: preprocessing inside the pipeline
+      return Pipeline([("clf", LogisticRegression())])
+
+  df = pd.DataFrame({"age": [25, 40, np.nan, 60], "plan": ["basic", "pro", "pro", None]})
+  print(make_model(["age"], ["plan"]))
+solution: |
+  import numpy as np
+  import pandas as pd
+  from sklearn.pipeline import Pipeline, make_pipeline
+  from sklearn.compose import ColumnTransformer
+  from sklearn.impute import SimpleImputer
+  from sklearn.preprocessing import StandardScaler, OneHotEncoder
+  from sklearn.linear_model import LogisticRegression
+
+  def make_model(numeric, categorical):
+      preprocess = ColumnTransformer([
+          ("num", make_pipeline(SimpleImputer(strategy="median"), StandardScaler()), numeric),
+          ("cat", make_pipeline(SimpleImputer(strategy="most_frequent"),
+                                OneHotEncoder(handle_unknown="ignore")), categorical),
+      ])
+      return Pipeline([("prep", preprocess), ("clf", LogisticRegression())])
+
+  df = pd.DataFrame({"age": [25, 40, np.nan, 60], "plan": ["basic", "pro", "pro", None]})
+  print(make_model(["age"], ["plan"]))
+tests: |
+  import numpy as np
+  import pandas as pd
+  from sklearn.pipeline import Pipeline
+  from sklearn.compose import ColumnTransformer
+  from sklearn.exceptions import NotFittedError
+  _rng = np.random.default_rng(0)
+  _n = 400
+  _df = pd.DataFrame({
+      "income": _rng.lognormal(10, 0.4, _n),
+      "age": _rng.uniform(18, 80, _n),
+      "plan": _rng.choice(["basic", "plus", "pro"], _n).astype(object),
+  })
+  _logit = 0.08 * (_df["age"] - 50) + np.where(_df["plan"] == "basic", 2.0, -1.0)
+  _y = (_rng.random(_n) < 1 / (1 + np.exp(-_logit))).astype(int)
+  _df.loc[_rng.random(_n) < 0.1, "age"] = np.nan
+  _df.loc[_rng.random(_n) < 0.1, "plan"] = None
+  _tr, _te = _df.iloc[:300], _df.iloc[300:].copy()
+  _te.iloc[:5, _te.columns.get_loc("plan")] = "enterprise"       # unseen in training
+  _m = make_model(["income", "age"], ["plan"])
+  assert isinstance(_m, Pipeline), "make_model should return a sklearn Pipeline"
+  assert isinstance(_m.steps[0][1], ColumnTransformer), "the first pipeline step should be the ColumnTransformer, so preprocessing is learned inside fit"
+  try:
+      _m.predict(_te)
+      _fitted = True
+  except NotFittedError:
+      _fitted = False
+  assert not _fitted, "return the pipeline unfitted: the caller decides which rows to fit on"
+  _m.fit(_tr, _y[:300])
+  _acc = _m.score(_te, _y[300:])
+  assert _acc > 0.7, f"test accuracy should be above 0.7 with this setup, got {_acc:.3f}: check the imputers, scaler and encoder"
+  _ct = _m.steps[0][1]
+  _names = list(_ct.get_feature_names_out())
+  assert len(_names) == 5, f"after preprocessing there should be 5 columns (2 numeric + 3 one-hot plans), got {len(_names)}: {_names}"
+hints:
+  - "Each ColumnTransformer entry is (name, transformer, column_names); a make_pipeline can be the transformer."
+  - "Use SimpleImputer(strategy=\"most_frequent\") before OneHotEncoder(handle_unknown=\"ignore\")."
+  - "Finish with Pipeline([(\"prep\", preprocess), (\"clf\", LogisticRegression())])."

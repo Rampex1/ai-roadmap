@@ -1,0 +1,56 @@
+id: f7-preprocessing-and-pipelines-02
+lesson: foundations/f7/preprocessing-and-pipelines
+title: One-hot encoding by hand
+prompt: |
+  Write `one_hot(train_values, test_values)` for two lists of category strings. Return
+  `(categories, A_train, A_test)`:
+
+  - `categories`: the sorted list of distinct values seen in **training**;
+  - `A_train` and `A_test`: 0/1 arrays with one row per value and one column per category, a 1 in the
+    column of that row's category;
+  - a test value never seen in training gets a row of all zeros, like
+    `OneHotEncoder(handle_unknown="ignore")`.
+starter: |
+  import numpy as np
+
+  def one_hot(train_values, test_values):
+      categories = sorted(set(train_values))
+      # TODO: build the two indicator arrays
+      return categories, np.zeros((len(train_values), 1)), np.zeros((len(test_values), 1))
+
+  cats, A_tr, A_te = one_hot(["Leeds", "York", "Leeds", "Hull"], ["York", "Bath"])
+  print(cats)
+  print(A_tr)
+  print(A_te)
+solution: |
+  import numpy as np
+
+  def one_hot(train_values, test_values):
+      categories = sorted(set(train_values))
+
+      def encode(values):
+          A = np.zeros((len(values), len(categories)))
+          for i, v in enumerate(values):
+              if v in categories:
+                  A[i, categories.index(v)] = 1
+          return A
+
+      return categories, encode(train_values), encode(test_values)
+
+  cats, A_tr, A_te = one_hot(["Leeds", "York", "Leeds", "Hull"], ["York", "Bath"])
+  print(cats)
+  print(A_tr)
+  print(A_te)
+tests: |
+  import numpy as np
+  from sklearn.preprocessing import OneHotEncoder
+  for _tr, _te in [(["Leeds", "York", "Leeds", "Hull"], ["York", "Bath", "Hull"]),
+                   (["b", "a", "c", "a", "d", "b"], ["d", "e", "a"])]:
+      _enc = OneHotEncoder(handle_unknown="ignore", sparse_output=False).fit(np.array(_tr).reshape(-1, 1))
+      _cats, _A, _B = one_hot(_tr, _te)
+      assert list(_cats) == list(_enc.categories_[0]), f"categories should be {list(_enc.categories_[0])}, got {list(_cats)}"
+      np.testing.assert_array_equal(np.asarray(_A), _enc.transform(np.array(_tr).reshape(-1, 1)), err_msg="A_train is wrong: one row per value, a single 1 in its category column")
+      np.testing.assert_array_equal(np.asarray(_B), _enc.transform(np.array(_te).reshape(-1, 1)), err_msg="A_test is wrong: use the TRAINING categories, and give unseen values a row of zeros")
+hints:
+  - "categories.index(v) gives the column for value v."
+  - "Check v in categories first: an unseen value keeps its row of zeros."

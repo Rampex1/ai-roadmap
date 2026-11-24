@@ -1,0 +1,7 @@
+term: "Precision"
+short: "Of the examples predicted positive, the share that really are positive: TP / (TP + FP)."
+body: |
+  High precision means few false alarms. It depends on the base rate: with rare positives, even a good
+  model can have low precision. Raising the decision threshold usually raises precision and lowers
+  recall.
+related: ["recall", "f1-score", "confusion-matrix"]

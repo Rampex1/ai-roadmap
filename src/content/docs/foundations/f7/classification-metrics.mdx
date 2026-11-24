@@ -1,0 +1,207 @@
+---
+title: "Classification metrics: precision, recall, ROC and choosing a threshold"
+module: f7
+order: 6
+estMinutes: 20
+objectives:
+  - "Compute accuracy, precision, recall and F1 from a confusion matrix, and say when accuracy misleads"
+  - "Trade precision against recall by moving the decision threshold, and choose it on validation data"
+  - "Read an ROC curve and interpret AUC as a ranking probability"
+  - "Handle class imbalance with stratified splits, suitable metrics and class weights"
+goDeeper: google-ml-crash-course
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import rocImg from '@/assets/diagrams/f7-roc.svg';
+
+"95% accurate" sounds good. If 95% of transactions are legitimate, a model that never flags anything
+is also 95% accurate, and catches no fraud at all. Choosing the right metric is half of building a
+classifier. This lesson uses one running example: 2,000 transactions, about 11% fraudulent (class 1).
+
+## Accuracy and its trap
+
+```python
+import numpy as np
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
+
+# 2,000 examples, about 11% positives (think: fraudulent transactions)
+X, y = make_classification(n_samples=2000, n_features=10, n_informative=6,
+                           weights=[0.9], flip_y=0.02, class_sep=1.0, random_state=0)
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.3, stratify=y, random_state=0)
+print("positives in train/test:", y_tr.mean().round(3), y_te.mean().round(3))
+
+clf = LogisticRegression().fit(X_tr, y_tr)
+y_pred = clf.predict(X_te)
+print(confusion_matrix(y_te, y_pred))
+print(f"accuracy {accuracy_score(y_te, y_pred):.3f}  precision {precision_score(y_te, y_pred):.3f}  "
+      f"recall {recall_score(y_te, y_pred):.3f}  F1 {f1_score(y_te, y_pred):.3f}")
+print(f"always predict 0: accuracy {accuracy_score(y_te, np.zeros_like(y_te)):.3f}")
+```
+
+```text title="Output"
+positives in train/test: 0.109 0.11
+[[529   5]
+ [ 22  44]]
+accuracy 0.955  precision 0.898  recall 0.667  F1 0.765
+always predict 0: accuracy 0.890
+```
+
+`stratify=y` made the training and test sets have the same share of positives; with rare classes, a
+plain random split can leave the test set with too few of them. The model's 95.5% accuracy is only 6.5
+points above the do-nothing baseline, and it misses 22 of the 66 frauds. Accuracy hides that; the
+confusion matrix shows it.
+
+## The confusion matrix
+
+A <Term id="confusion-matrix" /> counts the four possible outcomes of a binary classifier.
+([F11](/foundations/f11/measuring-fairness/) will compute it separately for each group of people, to
+check whether a model is fair.) scikit-learn's
+`confusion_matrix(y_true, y_pred)` puts actual classes in rows and predicted classes in columns, class 0
+first:
+
+$$
+\begin{pmatrix} \text{TN} & \text{FP} \\ \text{FN} & \text{TP} \end{pmatrix}
+= \begin{pmatrix} 529 & 5 \\ 22 & 44 \end{pmatrix}
+$$
+
+TN = true negatives, FP = false positives (false alarms), FN = false negatives (misses), TP = true
+positives. Note that the positive class is in the *bottom right*, not the top left as in many textbook
+pictures. From the four counts:
+
+| Metric | Formula | Question it answers | Here |
+|---|---|---|---|
+| Accuracy | $\frac{TP + TN}{n}$ | What share of all predictions is right? | 0.955 |
+| <Term id="precision" /> | $\frac{TP}{TP + FP}$ | Of the transactions we flagged, how many were fraud? | 44/49 = 0.898 |
+| <Term id="recall" /> (TPR) | $\frac{TP}{TP + FN}$ | Of the frauds, how many did we catch? | 44/66 = 0.667 |
+| False positive rate | $\frac{FP}{FP + TN}$ | Of the legitimate ones, how many did we flag? | 5/534 = 0.009 |
+| <Term id="f1-score" text="F1" /> | $\frac{2PR}{P + R}$ | One number that needs both $P$ and $R$ high | 0.765 |
+
+F1 is the *harmonic* mean of precision and recall, which is dragged towards the smaller one: precision
+1.0 with recall 0.1 gives F1 $= 0.18$, not the arithmetic mean $0.55$. A useless "flag nothing" model
+has recall 0 and therefore F1 0, so F1 does not fall into the accuracy trap.
+
+Which metric matters depends on the cost of each mistake:
+
+- **Recall** when misses are expensive: cancer screening, fraud, safety defects. A false alarm costs a
+  follow-up check; a miss can cost a life or a lot of money.
+- **Precision** when false alarms are expensive: a spam filter that hides real email, or a system that
+  freezes customers' cards.
+- Precision also depends on how rare positives are, the base-rate effect from
+  [F5's Bayes lesson](/foundations/f5/bayes-theorem/): the same model has lower precision when
+  positives are rarer.
+
+## Moving the threshold
+
+`predict` uses a threshold of 0.5 on `predict_proba`. Nothing makes 0.5 special. If missing fraud is
+expensive, flag anything above 0.2:
+
+```python
+from sklearn.metrics import roc_auc_score, average_precision_score
+
+p = clf.predict_proba(X_te)[:, 1]          # P(y = 1) for each test row
+for t in [0.5, 0.3, 0.2, 0.1]:
+    y_hat = (p >= t).astype(int)
+    print(f"threshold {t:.1f}: flagged {y_hat.sum():3d}  precision {precision_score(y_te, y_hat):.3f}  "
+          f"recall {recall_score(y_te, y_hat):.3f}  F1 {f1_score(y_te, y_hat):.3f}")
+```
+
+```text title="Output"
+threshold 0.5: flagged  49  precision 0.898  recall 0.667  F1 0.765
+threshold 0.3: flagged  71  precision 0.718  recall 0.773  F1 0.745
+threshold 0.2: flagged  93  precision 0.581  recall 0.818  F1 0.679
+threshold 0.1: flagged 149  precision 0.376  recall 0.848  F1 0.521
+```
+
+Lowering the threshold flags more cases: recall rises and precision falls. The model is the same; only
+the decision rule changed. How to choose:
+
+- **From costs.** If a missed fraud costs £500 and a false alarm £10, pick the threshold that minimises
+  $500 \cdot FN + 10 \cdot FP$.
+- **From a requirement.** "Catch at least 80% of fraud": the highest threshold with recall $\ge 0.8$
+  (exercise 3).
+- **Without either**, maximising F1 is a common default.
+
+:::caution[Choose the threshold on validation data]
+The threshold is a hyperparameter. Picking it by looking at the test set, as the table above does for
+illustration, makes the test score optimistic. In a real project choose it on a validation set or on
+cross-validated predictions (lesson 7, and the homework), then apply it to the test set once.
+:::
+
+## ROC curves and AUC
+
+To compare *models* independently of any threshold, sweep the threshold from 1 down to 0 and plot the
+true positive rate (recall) against the false positive rate. That is the
+<Term id="roc-curve" text="ROC curve" /> (the name, receiver operating characteristic, comes from radar
+engineering).
+
+<Figure src={rocImg} alt="ROC curve of the fraud model: true positive rate against false positive rate. The curve shoots up near the left edge to about 0.67 at almost zero false positive rate, then bends and climbs slowly to the top right. The thresholds 0.5, 0.2 and 0.1 are marked along it, moving up and to the right as the threshold falls. A dashed diagonal shows random guessing. The area under the curve is 0.93." caption="Each threshold is one point. Lowering it moves up (more frauds caught) and right (more false alarms). A perfect model hugs the top-left corner; random guessing follows the diagonal." />
+
+The **area under the curve** (AUC) summarises it in one number between 0 and 1:
+
+```python
+print(f"ROC AUC {roc_auc_score(y_te, p):.3f}   average precision {average_precision_score(y_te, p):.3f}")
+```
+
+```text title="Output"
+ROC AUC 0.930   average precision 0.822
+```
+
+AUC has a neat meaning: **the probability that a randomly chosen positive gets a higher score than a
+randomly chosen negative** (exercise 2 computes it exactly this way). 0.5 is random guessing, 1.0 is a
+perfect ranking. Because it only depends on the *order* of the scores, AUC ignores the threshold
+entirely, and also ignores whether the probabilities are calibrated.
+
+With heavy imbalance, ROC can look flattering: the false positive rate divides by the huge number of
+negatives, so even many false alarms give a small FPR. The **precision–recall curve** and its summary,
+**average precision** (`average_precision_score`), focus on the positive class and are often more
+informative when positives are rare. For average precision, the baseline is the share of positives
+(0.11 here), not 0.5.
+
+## Class imbalance
+
+A checklist for <Term id="class-imbalance" text="imbalanced classes" />:
+
+1. **Split with `stratify=y`**, so every split has the same class mix.
+2. **Compare with the baseline** and use precision, recall, F1, ROC AUC or average precision rather
+   than accuracy.
+3. **Choose the threshold deliberately** rather than accepting 0.5.
+4. **Re-weight the classes** if you like: `class_weight="balanced"` makes each rare example count more
+   in the loss, which pushes the probabilities up for the rare class.
+
+```python
+bal = LogisticRegression(class_weight="balanced").fit(X_tr, y_tr)
+yb = bal.predict(X_te)
+print(f"class_weight='balanced': precision {precision_score(y_te, yb):.3f}  recall {recall_score(y_te, yb):.3f}  "
+      f"AUC {roc_auc_score(y_te, bal.predict_proba(X_te)[:, 1]):.3f}")
+```
+
+```text title="Output"
+class_weight='balanced': precision 0.419  recall 0.864  AUC 0.941
+```
+
+At the default threshold, the re-weighted model trades precision for recall, much like lowering the
+threshold did, and its AUC is similar. Re-weighting and threshold-moving are two routes to the same
+trade-off; re-weighting also distorts the probabilities, so they no longer mean "80% chance". Resampling
+(duplicating rare rows or dropping common ones) is a third route, with the same caveat.
+
+## Try it
+
+<CodeExercise id="f7-classification-metrics-01" />
+
+<CodeExercise id="f7-classification-metrics-02" />
+
+<CodeExercise id="f7-classification-metrics-03" />
+
+## Summary
+
+- Accuracy misleads when classes are imbalanced; always compare with the majority-class baseline.
+- Precision = TP/(TP + FP), recall = TP/(TP + FN), F1 = their harmonic mean. scikit-learn's confusion
+  matrix is `[[TN, FP], [FN, TP]]`.
+- The threshold trades precision against recall; choose it from costs or requirements, on validation data.
+- ROC plots TPR against FPR over all thresholds; AUC is the chance a random positive outranks a random
+  negative. Average precision is often better for rare positives.
+- Imbalance: stratify, choose metrics and threshold deliberately, optionally `class_weight="balanced"`.

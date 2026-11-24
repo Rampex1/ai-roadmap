@@ -1,0 +1,7 @@
+term: "Lasso"
+short: "Linear regression with an L1 penalty α‖w‖₁, which sets some weights exactly to zero and so selects features."
+body: |
+  scikit-learn's `Lasso` minimises $\frac{1}{2n}\lVert \mathbf{y} - X\mathbf{w} - b \rVert^2 + \alpha\lVert \mathbf{w} \rVert_1$.
+  Unlike ridge, the absolute-value penalty keeps pushing small weights all the way to zero, so the
+  fitted model uses only some features. There is no closed form; it is fitted by coordinate descent.
+related: ["regularisation", "ridge-regression"]

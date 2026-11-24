@@ -1,0 +1,8 @@
+term: "Validation set"
+short: "Held-out data used to compare models and tune hyperparameters, kept separate from both training and test data."
+body: |
+  The model is fitted on the training set and scored on the validation set; whichever setting scores best
+  is chosen. Because that choice uses the validation data, its score is slightly optimistic, which is why
+  a separate test set is kept for the final estimate. Cross-validation replaces a single validation set
+  with several rotating ones.
+related: ["test-set", "cross-validation", "hyperparameter"]

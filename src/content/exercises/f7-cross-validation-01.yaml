@@ -1,0 +1,52 @@
+id: f7-cross-validation-01
+lesson: foundations/f7/cross-validation
+title: K-fold indices by hand
+prompt: |
+  Write `kfold_indices(n, k)` that returns a list of `k` pairs `(train_idx, val_idx)`, exactly like
+  `KFold(n_splits=k)` without shuffling:
+
+  - the validation folds are **consecutive** blocks of `0 .. n-1`, in order;
+  - when `n` is not divisible by `k`, the first `n % k` folds get one extra index
+    (so 10 rows in 3 folds have sizes 4, 3, 3);
+  - each `train_idx` is every index not in that fold, in increasing order.
+starter: |
+  import numpy as np
+
+  def kfold_indices(n, k):
+      folds = []
+      # TODO
+      return folds
+
+  for train_idx, val_idx in kfold_indices(10, 3):
+      print(val_idx, train_idx)
+solution: |
+  import numpy as np
+
+  def kfold_indices(n, k):
+      sizes = np.full(k, n // k)
+      sizes[: n % k] += 1
+      idx = np.arange(n)
+      folds = []
+      start = 0
+      for size in sizes:
+          val_idx = idx[start:start + size]
+          train_idx = np.concatenate([idx[:start], idx[start + size:]])
+          folds.append((train_idx, val_idx))
+          start += size
+      return folds
+
+  for train_idx, val_idx in kfold_indices(10, 3):
+      print(val_idx, train_idx)
+tests: |
+  import numpy as np
+  from sklearn.model_selection import KFold
+  for _n, _k in [(10, 3), (12, 4), (7, 7), (23, 5)]:
+      _got = kfold_indices(_n, _k)
+      _want = list(KFold(n_splits=_k).split(np.zeros((_n, 1))))
+      assert len(_got) == _k, f"n={_n}, k={_k}: expected {_k} folds, got {len(_got)}"
+      for _i, ((_tr, _va), (_wtr, _wva)) in enumerate(zip(_got, _want)):
+          assert np.array_equal(np.asarray(_va), _wva), f"n={_n}, k={_k}, fold {_i}: validation indices should be {_wva.tolist()}, got {list(_va)}"
+          assert np.array_equal(np.asarray(_tr), _wtr), f"n={_n}, k={_k}, fold {_i}: training indices should be {_wtr.tolist()}, got {list(_tr)}"
+hints:
+  - "Fold sizes: start with n // k each, then add 1 to the first n % k of them."
+  - "Walk a start pointer along np.arange(n); the training indices are everything before and after the fold."

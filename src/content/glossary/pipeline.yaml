@@ -1,0 +1,8 @@
+term: "Pipeline (scikit-learn)"
+short: "A chain of preprocessing steps and a final model that is fitted, cross-validated and used as one estimator."
+body: |
+  `Pipeline` (or `make_pipeline`) calls `fit_transform` on each step in turn and then `fit` on the model;
+  `predict` reuses the fitted steps. Because preprocessing is learned inside `fit`, cross-validation and
+  grid search refit it on each training fold, which prevents leakage. `ColumnTransformer` applies
+  different steps to different columns.
+related: ["data-leakage", "one-hot-encoding", "feature-scaling", "cross-validation"]

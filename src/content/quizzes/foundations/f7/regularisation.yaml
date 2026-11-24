@@ -3,11 +3,11 @@ items:
     type: mcq
     prompt: "What happens to a ridge regression as $\\alpha \\to \\infty$?"
     options:
+      - text: "It becomes ordinary least squares"
+        why: "That is α = 0."
       - text: "All weights go to 0 and it predicts the training mean everywhere"
         correct: true
         why: "The penalty dominates, so w = 0; the unpenalised intercept becomes the mean of y."
-      - text: "It becomes ordinary least squares"
-        why: "That is α = 0."
       - text: "The weights grow without bound"
         why: "The penalty punishes large weights, so they shrink."
     explanation: "α = 0 is least squares; very large α forces every weight to zero, leaving the mean baseline."
@@ -18,10 +18,10 @@ items:
       - text: "The L1 penalty of lasso"
         correct: true
         why: "The constant slope of |w| pushes small weights all the way to zero."
-      - text: "The L2 penalty of ridge"
-        why: "The push of w² weakens near zero, so ridge shrinks weights without zeroing them."
       - text: "Neither; only feature deletion can do that"
         why: "Lasso does it automatically, which is why it is used for feature selection."
+      - text: "The L2 penalty of ridge"
+        why: "The push of w² weakens near zero, so ridge shrinks weights without zeroing them."
     explanation: "Lasso performs feature selection by zeroing weights; ridge only shrinks them."
   - id: f7-regularisation-03
     type: mcq
@@ -42,10 +42,10 @@ items:
       - text: "Shrinking it would shift all predictions towards 0, which has nothing to do with model complexity"
         correct: true
         why: "The intercept only sets the overall level of the predictions."
-      - text: "The intercept is always zero after scaling"
-        why: "Scaling X does not make the mean of y zero, so the intercept is usually not zero."
       - text: "scikit-learn cannot compute its gradient"
         why: "Its gradient is easy; it is left out by design."
+      - text: "The intercept is always zero after scaling"
+        why: "Scaling X does not make the mean of y zero, so the intercept is usually not zero."
     explanation: "Penalties target the weights that control how strongly the model reacts to features, not the overall level."
   - id: f7-regularisation-05
     type: numeric
@@ -57,17 +57,17 @@ items:
     type: multi
     prompt: "Which statements about ridge regression are true?"
     options:
-      - text: "It has a closed-form solution"
-        correct: true
-        why: "On centred data, w solves (XᵀX + αI)w = Xᵀy."
       - text: "With alpha = 0 it is ordinary least squares"
         correct: true
         why: "No penalty, same objective."
+      - text: "It sets the weights of useless features exactly to zero"
+        why: "That is lasso's behaviour; ridge leaves small non-zero weights."
       - text: "Adding alpha times the identity makes the system solvable even with collinear features"
         correct: true
         why: "XᵀX + αI is invertible for any α > 0."
-      - text: "It sets the weights of useless features exactly to zero"
-        why: "That is lasso's behaviour; ridge leaves small non-zero weights."
+      - text: "It has a closed-form solution"
+        correct: true
+        why: "On centred data, w solves (XᵀX + αI)w = Xᵀy."
     explanation: "Ridge keeps a closed form, generalises least squares, and is numerically stable, but does not select features."
   - id: f7-regularisation-07
     type: output
@@ -85,28 +85,28 @@ items:
     type: mcq
     prompt: "How should you choose the penalty strength $\\alpha$?"
     options:
+      - text: "Pick the one with the best test score"
+        why: "That makes the test score optimistic; the test set is for the final estimate only."
+      - text: "Pick the one with the lowest training error"
+        why: "The lowest training error is always at α = 0, which brings back the overfitting."
       - text: "Try values on a log scale and keep the one with the best validation or cross-validation score"
         correct: true
         why: "α is a hyperparameter, chosen on held-out data."
-      - text: "Pick the one with the lowest training error"
-        why: "The lowest training error is always at α = 0, which brings back the overfitting."
-      - text: "Pick the one with the best test score"
-        why: "That makes the test score optimistic; the test set is for the final estimate only."
     explanation: "Search α over values like 0.001, 0.01, ..., 1000 and compare on validation data."
   - id: f7-regularisation-09
     type: cloze
     prompt: "Ridge regression uses an ____ penalty, the sum of the squared weights."
-    accept: ["L2", "l2", "L-2", "L₂"]
+    accept: [ "L2", "l2", "L-2", "L₂" ]
     explanation: "Ridge is L2 (squared weights); lasso is L1 (absolute values)."
   - id: f7-regularisation-10
     type: mcq
     prompt: "Why does lasso push weights all the way to zero while ridge does not?"
     options:
+      - text: "Lasso uses a larger alpha by default"
+        why: "The difference comes from the shape of the penalty, not its default strength."
       - text: "The slope of |w| stays at ±1 near zero, while the slope of w², which is 2w, vanishes there"
         correct: true
         why: "A constant push can beat a weak feature's benefit; a vanishing push never quite reaches zero."
-      - text: "Lasso uses a larger alpha by default"
-        why: "The difference comes from the shape of the penalty, not its default strength."
       - text: "Lasso is solved by gradient descent and ridge in closed form"
         why: "The solver does not cause sparsity; the shape of the penalty does."
     explanation: "Near zero, the L2 penalty's pull fades away, but the L1 penalty's pull stays constant."

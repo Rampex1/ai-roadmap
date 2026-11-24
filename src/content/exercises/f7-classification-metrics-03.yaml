@@ -1,0 +1,56 @@
+id: f7-classification-metrics-03
+lesson: foundations/f7/classification-metrics
+title: The highest threshold that meets a recall target
+prompt: |
+  A screening model must catch at least a fraction `target` of the positives. Write
+  `threshold_for_recall(y_true, probs, target)` that returns the **largest** threshold `t` such that
+  predicting `probs >= t` gives recall at least `target`. Only thresholds equal to one of the `probs`
+  values need to be considered.
+
+  A higher threshold means fewer false alarms, so the largest threshold that still meets the target
+  is the best choice. You can loop over the candidate thresholds, or think about which positive's
+  probability has to be the cut-off.
+starter: |
+  import numpy as np
+
+  def threshold_for_recall(y_true, probs, target):
+      # TODO
+      return 0.5
+
+  y = np.array([1, 0, 1, 1, 0, 0, 1, 0])
+  p = np.array([0.9, 0.8, 0.7, 0.4, 0.35, 0.3, 0.2, 0.1])
+  print(threshold_for_recall(y, p, 0.75))
+solution: |
+  import numpy as np
+
+  def threshold_for_recall(y_true, probs, target):
+      y_true, probs = np.asarray(y_true), np.asarray(probs)
+      for t in np.sort(np.unique(probs))[::-1]:          # from the highest threshold down
+          pred = probs >= t
+          recall = np.sum(pred & (y_true == 1)) / np.sum(y_true == 1)
+          if recall >= target:
+              return float(t)
+      return float(probs.min())
+
+  y = np.array([1, 0, 1, 1, 0, 0, 1, 0])
+  p = np.array([0.9, 0.8, 0.7, 0.4, 0.35, 0.3, 0.2, 0.1])
+  print(threshold_for_recall(y, p, 0.75))
+tests: |
+  import numpy as np
+  _y = np.array([1, 0, 1, 1, 0, 0, 1, 0])
+  _p = np.array([0.9, 0.8, 0.7, 0.4, 0.35, 0.3, 0.2, 0.1])
+  for _tg, _want in [(0.75, 0.4), (0.5, 0.7), (1.0, 0.2), (0.25, 0.9)]:
+      _got = threshold_for_recall(_y, _p, _tg)
+      assert np.isclose(_got, _want), f"for the example with target {_tg}, the answer is {_want}, got {_got}"
+  _rng = np.random.default_rng(12)
+  for _tg in [0.8, 0.95]:
+      _yy = _rng.integers(0, 2, 300)
+      _pp = np.clip(_rng.normal(0.35 + 0.3 * _yy, 0.2), 0, 1).round(3)
+      _t = threshold_for_recall(_yy, _pp, _tg)
+      _rec = lambda t: np.sum((_pp >= t) & (_yy == 1)) / np.sum(_yy == 1)
+      assert _rec(_t) >= _tg, f"at your threshold {_t} the recall is {_rec(_t):.3f}, below the target {_tg}"
+      _higher = np.unique(_pp)[np.unique(_pp) > _t]
+      assert len(_higher) == 0 or _rec(_higher.min()) < _tg, f"a higher threshold ({_higher.min()}) also meets the target {_tg}: return the largest one"
+hints:
+  - "Try the unique probabilities from largest to smallest and return the first that meets the target."
+  - "Recall at threshold t is np.sum((probs >= t) & (y_true == 1)) / np.sum(y_true == 1)."

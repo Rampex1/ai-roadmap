@@ -1,0 +1,64 @@
+id: f7-logistic-regression-01
+lesson: foundations/f7/logistic-regression
+title: Log loss and its gradient
+prompt: |
+  Write `loss_and_grad(w, b, X, y)` for logistic regression. With $\mathbf{p} = \sigma(X\mathbf{w} + b)$,
+  return a tuple `(loss, grad_w, grad_b)`:
+
+  - `loss`: the mean log loss $-\frac{1}{n}\sum_i \big[y_i \ln p_i + (1 - y_i)\ln(1 - p_i)\big]$;
+  - `grad_w`: $\frac{1}{n} X^\top(\mathbf{p} - \mathbf{y})$, shape `(d,)`;
+  - `grad_b`: $\frac{1}{n}\sum_i (p_i - y_i)$, a number.
+
+  The tests compare the loss with `sklearn.metrics.log_loss` and the gradient with finite differences.
+starter: |
+  import numpy as np
+
+  def sigmoid(z):
+      return 1 / (1 + np.exp(-z))
+
+  def loss_and_grad(w, b, X, y):
+      p = sigmoid(X @ w + b)
+      # TODO
+      return 0.0, np.zeros_like(w), 0.0
+
+  X = np.array([[1.0, 2.0], [-1.0, 0.5], [0.5, -1.5]])
+  y = np.array([1, 0, 1])
+  print(loss_and_grad(np.array([0.2, -0.1]), 0.0, X, y))
+solution: |
+  import numpy as np
+
+  def sigmoid(z):
+      return 1 / (1 + np.exp(-z))
+
+  def loss_and_grad(w, b, X, y):
+      p = sigmoid(X @ w + b)
+      n = len(y)
+      loss = -np.mean(y * np.log(p) + (1 - y) * np.log(1 - p))
+      grad_w = X.T @ (p - y) / n
+      grad_b = np.mean(p - y)
+      return loss, grad_w, grad_b
+
+  X = np.array([[1.0, 2.0], [-1.0, 0.5], [0.5, -1.5]])
+  y = np.array([1, 0, 1])
+  print(loss_and_grad(np.array([0.2, -0.1]), 0.0, X, y))
+tests: |
+  import numpy as np
+  from sklearn.metrics import log_loss
+  _rng = np.random.default_rng(9)
+  for _n, _d in [(20, 2), (50, 4)]:
+      _X = _rng.normal(size=(_n, _d))
+      _y = _rng.integers(0, 2, _n)
+      _w = _rng.normal(size=_d)
+      _b = float(_rng.normal())
+      _L, _gw, _gb = loss_and_grad(_w, _b, _X, _y)
+      _p = 1 / (1 + np.exp(-(_X @ _w + _b)))
+      assert np.isclose(_L, log_loss(_y, _p)), f"loss should be {log_loss(_y, _p):.5f} (the mean log loss), got {_L}"
+      assert np.shape(_gw) == (_d,), f"grad_w should have shape ({_d},), got {np.shape(_gw)}"
+      _h = 1e-6
+      _num = np.array([(loss_and_grad(_w + _h * e, _b, _X, _y)[0] - loss_and_grad(_w - _h * e, _b, _X, _y)[0]) / (2 * _h) for e in np.eye(_d)])
+      np.testing.assert_allclose(_gw, _num, rtol=1e-4, atol=1e-7, err_msg="grad_w does not match a finite-difference check of your loss")
+      _numb = (loss_and_grad(_w, _b + _h, _X, _y)[0] - loss_and_grad(_w, _b - _h, _X, _y)[0]) / (2 * _h)
+      assert np.isclose(_gb, _numb, rtol=1e-4, atol=1e-7), f"grad_b should be about {_numb:.5f}, got {_gb}"
+hints:
+  - "loss = -np.mean(y * np.log(p) + (1 - y) * np.log(1 - p))"
+  - "grad_w = X.T @ (p - y) / n, the same shape as w."

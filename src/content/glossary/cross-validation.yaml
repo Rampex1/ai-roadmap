@@ -1,0 +1,8 @@
+term: "Cross-validation"
+short: "Estimating performance by splitting the training data into k folds and using each fold once as the validation set."
+body: |
+  In k-fold cross-validation the model is fitted k times, each time on k − 1 folds, and scored on the
+  remaining fold; the k scores are averaged. This uses all the training data for both fitting and
+  validation and shows how much the score varies. It is how hyperparameters are usually tuned
+  (`GridSearchCV`). Preprocessing must be refitted inside each fold to avoid leakage.
+related: ["validation-set", "hyperparameter", "data-leakage"]

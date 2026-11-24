@@ -1,0 +1,210 @@
+---
+title: "Linear regression with scikit-learn, and polynomial features"
+module: f7
+order: 2
+estMinutes: 19
+objectives:
+  - "Fit LinearRegression and read coef_, intercept_ and score()"
+  - "Solve the normal equations directly and say when the closed form beats gradient descent"
+  - "Measure a regression with MSE, RMSE and R², and explain what R² = 0 means"
+  - "Fit curves with PolynomialFeatures and say why the model is still linear"
+goDeeper: islp
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+[F6's project](/foundations/f6/linear-regression-by-gradient-descent/) built
+<Term id="linear-regression" /> from nothing: the model $\hat{\mathbf{y}} = X\mathbf{w}$ with a column of
+ones for the bias, the mean squared error loss, its gradient $\frac{2}{n}X^\top(X\mathbf{w} - \mathbf{y})$
+and a gradient descent loop. Here we use the library version, see how it gets its answer, learn to
+measure the fit, and then make the same model bend into curves.
+
+## LinearRegression
+
+Data with three features and known weights $(3, -2, 0.5)$, bias 10 and noise of standard deviation 1:
+
+```python
+import numpy as np
+from sklearn.linear_model import LinearRegression
+
+rng = np.random.default_rng(0)
+n = 200
+X = rng.normal(size=(n, 3))
+y = X @ np.array([3.0, -2.0, 0.5]) + 10 + rng.normal(0, 1.0, n)
+
+model = LinearRegression().fit(X, y)
+print("coef_:", model.coef_.round(3), " intercept_:", round(model.intercept_, 3))
+
+# The normal equations, solved directly: append a column of ones for the bias
+A = np.column_stack([X, np.ones(n)])
+w = np.linalg.solve(A.T @ A, A.T @ y)
+print("normal equations:", w.round(3))
+```
+
+```text title="Output"
+coef_: [ 2.91  -2.096  0.553]  intercept_: 9.964
+normal equations: [ 2.91  -2.096  0.553  9.964]
+```
+
+`LinearRegression` keeps the bias separate: `coef_` holds one weight per feature and `intercept_`
+the bias, so you do not add a column of ones yourself.
+
+## Where the answer comes from: the normal equations
+
+The least-squares weights are where the gradient of the loss is zero. Setting
+$\frac{2}{n}A^\top(A\mathbf{w} - \mathbf{y}) = \mathbf{0}$ gives the **normal equations**
+
+$$
+A^\top A\,\mathbf{w} = A^\top \mathbf{y}
+$$
+
+where $A$ is $X$ with a column of ones appended. This is a $(d+1) \times (d+1)$ linear system, which
+[F3](/foundations/f3/linear-systems/) taught you to solve. The code above does exactly that with
+`np.linalg.solve` and gets the same numbers as scikit-learn.
+
+Two practical notes:
+
+- **Do not compute the inverse.** $\mathbf{w} = (A^\top A)^{-1}A^\top\mathbf{y}$ is fine on paper, but
+  `np.linalg.solve` is faster and more accurate than `np.linalg.inv`. Library solvers go further and
+  use `lstsq`-style methods that never form $A^\top A$ at all, which is safer when features are nearly
+  collinear.
+- **Closed form or gradient descent?** F6 compared them: the closed form is exact and has nothing to tune,
+  but costs about $nd^2 + d^3$ operations and needs the data in memory. For linear regression with up to
+  a few thousand features, use the closed form (that is, `LinearRegression`). Gradient descent is for
+  huge $d$, data that does not fit in memory, and models with no closed form, which includes the very
+  next one we meet, logistic regression.
+
+## How good is the fit?
+
+Three standard numbers, all in `sklearn.metrics`:
+
+- **MSE**, the mean squared error $\frac{1}{n}\sum_i (y_i - \hat{y}_i)^2$: the loss we minimised.
+- **RMSE** $= \sqrt{\text{MSE}}$: in the units of $y$, so "typically off by about this much".
+- **<Term id="r-squared" />**, the fraction of the variance in $y$ that the model explains:
+
+$$
+R^2 = 1 - \frac{\sum_i (y_i - \hat{y}_i)^2}{\sum_i (y_i - \bar{y})^2}
+$$
+
+The denominator is the error of the dumbest model, the one that always predicts the mean $\bar{y}$.
+So $R^2 = 1$ is a perfect fit, $R^2 = 0$ means "no better than the mean baseline", and $R^2 < 0$ means
+worse than the baseline, which can happen on new data. A regressor's `.score(X, y)` returns $R^2$.
+
+```python
+from sklearn.metrics import mean_squared_error, r2_score
+
+y_hat = model.predict(X)
+mse = mean_squared_error(y, y_hat)
+print(f"MSE {mse:.3f}  RMSE {np.sqrt(mse):.3f}")
+print(f"R² {r2_score(y, y_hat):.4f}  score() {model.score(X, y):.4f}")
+ss_res = np.sum((y - y_hat) ** 2); ss_tot = np.sum((y - y.mean()) ** 2)
+print(f"by hand {1 - ss_res / ss_tot:.4f}")
+```
+
+```text title="Output"
+MSE 1.000  RMSE 1.000
+R² 0.9300  score() 0.9300
+by hand 0.9300
+```
+
+The RMSE of about 1 is the noise we added: no model can predict that part. These numbers are computed on
+the training data, which flatters the model. From lesson 3 on we always measure on held-out data.
+
+:::caution[Correlated is not causal]
+A weight of $-2.1$ says that, *in this data*, $\hat{y}$ falls by 2.1 when that feature rises by 1 and the
+others stay fixed. It does not say that changing the feature in the real world would change $y$. Also,
+weights are only comparable across features when the features are on the same scale.
+:::
+
+## Curves with polynomial features
+
+Here is data that follows a parabola, $y = 0.5x^2 - x + 2$ plus noise. A straight line cannot fit it.
+The trick is to **add features**: give the model $x^2$ as well as $x$. The model
+$\hat{y} = w_1 x + w_2 x^2 + b$ is a curve in $x$, but it is still *linear in the weights*, so least
+squares works unchanged. "Linear regression" means linear in $\mathbf{w}$, not in $x$.
+
+scikit-learn builds these columns with <Term id="polynomial-features" text="PolynomialFeatures" />:
+
+```python
+from sklearn.preprocessing import PolynomialFeatures
+
+rng = np.random.default_rng(1)
+x = rng.uniform(-3, 3, 60)
+y = 0.5 * x**2 - x + 2 + rng.normal(0, 0.5, 60)
+X = x.reshape(-1, 1)
+
+line = LinearRegression().fit(X, y)
+print(f"straight line R² {line.score(X, y):.3f}")
+
+poly = PolynomialFeatures(degree=2, include_bias=False)
+X2 = poly.fit_transform(X)          # columns: x, x²
+print(X[:2].ravel().round(2), "->", X2[:2].round(2).tolist())
+quad = LinearRegression().fit(X2, y)
+print(f"quadratic R² {quad.score(X2, y):.3f}  coef {quad.coef_.round(2)}  intercept {quad.intercept_:.2f}")
+```
+
+```text title="Output"
+straight line R² 0.619
+[0.07 2.7 ] -> [[0.07, 0.01], [2.7, 7.31]]
+quadratic R² 0.961  coef [-0.96  0.44]  intercept 2.14
+```
+
+The quadratic model recovers roughly the true coefficients $-1$, $0.5$ and $2$. `include_bias=False`
+leaves out the column of ones, because `LinearRegression` fits its own intercept.
+
+With several inputs, `PolynomialFeatures` also adds **products** (interactions). For two features $a$
+and $b$ at degree 2:
+
+```python
+poly = PolynomialFeatures(degree=2)
+out = poly.fit_transform(np.array([[2.0, 3.0]]))
+print(poly.get_feature_names_out(["a", "b"]))
+print(out)
+```
+
+```text title="Output"
+['1' 'a' 'b' 'a^2' 'a b' 'b^2']
+[[1. 2. 3. 4. 6. 9.]]
+```
+
+The number of columns grows fast. Without the bias column, degree 2 turns 10 features into 65 and 100
+features into 5,150; degree 3 turns 100 features into 176,850. More features means more freedom to fit
+noise, which is the subject of the next lesson.
+
+## Chaining steps with a pipeline
+
+Having to call `fit_transform` on the features and then `fit` on the model, and remembering to
+transform new data the same way before `predict`, is error-prone. `make_pipeline` glues the steps into
+one estimator with the usual `fit` and `predict`:
+
+```python
+from sklearn.pipeline import make_pipeline
+
+model = make_pipeline(PolynomialFeatures(degree=2, include_bias=False), LinearRegression())
+model.fit(x.reshape(-1, 1), y)
+print(model.predict([[0.0], [2.0]]).round(2))
+```
+
+```text title="Output"
+[2.14 1.96]
+```
+
+The pipeline applies the polynomial expansion to the new points automatically. Lesson 8 shows why
+pipelines are also the main defence against data leakage.
+
+## Try it
+
+<CodeExercise id="f7-linear-regression-with-scikit-learn-01" />
+
+<CodeExercise id="f7-linear-regression-with-scikit-learn-02" />
+
+<CodeExercise id="f7-linear-regression-with-scikit-learn-03" />
+
+## Summary
+
+- `LinearRegression().fit(X, y)` stores weights in `coef_` and the bias in `intercept_`.
+- The least-squares solution solves the normal equations $A^\top A\mathbf{w} = A^\top\mathbf{y}$; use a
+  solver, not an inverse. Use the closed form when it exists and fits in memory, gradient descent otherwise.
+- MSE is the loss, RMSE is in the units of $y$, and $R^2$ compares the model with always predicting the mean.
+- Polynomial features let a linear model fit curves; the column count explodes with degree and inputs.
+- `make_pipeline` chains preprocessing and a model into one estimator.

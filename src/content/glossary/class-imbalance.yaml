@@ -1,0 +1,7 @@
+term: "Class imbalance"
+short: "When one class is much rarer than another, as with fraud or disease, so accuracy becomes misleading."
+body: |
+  A model that always predicts the majority class can score 99% accuracy and be useless. Remedies:
+  use precision, recall, F1 or average precision; split with stratification; weight the rare class
+  (`class_weight="balanced"`); and pick the decision threshold deliberately.
+related: ["precision", "recall", "f1-score"]

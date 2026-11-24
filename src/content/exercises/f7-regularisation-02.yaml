@@ -1,0 +1,73 @@
+id: f7-regularisation-02
+lesson: foundations/f7/regularisation
+title: Choose the penalty on validation data
+prompt: |
+  Write `choose_alpha(X_tr, y_tr, X_val, y_val, alphas)`. For each `alpha`, fit
+  `make_pipeline(StandardScaler(), Ridge(alpha=alpha))` on the training data and compute the mean
+  squared error on the validation data. Return the `alpha` with the lowest validation MSE.
+
+  The two datasets below need very different amounts of penalty. Which gets the larger one, and why?
+starter: |
+  import numpy as np
+  from sklearn.pipeline import make_pipeline
+  from sklearn.preprocessing import StandardScaler
+  from sklearn.linear_model import Ridge
+  from sklearn.metrics import mean_squared_error
+
+  def choose_alpha(X_tr, y_tr, X_val, y_val, alphas):
+      # TODO
+      return alphas[0]
+
+  alphas = [0.01, 0.1, 1, 10, 100, 1000]
+  rng = np.random.default_rng(0)
+  # few rows, many noisy features: only the first feature matters
+  X = rng.normal(size=(60, 40)); y = X[:, 0] + rng.normal(0, 2, 60)
+  print("noisy:", choose_alpha(X[:30], y[:30], X[30:], y[30:], alphas))
+  # many rows, few features, little noise
+  X = rng.normal(size=(400, 3)); y = X @ np.array([1.0, 2.0, 3.0]) + rng.normal(0, 0.1, 400)
+  print("clean:", choose_alpha(X[:300], y[:300], X[300:], y[300:], alphas))
+solution: |
+  import numpy as np
+  from sklearn.pipeline import make_pipeline
+  from sklearn.preprocessing import StandardScaler
+  from sklearn.linear_model import Ridge
+  from sklearn.metrics import mean_squared_error
+
+  def choose_alpha(X_tr, y_tr, X_val, y_val, alphas):
+      errors = []
+      for a in alphas:
+          model = make_pipeline(StandardScaler(), Ridge(alpha=a)).fit(X_tr, y_tr)
+          errors.append(mean_squared_error(y_val, model.predict(X_val)))
+      return alphas[int(np.argmin(errors))]
+
+  alphas = [0.01, 0.1, 1, 10, 100, 1000]
+  rng = np.random.default_rng(0)
+  # few rows, many noisy features: only the first feature matters
+  X = rng.normal(size=(60, 40)); y = X[:, 0] + rng.normal(0, 2, 60)
+  print("noisy:", choose_alpha(X[:30], y[:30], X[30:], y[30:], alphas))
+  # many rows, few features, little noise
+  X = rng.normal(size=(400, 3)); y = X @ np.array([1.0, 2.0, 3.0]) + rng.normal(0, 0.1, 400)
+  print("clean:", choose_alpha(X[:300], y[:300], X[300:], y[300:], alphas))
+tests: |
+  import numpy as np
+  from sklearn.pipeline import make_pipeline
+  from sklearn.preprocessing import StandardScaler
+  from sklearn.linear_model import Ridge
+  def _ref(Xt, yt, Xv, yv, al):
+      e = [np.mean((make_pipeline(StandardScaler(), Ridge(alpha=a)).fit(Xt, yt).predict(Xv) - yv) ** 2) for a in al]
+      return al[int(np.argmin(e))]
+  _al = [0.001, 0.03, 1, 30, 1000]
+  _rng = np.random.default_rng(13)
+  _seen = set()
+  for _n, _d, _noise in [(50, 30, 3.0), (300, 4, 0.05), (80, 10, 1.0)]:
+      _X = _rng.normal(size=(_n, _d)) * _rng.uniform(0.1, 10, _d)
+      _y = _X[:, :2] @ np.array([0.3, -0.2]) + _rng.normal(0, _noise, _n)
+      _cut = _n // 2
+      _want = _ref(_X[:_cut], _y[:_cut], _X[_cut:], _y[_cut:], _al)
+      _got = choose_alpha(_X[:_cut], _y[:_cut], _X[_cut:], _y[_cut:], _al)
+      assert _got == _want, f"with {_n} rows and {_d} features, the lowest validation MSE is at alpha={_want}, you returned {_got}"
+      _seen.add(_want)
+  assert len(_seen) >= 2, "internal check: the test datasets should prefer different alphas"
+hints:
+  - "Loop over alphas, fit the pipeline on (X_tr, y_tr), and score with mean_squared_error(y_val, model.predict(X_val))."
+  - "alphas[int(np.argmin(errors))] returns the winner."

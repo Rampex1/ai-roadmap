@@ -1,0 +1,8 @@
+term: "k-nearest neighbours (k-NN)"
+short: "Predicting from the k training examples closest to the new point: a majority vote for classification, an average for regression."
+body: |
+  Fitting only stores the data; the work happens at prediction time, when distances to every training
+  point are computed. Small $k$ gives a jagged boundary (low bias, high variance), large $k$ a smooth one.
+  Features must be scaled, since distances are dominated by large-scale features, and it struggles in
+  high dimensions, where all points become roughly equally far apart.
+related: ["decision-boundary", "feature-scaling", "bias-variance-trade-off"]

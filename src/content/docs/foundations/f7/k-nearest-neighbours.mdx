@@ -1,0 +1,207 @@
+---
+title: "k-nearest neighbours, and which model when"
+module: f7
+order: 9
+estMinutes: 16
+objectives:
+  - "Predict with k-NN by hand: distances, the k nearest, a majority vote"
+  - "Explain how k controls bias and variance, and why k-NN needs scaled features and few dimensions"
+  - "Choose a sensible first model for a tabular problem and follow a standard workflow from baseline to test set"
+goDeeper: sklearn-user-guide
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Every model so far learned weights. <Term id="k-nearest-neighbours" text="k-nearest neighbours" /> (k-NN)
+learns nothing at all: it remembers the training set, and to classify a new point it finds the $k$
+most similar training points and lets them vote. It is the simplest model with a curved decision
+boundary, and a good lens on everything in this module: bias and variance, scaling and dimensionality.
+
+## The algorithm
+
+To predict for a new point $\mathbf{x}$:
+
+1. Compute the distance from $\mathbf{x}$ to every training point, usually the Euclidean distance
+   $\lVert \mathbf{x} - \mathbf{x}_i \rVert$ ([F3](/foundations/f3/vectors/)).
+2. Take the $k$ training points with the smallest distances.
+3. **Classification:** predict the most common label among them. **Regression:** predict their mean.
+
+Five training points, two classes, $k = 3$:
+
+```python
+import numpy as np
+
+X_train = np.array([[1.0, 1.0], [2.0, 1.0], [4.0, 4.0], [5.0, 4.0], [5.0, 5.0]])
+y_train = np.array([0, 0, 1, 1, 1])
+x_new = np.array([3.0, 2.0])
+
+dist = np.linalg.norm(X_train - x_new, axis=1)    # distance to every training point
+print(dist.round(3))
+nearest = np.argsort(dist)[:3]                     # indices of the 3 closest
+print(nearest, y_train[nearest])
+print("prediction:", np.bincount(y_train[nearest]).argmax())
+```
+
+```text title="Output"
+[2.236 1.414 2.236 2.828 3.606]
+[1 0 2] [0 0 1]
+prediction: 0
+```
+
+`np.bincount` counts how many times each label occurs and `argmax` picks the most common. `fit` in
+scikit-learn's `KNeighborsClassifier` only stores the data (plus an index structure to speed up the
+search). All the work happens in `predict`, which must compare each new point with the training set:
+roughly $n \times d$ operations per prediction. That is fast to train and slow to use, the opposite of
+logistic regression.
+
+## k is a bias–variance dial
+
+With $k = 1$, every training point is its own nearest neighbour, so training accuracy is perfect, and
+the boundary bends around every noisy point. With large $k$, each prediction averages over a big
+neighbourhood, so the boundary is smooth; with $k = n$ the model predicts the majority class everywhere.
+On the two-moons dataset (two interleaved half-circles, with noise):
+
+```python
+from sklearn.datasets import make_moons
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+
+X, y = make_moons(n_samples=400, noise=0.3, random_state=0)
+X_tr, X_val, y_tr, y_val = train_test_split(X, y, test_size=0.3, random_state=0)
+for k in [1, 5, 15, 50, 150]:
+    knn = KNeighborsClassifier(n_neighbors=k).fit(X_tr, y_tr)
+    print(f"k={k:<4} train acc {knn.score(X_tr, y_tr):.3f}  validation acc {knn.score(X_val, y_val):.3f}")
+```
+
+```text title="Output"
+k=1    train acc 1.000  validation acc 0.892
+k=5    train acc 0.900  validation acc 0.908
+k=15   train acc 0.889  validation acc 0.925
+k=50   train acc 0.896  validation acc 0.925
+k=150  train acc 0.807  validation acc 0.867
+```
+
+Small $k$: low bias, high variance (perfect training score, worse validation). Large $k$: high bias.
+The middle wins, exactly as in [lesson 3](/foundations/f7/overfitting-and-bias-variance/). Choose $k$ by
+cross-validation (exercise 2). For binary problems an odd $k$ avoids tied votes. The option
+`weights="distance"` lets closer neighbours count more.
+
+## Scaling is not optional
+
+Distances add up squared differences across features, so a feature measured in thousands drowns one
+measured in hundredths. In the breast cancer data, "mean area" runs from about 144 to 2,501 while
+"mean fractal dimension" runs from 0.050 to 0.097:
+
+```python
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import cross_val_score
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+
+X, y = load_breast_cancer(return_X_y=True)
+print(f"mean area: {X[:, 3].min():.1f} to {X[:, 3].max():.1f}")
+print(f"mean fractal dimension: {X[:, 9].min():.3f} to {X[:, 9].max():.3f}")
+raw = KNeighborsClassifier(n_neighbors=5)
+scaled = make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=5))
+print("unscaled CV accuracy:", cross_val_score(raw, X, y, cv=5).mean().round(3))
+print("scaled CV accuracy:  ", cross_val_score(scaled, X, y, cv=5).mean().round(3))
+```
+
+```text title="Output"
+mean area: 143.5 to 2501.0
+mean fractal dimension: 0.050 to 0.097
+unscaled CV accuracy: 0.928
+scaled CV accuracy:   0.965
+```
+
+Unscaled, k-NN is effectively using only the few large-scale features. Scaling inside the pipeline
+(lesson 8) lets all 30 contribute, and cuts the error by half.
+
+## The curse of dimensionality
+
+k-NN assumes that nearby points have similar labels. In high dimensions, "nearby" stops meaning much:
+
+```python
+rng = np.random.default_rng(0)
+for d in [2, 10, 100, 1000]:
+    X = rng.uniform(size=(1000, d))
+    dist = np.linalg.norm(X[1:] - X[0], axis=1)
+    print(f"d={d:<5} nearest/farthest distance ratio {dist.min() / dist.max():.2f}")
+```
+
+```text title="Output"
+d=2     nearest/farthest distance ratio 0.01
+d=10    nearest/farthest distance ratio 0.29
+d=100   nearest/farthest distance ratio 0.70
+d=1000  nearest/farthest distance ratio 0.90
+```
+
+With 1,000 random features, a point's nearest neighbour is 90% as far away as its farthest one: everyone
+is roughly equally distant, so the "nearest" neighbours are hardly more similar than random points.
+k-NN works best with a modest number of meaningful features. With many features, reduce them first (PCA
+from F3, or feature selection), or use a model that learns which features matter. Real data is usually
+less hopeless than uniform noise, because its features are correlated, but the warning stands.
+
+## Which model when
+
+You now have four model families. F8 adds trees and ensembles, F9 neural networks. A first guide for
+tabular data:
+
+| Model | Good at | Watch out for | Needs scaling |
+|---|---|---|---|
+| Linear regression | numeric target, roughly linear effects, interpretable weights | curves (add features), outliers, collinear features | no (yes if penalised) |
+| Ridge / lasso | many features, few rows; lasso when few features matter | choosing $\alpha$; unscaled features | yes |
+| Logistic regression | classification baseline, calibrated-ish probabilities, interpretable | linear boundary only; choose `C` | yes |
+| k-NN | low-dimensional data with curved boundaries; no training time | slow predictions, high dimensions, irrelevant features | yes |
+| Trees and ensembles (F8) | tabular data with interactions and mixed types; often the strongest | overfitting single trees; less interpretable | no |
+| Neural networks (F9) | images, text, audio, very large datasets | data hunger, tuning, compute | yes |
+
+And a workflow that works for almost every tabular problem:
+
+1. **Frame the problem.** What is the label? Regression or classification? What would a wrong prediction
+   cost, and which metric reflects that (lesson 6)? Would every feature be known at prediction time
+   (lesson 8)?
+2. **Split off a test set** (stratified, or by time or group if needed) and do not touch it.
+3. **Baseline.** `DummyClassifier` or `DummyRegressor`, cross-validated. Everything else must beat it.
+4. **Simple model first.** A regularised linear model in a pipeline with sensible preprocessing.
+5. **Compare a few model families** with the same cross-validation folds and the same metric; tune each
+   one's key hyperparameters with `GridSearchCV`.
+6. **Decide** using the CV scores, their spread, and practical concerns (speed, interpretability). A
+   model that is 0.2 points better but ten times harder to explain may not be the right choice.
+7. **Choose a threshold** for classifiers, on cross-validated predictions.
+8. **Evaluate once on the test set** and report the score with the baseline beside it.
+
+The baseline for the breast cancer data, for example:
+
+```python
+from sklearn.dummy import DummyClassifier
+
+X, y = load_breast_cancer(return_X_y=True)
+print(cross_val_score(DummyClassifier(), X, y, cv=5).mean().round(3))
+```
+
+```text title="Output"
+0.627
+```
+
+So 96.5% accuracy from scaled k-NN means the error rate fell from 37% to 3.5%, which is a clearer way to
+state the gain. The homework walks through this whole workflow on a realistic table.
+
+:::note[No free lunch]
+No model is best on every problem. The table above gives sensible defaults, not rules; the only way to
+know which works on *your* data is to compare them fairly, with cross-validation.
+:::
+
+## Try it
+
+<CodeExercise id="f7-k-nearest-neighbours-01" />
+
+<CodeExercise id="f7-k-nearest-neighbours-02" />
+
+## Summary
+
+- k-NN predicts by a majority vote (or mean) of the $k$ nearest training points; fitting only stores data.
+- Small $k$ overfits, large $k$ underfits; pick $k$ by cross-validation.
+- Always scale features for k-NN; it degrades in high dimensions, where all distances look alike.
+- Start every project with a baseline and a simple, regularised model in a pipeline; compare model
+  families with the same CV folds and metric; touch the test set once.

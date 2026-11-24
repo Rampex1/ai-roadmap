@@ -1,0 +1,7 @@
+term: "Feature"
+short: "One input variable a model uses to make a prediction, such as floor area or age; one column of X."
+body: |
+  The feature matrix $X$ has one row per example and one column per feature, shape $(n, d)$.
+  Choosing, cleaning, scaling and constructing features (feature engineering) often matters more than
+  the choice of model.
+related: ["label", "feature-scaling", "one-hot-encoding"]

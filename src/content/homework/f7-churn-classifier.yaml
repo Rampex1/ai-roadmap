@@ -1,0 +1,37 @@
+id: f7-churn-classifier
+module: f7
+kind: homework
+title: "End-to-end tabular classification: predicting customer churn"
+brief: |
+  Build a churn classifier from start to finish, following the workflow from the last F7 lesson. The
+  notebook generates a realistic synthetic table of 3,000 phone customers (numeric and categorical
+  columns, missing values, an irrelevant column and one leaky column), so it runs offline and everyone
+  gets the same numbers. Download the notebook and open it in local Jupyter or
+  [Google Colab](https://colab.research.google.com/) (File > Upload notebook). You need scikit-learn 1.2
+  or newer, pandas and matplotlib.
+
+  Each task has `TODO` cells and a check cell that prints `OK` when your code is right:
+
+  1. **Explore:** churn rate, missing values, churn rate by contract type, and a two-panel figure.
+     Find the column that would not be known at prediction time and measure how well it "predicts" churn.
+  2. **Split:** a stratified 80/20 train/test split; the test set stays untouched until Task 6.
+  3. **Preprocess:** a `ColumnTransformer` that imputes and scales the numeric columns and imputes and
+     one-hot encodes the categorical ones.
+  4. **Compare models** with the same stratified 5-fold CV and ROC AUC: a dummy baseline, an almost
+     unpenalised logistic regression, an L2-regularised logistic regression with `C` tuned by
+     `GridSearchCV`, and k-NN with `k` tuned.
+  5. **Choose a threshold** that catches at least 70% of churners, using out-of-fold probabilities from
+     `cross_val_predict`, and plot precision and recall against the threshold.
+  6. **Evaluate once** on the test set: ROC AUC, precision, recall and the confusion matrix.
+  7. **Write up** the result for a non-technical manager in 8 to 12 sentences.
+
+  Stretch tasks add interaction features, L1 feature selection, a cost-based threshold and class weights.
+notebook: /homework/f7-churn-classifier.ipynb
+rubric:
+  - "Every check cell for Tasks 1 to 6 prints OK after restarting and running all cells"
+  - "The leaky column is identified and dropped before the split, and the write-up explains why it must go despite its high AUC"
+  - "All preprocessing happens inside pipelines, and the test set is used only in Task 6"
+  - "The model comparison table reports mean and standard deviation of CV AUC for all four models, and the write-up says whether the differences exceed the fold-to-fold spread"
+  - "The threshold was chosen on out-of-fold predictions, and the figure shows precision and recall against the threshold with the choice marked"
+  - "The write-up states test AUC, precision and recall in plain words, next to the baseline, and discusses whether the 70% recall target was met"
+compute: "Any laptop or free Colab (CPU), under 15 minutes including reading; all cells together run in under a minute"

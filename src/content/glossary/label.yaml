@@ -1,0 +1,7 @@
+term: "Label"
+short: "The answer a supervised model learns to predict for each example, also called the target; the vector y."
+body: |
+  For regression the label is a number (a price), for classification a category (spam or not). Labels
+  are often the expensive part of a dataset, because someone has to record or annotate them, and they
+  can carry human bias.
+related: ["feature", "supervised-learning"]

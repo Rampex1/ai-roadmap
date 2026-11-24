@@ -1,0 +1,194 @@
+---
+title: "What machine learning is: features, labels and the fit/predict loop"
+module: f7
+order: 1
+estMinutes: 15
+objectives:
+  - "Tell supervised from unsupervised learning, and regression from classification, for a given task"
+  - "Arrange data as a feature matrix X of shape (n, d) and a label vector y of shape (n,)"
+  - "Use scikit-learn's estimator API: constructor hyperparameters, fit, predict and learned attributes ending in _"
+  - "Explain why a model is judged on data it was not trained on"
+goDeeper: google-ml-crash-course
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+In ordinary programming you write the rules: "if the email contains *free money*, mark it as spam". In
+machine learning you supply **examples** and let an algorithm find the rules. You show it ten thousand
+emails, each marked spam or not spam, and it fits a function that maps an email to a verdict. The rules
+end up stored as numbers (weights) rather than as `if` statements.
+
+You have already done this once. In [F6](/foundations/f6/linear-regression-by-gradient-descent/) you
+fitted a linear regression by gradient descent: data in, weights out. This module turns that one
+example into a method: how to set up a learning problem, how to tell whether the model is any good, and
+how to avoid fooling yourself along the way.
+
+## Features and labels
+
+Every dataset in this module is a table. Each **row** is one example (a flat, a patient, a transaction).
+Each **column** is a <Term id="feature" />: a measured input such as floor area or age. In one column
+there is the thing we want to predict, the <Term id="label" /> (also called the *target*).
+
+We keep the features in a matrix and the labels in a vector:
+
+$$
+X = \begin{pmatrix} x_{11} & \cdots & x_{1d} \\ \vdots & & \vdots \\ x_{n1} & \cdots & x_{nd} \end{pmatrix} \in \mathbb{R}^{n \times d},
+\qquad
+\mathbf{y} = \begin{pmatrix} y_1 \\ \vdots \\ y_n \end{pmatrix}
+$$
+
+Here $n$ is the number of examples and $d$ the number of features; row $i$ of $X$, written
+$\mathbf{x}_i$, belongs with label $y_i$. A model is a function $f$ with $f(\mathbf{x}) \approx y$.
+This is the same layout as F3 and F6: one example per row.
+
+## Kinds of learning
+
+**Supervised learning.** In <Term id="supervised-learning" /> every training example comes with its
+label, and the job is to predict labels for new examples. It splits by the kind of label:
+
+- **Regression:** $y$ is a number. Predict a flat's rent, tomorrow's temperature, a house price.
+- **Classification:** $y$ is a category. Spam or not spam, which digit is in an image, whether a tumour
+  is malignant. With two classes it is *binary* classification, and we usually code them 0 and 1.
+
+**Unsupervised learning.** In <Term id="unsupervised-learning" /> there are no labels, only $X$. The
+job is to find structure: groups of similar customers (clustering), or a compact summary of many
+features, as PCA did in [F3](/foundations/f3/svd-and-pca/). F8 covers clustering.
+
+There is also **reinforcement learning**, where an agent learns from rewards while acting in an
+environment. It does not fit the table layout and is not part of this module.
+
+:::note[Which kind is it?]
+Ask: *is there a column I want to predict, and do I have it for the training rows?* If yes, it is
+supervised; then ask whether that column is a number (regression) or a category (classification).
+If there is no such column, it is unsupervised.
+:::
+
+## The loop: fit, predict, evaluate
+
+Almost every project in this module follows the same steps:
+
+1. **Collect** a table of examples with features and labels.
+2. **Split** off some rows that the model will not see while learning.
+3. **Fit** the model on the remaining rows: choose its parameters to make a loss small, as in F6.
+4. **Predict** labels for the held-out rows.
+5. **Evaluate** by comparing those predictions with the true held-out labels.
+
+Step 2 is the one beginners skip, and it is the most important. A model that has memorised its training
+rows can score perfectly on them and still be useless on new ones. What we care about is
+**generalisation**: performance on data the model has never seen. Lesson 3 is about exactly this.
+
+## scikit-learn's estimator API
+
+[scikit-learn](https://scikit-learn.org/) is the standard Python library for classical ML. (The
+exercises on this site run version 1.8 in your browser; the online documentation is a little ahead,
+as of late 2026.) Its great strength is that every model has the **same interface**, so once you have
+used one, you can use them all:
+
+```python
+import numpy as np
+from sklearn.linear_model import LinearRegression
+
+# 6 flats: floor area (m²) and number of rooms -> monthly rent (in £)
+X = np.array([[30, 1], [45, 2], [50, 2], [70, 3], [85, 3], [100, 4]])
+y = np.array([900, 1150, 1250, 1600, 1800, 2100])
+
+model = LinearRegression()      # 1. choose a model (hyperparameters go here)
+model.fit(X, y)                 # 2. learn parameters from (X, y)
+print("weights:", model.coef_.round(2), "bias:", round(model.intercept_, 2))
+
+X_new = np.array([[60, 2], [120, 5]])
+print("predictions:", model.predict(X_new).round(0))   # 3. predict for new rows
+```
+
+```text title="Output"
+weights: [14.51 62.05] bias: 392.63
+predictions: [1387. 2444.]
+```
+
+Four conventions to remember:
+
+- **The constructor holds the settings.** Anything you choose *before* training goes into the
+  constructor, such as `KNeighborsClassifier(n_neighbors=5)`. These settings are called
+  <Term id="hyperparameter" text="hyperparameters" />, to tell them apart from the parameters the model learns.
+- **`fit(X, y)` learns.** It changes the object in place and returns the object itself, so
+  `LinearRegression().fit(X, y).predict(X_new)` works in one line.
+- **Learned things end in an underscore.** `coef_` and `intercept_` exist only after `fit`. Asking for
+  them earlier raises an error, which is how scikit-learn tells you the model is not trained yet.
+- **`predict(X)` takes a 2-D array and returns one prediction per row.**
+
+That last point causes the most common beginner error. With one feature, you still need a 2-D `X`
+of shape `(n, 1)`:
+
+```python
+area = np.array([30, 45, 50, 70, 85, 100])
+rent = np.array([900, 1150, 1250, 1600, 1800, 2100])
+try:
+    LinearRegression().fit(area, rent)
+except ValueError as e:
+    print(str(e).splitlines()[0])
+X = area.reshape(-1, 1)
+print(X.shape)
+print(LinearRegression().fit(X, rent).predict([[60]]).round(1))
+```
+
+```text title="Output"
+Expected 2D array, got 1D array instead:
+(6, 1)
+[1410.3]
+```
+
+`reshape(-1, 1)` means "one column, as many rows as needed" ([F2](/foundations/f2/reshape-and-random/)
+introduced reshaping).
+
+The same three calls work for a classifier, and the unsupervised models follow the same pattern
+minus the `y`:
+
+```python
+from sklearn.datasets import load_iris
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.cluster import KMeans
+
+X, y = load_iris(return_X_y=True)
+print(X.shape, y.shape, set(y.tolist()))
+clf = KNeighborsClassifier(n_neighbors=5).fit(X, y)          # supervised: uses y
+print(clf.predict([[5.0, 3.4, 1.5, 0.2], [6.7, 3.0, 5.2, 2.3]]))
+km = KMeans(n_clusters=3, n_init=10, random_state=0).fit(X)   # unsupervised: no y
+print(km.labels_[:5], km.labels_[-5:])
+```
+
+```text title="Output"
+(150, 4) (150,) {0, 1, 2}
+[0 2]
+[1 1 1 1 1] [2 0 2 2 0]
+```
+
+The iris dataset has 150 flowers, 4 measurements each, and 3 species. The classifier predicts species
+0 and 2 for two new flowers. K-means, which never saw `y`, invents its own three groups; its group
+numbers are arbitrary and need not match the species codes.
+
+Models that transform data rather than predict, such as a scaler, have `fit` and `transform` instead
+(and `fit_transform` to do both). You will meet them in lesson 8.
+
+## Start with a baseline
+
+How do you know whether rent predictions within £100 are good? Compare with a <Term id="baseline-model" />
+that knows nothing: always predict the average training rent, or for classification the most common
+class. scikit-learn ships these as `DummyRegressor` and `DummyClassifier`. A model that cannot beat
+the baseline has learned nothing useful, however sophisticated it is. In the first exercise you write
+the mean baseline yourself, as a proper scikit-learn style estimator.
+
+## Try it
+
+<CodeExercise id="f7-what-is-machine-learning-01" />
+
+<CodeExercise id="f7-what-is-machine-learning-02" />
+
+## Summary
+
+- Machine learning fits a function from examples instead of hand-written rules.
+- Data is a feature matrix $X$ of shape $(n, d)$ and a label vector $\mathbf{y}$ of length $n$.
+- Supervised learning has labels: regression for numbers, classification for categories.
+  Unsupervised learning has none and looks for structure.
+- scikit-learn's API: hyperparameters in the constructor, `fit(X, y)` to learn, attributes ending in
+  `_` hold what was learned, `predict(X)` with a 2-D `X`.
+- Judge models on data they did not train on, and always compare with a baseline.

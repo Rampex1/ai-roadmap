@@ -9,11 +9,11 @@ items:
     type: mcq
     prompt: "Why use 5-fold cross-validation instead of a single 80/20 validation split?"
     options:
+      - text: "It makes the model more accurate"
+        why: "CV estimates performance; the model itself is the same."
       - text: "Its average over five splits is less noisy, and every training row is used for validation once"
         correct: true
         why: "One split's score depends on which rows land in it; averaging reduces that luck."
-      - text: "It makes the model more accurate"
-        why: "CV estimates performance; the model itself is the same."
       - text: "It removes the need for a test set"
         why: "Choosing hyperparameters by CV score still makes that score optimistic; the test set stays."
     explanation: "CV gives a more stable estimate and a measure of its spread."
@@ -21,54 +21,54 @@ items:
     type: mcq
     prompt: "Why is `search.best_score_` from GridSearchCV slightly optimistic?"
     options:
+      - text: "GridSearchCV adds a bonus to the best score"
+        why: "No bonus; the bias is a statistical selection effect."
       - text: "It is the maximum of many noisy scores, so the winner was partly lucky"
         correct: true
         why: "Selecting the best of several estimates biases it upwards."
       - text: "It is computed on the training folds"
         why: "It is computed on the validation folds; the bias comes from selection."
-      - text: "GridSearchCV adds a bonus to the best score"
-        why: "No bonus; the bias is a statistical selection effect."
     explanation: "A held-out test set, or nested cross-validation, gives an unbiased estimate."
   - id: f7-cross-validation-04
     type: mcq
     prompt: "For `make_pipeline(StandardScaler(), LogisticRegression())`, which key sets `C` in a GridSearchCV grid?"
     options:
+      - text: "LogisticRegression.C"
+        why: "scikit-learn uses step__parameter with the lower-case step name, not attribute syntax."
       - text: "logisticregression__C"
         correct: true
         why: "make_pipeline names steps after their class in lower case, and step and parameter are joined by a double underscore."
       - text: "C"
         why: "The pipeline has no parameter called C; you must say which step it belongs to."
-      - text: "LogisticRegression.C"
-        why: "scikit-learn uses step__parameter with the lower-case step name, not attribute syntax."
     explanation: "Pipeline parameters are named `<step>__<param>`."
   - id: f7-cross-validation-05
     type: cloze
     prompt: "In a pipeline built with `make_pipeline(StandardScaler(), Ridge())`, the grid key for Ridge's `alpha` is ____ ."
-    accept: ["ridge__alpha"]
+    accept: [ "ridge__alpha" ]
     explanation: "The step is named \"ridge\" and the parameter is joined with a double underscore: `ridge__alpha`."
   - id: f7-cross-validation-06
     type: mcq
     prompt: "Your rows are daily measurements over three years. Which splitter fits?"
     options:
-      - text: "TimeSeriesSplit"
-        correct: true
-        why: "Each fold trains on earlier days and validates on later ones."
       - text: "KFold with shuffle=True"
         why: "Shuffling mixes future days into training, which leaks information."
       - text: "StratifiedKFold"
         why: "Stratification balances classes but ignores time order."
+      - text: "TimeSeriesSplit"
+        correct: true
+        why: "Each fold trains on earlier days and validates on later ones."
     explanation: "With time-ordered data, always validate on the future."
   - id: f7-cross-validation-07
     type: mcq
     prompt: "A medical dataset has several scans per patient. Which splitter keeps one patient's scans on the same side of every split?"
     options:
-      - text: "GroupKFold, with the patient ID as the group"
-        correct: true
-        why: "Groups are kept whole, so the model is validated on patients it has never seen."
       - text: "StratifiedKFold"
         why: "It balances classes but may put the same patient in training and validation."
       - text: "LeaveOneOut"
         why: "Leaving out one scan still leaves that patient's other scans in training."
+      - text: "GroupKFold, with the patient ID as the group"
+        correct: true
+        why: "Groups are kept whole, so the model is validated on patients it has never seen."
     explanation: "Group-aware splitting prevents the model from recognising people instead of learning the task."
   - id: f7-cross-validation-08
     type: output
@@ -92,13 +92,13 @@ items:
     type: mcq
     prompt: "What does `cross_val_score(clf, X, y, cv=5)` use for a classifier `clf`?"
     options:
-      - text: "StratifiedKFold with 5 folds, without shuffling"
-        correct: true
-        why: "For classifiers an integer cv means stratified folds, in the order the rows come."
       - text: "KFold with 5 folds, shuffled"
         why: "The default does not shuffle, which matters if your rows are sorted."
       - text: "Five random 80/20 splits"
         why: "That would be ShuffleSplit, not the default."
+      - text: "StratifiedKFold with 5 folds, without shuffling"
+        correct: true
+        why: "For classifiers an integer cv means stratified folds, in the order the rows come."
     explanation: "Pass `StratifiedKFold(5, shuffle=True, random_state=...)` explicitly if the rows may be ordered."
   - id: f7-cross-validation-11
     type: numeric

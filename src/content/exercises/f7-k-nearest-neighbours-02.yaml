@@ -1,0 +1,63 @@
+id: f7-k-nearest-neighbours-02
+lesson: foundations/f7/k-nearest-neighbours
+title: Choose k with cross-validation
+prompt: |
+  Write `best_k(X, y, ks)` that returns the `k` in `ks` with the highest mean 5-fold cross-validated
+  accuracy for `make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=k))`. Use
+  `cross_val_score(model, X, y, cv=5)`. If two values tie, return the first one in `ks`.
+
+  Putting the scaler inside the pipeline means it is refitted on each training fold, so the
+  validation fold never influences the scaling.
+starter: |
+  import numpy as np
+  from sklearn.pipeline import make_pipeline
+  from sklearn.preprocessing import StandardScaler
+  from sklearn.neighbors import KNeighborsClassifier
+  from sklearn.model_selection import cross_val_score
+  from sklearn.datasets import load_breast_cancer
+
+  def best_k(X, y, ks):
+      # TODO
+      return ks[0]
+
+  X, y = load_breast_cancer(return_X_y=True)
+  print(best_k(X, y, [1, 3, 5, 9, 15, 25]))
+solution: |
+  import numpy as np
+  from sklearn.pipeline import make_pipeline
+  from sklearn.preprocessing import StandardScaler
+  from sklearn.neighbors import KNeighborsClassifier
+  from sklearn.model_selection import cross_val_score
+  from sklearn.datasets import load_breast_cancer
+
+  def best_k(X, y, ks):
+      means = []
+      for k in ks:
+          model = make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=k))
+          means.append(cross_val_score(model, X, y, cv=5).mean())
+      return ks[int(np.argmax(means))]
+
+  X, y = load_breast_cancer(return_X_y=True)
+  print(best_k(X, y, [1, 3, 5, 9, 15, 25]))
+tests: |
+  import numpy as np
+  from sklearn.pipeline import make_pipeline
+  from sklearn.preprocessing import StandardScaler
+  from sklearn.neighbors import KNeighborsClassifier
+  from sklearn.model_selection import cross_val_score
+  from sklearn.datasets import make_moons
+  def _ref(X, y, ks):
+      m = [cross_val_score(make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=k)), X, y, cv=5).mean() for k in ks]
+      return ks[int(np.argmax(m))]
+  _ks = [1, 5, 25, 61]
+  _sets = [make_moons(n_samples=300, noise=0.35, random_state=0), make_moons(n_samples=300, noise=0.05, random_state=0)]
+  _seen = set()
+  for _X, _y in _sets:
+      _want = _ref(_X, _y, _ks)
+      _got = best_k(_X, _y, _ks)
+      assert _got == _want, f"expected k={_want} (highest mean CV accuracy), got {_got}"
+      _seen.add(_want)
+  assert len(_seen) >= 2, "internal check: datasets should prefer different k"
+hints:
+  - "Build the pipeline inside the loop over ks and append cross_val_score(model, X, y, cv=5).mean()."
+  - "ks[int(np.argmax(means))] returns the first best value."

@@ -1,0 +1,7 @@
+term: "Polynomial features"
+short: "New features made from powers and products of the original ones, such as x², x³ or x₁x₂, so a linear model can fit curves."
+body: |
+  The model stays linear in its weights, so least squares still works, but it can now bend. The number
+  of features grows fast with the degree and the number of inputs, and high degrees overfit, so they are
+  usually combined with scaling and regularisation. In scikit-learn: `PolynomialFeatures`.
+related: ["linear-regression", "overfitting", "feature"]

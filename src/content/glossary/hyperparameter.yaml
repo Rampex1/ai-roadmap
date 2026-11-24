@@ -1,0 +1,7 @@
+term: "Hyperparameter"
+short: "A setting chosen before training rather than learned from the data, such as k in k-NN, the penalty α or the learning rate."
+body: |
+  Parameters (weights) are learned by `fit`; hyperparameters are passed to the model's constructor.
+  They are chosen by comparing validation or cross-validation scores, never test scores. In scikit-learn,
+  `GridSearchCV` and `RandomizedSearchCV` automate the search.
+related: ["cross-validation", "validation-set"]

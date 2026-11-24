@@ -1,0 +1,54 @@
+id: f7-overfitting-and-bias-variance-01
+lesson: foundations/f7/overfitting-and-bias-variance
+title: A train, validation and test split by hand
+prompt: |
+  Write `three_way_split(n, val_frac, test_frac, seed)` that splits the row indices `0 .. n-1` at
+  random into three disjoint index arrays and returns them as `(train_idx, val_idx, test_idx)`.
+
+  - The test set gets `round(n * test_frac)` indices and the validation set `round(n * val_frac)`;
+    the training set gets the rest.
+  - Shuffle with `np.random.default_rng(seed).permutation(n)`, so the same seed always gives the same
+    split and different seeds give different splits.
+
+  You would then use the indices as `X[train_idx]`, `y[train_idx]` and so on, which keeps each row
+  paired with its label.
+starter: |
+  import numpy as np
+
+  def three_way_split(n, val_frac, test_frac, seed):
+      idx = np.arange(n)          # TODO: shuffle, then cut into three pieces
+      return idx, idx[:0], idx[:0]
+
+  train_idx, val_idx, test_idx = three_way_split(10, 0.2, 0.2, seed=0)
+  print(train_idx, val_idx, test_idx)
+solution: |
+  import numpy as np
+
+  def three_way_split(n, val_frac, test_frac, seed):
+      perm = np.random.default_rng(seed).permutation(n)
+      n_test = round(n * test_frac)
+      n_val = round(n * val_frac)
+      test_idx = perm[:n_test]
+      val_idx = perm[n_test:n_test + n_val]
+      train_idx = perm[n_test + n_val:]
+      return train_idx, val_idx, test_idx
+
+  train_idx, val_idx, test_idx = three_way_split(10, 0.2, 0.2, seed=0)
+  print(train_idx, val_idx, test_idx)
+tests: |
+  import numpy as np
+  for _n, _v, _t in [(10, 0.2, 0.2), (100, 0.15, 0.25), (37, 0.1, 0.3)]:
+      _tr, _va, _te = (np.asarray(a) for a in three_way_split(_n, _v, _t, seed=4))
+      assert len(_te) == round(_n * _t), f"n={_n}, test_frac={_t}: test set should have {round(_n * _t)} indices, got {len(_te)}"
+      assert len(_va) == round(_n * _v), f"n={_n}, val_frac={_v}: validation set should have {round(_n * _v)} indices, got {len(_va)}"
+      _all = np.concatenate([_tr, _va, _te])
+      assert len(_all) == _n and sorted(_all.tolist()) == list(range(_n)), "together the three sets should contain every index 0 .. n-1 exactly once"
+      _again = three_way_split(_n, _v, _t, seed=4)
+      assert all(np.array_equal(a, b) for a, b in zip((_tr, _va, _te), _again)), "the same seed should give the same split"
+  _a = three_way_split(100, 0.2, 0.2, seed=1)[2]
+  _b = three_way_split(100, 0.2, 0.2, seed=2)[2]
+  assert not np.array_equal(np.sort(_a), np.sort(_b)), "different seeds should give different test sets: shuffle with the seed"
+  assert not np.array_equal(np.sort(three_way_split(100, 0.2, 0.2, seed=1)[2]), np.arange(20)), "the test set should be a random sample, not the first rows"
+hints:
+  - "perm = np.random.default_rng(seed).permutation(n) is a shuffled copy of 0 .. n-1."
+  - "Slice perm into three consecutive pieces: [:n_test], [n_test:n_test + n_val] and the rest."

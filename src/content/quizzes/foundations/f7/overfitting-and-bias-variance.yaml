@@ -15,13 +15,13 @@ items:
     type: mcq
     prompt: "A straight line fitted to clearly curved data has training MSE 0.50 and validation MSE 0.55. What is the diagnosis?"
     options:
+      - text: "Data leakage"
+        why: "Leakage makes scores look too good, not uniformly bad."
+      - text: "Overfitting: high variance"
+        why: "Overfitting shows low training error and a large gap; here there is no gap."
       - text: "Underfitting: high bias"
         correct: true
         why: "Both errors are high and close together: the model is too simple for the pattern."
-      - text: "Overfitting: high variance"
-        why: "Overfitting shows low training error and a large gap; here there is no gap."
-      - text: "Data leakage"
-        why: "Leakage makes scores look too good, not uniformly bad."
     explanation: "High error on both sets with a small gap points to bias. A more flexible model or better features would help."
   - id: f7-overfitting-and-bias-variance-03
     type: multi
@@ -30,14 +30,14 @@ items:
       - text: "Collect more training data"
         correct: true
         why: "More data pins down a flexible model and reduces variance."
+      - text: "Add higher-degree polynomial features"
+        why: "That adds flexibility and makes overfitting worse."
       - text: "Add a regularisation penalty"
         correct: true
         why: "A penalty limits how wildly the weights can fit noise."
       - text: "Use a simpler model, such as a lower polynomial degree"
         correct: true
         why: "Less flexibility means less variance."
-      - text: "Add higher-degree polynomial features"
-        why: "That adds flexibility and makes overfitting worse."
     explanation: "Overfitting is a variance problem: more data, a penalty or a simpler model all reduce variance."
   - id: f7-overfitting-and-bias-variance-04
     type: mcq
@@ -71,7 +71,7 @@ items:
     explanation: "That is why training error cannot be used to choose model complexity."
   - id: f7-overfitting-and-bias-variance-07
     type: order
-    prompt: "Order these fits of the lesson's sine data from **highest bias** to **highest variance**."
+    prompt: "Order these fits of the lesson's sine data from least to most flexible (highest bias to highest variance)."
     items:
       - "Degree 1 polynomial"
       - "Degree 3 polynomial"
@@ -82,13 +82,13 @@ items:
     type: mcq
     prompt: "You want to forecast next month's sales from five years of monthly data. How should you split off a test set?"
     options:
+      - text: "The first year, since it is the oldest"
+        why: "Testing on the past while training on the future reverses the real situation."
+      - text: "A random 20% of months, with a fixed random_state"
+        why: "Random months let the model learn from months that come after the ones it is tested on."
       - text: "Use the most recent months as the test set and train on everything before"
         correct: true
         why: "This mirrors how the model will be used: trained on the past, predicting the future."
-      - text: "A random 20% of months, with a fixed random_state"
-        why: "Random months let the model learn from months that come after the ones it is tested on."
-      - text: "The first year, since it is the oldest"
-        why: "Testing on the past while training on the future reverses the real situation."
     explanation: "With time-ordered data, test on the future. A random split leaks information from later months."
   - id: f7-overfitting-and-bias-variance-09
     type: output
@@ -104,7 +104,7 @@ items:
   - id: f7-overfitting-and-bias-variance-10
     type: cloze
     prompt: "In expected squared error = bias² + variance + ____, the last term is the floor that no model can beat."
-    accept: ["noise", "irreducible error", "noise variance", "σ²", "sigma^2", "sigma squared", "irreducible noise"]
+    accept: [ "noise", "irreducible error", "noise variance", "σ²", "sigma^2", "sigma squared", "irreducible noise" ]
     explanation: "The noise variance σ²: randomness in y that no function of the features can predict."
   - id: f7-overfitting-and-bias-variance-11
     type: mcq
@@ -113,8 +113,8 @@ items:
       - text: "Variance"
         correct: true
         why: "With more data, fits on different training sets agree more closely."
-      - text: "Bias"
-        why: "A straight line still cannot bend however much data you give it."
       - text: "Noise"
         why: "Noise is a property of the data-generating process, not of the training set size."
+      - text: "Bias"
+        why: "A straight line still cannot bend however much data you give it."
     explanation: "More data cures variance, not bias. If a model underfits, more data will not help."

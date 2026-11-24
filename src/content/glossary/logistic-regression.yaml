@@ -1,0 +1,8 @@
+term: "Logistic regression"
+short: "A linear classifier that turns a weighted sum z = w·x + b into a probability with the sigmoid, trained by minimising log loss."
+body: |
+  It models $P(y = 1 \mid \mathbf{x}) = \sigma(\mathbf{w}\cdot\mathbf{x} + b)$, so $z$ is the log-odds. The
+  loss is binary cross-entropy (the negative log-likelihood), which is convex but has no closed-form
+  minimum, so it is fitted iteratively; its gradient is $\frac{1}{n}X^\top(\mathbf{p} - \mathbf{y})$. The
+  decision boundary $\mathbf{w}\cdot\mathbf{x} + b = 0$ is a line or hyperplane.
+related: ["sigmoid", "cross-entropy", "decision-boundary", "maximum-likelihood-estimation"]

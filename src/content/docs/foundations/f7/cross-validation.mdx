@@ -1,0 +1,180 @@
+---
+title: "Cross-validation and hyperparameter search"
+module: f7
+order: 7
+estMinutes: 15
+objectives:
+  - "Explain why a single validation split gives a noisy score, and how k-fold cross-validation reduces the noise"
+  - "Use cross_val_score with KFold or StratifiedKFold and report a mean and spread"
+  - "Tune hyperparameters with GridSearchCV over a pipeline, then evaluate once on the test set"
+  - "Pick a splitter that respects time order or groups"
+goDeeper: sklearn-cross-validation
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import kfoldImg from '@/assets/diagrams/f7-kfold.svg';
+
+Lesson 3 chose hyperparameters with one validation set. That works, but the score depends on *which*
+rows happened to land in it. With small datasets that luck can be larger than the difference between
+the models you are comparing.
+
+## One split is noisy
+
+The breast cancer dataset that ships with scikit-learn has 569 tumours, 30 measurements each, labelled
+malignant or benign. Score the same model on ten different random 80/20 splits:
+
+```python
+import numpy as np
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+
+X, y = load_breast_cancer(return_X_y=True)        # 569 tumours, 30 features
+model = make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=5))
+scores = []
+for seed in range(10):                            # ten different random splits
+    X_tr, X_val, y_tr, y_val = train_test_split(X, y, test_size=0.2, random_state=seed)
+    scores.append(model.fit(X_tr, y_tr).score(X_val, y_val))
+print(np.round(scores, 3))
+print(f"min {min(scores):.3f}  max {max(scores):.3f}")
+```
+
+```text title="Output"
+[0.956 0.956 0.974 0.947 0.965 0.965 0.956 0.956 0.982 0.965]
+min 0.947  max 0.982
+```
+
+Same model, same data: anywhere from 94.7% to 98.2% depending on the shuffle. A validation set of 114
+rows is a *sample*, and its accuracy has a standard error, just like any estimate from
+[F5](/foundations/f5/sampling-and-the-clt/). If two models differ by one point, a single split cannot
+tell them apart.
+
+## k-fold cross-validation
+
+<Term id="cross-validation" text="Cross-validation" /> uses every training row for validation exactly
+once. Split the training data into $k$ equal **folds** (5 or 10 are usual). Fit on $k - 1$ folds, score on
+the remaining one, and rotate:
+
+<Figure src={kfoldImg} alt="Five-fold cross-validation drawn as a grid. Each of five rounds is a row of five fold boxes; in round i, fold i is highlighted as the validation fold and the other four are used for fitting. A separate dashed box on the right is the test set, marked untouched until the end. A legend says the CV score is the mean of the five scores." caption="5-fold cross-validation. The test set is split off first and is not part of the rotation." />
+
+The result is $k$ scores. Their mean is a more stable estimate than one split, and their spread shows how
+much the score depends on the data.
+
+```python
+from sklearn.model_selection import cross_val_score, StratifiedKFold
+
+cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
+scores = cross_val_score(model, X, y, cv=cv)
+print(scores.round(3))
+print(f"mean {scores.mean():.3f}  std {scores.std():.3f}")
+print(cross_val_score(model, X, y, cv=cv, scoring="roc_auc").mean().round(3))
+```
+
+```text title="Output"
+[0.93  0.991 0.956 0.965 0.982]
+mean 0.965  std 0.021
+0.981
+```
+
+Details worth knowing:
+
+- `cross_val_score` clones the model and fits a fresh copy for each fold, so nothing carries over.
+- Passing `cv=5` uses `StratifiedKFold` for classifiers (each fold keeps the class mix) and `KFold` for
+  regressors, **without shuffling**. If your rows are sorted (say, all class 0 first), pass a splitter
+  with `shuffle=True` as above.
+- `scoring=` picks the metric: `"accuracy"`, `"roc_auc"`, `"f1"`, `"neg_mean_squared_error"` and many
+  more. Error metrics are negated so that higher is always better.
+- The cost is $k$ fits instead of one. For classical models on tabular data that is usually cheap.
+
+Report results as *mean ± standard deviation over folds*, for example $0.965 \pm 0.021$. The folds
+share most of their training rows, so this spread understates the true uncertainty a little, but it is
+a useful warning sign when it is large.
+
+## Hyperparameter search with GridSearchCV
+
+A <Term id="hyperparameter" /> such as $k$, $\alpha$ or `C` is chosen, not learned. The recipe:
+
+1. Split off a test set and leave it alone.
+2. For each candidate value, compute the cross-validated score on the training set.
+3. Pick the best value and refit on the whole training set.
+4. Score the refitted model on the test set, once.
+
+`GridSearchCV` does steps 2 and 3. Hyperparameters of a step inside a pipeline are named
+`<step name>__<parameter>`, with a double underscore; `make_pipeline` names each step after its class in
+lower case.
+
+```python
+from sklearn.model_selection import GridSearchCV
+from sklearn.linear_model import LogisticRegression
+
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, stratify=y, random_state=0)
+
+pipe = make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000))
+print(list(pipe.named_steps))
+grid = {"logisticregression__C": [0.001, 0.01, 0.1, 1, 10, 100]}
+search = GridSearchCV(pipe, grid, cv=5, scoring="roc_auc")
+search.fit(X_tr, y_tr)                       # 6 values x 5 folds = 30 fits, then one refit
+
+for C, m, s in zip(grid["logisticregression__C"], search.cv_results_["mean_test_score"],
+                   search.cv_results_["std_test_score"]):
+    print(f"C={C:<6} CV AUC {m:.4f} ± {s:.4f}")
+print("best:", search.best_params_, round(search.best_score_, 4))
+print("test AUC:", round(search.score(X_te, y_te), 4))   # once, at the very end
+```
+
+```text title="Output"
+['standardscaler', 'logisticregression']
+C=0.001  CV AUC 0.9895 ± 0.0038
+C=0.01   CV AUC 0.9927 ± 0.0043
+C=0.1    CV AUC 0.9954 ± 0.0043
+C=1      CV AUC 0.9945 ± 0.0036
+C=10     CV AUC 0.9871 ± 0.0065
+C=100    CV AUC 0.9821 ± 0.0106
+best: {'logisticregression__C': 0.1} 0.9954
+test AUC: 0.994
+```
+
+The U-shape of lesson 3 again: too strong a penalty (small `C`) underfits, too weak overfits. After
+`fit`, `search` *is* the refitted best model: `search.predict`, `search.score` and
+`search.best_estimator_` all use it. Notice that `C=0.1` and `C=1` differ by less than one standard
+deviation; when scores are this close, preferring the simpler (more regularised) model is a sensible
+tie-breaker.
+
+Three refinements to know about:
+
+- **Grids grow fast.** Three hyperparameters with 10 values each is 1,000 combinations times $k$ fits.
+  `RandomizedSearchCV` samples a fixed number of random combinations instead and is usually nearly as
+  good for a fraction of the cost.
+- **`best_score_` is optimistic.** It is the maximum of several noisy scores, so it is biased upwards,
+  the same selection effect as with a single validation set. That is why the test set exists. If you
+  need an unbiased estimate without a test set, **nested cross-validation** runs the whole search inside
+  an outer CV loop.
+- **Respect the structure of the data.** Use `TimeSeriesSplit` for time-ordered rows, so each fold
+  validates on data later than its training data. Use `GroupKFold` when several rows belong to one
+  patient or user, so a group never appears on both sides.
+
+:::tip[Search over the whole pipeline]
+Put preprocessing in the pipeline you pass to `GridSearchCV`. Then the scaler is refitted on each
+training fold, and you can tune preprocessing choices too, for example
+`{"polynomialfeatures__degree": [1, 2, 3], "ridge__alpha": [0.1, 1, 10]}`. The next lesson explains why
+this matters so much.
+:::
+
+## Try it
+
+<CodeExercise id="f7-cross-validation-01" />
+
+<CodeExercise id="f7-cross-validation-02" />
+
+## Summary
+
+- A single validation split gives a noisy score; k-fold CV averages $k$ scores, using every row for
+  validation once.
+- `cross_val_score(model, X, y, cv=..., scoring=...)`; shuffle sorted data; report mean ± std.
+- `GridSearchCV` cross-validates every candidate, refits the best on all training data, and is then
+  scored once on the test set. Pipeline parameters are named `step__param`.
+- `best_score_` is optimistic; nested CV or a test set gives an honest estimate.
+- Use `TimeSeriesSplit` and `GroupKFold` when rows are not independent.

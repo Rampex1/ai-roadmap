@@ -1,0 +1,47 @@
+id: f7-preprocessing-and-pipelines-01
+lesson: foundations/f7/preprocessing-and-pipelines
+title: Standardise without leaking
+prompt: |
+  Write `standardise(X_train, X_test)` that returns `(Z_train, Z_test)`. Compute each column's mean
+  and standard deviation from **`X_train` only**, then apply the same transformation to both arrays.
+
+  Match `StandardScaler`: use the population standard deviation (`np.std`'s default) and, for a
+  column whose standard deviation is 0, divide by 1 instead of 0.
+starter: |
+  import numpy as np
+
+  def standardise(X_train, X_test):
+      X_all = np.vstack([X_train, X_test])      # leak: uses the test rows
+      mu, sd = X_all.mean(axis=0), X_all.std(axis=0)
+      return (X_train - mu) / sd, (X_test - mu) / sd
+
+  X_train = np.array([[50.0, 1.0], [70.0, 2.0], [90.0, 3.0]])
+  X_test = np.array([[110.0, 2.0]])
+  print(standardise(X_train, X_test))
+solution: |
+  import numpy as np
+
+  def standardise(X_train, X_test):
+      mu = X_train.mean(axis=0)
+      sd = X_train.std(axis=0)
+      sd = np.where(sd == 0, 1.0, sd)
+      return (X_train - mu) / sd, (X_test - mu) / sd
+
+  X_train = np.array([[50.0, 1.0], [70.0, 2.0], [90.0, 3.0]])
+  X_test = np.array([[110.0, 2.0]])
+  print(standardise(X_train, X_test))
+tests: |
+  import numpy as np
+  from sklearn.preprocessing import StandardScaler
+  _rng = np.random.default_rng(2)
+  for _shift in [0.0, 50.0]:
+      _tr = _rng.normal(size=(30, 3)) * [1, 10, 0.1] + [0, 100, 5]
+      _te = _rng.normal(size=(8, 3)) * [1, 10, 0.1] + [_shift, 100, 5]
+      _tr[:, 2] = 4.0                     # a constant column
+      _s = StandardScaler().fit(_tr)
+      _ztr, _zte = standardise(_tr, _te)
+      np.testing.assert_allclose(_ztr, _s.transform(_tr), atol=1e-10, err_msg="Z_train should match StandardScaler fitted on X_train (constant columns: divide by 1)")
+      np.testing.assert_allclose(_zte, _s.transform(_te), atol=1e-10, err_msg="Z_test should use the TRAINING mean and std, not statistics that include the test rows")
+hints:
+  - "mu = X_train.mean(axis=0) and sd = X_train.std(axis=0): nothing from X_test."
+  - "np.where(sd == 0, 1.0, sd) avoids dividing by zero."
