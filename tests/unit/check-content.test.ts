@@ -153,3 +153,10 @@ describe('real course content', () => {
     expect(closure('b1').has('b0')).toBe(true);
   });
 });
+
+describe('quiz values must be text', () => {
+  it('reports an option whose text YAML parsed as a number', () => {
+    const root = variant((r) => write(r, 'quizzes/demo/m1/intro.yaml', 'items:\n  - id: m1-intro-01\n    type: mcq\n    prompt: p\n    explanation: e\n    options:\n      - text: 0.5\n        correct: true\n        why: w\n      - text: "1"\n        why: w\n'));
+    expect(checkContent(root).join('\n')).toMatch(/options\[0\]\.text must be text/);
+  });
+});

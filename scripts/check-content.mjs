@@ -149,6 +149,17 @@ export function checkContent(root) {
       else if (itemIds.has(item.id)) err(file, `${where}: duplicate quiz item id (also in ${rel(itemIds.get(item.id))})`);
       else itemIds.set(item.id, file);
       if (!QUIZ_TYPES.has(item?.type)) err(file, `${where}: invalid type "${item?.type}" (expected ${[...QUIZ_TYPES].join('|')})`);
+      // YAML turns bare 3, 0.5 or true into non-strings; the schema (checked only at build) needs text.
+      for (const k of ['prompt', 'explanation', 'code', 'answer']) {
+        if (k === 'answer' && item?.type === 'numeric') continue;
+        if (k in (item ?? {}) && typeof item[k] !== 'string') err(file, `${where}: ${k} must be text — quote it in YAML`);
+      }
+      (item?.options ?? []).forEach((o, j) => {
+        for (const k of ['text', 'why']) if (o && k in o && typeof o[k] !== 'string') err(file, `${where}: options[${j}].${k} must be text — quote it in YAML (e.g. "0.5")`);
+      });
+      for (const k of ['items', 'accept']) (item?.[k] ?? []).forEach((v, j) => {
+        if (typeof v !== 'string') err(file, `${where}: ${k}[${j}] must be text — quote it in YAML`);
+      });
     });
   }
 
