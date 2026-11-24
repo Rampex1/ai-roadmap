@@ -1,0 +1,140 @@
+items:
+  - id: b0-convex-optimisation-01
+    type: multi
+    prompt: "Which of these sets are convex?"
+    options:
+      - text: "A half-space, all x with aᵀx ≤ b"
+        correct: true
+        why: "A segment between two points satisfying a linear inequality satisfies it too."
+      - text: "The surface of a sphere, ‖x‖ = 1"
+        why: "The midpoint of two surface points lies inside the sphere."
+      - text: "A solid ball, all x with ‖x‖ ≤ r"
+        correct: true
+        why: "By the triangle inequality, every point on a segment between two points in the ball is in the ball."
+      - text: "The probability simplex: non-negative vectors whose entries sum to 1"
+        correct: true
+        why: "Mixing two distributions gives a distribution."
+      - text: "A ring (annulus): all x with 1 ≤ ‖x‖ ≤ 2"
+        why: "The segment between opposite points passes through the hole."
+    explanation: "Convex means every segment between two members stays in the set. Intersections of convex sets are convex; holes and curved surfaces break it."
+  - id: b0-convex-optimisation-02
+    type: mcq
+    prompt: "X is a positive random variable that is not constant. Which inequality does Jensen give?"
+    options:
+      - text: "E[log X] < log E[X]"
+        correct: true
+        why: "log is concave, so the inequality runs the opposite way to the convex case, and it is strict for non-constant X."
+      - text: "E[log X] > log E[X]"
+        why: "That would hold for a convex function, but log is concave."
+      - text: "E[log X] = log E[X]"
+        why: "Equality needs X constant or the function linear."
+      - text: "No general relation"
+        why: "Jensen gives a relation for every convex or concave function."
+    explanation: "For concave f, f(E[X]) ≥ E[f(X)]. This is the step behind KL ≥ 0 and the ELBO."
+  - id: b0-convex-optimisation-03
+    type: numeric
+    prompt: |
+      $X$ is 1 or 9 with probability $\tfrac{1}{2}$ each. What is the Jensen gap $\mathbb{E}[X^2] - (\mathbb{E}[X])^2$?
+    answer: 16
+    tol: 0.001
+    explanation: "E[X²] = (1 + 81)/2 = 41 and (E[X])² = 5² = 25, so the gap is 16, which is the variance of X."
+  - id: b0-convex-optimisation-04
+    type: mcq
+    prompt: |
+      Why does the first-order condition $f(\mathbf{y}) \ge f(\mathbf{x}) + \nabla f(\mathbf{x})^\top(\mathbf{y} - \mathbf{x})$ imply that a stationary point of a convex function is a global minimum?
+    options:
+      - text: "With the gradient zero at x, the condition reads f(y) ≥ f(x) for every y"
+        correct: true
+        why: "The tangent plane at a stationary point is flat, and it lies below the whole function."
+      - text: "Because convex functions have exactly one stationary point"
+        why: "A convex function can have a whole flat set of minimisers, for example a constant function."
+      - text: "Because the Hessian is positive definite at x"
+        why: "Convexity only guarantees a positive semidefinite Hessian, and the argument does not need second derivatives."
+      - text: "It does not: it only implies a local minimum"
+        why: "The inequality holds for every y, not just nearby ones, so the conclusion is global."
+    explanation: "Plug ∇f(x*) = 0 into the tangent-plane inequality: f(y) ≥ f(x*) for all y. A one-line proof of F6's headline."
+  - id: b0-convex-optimisation-05
+    type: numeric
+    prompt: |
+      Minimise $x^2 + y^2$ subject to $x + y = 4$ using a Lagrange multiplier. What is the minimum value?
+    answer: 8
+    tol: 0.001
+    explanation: "2x + ν = 0 and 2y + ν = 0 give x = y; the constraint gives x = y = 2 and ν = −4. The value is 4 + 4 = 8."
+  - id: b0-convex-optimisation-06
+    type: mcq
+    prompt: |
+      What does complementary slackness, $\mu_i\, g_i(\mathbf{x}) = 0$, say about an inequality constraint $g_i(\mathbf{x}) \le 0$ at the optimum?
+    options:
+      - text: "The constraint can be dropped"
+        why: "Only inactive constraints can be dropped, and you do not know in advance which ones are inactive."
+      - text: "Every constraint must be active"
+        why: "Constraints can be inactive; then their multiplier is zero."
+      - text: "Either the constraint is active (g_i = 0) or its multiplier is zero"
+        correct: true
+        why: "An inactive constraint exerts no force on the solution, so its multiplier vanishes."
+      - text: "The multiplier must be negative"
+        why: "Dual feasibility requires μ_i ≥ 0."
+    explanation: "A constraint either touches the solution and pushes back (μ > 0, g = 0), or it does not (μ = 0)."
+  - id: b0-convex-optimisation-07
+    type: output
+    prompt: |
+      This solves the KKT system for $\min x^2 + y^2$ subject to $x + y = 4$, written as $\tfrac{1}{2}\mathbf{x}^\top Q\mathbf{x}$ with $Q = 2I$. What does it print?
+    code: |
+      import numpy as np
+      K = np.array([[2.0, 0.0, 1.0],
+                    [0.0, 2.0, 1.0],
+                    [1.0, 1.0, 0.0]])
+      print(np.linalg.solve(K, np.array([0.0, 0.0, 4.0])))
+    answer: "[ 2.  2. -4.]"
+    explanation: "The unknowns are (x, y, ν). The solution is x = y = 2 with multiplier ν = −4, in one linear solve."
+  - id: b0-convex-optimisation-08
+    type: mcq
+    prompt: "Least squares with 50 examples and 200 features has many minimisers. What does adding λ‖w‖² (λ > 0) change?"
+    options:
+      - text: "Nothing: the problem was already strongly convex"
+        why: "XᵀX has rank at most 50, so at least 150 directions have zero curvature."
+      - text: "It adds 2λI to the Hessian, so every eigenvalue is at least 2λ and the minimiser becomes unique"
+        correct: true
+        why: "The loss becomes 2λ-strongly convex."
+      - text: "It makes the problem non-convex"
+        why: "A sum of convex functions is convex."
+      - text: "It removes the need for any optimisation"
+        why: "Ridge has a closed form, but that is not what strong convexity is about."
+    explanation: "Strong convexity, H ⪰ μI with μ > 0, guarantees a unique minimiser and linear convergence of gradient descent."
+  - id: b0-convex-optimisation-09
+    type: mcq
+    prompt: "How do you pass the constraint x + y ≤ 2 to `scipy.optimize.minimize` as an `\"ineq\"` constraint?"
+    options:
+      - text: "lambda q: q[0] + q[1] - 2"
+        why: "scipy reads \"ineq\" as fun(x) ≥ 0, so this encodes x + y ≥ 2, the opposite constraint."
+      - text: "lambda q: 2 - q[0] - q[1]"
+        correct: true
+        why: "2 − x − y ≥ 0 is the same as x + y ≤ 2."
+      - text: "lambda q: q[0] + q[1] <= 2"
+        why: "The function must return a number, not a boolean."
+      - text: "It cannot express inequalities"
+        why: "It can, with \"type\": \"ineq\"."
+    explanation: "scipy's convention is fun(x) ≥ 0, the opposite sign to the g(x) ≤ 0 used in the KKT conditions. Always check the sign."
+  - id: b0-convex-optimisation-10
+    type: multi
+    prompt: "Minimise (x − 2)² + (y − 2)² subject to x + y ≤ 6. Which statements are true?"
+    options:
+      - text: "The constraint is inactive at the solution"
+        correct: true
+        why: "The unconstrained minimum (2, 2) has x + y = 4 < 6."
+      - text: "The multiplier is 0"
+        correct: true
+        why: "Complementary slackness: an inactive constraint has a zero multiplier."
+      - text: "The solution is (3, 3)"
+        why: "That lies on the boundary but has a higher objective, 2, than (2, 2), which has 0."
+      - text: "The solution is (2, 2)"
+        correct: true
+        why: "It is feasible, so the constraint changes nothing."
+    explanation: "Try the unconstrained minimum first: if it is feasible, the constraint is inactive and its multiplier is zero."
+  - id: b0-convex-optimisation-11
+    type: numeric
+    prompt: |
+      In the lesson's example, $\min x^2 + 2y^2$ subject to $x + y = c$, at $c = 3$ the optimum is $f^\star = 6$ with multiplier $\nu = -4$. Using $\nu$ as a sensitivity, estimate $f^\star$ for $c = 3.1$.
+    answer: 6.4
+    tol: 0.02
+    explanation: "df*/dc = −ν = 4, so f* ≈ 6 + 4 × 0.1 = 6.4. The exact value is (2/3)(3.1)² ≈ 6.407."

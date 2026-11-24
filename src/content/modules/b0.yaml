@@ -4,5 +4,8 @@ title: "Math for research"
 order: 1
 prereqs: ["f8", "f10", "f11"]
 objectives:
-  - "Explain the core ideas of math for research"
-  - "Derive or implement the key methods of math for research"
+  - "Derive gradients with respect to vectors and matrices in a stated layout convention, and verify them with finite differences"
+  - "Use Taylor expansions and Hessians to classify stationary points, explain conditioning and take Newton steps"
+  - "Apply convexity, Jensen's inequality and Lagrange multipliers or KKT conditions to solve and check small constrained problems"
+  - "Work with multivariate Gaussians (sampling, marginals, conditionals, change of variables) and Monte Carlo estimates with error bars"
+  - "Use mutual information, KL divergence and the ELBO, and read and verify the derivations in ML papers"

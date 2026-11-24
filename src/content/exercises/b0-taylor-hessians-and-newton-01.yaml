@@ -1,0 +1,75 @@
+id: b0-taylor-hessians-and-newton-01
+lesson: research/b0/taylor-hessians-and-newton
+title: Hessian of a quadratic and one Newton step
+prompt: |
+  Take the quadratic $f(\mathbf{x}) = \tfrac{1}{2}\mathbf{x}^\top A\mathbf{x} - \mathbf{b}^\top\mathbf{x}$, where
+  $A$ is square but **not necessarily symmetric** (lesson 1 told you what that does to the gradient).
+
+  Write:
+
+  1. `quad_grad(A, b, x)`: the gradient of $f$ at `x`.
+  2. `quad_hess(A, b, x)`: the Hessian of $f$ at `x` (a symmetric matrix).
+  3. `newton_step(grad_fn, hess_fn, x)`: one Newton update $\mathbf{x} - H^{-1}\nabla f$, where `grad_fn(x)` and
+     `hess_fn(x)` return the gradient and Hessian. Use `np.linalg.solve`, not `np.linalg.inv`.
+
+  The tests check that one Newton step from any start lands on the minimum of a quadratic, and also run your
+  `newton_step` on a non-quadratic function.
+starter: |
+  import numpy as np
+
+  def quad_grad(A, b, x):
+      return A @ x - b
+
+  def quad_hess(A, b, x):
+      return A
+
+  def newton_step(grad_fn, hess_fn, x):
+      return x - grad_fn(x)
+solution: |
+  import numpy as np
+
+  def quad_grad(A, b, x):
+      return 0.5 * (A + A.T) @ x - b
+
+  def quad_hess(A, b, x):
+      return 0.5 * (A + A.T)
+
+  def newton_step(grad_fn, hess_fn, x):
+      return x - np.linalg.solve(hess_fn(x), grad_fn(x))
+tests: |
+  import numpy as np
+  def _ng(f, x, eps=1e-6):
+      x = np.array(x, dtype=float); g = np.zeros_like(x)
+      for i in range(x.size):
+          o = x[i]; x[i] = o + eps; fp = f(x); x[i] = o - eps; fm = f(x); x[i] = o
+          g[i] = (fp - fm) / (2 * eps)
+      return g
+  _rng = np.random.default_rng(3)
+  for _n in (2, 3, 5):
+      _M = _rng.normal(size=(_n, _n))
+      _A = _M @ _M.T + _n * np.eye(_n) + 0.8 * (_M - _M.T)    # positive definite symmetric part, not symmetric
+      _b = _rng.normal(size=_n)
+      _x = _rng.normal(size=_n)
+      _f = lambda v: 0.5 * v @ _A @ v - _b @ v
+      _g = quad_grad(_A, _b, _x)
+      assert _g is not None, "quad_grad returned None"
+      np.testing.assert_allclose(_g, _ng(_f, _x), rtol=1e-6, atol=1e-8, err_msg="quad_grad does not match the numerical gradient. A is not symmetric: what does lesson 1 say about x^T A x?")
+      _H = np.asarray(quad_hess(_A, _b, _x))
+      np.testing.assert_allclose(_H, _H.T, atol=1e-12, err_msg="A Hessian is always symmetric; yours is not")
+      _Hn = np.array([_ng(lambda v: quad_grad(_A, _b, v)[i], _x) for i in range(_n)])
+      np.testing.assert_allclose(_H, _Hn, rtol=1e-5, atol=1e-7, err_msg="quad_hess should be the Jacobian of the gradient")
+      _star = np.linalg.solve(0.5 * (_A + _A.T), _b)
+      _x1 = newton_step(lambda v: quad_grad(_A, _b, v), lambda v: quad_hess(_A, _b, v), _x)
+      np.testing.assert_allclose(_x1, _star, rtol=1e-8, atol=1e-10, err_msg="One Newton step on a quadratic should land exactly on the minimum")
+  _gf = lambda v: np.array([np.exp(v[0]) - 2, 4 * v[1]])
+  _hf = lambda v: np.array([[np.exp(v[0]), 0.0], [0.0, 4.0]])
+  _v = np.array([2.0, 1.0])
+  _v1 = newton_step(_gf, _hf, _v)
+  np.testing.assert_allclose(_v1, [2 - (np.exp(2) - 2) / np.exp(2), 0.0], rtol=1e-10, atol=1e-12, err_msg="newton_step should return x - solve(H, g) for a general function too")
+  for _ in range(6):
+      _v1 = newton_step(_gf, _hf, _v1)
+  np.testing.assert_allclose(_v1, [np.log(2), 0.0], atol=1e-10, err_msg="Repeated Newton steps on exp(x) - 2x + 2y^2 should converge to (ln 2, 0)")
+hints:
+  - "The gradient of x^T A x is (A + A^T) x, so the gradient of half of it is 0.5 (A + A^T) x."
+  - "The Hessian is the matrix in front of x in the gradient, and it does not depend on x here."
+  - "Newton: x - np.linalg.solve(H, g), with H = hess_fn(x) and g = grad_fn(x)."

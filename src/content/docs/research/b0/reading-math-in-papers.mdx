@@ -1,0 +1,243 @@
+---
+title: "Reading the maths in ML papers"
+module: b0
+order: 6
+estMinutes: 18
+objectives:
+  - "Read standard ML notation: shapes, expectation subscripts, argmin and argmax, ∝, i.i.d., hats and stars"
+  - "Turn a proportional (∝) posterior into a normalised one in log space, and find its argmax"
+  - "Work through a derivation step by step and verify it numerically, using MAP estimation with a Gaussian prior (ridge regression) as the example"
+goDeeper: cs229-linalg-review
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Papers compress. A single line such as
+
+$$
+\theta^\star = \arg\max_\theta\; \mathbb{E}_{x \sim p_{\mathcal{D}}}\Big[\mathbb{E}_{z \sim q_\phi(z \mid x)}\big[\log p_\theta(x \mid z)\big]\Big]
+$$
+
+packs in a dataset, two distributions, two sets of parameters, a sampling procedure and an optimisation. The
+previous five lessons gave you the mathematics; this one is about reading it fluently and checking it, which is
+the skill that B13 (reading and reproducing papers) builds on.
+
+## A notation cheat sheet
+
+Conventions vary, and good papers have a notation section; read it first. These are the common defaults:
+
+| Notation | Usually means |
+|---|---|
+| $a$, $\mathbf{x}$ (or $\boldsymbol{x}$), $W$ | scalar, vector (a column), matrix |
+| $\mathcal{D}$, $\mathcal{X}$ | a set: a dataset, an input space |
+| $\mathbb{R}^{n \times d}$ | real matrices with $n$ rows and $d$ columns |
+| $x_i$ or $\mathbf{x}^{(i)}$ | the $i$-th example; $x_j$ can also mean the $j$-th feature, so check |
+| $\mathbf{x}^\top$, $\lVert\mathbf{x}\rVert$, $\lVert\mathbf{x}\rVert_1$ | transpose, Euclidean (L2) norm, L1 norm |
+| $\odot$ | elementwise product |
+| $\mathbb{1}[\cdot]$ | indicator: 1 if the condition holds, else 0 |
+| $\operatorname{tr}$, $\det$, $\operatorname{diag}$ | trace, determinant, diagonal matrix from a vector |
+| $:=$ or $\triangleq$ | "is defined as" |
+| $x \sim p$ | $x$ is distributed according to (or sampled from) $p$ |
+| $p_\theta$, $q_\phi$ | a distribution with parameters $\theta$ or $\phi$ |
+| $\hat{\theta}$, $\theta^\star$ | an estimate; the optimal value |
+| $\log$ | natural log, unless information-theory bits are meant |
+| $\propto$ | proportional to (see below) |
+| $\approx$, $\mathcal{O}(\cdot)$ | approximately; grows at most like |
+
+Also watch for **abuse of notation**: $p(x)$ and $p(z)$ are usually *different* functions, named by their
+argument. And row versus column vectors: papers write $W\mathbf{x}$ (column vectors), while code usually stores
+examples as rows and computes `X @ W.T` or `X @ W`. Translate the shapes, as in [lesson 1](/research/b0/matrix-calculus/).
+
+## Expectations and their subscripts
+
+$\mathbb{E}_{x \sim p}[f(x)]$ is the average of $f(x)$ when $x$ is drawn from $p$. The subscript tells you
+**what is random** and **from which distribution**; everything else inside is held fixed. Habits that help:
+
+- **Name the sampling.** $\mathbb{E}_{x \sim p_{\mathcal{D}}}$ means "over the training data": in code, an average
+  over a (mini-)batch. $\mathbb{E}_{z \sim q_\phi(z \mid x)}$ means "sample $z$ from the encoder for this $x$".
+- **Nested expectations run inside out.** In the line at the top, for each data point $x$ you sample $z$ given
+  that $x$, evaluate, average over $z$, then average over $x$. In code that is two loops, or one batch with one
+  $z$ sample per $x$ (the usual Monte Carlo shortcut, [lesson 4](/research/b0/gaussians-and-monte-carlo/)).
+- **Check what the gradient touches.** If the distribution in the subscript depends on the parameters you
+  differentiate (as $q_\phi$ does with respect to $\phi$), you cannot just move the gradient inside; that is the
+  problem the reparameterisation trick solves. If it does not ($p_{\mathcal{D}}$ never depends on $\theta$), you
+  can: $\nabla_\theta\mathbb{E}_{x \sim p_{\mathcal{D}}}[\ell_\theta(x)] = \mathbb{E}_{x \sim p_{\mathcal{D}}}[\nabla_\theta \ell_\theta(x)]$,
+  which is why a mini-batch gradient is an unbiased estimate of the full one.
+- **Missing subscripts** mean "obvious from context", which it sometimes is not. Write it in yourself.
+
+## argmin, argmax, and i.i.d.
+
+$\min_\theta L(\theta)$ is a **value**, the smallest loss. $\arg\min_\theta L(\theta)$ is the **argument** that
+achieves it, the best parameters. $\theta^\star = \arg\min_\theta L(\theta)$ reads "the parameters that minimise
+the loss". Strictly, argmin is a set (several minimisers can tie); papers write "=" when the minimiser is unique
+or any one will do. Two facts used constantly:
+
+- argmax is unchanged by any strictly increasing transformation: $\arg\max_\theta p(\theta) = \arg\max_\theta \log p(\theta)$,
+  and adding or multiplying by a positive constant that does not depend on $\theta$ changes nothing.
+- $\arg\max_\theta f(\theta) = \arg\min_\theta\, (-f(\theta))$.
+
+**i.i.d.** (independent and identically distributed) means each example is drawn from the same distribution,
+independently of the others. It is what lets a likelihood factorise into a product, and the log-likelihood into a
+sum ([F5](/foundations/f5/maximum-likelihood/)):
+
+$$
+p(\mathcal{D} \mid \theta) = \prod_{i=1}^{n} p(x_i \mid \theta), \qquad \log p(\mathcal{D} \mid \theta) = \sum_{i=1}^{n}\log p(x_i \mid \theta)
+$$
+
+When a paper writes the second form, it has assumed <Term id="iid" text="i.i.d." /> data; time series, data
+with duplicates, or data collected by the model itself (reinforcement learning) can break it.
+
+## Proportional to: ∝
+
+$f(\theta) \propto g(\theta)$ means $f(\theta) = c \cdot g(\theta)$ for a constant $c$ that **does not depend on
+$\theta$**. It is everywhere in Bayesian writing, because Bayes' rule's denominator is a constant:
+
+$$
+p(\theta \mid \mathcal{D}) = \frac{p(\mathcal{D} \mid \theta)\,p(\theta)}{p(\mathcal{D})} \;\propto\; p(\mathcal{D} \mid \theta)\,p(\theta)
+$$
+
+In log form, "$\propto$" becomes "$+\,\text{const}$":
+$\log p(\theta \mid \mathcal{D}) = \log p(\mathcal{D} \mid \theta) + \log p(\theta) + \text{const}$. Two things
+follow. For an **argmax** you can ignore the constant entirely. For **probabilities** you must recover it by
+normalising, which you can do numerically on a grid. Do it in log space with `logsumexp`, which computes
+$\log\sum_i e^{a_i}$ without overflow; subtracting it from every log-value makes the probabilities sum to 1.
+
+Example: a coin lands heads 7 times in 10, with a $\text{Beta}(2, 2)$ prior $p(\theta) = 6\theta(1 - \theta)$ on
+its bias. The posterior is proportional to $\theta^7(1 - \theta)^3 \cdot 6\theta(1 - \theta)$:
+
+```python
+import numpy as np
+from scipy.special import logsumexp
+
+theta = np.linspace(0.001, 0.999, 999)          # grid of coin biases
+k, n = 7, 10                                    # 7 heads in 10 flips
+log_unnorm = k * np.log(theta) + (n - k) * np.log(1 - theta) + np.log(6 * theta * (1 - theta))   # likelihood x Beta(2, 2) prior
+log_post = log_unnorm - logsumexp(log_unnorm)   # normalise: probabilities over the grid sum to 1
+post = np.exp(log_post)
+print(round(post.sum(), 6), round(theta[np.argmax(post)], 3))
+print(round(theta @ post, 4))
+```
+
+```text title="Output"
+1.0 0.667
+0.6429
+```
+
+The posterior here is known exactly, $\text{Beta}(9, 5)$, with mode $8/12 \approx 0.667$ (the MAP estimate) and mean
+$9/14 \approx 0.643$; the grid recovers both. Note that the mode and the mean differ: "the" estimate depends on
+which summary a paper uses.
+
+## Working through a derivation
+
+When a paper says "it is easy to show that", budget half an hour with paper and a notebook. A procedure that works:
+
+1. **List every symbol with its type and shape.** Scalar, vector of length $d$, $n \times d$ matrix, distribution,
+   function. Half of all confusion is a symbol you misread.
+2. **Mark what is random and what depends on what.** Which quantities are parameters, which are data, which are
+   sampled, and what each expectation averages over.
+3. **Redo every step, naming the rule used**: linearity of expectation, Bayes, the chain rule, a matrix identity,
+   Jensen, "drop a constant", "i.i.d. so the log of the product is a sum of logs". A step you cannot name is a step
+   you have not understood, or a typo in the paper.
+4. **Check special cases**: one dimension, one data point, zero noise, a parameter going to 0 or infinity. The
+   result should reduce to something you know.
+5. **Check numerically** on tiny random inputs: the gradient with finite differences, the closed form against an
+   optimiser, an expectation against Monte Carlo.
+
+### Worked example: a Gaussian prior is L2 regularisation
+
+A paper writes: "with likelihood $y_i \mid \mathbf{x}_i, \mathbf{w} \sim \mathcal{N}(\mathbf{w}^\top\mathbf{x}_i, \sigma^2)$
+and prior $\mathbf{w} \sim \mathcal{N}(\mathbf{0}, \tau^2 I)$, the MAP estimate is ridge regression with
+$\lambda = \sigma^2/\tau^2$." Work through it.
+
+**Symbols.** $\mathbf{x}_i \in \mathbb{R}^d$ (an input), $y_i$ a scalar target, $X \in \mathbb{R}^{n \times d}$ with
+rows $\mathbf{x}_i^\top$, $\mathbf{w} \in \mathbb{R}^d$ the parameters, $\sigma^2$ the noise variance and $\tau^2$
+the prior variance (both fixed numbers). MAP means "maximum a posteriori": the argmax of the posterior.
+
+**Steps.**
+
+$$
+\begin{aligned}
+\hat{\mathbf{w}}_{\text{MAP}} &= \arg\max_{\mathbf{w}}\; p(\mathbf{w} \mid \mathcal{D})
+&&\text{definition} \\
+&= \arg\max_{\mathbf{w}}\; \log p(\mathcal{D} \mid \mathbf{w}) + \log p(\mathbf{w})
+&&\text{Bayes, } \propto\text{, log is increasing} \\
+&= \arg\max_{\mathbf{w}}\; \sum_{i=1}^{n} -\frac{(y_i - \mathbf{w}^\top\mathbf{x}_i)^2}{2\sigma^2} - \frac{\lVert\mathbf{w}\rVert^2}{2\tau^2}
+&&\text{i.i.d., Gaussian log-densities, drop constants} \\
+&= \arg\min_{\mathbf{w}}\; \lVert\mathbf{y} - X\mathbf{w}\rVert^2 + \frac{\sigma^2}{\tau^2}\lVert\mathbf{w}\rVert^2
+&&\text{negate, multiply by } 2\sigma^2 > 0
+\end{aligned}
+$$
+
+That is ridge regression with $\lambda = \sigma^2/\tau^2$. Setting the gradient to zero with lesson 1's identities,
+$2X^\top(X\mathbf{w} - \mathbf{y}) + 2\lambda\mathbf{w} = \mathbf{0}$, gives the closed form
+$\hat{\mathbf{w}} = (X^\top X + \lambda I)^{-1}X^\top\mathbf{y}$.
+
+**Special cases.** As $\tau \to \infty$ (a flat prior) $\lambda \to 0$ and we recover least squares, the
+maximum-likelihood answer. As $\tau \to 0$ the prior insists on $\mathbf{w} = \mathbf{0}$ and so does the estimate.
+More noise ($\sigma$ up) means trusting the data less: more regularisation. All sensible.
+
+**Numerical check.** Compare three routes: the closed form, a generic optimiser on the negative log-posterior
+written straight from the second line, and scikit-learn's `Ridge` with `alpha` $= \lambda$:
+
+```python
+from scipy.optimize import minimize
+from sklearn.linear_model import Ridge
+
+rng = np.random.default_rng(0)
+n, d = 50, 3
+X = rng.normal(size=(n, d))
+w_true = np.array([2.0, -1.0, 0.5])
+sigma, tau = 0.5, 1.0
+y = X @ w_true + sigma * rng.normal(size=n)
+
+def neg_log_post(w):                            # minus log p(w | D), dropping constants
+    return np.sum((y - X @ w) ** 2) / (2 * sigma**2) + w @ w / (2 * tau**2)
+
+lam = sigma**2 / tau**2
+w_closed = np.linalg.solve(X.T @ X + lam * np.eye(d), X.T @ y)
+w_numeric = minimize(neg_log_post, np.zeros(d)).x
+w_sklearn = Ridge(alpha=lam, fit_intercept=False).fit(X, y).coef_
+print(np.round(w_closed, 5))
+print(np.round(w_numeric, 5))
+print(np.round(w_sklearn, 5))
+```
+
+```text title="Output"
+[ 2.08358 -1.07213  0.50764]
+[ 2.08358 -1.07213  0.50764]
+[ 2.08358 -1.07213  0.50764]
+```
+
+Three routes, one answer: the derivation is right. (scikit-learn's `Ridge` minimises
+$\lVert\mathbf{y} - X\mathbf{w}\rVert^2 + \alpha\lVert\mathbf{w}\rVert^2$, the same scaling as our last line; other
+libraries divide the first term by $n$, which changes what $\lambda$ means. Checking such scalings is part of
+reading.)
+
+:::caution[Common traps]
+- **Sum versus mean.** $\sum_i$ and $\frac{1}{n}\sum_i$ give the same argmin but different gradients, and so
+  different effective learning rates and regularisation strengths.
+- **$\lVert\cdot\rVert$ versus $\lVert\cdot\rVert^2$**, and $\frac{1}{2}$ factors put in to make gradients tidy.
+- **Dropped constants** are fine for argmax and fatal for reported log-likelihoods, bits per dimension or
+  perplexity, which need the full normalised density.
+- **Silent conventions**: layout (lesson 1), the KL direction (lesson 5), $\log$ base, and whether $\sigma$ in
+  $\mathcal{N}(\mu, \sigma)$ is a standard deviation or $\mathcal{N}(\mu, \sigma^2)$ a variance. NumPy's
+  `rng.normal(loc, scale)` and `scipy.stats.norm(loc, scale)` both take the standard deviation.
+:::
+
+## Try it
+
+<CodeExercise id="b0-reading-math-in-papers-01" />
+
+<CodeExercise id="b0-reading-math-in-papers-02" />
+
+## Summary
+
+- Read the notation section first; default to bold lower case for vectors, capitals for matrices, $\log = \ln$,
+  hats for estimates and stars for optima, and translate row versus column conventions.
+- $\mathbb{E}_{x \sim p}$: the subscript says what is random. Nested expectations run inside out; a mini-batch
+  average is a Monte Carlo estimate of $\mathbb{E}_{p_{\mathcal{D}}}$.
+- argmax returns the argument, and is unchanged by logs and positive constants. i.i.d. turns a likelihood into a
+  product and its log into a sum.
+- $\propto$ hides a constant in the variable of interest; normalise in log space with `logsumexp`.
+- For derivations: list symbols and shapes, name each rule, test special cases, and verify numerically. A Gaussian
+  prior gives ridge regression with $\lambda = \sigma^2/\tau^2$.

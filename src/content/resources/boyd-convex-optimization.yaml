@@ -1,0 +1,5 @@
+title: "Convex Optimization (Boyd and Vandenberghe)"
+url: https://web.stanford.edu/~boyd/cvxbook/
+kind: book
+free: true
+modules: [b0]

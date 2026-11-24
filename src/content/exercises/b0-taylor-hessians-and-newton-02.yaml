@@ -1,0 +1,68 @@
+id: b0-taylor-hessians-and-newton-02
+lesson: research/b0/taylor-hessians-and-newton
+title: A numerical Hessian and the second-derivative test
+prompt: |
+  Write:
+
+  1. `num_hessian(grad_fn, x, eps=1e-5)`: the Hessian at `x`, computed as the Jacobian of the gradient. Column
+     `j` is `(grad_fn(x + eps e_j) - grad_fn(x - eps e_j)) / (2 eps)`. Rounding makes the result slightly
+     non-symmetric, so return the symmetrised matrix `(H + H.T) / 2`.
+  2. `classify(H, tol=1e-8)`: return the string `"minimum"`, `"maximum"` or `"saddle"` for a stationary point
+     with symmetric Hessian `H`, using its eigenvalues. Return `"inconclusive"` if any eigenvalue has absolute value
+     below `tol` (and the others do not already show a saddle, i.e. there is no positive and negative pair).
+starter: |
+  import numpy as np
+
+  def num_hessian(grad_fn, x, eps=1e-5):
+      x = np.array(x, dtype=float)
+      n = x.size
+      H = np.zeros((n, n))
+      return H
+
+  def classify(H, tol=1e-8):
+      if np.all(np.diag(H) > 0):
+          return "minimum"
+      return "maximum"
+solution: |
+  import numpy as np
+
+  def num_hessian(grad_fn, x, eps=1e-5):
+      x = np.array(x, dtype=float)
+      n = x.size
+      H = np.zeros((n, n))
+      for j in range(n):
+          e = np.zeros(n)
+          e[j] = eps
+          H[:, j] = (grad_fn(x + e) - grad_fn(x - e)) / (2 * eps)
+      return (H + H.T) / 2
+
+  def classify(H, tol=1e-8):
+      lam = np.linalg.eigvalsh(H)
+      if lam.min() < -tol and lam.max() > tol:
+          return "saddle"
+      if np.any(np.abs(lam) <= tol):
+          return "inconclusive"
+      return "minimum" if lam.min() > 0 else "maximum"
+tests: |
+  import numpy as np
+  _g1 = lambda p: np.array([np.exp(p[0]) * np.sin(p[1]), np.exp(p[0]) * np.cos(p[1])])
+  _p = np.array([0.5, 1.0])
+  _H1 = np.array([[np.exp(0.5) * np.sin(1.0), np.exp(0.5) * np.cos(1.0)], [np.exp(0.5) * np.cos(1.0), -np.exp(0.5) * np.sin(1.0)]])
+  _got = num_hessian(_g1, _p)
+  assert _got is not None and np.shape(_got) == (2, 2), f"num_hessian should return a 2 x 2 matrix here, got shape {np.shape(_got)}"
+  np.testing.assert_allclose(_got, _H1, rtol=1e-6, atol=1e-8, err_msg="num_hessian of exp(x) sin(y) is wrong")
+  np.testing.assert_array_equal(_got, np.asarray(_got).T, err_msg="Return the symmetrised matrix (H + H.T) / 2")
+  _rng = np.random.default_rng(11)
+  _M = _rng.normal(size=(4, 4)); _S = _M + _M.T
+  _x = _rng.normal(size=4)
+  np.testing.assert_allclose(num_hessian(lambda v: _S @ v + np.cos(v), _x), _S - np.diag(np.sin(_x)), rtol=1e-6, atol=1e-7, err_msg="num_hessian is wrong for a 4-variable function")
+  assert classify(np.array([[3.0, 2.0], [2.0, 3.0]])) == "minimum", "[[3, 2], [2, 3]] has eigenvalues 1 and 5: a minimum"
+  assert classify(np.array([[1.0, 2.0], [2.0, 1.0]])) == "saddle", "[[1, 2], [2, 1]] has positive diagonal but eigenvalues -1 and 3: a saddle. Use the eigenvalues, not the diagonal"
+  assert classify(-np.diag([1.0, 2.0, 3.0])) == "maximum", "All negative eigenvalues means a maximum"
+  assert classify(np.diag([2.0, -1.0, 0.0])) == "saddle", "A positive and a negative eigenvalue make a saddle even if another is zero"
+  assert classify(np.diag([2.0, 0.0])) == "inconclusive", "An eigenvalue of 0 with the rest positive is inconclusive"
+  assert classify(num_hessian(lambda v: np.array([2 * v[0], -2 * v[1]]), [0.0, 0.0])) == "saddle", "x^2 - y^2 has a saddle at the origin"
+hints:
+  - "Build the matrix one column at a time: perturb x_j up and down and difference the gradients."
+  - "np.linalg.eigvalsh(H) returns the real eigenvalues of a symmetric matrix in increasing order."
+  - "Check for a saddle first (some eigenvalue below -tol and some above tol), then for near-zero eigenvalues."

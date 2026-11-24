@@ -1,0 +1,109 @@
+items:
+  - id: b0-matrix-calculus-01
+    type: mcq
+    prompt: |
+      A function $\mathbf{f}: \mathbb{R}^5 \to \mathbb{R}^3$ maps 5 inputs to 3 outputs. In this course's convention (numerator layout), what is the shape of its Jacobian?
+    options:
+      - text: "3 × 3"
+        why: "The Jacobian is square only when the numbers of inputs and outputs are equal."
+      - text: "A vector of length 15"
+        why: "The Jacobian holds 15 partial derivatives, but arranged as a matrix, not flattened."
+      - text: "3 × 5"
+        correct: true
+        why: "Outputs × inputs: row i is the gradient of output i laid flat, column j says how all outputs move with input j."
+      - text: "5 × 3"
+        why: "That is the denominator layout, the transpose of the convention used here."
+    explanation: "Entry (i, j) is ∂f_i/∂x_j, so there is one row per output and one column per input: 3 × 5."
+  - id: b0-matrix-calculus-02
+    type: mcq
+    prompt: |
+      $A$ is a square matrix that is **not** symmetric. What is $\nabla_{\mathbf{x}}(\mathbf{x}^\top A\mathbf{x})$?
+    options:
+      - text: "2Ax"
+        why: "Only true when A is symmetric. For a non-symmetric A it can be far off, as the lesson's check (80% error) showed."
+      - text: "Ax"
+        why: "This misses that x appears twice in the quadratic form, so the product rule gives two terms."
+      - text: "(A + Aᵀ)x"
+        correct: true
+        why: "x appears as x_i and as x_j in the double sum; one term gives Ax and the other Aᵀx."
+      - text: "xᵀA"
+        why: "That is a row vector and only one of the two terms. The gradient has the shape of x."
+    explanation: "Differentiate the double sum of x_i A_ij x_j by x_k: the terms with i = k give (Ax)_k and those with j = k give (Aᵀx)_k."
+  - id: b0-matrix-calculus-03
+    type: numeric
+    prompt: |
+      Let $A = \begin{pmatrix} 1 & 2 \\ 0 & 3 \end{pmatrix}$ and $f(\mathbf{x}) = \mathbf{x}^\top A\mathbf{x}$. What is the **second** component of $\nabla f$ at $\mathbf{x} = (1, 1)$?
+    answer: 8
+    tol: 0.001
+    explanation: "A + Aᵀ = [[2, 2], [2, 6]], and (A + Aᵀ)(1, 1) = (4, 8). Using 2Ax by mistake gives (6, 6)."
+  - id: b0-matrix-calculus-04
+    type: output
+    prompt: "A linear layer has inputs `X` of shape (5, 3), weights `W` of shape (3, 2), and upstream gradient `G = dL/dY` of shape (5, 2). What does this print?"
+    code: |
+      import numpy as np
+      X = np.zeros((5, 3)); W = np.zeros((3, 2)); G = np.zeros((5, 2))
+      print((X.T @ G).shape, (G @ W.T).shape)
+    answer: "(3, 2) (5, 3)"
+    explanation: "Xᵀ G is the weight gradient, shaped like W (3, 2); G Wᵀ is the input gradient, shaped like X (5, 3). Gradients have the shape of the variable."
+  - id: b0-matrix-calculus-05
+    type: multi
+    prompt: "Which statements are true?"
+    options:
+      - text: "Backpropagation computes products of a transposed Jacobian with a vector without ever building the Jacobian"
+        correct: true
+        why: "Each operation only implements its vector-Jacobian product; full Jacobians would be enormous."
+      - text: "In numerator layout, the derivative of a scalar with respect to a column vector is a row vector"
+        correct: true
+        why: "Numerator layout puts the output index on the rows: a 1 × n matrix. Our gradient is its transpose."
+      - text: "In denominator layout, the Jacobian of a map from R^n to R^m is m × n"
+        why: "Denominator layout is the transpose: n × m."
+      - text: "Two correct sources can give answers that differ by a transpose"
+        correct: true
+        why: "They may use different layout conventions; check the convention before your algebra."
+    explanation: "Layout conventions differ by a transpose. This course uses gradients shaped like the variable and m × n Jacobians, and backprop works with Jᵀv."
+  - id: b0-matrix-calculus-06
+    type: cloze
+    prompt: |
+      For an invertible matrix $W$, $\nabla_W \log\lvert\det W\rvert$ is the ____ of $W^{-1}$ (one word).
+    accept: [ "transpose" ]
+    explanation: "Jacobi's formula gives d log|det W| = tr(W⁻¹ dW) = tr((W⁻ᵀ)ᵀ dW), so the gradient is W⁻ᵀ, the transpose of the inverse. For a symmetric matrix such as a covariance it is just the inverse."
+  - id: b0-matrix-calculus-07
+    type: numeric
+    prompt: "You check the gradient of a loss with respect to a 100 × 50 weight matrix using central differences, one entry at a time. How many times is the loss function evaluated?"
+    answer: 10000
+    tol: 0
+    explanation: "Two evaluations (plus and minus ε) for each of the 5,000 entries: 10,000. That is why finite-difference checks are run on tiny shapes."
+  - id: b0-matrix-calculus-08
+    type: mcq
+    prompt: |
+      $Y = XW$ with $X$ of shape $n \times d$ and $W$ of shape $d \times k$, and $G = \partial L/\partial Y$. A paper writes $\partial L/\partial W = G^\top X$. What is going on?
+    options:
+      - text: "The paper uses the other layout convention; transpose its result to get the gradient shaped like W"
+        correct: true
+        why: "(Gᵀ X)ᵀ = Xᵀ G, the d × k gradient. The disagreement is a convention, not an error."
+      - text: "It is the gradient with respect to X, not W"
+        why: "The gradient with respect to X is G Wᵀ, of shape n × d."
+      - text: "Gᵀ X is the same matrix as Xᵀ G"
+        why: "Gᵀ X is k × d while Xᵀ G is d × k. They are transposes of each other, not equal."
+      - text: "The paper is wrong: the gradient must be X G"
+        why: "X G does not even multiply: (n × d)(n × k) has mismatched inner dimensions."
+    explanation: "Gᵀ X has shape k × d, the transpose of W's shape, which signals the other (numerator-style) layout. Transposing gives Xᵀ G."
+  - id: b0-matrix-calculus-09
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      A = np.array([[2.0, 1.0], [1.0, 3.0]])
+      x = np.array([1.0, -1.0])
+      print((A + A.T) @ x, 2 * A @ x)
+    answer: "[ 2. -4.] [ 2. -4.]"
+    explanation: "This A is symmetric, so A + Aᵀ = 2A and the two formulas agree: Ax = (1, −2), doubled is (2, −4). A symmetric test matrix can hide a bug; test with a non-symmetric one."
+  - id: b0-matrix-calculus-10
+    type: order
+    prompt: "Put the steps of the differential method for a gradient with respect to a matrix W in order."
+    items:
+      - "Write the differential df in terms of dW"
+      - "Rearrange it into the form tr(Gᵀ dW) using linearity and cyclic shifts of the trace"
+      - "Read off the gradient as G"
+      - "Check the shape and verify with a finite-difference check"
+    explanation: "Compute df, push it into tr(Gᵀ dW), read off ∇_W f = G, then check the shape and numerically verify."

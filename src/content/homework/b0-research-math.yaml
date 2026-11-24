@@ -1,0 +1,22 @@
+id: b0-research-math
+module: b0
+kind: homework
+title: Check research mathematics with NumPy
+brief: |
+  Turn mathematical claims into numerical checks. Open the notebook in local Jupyter or Colab
+  with NumPy installed.
+
+  1. Derive a least-squares gradient and verify it with central differences.
+  2. Solve for a Newton step and compare with a direct least-squares solution.
+  3. Derive a nonnegative projection and check its KKT conditions.
+  4. Sample a correlated Gaussian and estimate the Monte Carlo standard error of a variance estimate.
+  5. Check the ELBO identity for two trial distributions.
+  6. Annotate the ELBO derivation and state the assumptions behind it.
+notebook: /homework/b0-research-math.ipynb
+rubric:
+  - The gradient agrees with finite differences at more than one point.
+  - The Newton step uses a linear solve and reaches the known optimum from both starting points.
+  - The constrained solution satisfies feasibility, stationarity and complementary slackness.
+  - The report includes a reproducible estimate and explains the standard error change with sample size.
+  - The derivation identifies the Bayes step and the condition for a tight bound.
+compute: Any laptop or free Colab CPU. Allow 90 to 120 minutes including the derivations.

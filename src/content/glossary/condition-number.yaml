@@ -1,0 +1,7 @@
+term: "Condition number"
+short: "For a positive definite matrix, the ratio of its largest to its smallest eigenvalue; large values mean long, narrow valleys."
+body: |
+  For a loss, the condition number of the Hessian compares the steepest and flattest curvatures. Gradient descent
+  needs a number of steps roughly proportional to it, which is why feature scaling, adaptive optimisers and
+  second-order methods help. For a linear system it measures how much errors in the inputs can be amplified.
+related: ["hessian", "eigenvector", "gradient-descent", "feature-scaling"]

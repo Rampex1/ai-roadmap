@@ -1,0 +1,66 @@
+id: b0-matrix-calculus-02
+lesson: research/b0/matrix-calculus
+title: Three matrix gradients
+prompt: |
+  Derive and code three gradients with respect to a matrix $W$. Each must return an array **shaped like `W`**
+  (the convention of this course).
+
+  1. `grad_bilinear(a, W, b)`: the gradient of $f(W) = \mathbf{a}^\top W \mathbf{b}$, where $W$ is $m \times n$,
+     $\mathbf{a}$ has length $m$ and $\mathbf{b}$ length $n$.
+  2. `grad_frobenius(X, W, T)`: the gradient of $f(W) = \lVert XW - T\rVert_F^2$ (the sum of squared entries).
+  3. `grad_logdet(W)`: the gradient of $f(W) = \log\lvert\det W\rvert$ for an invertible square $W$.
+
+  The tests compare each one with a numerical gradient on random matrices of several shapes, so a formula that
+  only works for square or symmetric matrices will be caught.
+starter: |
+  import numpy as np
+
+  def grad_bilinear(a, W, b):
+      return np.outer(b, a)
+
+  def grad_frobenius(X, W, T):
+      return 2 * (X @ W - T)
+
+  def grad_logdet(W):
+      return np.linalg.inv(W)
+solution: |
+  import numpy as np
+
+  def grad_bilinear(a, W, b):
+      return np.outer(a, b)
+
+  def grad_frobenius(X, W, T):
+      return 2 * X.T @ (X @ W - T)
+
+  def grad_logdet(W):
+      return np.linalg.inv(W).T
+tests: |
+  import numpy as np
+  def _ng(f, x, eps=1e-6):
+      x = np.array(x, dtype=float)
+      g = np.zeros_like(x)
+      for idx in np.ndindex(x.shape):
+          o = x[idx]
+          x[idx] = o + eps; fp = f(x)
+          x[idx] = o - eps; fm = f(x)
+          x[idx] = o
+          g[idx] = (fp - fm) / (2 * eps)
+      return g
+  def _check(got, want, name):
+      assert got is not None, f"{name} returned None: did you forget the return statement?"
+      assert np.shape(got) == np.shape(want), f"{name} should return an array shaped like W, {np.shape(want)}, got {np.shape(got)}"
+      np.testing.assert_allclose(got, want, rtol=1e-5, atol=1e-7, err_msg=f"{name} does not match the numerical gradient")
+  _rng = np.random.default_rng(7)
+  for _m, _n in ((2, 3), (4, 2), (3, 3)):
+      _a = _rng.normal(size=_m); _b = _rng.normal(size=_n); _W = _rng.normal(size=(_m, _n))
+      _check(grad_bilinear(_a, _W, _b), _ng(lambda W: _a @ W @ _b, _W), "grad_bilinear")
+  for _n, _d, _k in ((5, 3, 2), (4, 2, 3), (6, 4, 1)):
+      _X = _rng.normal(size=(_n, _d)); _W = _rng.normal(size=(_d, _k)); _T = _rng.normal(size=(_n, _k))
+      _check(grad_frobenius(_X, _W, _T), _ng(lambda W: np.sum((_X @ W - _T) ** 2), _W), "grad_frobenius")
+  for _d in (2, 3, 4):
+      _W = _rng.normal(size=(_d, _d)) + 0.5 * np.eye(_d)
+      _check(grad_logdet(_W), _ng(lambda W: np.linalg.slogdet(W)[1], _W), "grad_logdet")
+hints:
+  - "Write a^T W b as a double sum of a_i W_ij b_j and differentiate by W_ij."
+  - "For the Frobenius norm, the differential is 2 tr((XW - T)^T X dW); move X to the other side with a transpose."
+  - "Jacobi: d log|det W| = tr(W^-1 dW), so the gradient is the transpose of the inverse."

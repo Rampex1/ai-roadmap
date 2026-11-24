@@ -1,0 +1,7 @@
+term: "Mutual information"
+short: "I(X; Y) = H(X) − H(X | Y): how much knowing one variable reduces uncertainty about the other."
+body: |
+  Equivalently $H(X) + H(Y) - H(X, Y)$, or the KL divergence between the joint distribution and the product of
+  the marginals. It is symmetric, never negative, and zero exactly when $X$ and $Y$ are independent; unlike
+  correlation it detects any kind of dependence. Contrastive learning objectives are motivated as bounds on it.
+related: ["entropy", "kl-divergence", "independence"]

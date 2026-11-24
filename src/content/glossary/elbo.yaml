@@ -1,0 +1,7 @@
+term: "ELBO"
+short: "Evidence lower bound: E_q[log p(x, z) − log q(z)] ≤ log p(x), for any distribution q over the latent z."
+body: |
+  It follows from Jensen's inequality, and the gap is exactly $D_{\mathrm{KL}}(q(z) \,\|\, p(z \mid x))$, so the
+  bound is tight when $q$ is the true posterior. Rewritten as a reconstruction term minus
+  $D_{\mathrm{KL}}(q \,\|\, \text{prior})$, it is the objective maximised by variational autoencoders.
+related: ["kl-divergence", "jensens-inequality", "likelihood"]

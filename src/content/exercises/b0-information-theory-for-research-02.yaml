@@ -1,0 +1,65 @@
+id: b0-information-theory-for-research-02
+lesson: research/b0/information-theory-for-research
+title: The ELBO and its gap
+prompt: |
+  A model has a discrete latent $z \in \{0, \dots, K - 1\}$ with prior `prior[z]` $= p(z)$, and for one observed
+  $x$ the likelihoods `lik[z]` $= p(x \mid z)$. Write three functions (natural logs):
+
+  1. `log_evidence(prior, lik)`: $\log p(x) = \log\sum_z p(z)\,p(x \mid z)$.
+  2. `posterior(prior, lik)`: the vector $p(z \mid x)$.
+  3. `elbo(prior, lik, q)`: $\sum_z q(z)\big[\log p(x, z) - \log q(z)\big]$ for a distribution `q` over $z$.
+     Entries with `q == 0` contribute 0.
+
+  The tests check that the ELBO never exceeds the log evidence, that the gap equals
+  $D_{\mathrm{KL}}(q \,\|\, p(z \mid x))$, and that the bound is tight at the posterior.
+starter: |
+  import numpy as np
+
+  def log_evidence(prior, lik):
+      return np.sum(np.log(prior * lik))
+
+  def posterior(prior, lik):
+      return lik / lik.sum()
+
+  def elbo(prior, lik, q):
+      return np.sum(q * np.log(prior * lik))
+solution: |
+  import numpy as np
+
+  def log_evidence(prior, lik):
+      return float(np.log(np.sum(np.asarray(prior) * np.asarray(lik))))
+
+  def posterior(prior, lik):
+      joint = np.asarray(prior, dtype=float) * np.asarray(lik, dtype=float)
+      return joint / joint.sum()
+
+  def elbo(prior, lik, q):
+      joint = np.asarray(prior, dtype=float) * np.asarray(lik, dtype=float)
+      q = np.asarray(q, dtype=float)
+      m = q > 0
+      return float(np.sum(q[m] * (np.log(joint[m]) - np.log(q[m]))))
+tests: |
+  import math
+  import numpy as np
+  _prior = np.array([0.5, 0.3, 0.2]); _lik = np.array([0.10, 0.60, 0.30])
+  assert math.isclose(log_evidence(_prior, _lik), math.log(0.29), rel_tol=1e-12), f"log p(x) = log(sum(prior * lik)) = log 0.29 = {math.log(0.29):.4f}, got {log_evidence(_prior, _lik)!r}"
+  np.testing.assert_allclose(posterior(_prior, _lik), _prior * _lik / 0.29, rtol=1e-12, err_msg="The posterior is prior * lik, normalised to sum to 1")
+  assert math.isclose(elbo(_prior, _lik, _prior), -1.5453, abs_tol=1e-4), f"With q = prior the ELBO is about -1.5453, got {elbo(_prior, _lik, _prior)!r}"
+  _rng = np.random.default_rng(4)
+  for _K in (2, 4, 6):
+      _p = _rng.dirichlet(np.ones(_K)); _l = _rng.uniform(0.01, 1, _K)
+      _post = posterior(_p, _l); _le = log_evidence(_p, _l)
+      assert math.isclose(elbo(_p, _l, _post), _le, rel_tol=1e-9), "At q = posterior the ELBO should equal log p(x)"
+      for _ in range(5):
+          _q = _rng.dirichlet(np.ones(_K))
+          _e = elbo(_p, _l, _q)
+          assert _e <= _le + 1e-12, "The ELBO must never exceed log p(x)"
+          _kl = float(np.sum(_q * np.log(_q / _post)))
+          assert math.isclose(_le - _e, _kl, rel_tol=1e-7, abs_tol=1e-12), "log p(x) - ELBO should equal KL(q || posterior)"
+  _q0 = np.array([0.0, 1.0, 0.0])
+  _e0 = elbo(_prior, _lik, _q0)
+  assert not math.isnan(_e0) and math.isclose(_e0, math.log(0.3 * 0.6), rel_tol=1e-12), "Entries with q = 0 contribute nothing: a q that puts all mass on z = 1 gives ELBO = log p(x, z=1)"
+hints:
+  - "The joint p(x, z) is prior * lik, elementwise; the evidence is its sum."
+  - "The ELBO is sum over z of q * (log joint - log q)."
+  - "Mask out q == 0 before taking logs, as with entropy."

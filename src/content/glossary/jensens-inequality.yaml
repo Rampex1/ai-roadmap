@@ -1,0 +1,7 @@
+term: "Jensen's inequality"
+short: "For a convex function f, f(E[X]) ≤ E[f(X)]; for a concave function such as log, the inequality is reversed."
+body: |
+  It generalises the chord definition of convexity from two points to any distribution. Equality holds when $X$ is
+  constant or $f$ is linear on its range. Applied to $\log$ it proves that the KL divergence is never negative and
+  gives the evidence lower bound (ELBO) used by variational autoencoders.
+related: ["convex-function", "expected-value", "kl-divergence", "elbo"]

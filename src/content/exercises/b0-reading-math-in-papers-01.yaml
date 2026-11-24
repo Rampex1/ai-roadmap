@@ -1,0 +1,59 @@
+id: b0-reading-math-in-papers-01
+lesson: research/b0/reading-math-in-papers
+title: From ∝ to a normalised posterior
+prompt: |
+  A paper writes $p(\theta \mid \mathcal{D}) \propto p(\mathcal{D} \mid \theta)\,p(\theta)$. On a grid of $\theta$
+  values, write:
+
+  1. `grid_posterior(log_lik, log_prior)`: given arrays of $\log p(\mathcal{D} \mid \theta)$ and $\log p(\theta)$ at
+     each grid point, return the posterior **probabilities** over the grid (non-negative, summing to 1). Work in log
+     space with `scipy.special.logsumexp`: the tests use data sets large enough that `np.exp` of the
+     unnormalised log-posterior underflows to 0.
+  2. `map_estimate(theta, post)`: the grid value of $\theta$ with the highest posterior probability (the argmax,
+     not the max).
+
+  The tests use coin flips with a $\text{Beta}(a, b)$ prior, whose exact MAP is
+  $\frac{k + a - 1}{n + a + b - 2}$ for $k$ heads in $n$ flips.
+starter: |
+  import numpy as np
+  from scipy.special import logsumexp
+
+  def grid_posterior(log_lik, log_prior):
+      unnorm = np.exp(log_lik + log_prior)
+      return unnorm / unnorm.sum()
+
+  def map_estimate(theta, post):
+      return np.max(post)
+solution: |
+  import numpy as np
+  from scipy.special import logsumexp
+
+  def grid_posterior(log_lik, log_prior):
+      log_unnorm = np.asarray(log_lik, dtype=float) + np.asarray(log_prior, dtype=float)
+      return np.exp(log_unnorm - logsumexp(log_unnorm))
+
+  def map_estimate(theta, post):
+      return float(theta[np.argmax(post)])
+tests: |
+  import math
+  import warnings
+  import numpy as np
+  from scipy import stats
+  warnings.simplefilter("ignore")
+  _theta = np.linspace(0.0005, 0.9995, 1999)
+  for _k, _n, _a, _b in ((7, 10, 2, 2), (3, 20, 1, 1), (2100, 3000, 2, 5), (10, 10, 3, 2)):
+      _ll = _k * np.log(_theta) + (_n - _k) * np.log(1 - _theta)
+      _lp = stats.beta(_a, _b).logpdf(_theta)
+      _post = grid_posterior(_ll, _lp)
+      assert _post is not None and np.shape(_post) == _theta.shape, "grid_posterior should return one probability per grid point"
+      assert not np.any(np.isnan(_post)), f"Got nan for k={_k}, n={_n}: exp of a very negative log underflows to 0. Subtract logsumexp in log space before exponentiating"
+      assert math.isclose(float(np.sum(_post)), 1.0, rel_tol=1e-9), f"The posterior probabilities should sum to 1, got {np.sum(_post)}"
+      _want = stats.beta(_k + _a, _n - _k + _b).pdf(_theta); _want = _want / _want.sum()
+      np.testing.assert_allclose(_post, _want, atol=1e-9, err_msg=f"The posterior for k={_k}, n={_n} with a Beta({_a}, {_b}) prior is wrong")
+      _map = map_estimate(_theta, _post)
+      _exact = (_k + _a - 1) / (_n + _a + _b - 2)
+      assert abs(_map - _exact) <= 0.0006, f"map_estimate should return the theta value at the argmax, about {_exact:.4f}; got {_map!r}"
+hints:
+  - "log_unnorm = log_lik + log_prior; then log_post = log_unnorm - logsumexp(log_unnorm)."
+  - "Only exponentiate after normalising in log space."
+  - "np.argmax(post) gives the index; return theta at that index."

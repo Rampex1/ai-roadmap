@@ -1,0 +1,7 @@
+term: "i.i.d."
+short: "Independent and identically distributed: every example comes from the same distribution, independently of the others."
+body: |
+  The assumption lets a likelihood factorise into a product over examples, so its log is a sum, and it justifies
+  averaging losses and using mini-batch gradients. Time series, duplicated data and data collected by the model
+  itself (as in reinforcement learning) can violate it.
+related: ["independence", "likelihood", "maximum-likelihood-estimation"]

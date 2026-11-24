@@ -1,0 +1,323 @@
+---
+title: "Matrix calculus: gradients, Jacobians and layout conventions"
+module: b0
+order: 1
+estMinutes: 20
+objectives:
+  - "State the layout convention used here (gradients have the shape of the variable, Jacobians are outputs × inputs) and convert a result written in the other convention"
+  - "Derive ∇ₓ(aᵀx) = a, ∇ₓ(xᵀAx) = (A + Aᵀ)x and the weight gradient of a linear layer, using index notation or differentials"
+  - "Verify any matrix-calculus result with a central-difference gradient check and a relative error"
+goDeeper: matrix-cookbook
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Open almost any ML paper and you will meet lines such as $\nabla_{W} \mathcal{L} = X^\top (P - Y)$ or
+$\frac{\partial}{\partial \Sigma}\log\det\Sigma = \Sigma^{-1}$, stated without proof. You already know every
+ingredient: partial derivatives and the gradient from [F4](/foundations/f4/gradient/), the chain rule from
+[F4](/foundations/f4/chain-rule/), and the linear-layer gradients you derived by hand in
+[F9](/foundations/f9/backpropagation/). This lesson turns those pieces into a toolkit: a fixed convention for
+shapes, two derivation methods that scale to matrices, a handful of identities worth memorising, and a
+numerical check that catches every mistake.
+
+## Shapes first: what a derivative of a vector is
+
+There are four cases, depending on whether the input and the output are scalars, vectors or matrices.
+
+| Function | Derivative | Shape |
+|---|---|---|
+| $f: \mathbb{R} \to \mathbb{R}$ | ordinary derivative $f'(x)$ | scalar |
+| $f: \mathbb{R}^n \to \mathbb{R}$ | <Term id="gradient" /> $\nabla_{\mathbf{x}} f$ | $n$-vector, like $\mathbf{x}$ |
+| $f: \mathbb{R}^{m \times n} \to \mathbb{R}$ | gradient $\nabla_W f$, entry $(i, j)$ is $\partial f / \partial W_{ij}$ | $m \times n$, like $W$ |
+| $\mathbf{f}: \mathbb{R}^n \to \mathbb{R}^m$ | <Term id="jacobian" /> $J$, entry $(i, j)$ is $\partial f_i / \partial x_j$ | $m \times n$ |
+
+The Jacobian collects every partial derivative of every output. Row $i$ is the gradient of output $f_i$ (laid
+flat); column $j$ says how all $m$ outputs move when you nudge input $x_j$. It is the matrix of the best linear
+approximation, the many-output version of [F4's](/foundations/f4/partial-derivatives/) linear approximation:
+
+$$
+\mathbf{f}(\mathbf{x} + \mathbf{h}) \approx \mathbf{f}(\mathbf{x}) + J\,\mathbf{h}
+$$
+
+For a linear map $\mathbf{f}(\mathbf{x}) = A\mathbf{x}$ the approximation is exact, so the Jacobian is $A$
+itself.
+
+### The layout convention
+
+Here is the annoying part. Should the derivative of an $m$-vector with respect to an $n$-vector be $m \times n$ or
+$n \times m$? Both conventions are in use:
+
+- **Numerator layout:** the output index runs down the rows, so the Jacobian is $m \times n$ (outputs × inputs).
+  The derivative of a scalar with respect to a column vector is then a **row** vector, $1 \times n$.
+- **Denominator layout:** everything is transposed, $n \times m$, and the derivative of a scalar with respect to a
+  column vector is a **column** vector.
+
+:::note[The convention in this course]
+- **Gradients have the shape of the variable.** $\nabla_{\mathbf{x}} f$ is a column vector like $\mathbf{x}$,
+  and $\nabla_W f$ is a matrix shaped like $W$. This is what every autodiff framework stores, and what
+  `W -= lr * grad_W` needs.
+- **Jacobians are numerator layout:** $m \times n$, outputs × inputs.
+
+So for a scalar $f$, the gradient is the transpose of its $1 \times n$ Jacobian: $\nabla f = J^\top$.
+:::
+
+Papers, textbooks and Wikipedia mix the two layouts, and some switch within one page. The Matrix Cookbook
+mostly gives derivatives of scalars as arrays shaped like the variable, which matches our gradients. When a
+source disagrees with you by a transpose, check its convention before you check your algebra. A result in the
+other layout converts by transposing, and the shape test below settles any doubt in seconds.
+
+### The chain rule in Jacobians
+
+If $\mathbf{y} = \mathbf{f}(\mathbf{x})$ and $\mathbf{z} = \mathbf{g}(\mathbf{y})$, the Jacobians multiply in the
+same order as the functions compose:
+
+$$
+J_{\mathbf{g} \circ \mathbf{f}}(\mathbf{x}) = J_{\mathbf{g}}(\mathbf{y})\; J_{\mathbf{f}}(\mathbf{x})
+$$
+
+The shapes chain: $(k \times m)(m \times n) = k \times n$. When the final output is a scalar loss $L$, take
+transposes and you get the rule backpropagation runs on:
+
+$$
+\nabla_{\mathbf{x}} L = J_{\mathbf{f}}^\top \, \nabla_{\mathbf{y}} L
+$$
+
+The gradient flowing back through a layer is the incoming gradient multiplied by the transposed Jacobian, a
+**vector-Jacobian product**. Frameworks never build $J$ (for a layer with a million inputs and outputs it would
+have $10^{12}$ entries); each operation only knows how to compute $J^\top \mathbf{v}$ for a given $\mathbf{v}$.
+
+## Method 1: index notation
+
+The safest way to derive a gradient is to write the function as a sum over indices, take one partial derivative,
+then recognise the result as a matrix expression.
+
+**Linear function.** $f(\mathbf{x}) = \mathbf{a}^\top\mathbf{x} = \sum_i a_i x_i$. Differentiating by $x_k$ kills
+every term except $i = k$:
+
+$$
+\frac{\partial f}{\partial x_k} = a_k \quad\Longrightarrow\quad \nabla_{\mathbf{x}}(\mathbf{a}^\top\mathbf{x}) = \mathbf{a}
+$$
+
+**Quadratic form.** $f(\mathbf{x}) = \mathbf{x}^\top A\mathbf{x} = \sum_i \sum_j x_i A_{ij} x_j$, with $A$ any
+$n \times n$ matrix. The variable $x_k$ appears in two places: as $x_i$ (when $i = k$) and as $x_j$ (when $j = k$).
+The product rule gives one term for each:
+
+$$
+\frac{\partial f}{\partial x_k} = \sum_j A_{kj} x_j + \sum_i x_i A_{ik} = (A\mathbf{x})_k + (A^\top\mathbf{x})_k
+$$
+
+$$
+\nabla_{\mathbf{x}}(\mathbf{x}^\top A\mathbf{x}) = (A + A^\top)\,\mathbf{x}
+$$
+
+If $A$ is symmetric this is $2A\mathbf{x}$, the matrix version of $\frac{d}{dx} a x^2 = 2ax$. Papers usually
+assume symmetric $A$ and write $2A\mathbf{x}$; for a non-symmetric $A$ that is wrong, as the check below shows.
+
+**Least squares.** Expanding $\lVert X\mathbf{w} - \mathbf{y}\rVert^2 = \mathbf{w}^\top X^\top X\mathbf{w} - 2\mathbf{y}^\top X\mathbf{w} + \mathbf{y}^\top\mathbf{y}$
+and applying the two rules (with the symmetric $X^\top X$) gives $2X^\top X\mathbf{w} - 2X^\top\mathbf{y} = 2X^\top(X\mathbf{w} - \mathbf{y})$,
+the gradient you used in [F6](/foundations/f6/linear-regression-by-gradient-descent/).
+
+## Method 2: differentials
+
+Index notation gets messy for matrix variables. The method research papers use instead works with
+**differentials**: how much $f$ changes, to first order, when the variable changes by a small $dW$. The key fact
+is that for a scalar $f$ of a matrix $W$,
+
+$$
+df = \sum_{i,j} \frac{\partial f}{\partial W_{ij}}\, dW_{ij} = \operatorname{tr}\!\big( (\nabla_W f)^\top dW \big)
+$$
+
+where $\operatorname{tr}$ is the trace (the sum of the diagonal) and $\operatorname{tr}(A^\top B) = \sum_{ij} A_{ij}B_{ij}$
+is the matrix dot product. So the recipe is: **compute $df$, push it into the form $\operatorname{tr}(G^\top dW)$,
+and read off $\nabla_W f = G$.** Two facts do most of the pushing: the trace is linear, and it is unchanged by
+cyclic shifts, $\operatorname{tr}(ABC) = \operatorname{tr}(CAB) = \operatorname{tr}(BCA)$.
+
+**A linear layer.** Let $Y = XW$ with $X$ of shape $n \times d$ and $W$ of shape $d \times k$, and suppose the
+loss $L$ depends on $W$ only through $Y$, with $G = \partial L / \partial Y$ (shape $n \times k$) already known
+from the layers above. Then $dY = X\,dW$ and
+
+$$
+dL = \operatorname{tr}(G^\top dY) = \operatorname{tr}(G^\top X\, dW) = \operatorname{tr}\big((X^\top G)^\top dW\big)
+\quad\Longrightarrow\quad \nabla_W L = X^\top G
+$$
+
+That is the $dW = A^\top dZ$ rule from F9, now derived in one line instead of by indices. The same method gives
+$\nabla_X L = G W^\top$, and a bias $\mathbf{b}$ added to every row gets the column sums of $G$.
+
+**A log-determinant.** Gaussian log-likelihoods (lesson 4) contain $\log\det\Sigma$. The differential of the
+determinant is $d\det W = \det W\,\operatorname{tr}(W^{-1}dW)$ (Jacobi's formula), so
+
+$$
+d \log\lvert\det W\rvert = \operatorname{tr}(W^{-1}dW) \quad\Longrightarrow\quad \nabla_W \log\lvert\det W\rvert = W^{-\top}
+$$
+
+where $W^{-\top}$ is the transpose of the inverse. For a symmetric matrix such as a covariance, it is just
+$\Sigma^{-1}$.
+
+:::tip[Identities worth knowing by heart]
+With gradients shaped like the variable:
+
+| Function | Gradient |
+|---|---|
+| $\mathbf{a}^\top\mathbf{x}$ | $\mathbf{a}$ |
+| $\mathbf{x}^\top A\mathbf{x}$ | $(A + A^\top)\mathbf{x}$, or $2A\mathbf{x}$ if $A$ is symmetric |
+| $\lVert A\mathbf{x} - \mathbf{b}\rVert^2$ | $2A^\top(A\mathbf{x} - \mathbf{b})$ |
+| $\mathbf{a}^\top W\mathbf{b}$ (by $W$) | $\mathbf{a}\mathbf{b}^\top$ |
+| $\operatorname{tr}(AW)$ (by $W$) | $A^\top$ |
+| $\lVert XW - T\rVert_F^2$ (by $W$) | $2X^\top(XW - T)$ |
+| $\log\lvert\det W\rvert$ | $W^{-\top}$ |
+
+$\lVert \cdot \rVert_F$ is the Frobenius norm, the square root of the sum of squared entries.
+:::
+
+## Check everything numerically
+
+A derivation is a hypothesis until a number confirms it. The tool is the central difference from
+[F4](/foundations/f4/numerical-derivatives/), applied to one entry at a time, with any shape of input:
+
+```python
+import numpy as np
+
+def num_grad(f, x, eps=1e-6):
+    """Central-difference gradient of a scalar function f at x (any shape)."""
+    x = np.array(x, dtype=float)          # a copy, so we can nudge entries
+    g = np.zeros_like(x)
+    for idx in np.ndindex(x.shape):
+        old = x[idx]
+        x[idx] = old + eps
+        f_plus = f(x)
+        x[idx] = old - eps
+        f_minus = f(x)
+        x[idx] = old
+        g[idx] = (f_plus - f_minus) / (2 * eps)
+    return g
+
+def rel_error(a, b):
+    return np.linalg.norm(a - b) / max(np.linalg.norm(a), np.linalg.norm(b))
+
+rng = np.random.default_rng(0)
+a = rng.normal(size=4)
+x = rng.normal(size=4)
+A = rng.normal(size=(4, 4))               # not symmetric
+print(f"{rel_error(num_grad(lambda v: a @ v, x), a):.1e}")
+print(f"{rel_error(num_grad(lambda v: v @ A @ v, x), (A + A.T) @ x):.1e}")
+print(f"{rel_error(num_grad(lambda v: v @ A @ v, x), 2 * A @ x):.1e}")
+```
+
+```text title="Output"
+7.3e-11
+9.7e-11
+8.0e-01
+```
+
+The relative error $\lVert g_{\text{num}} - g\rVert / \max(\lVert g_{\text{num}}\rVert, \lVert g\rVert)$ is about
+$10^{-10}$ for a correct formula and order 1 for a wrong one. Here $2A\mathbf{x}$ is off by 80% because this $A$
+is not symmetric. Rough guide, in float64 with $\varepsilon = 10^{-6}$: below $10^{-7}$ is right, above $10^{-3}$
+is a bug, and in between look harder (kinks such as ReLU near 0 can cause it).
+
+A Jacobian is checked the same way, one input at a time, each giving a column. Take
+$\mathbf{f}(\mathbf{x}) = \tanh(B\mathbf{x})$, a linear map followed by an elementwise function. Its Jacobian is
+$\operatorname{diag}(1 - \tanh^2(B\mathbf{x}))\,B$: the chain rule gives "Jacobian of tanh (diagonal, because it is
+elementwise) times Jacobian of $B\mathbf{x}$ (which is $B$)". Continuing the same session:
+
+```python
+B = rng.normal(size=(3, 4))
+def f(v):
+    return np.tanh(B @ v)            # R^4 -> R^3
+
+def num_jacobian(f, x, eps=1e-6):
+    x = np.array(x, dtype=float)
+    cols = []
+    for j in range(x.size):
+        e = np.zeros_like(x)
+        e[j] = eps
+        cols.append((f(x + e) - f(x - e)) / (2 * eps))
+    return np.stack(cols, axis=1)    # column j: how every output moves with x_j
+
+J_num = num_jacobian(f, x)
+J = np.diag(1 - np.tanh(B @ x) ** 2) @ B
+print(J_num.shape)
+print(f"{rel_error(J_num, J):.1e}")
+```
+
+```text title="Output"
+(3, 4)
+2.2e-10
+```
+
+Three outputs by four inputs: numerator layout. And the linear layer, with a mean squared error loss
+$L = \frac{1}{n}\lVert XW + \mathbf{1}\mathbf{b}^\top - T\rVert_F^2$ (so $G = \frac{2}{n}(XW + \mathbf{1}\mathbf{b}^\top - T)$):
+
+```python
+n, d, k = 5, 3, 2
+X = rng.normal(size=(n, d))
+W = rng.normal(size=(d, k))
+b = rng.normal(size=k)
+T = rng.normal(size=(n, k))           # targets
+
+def loss(W, b):
+    return np.sum((X @ W + b - T) ** 2) / n
+
+G = 2 / n * (X @ W + b - T)           # dL/dY, shape (n, k)
+dW = X.T @ G                          # shape (d, k), same as W
+db = G.sum(axis=0)                    # shape (k,), same as b
+dX = G @ W.T                          # shape (n, d), same as X
+print(dW.shape, db.shape, dX.shape)
+print(f"{rel_error(num_grad(lambda W_: loss(W_, b), W), dW):.1e}")
+print(f"{rel_error(num_grad(lambda b_: loss(W, b_), b), db):.1e}")
+```
+
+```text title="Output"
+(3, 2) (2,) (5, 3)
+1.1e-10
+3.5e-11
+```
+
+Finally the log-determinant identity, on a random matrix (whose determinant may be negative, hence the absolute
+value; `slogdet` returns its sign and the log of its absolute value):
+
+```python
+rng = np.random.default_rng(1)
+M = rng.normal(size=(3, 3))
+f = lambda M_: np.linalg.slogdet(M_)[1]          # log |det M|
+print(f"{rel_error(num_grad(f, M), np.linalg.inv(M).T):.1e}")
+print(f"{rel_error(num_grad(f, M), np.linalg.inv(M)):.1e}")
+```
+
+```text title="Output"
+3.2e-11
+4.0e-01
+```
+
+The transpose matters: $M^{-1}$ without it is off by 40%. (A source in denominator layout would print
+$M^{-1}$ here and be right in its own convention.)
+
+:::caution[A finite-difference check is slow on purpose]
+`num_grad` calls $f$ twice per entry, so it is far too slow to train with: a layer with a million weights needs
+two million forward passes. Use it on tiny shapes (a few rows, a few features) to test the formula, then trust the
+formula at full size. Always check in float64; float32 rounding swamps the differences.
+:::
+
+## A workflow for any gradient
+
+1. **Write the shapes** of every symbol. The answer must have the shape of the variable.
+2. **Derive** with index notation (vectors) or differentials (matrices), or look it up in the Matrix Cookbook and
+   translate its layout.
+3. **Shape-check**: often only one arrangement of the factors multiplies at all.
+4. **Verify** with `num_grad` on random small inputs, using a non-symmetric matrix where symmetry could hide a bug.
+
+## Try it
+
+<CodeExercise id="b0-matrix-calculus-01" />
+
+<CodeExercise id="b0-matrix-calculus-02" />
+
+## Summary
+
+- Gradients of scalars have the shape of the variable; Jacobians are outputs × inputs (numerator layout), so
+  $\nabla f = J^\top$ for scalar $f$. Other sources may use the transposed (denominator) layout.
+- Chain rule: $J_{g \circ f} = J_g J_f$; backprop computes vector-Jacobian products $J^\top \nabla_{\mathbf{y}} L$.
+- Key identities: $\nabla(\mathbf{a}^\top\mathbf{x}) = \mathbf{a}$, $\nabla(\mathbf{x}^\top A\mathbf{x}) = (A + A^\top)\mathbf{x}$,
+  $\nabla_W L = X^\top G$ for $Y = XW$, $\nabla \log\lvert\det W\rvert = W^{-\top}$.
+- Differentials: write $df = \operatorname{tr}(G^\top dW)$ and read off $\nabla_W f = G$.
+- Verify with central differences: relative error near $10^{-10}$ means right, order 1 means wrong.

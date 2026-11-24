@@ -1,0 +1,126 @@
+items:
+  - id: b0-information-theory-for-research-01
+    type: numeric
+    prompt: "H(X) = 1 bit, H(Y) = 1 bit and H(X, Y) = 1.5 bits. What is the mutual information I(X; Y), in bits?"
+    answer: 0.5
+    tol: 0.001
+    explanation: "I(X; Y) = H(X) + H(Y) − H(X, Y) = 1 + 1 − 1.5 = 0.5 bits: the overlap between the two variables' information."
+  - id: b0-information-theory-for-research-02
+    type: mcq
+    prompt: "Which KL divergence equals the mutual information I(X; Y)?"
+    options:
+      - text: "KL( p(x) ‖ p(y) )"
+        why: "X and Y can have different outcome spaces, and MI is about the joint, not the marginals alone."
+      - text: "KL( p(x | y) ‖ p(y | x) )"
+        why: "These are distributions over different variables."
+      - text: "KL( p(x) p(y) ‖ p(x, y) )"
+        why: "That is the reverse direction, a different (and less used) quantity."
+      - text: "KL( p(x, y) ‖ p(x) p(y) )"
+        correct: true
+        why: "MI measures how far the joint is from what it would be under independence."
+    explanation: "I(X; Y) = Σ p(x, y) log [p(x, y) / (p(x)p(y))], which is zero exactly when the joint factorises."
+  - id: b0-information-theory-for-research-03
+    type: mcq
+    prompt: "You fit a single Gaussian q to a distribution p with two well-separated bumps by minimising the forward KL, KL(p ‖ q). What do you get?"
+    options:
+      - text: "The same answer as the reverse KL"
+        why: "The two directions punish different mistakes and generally give different fits."
+      - text: "A broad Gaussian covering both bumps, centred between them"
+        correct: true
+        why: "Forward KL is mode-covering; for a Gaussian q it matches p's mean and variance."
+      - text: "A Gaussian with zero variance at the mean"
+        why: "That would make q tiny almost everywhere p has mass: infinite forward KL."
+      - text: "A narrow Gaussian on one bump"
+        why: "That is the typical reverse-KL result. Forward KL heavily punishes q being tiny where p has mass, here the other bump."
+    explanation: "Forward KL averages over p, so missing any of p's mass is costly: q spreads out. Reverse KL averages over q and tends to lock onto one mode."
+  - id: b0-information-theory-for-research-04
+    type: mcq
+    prompt: "Minimising the population average negative log-likelihood of q_θ under p_data is equivalent to minimising which quantity?"
+    options:
+      - text: "KL(q_θ ‖ p_data)"
+        why: "That is the reverse direction, which variational inference minimises."
+      - text: "The entropy of q_θ"
+        why: "The entropy of the model is not the objective."
+      - text: "KL(p_data ‖ q_θ)"
+        correct: true
+        why: "Forward KL is cross-entropy minus the data entropy, a constant in θ; the cross-entropy is estimated by the average negative log-likelihood."
+      - text: "The entropy of p_data"
+        why: "This does not depend on θ at all."
+    explanation: "Max likelihood = min average NLL = min cross-entropy to the empirical distribution = min forward KL from data to model."
+  - id: b0-information-theory-for-research-05
+    type: multi
+    prompt: "Which are properties of the KL divergence?"
+    options:
+      - text: "For product distributions it is the sum of the KLs of the factors"
+        correct: true
+        why: "The log of a product is a sum of logs, so the KL between diagonal Gaussians is a sum over dimensions."
+      - text: "It is never negative"
+        correct: true
+        why: "Gibbs' inequality, proved with Jensen."
+      - text: "It can be estimated by Monte Carlo from samples of p, given both log-densities"
+        correct: true
+        why: "KL(p ‖ q) = E_p[log p − log q]."
+      - text: "It satisfies the triangle inequality"
+        why: "It does not, which is one reason it is not a metric."
+      - text: "It is symmetric in its two arguments"
+        why: "In general KL(p ‖ q) ≠ KL(q ‖ p); the lesson's Gaussians gave 0.443 and 1.307."
+    explanation: "Non-negative, asymmetric, additive over independent factors, and estimable by sampling."
+  - id: b0-information-theory-for-research-06
+    type: numeric
+    prompt: |
+      What is $D_{\mathrm{KL}}\big(\mathcal{N}(0, 1) \,\|\, \mathcal{N}(0, 2^2)\big)$ in nats? (Use the closed form from the lesson.)
+    answer: 0.3181
+    tol: 0.001
+    explanation: "log(σ₂/σ₁) + (σ₁² + (μ₁ − μ₂)²)/(2σ₂²) − 1/2 = ln 2 + 1/8 − 1/2 ≈ 0.6931 + 0.125 − 0.5 = 0.3181."
+  - id: b0-information-theory-for-research-07
+    type: mcq
+    prompt: "What is the gap log p(x) − ELBO(q)?"
+    options:
+      - text: "KL( p(z | x) ‖ q(z) )"
+        why: "Right idea, wrong direction: the expectation in the ELBO is under q, so q comes first."
+      - text: "KL( q(z) ‖ p(z) ), the KL to the prior"
+        why: "That term appears inside the ELBO's reconstruction-minus-KL form, but the gap is the KL to the posterior."
+      - text: "KL( q(z) ‖ p(z | x) )"
+        correct: true
+        why: "Writing p(x, z) = p(z | x) p(x) inside the ELBO gives log p(x) minus exactly this KL."
+      - text: "Zero, for every q"
+        why: "The bound is tight only when q equals the posterior."
+    explanation: "Maximising the ELBO over q therefore minimises a reverse KL to the posterior, and the bound is exact at q = p(z | x)."
+  - id: b0-information-theory-for-research-08
+    type: order
+    prompt: "Put the steps that derive the ELBO in order."
+    items:
+      - "Write log p(x) as the log of the sum over z of p(x, z)"
+      - "Multiply and divide inside the sum by q(z)"
+      - "Recognise the sum as an expectation under q of p(x, z)/q(z)"
+      - "Apply Jensen's inequality to move the log inside the expectation"
+    explanation: "log Σ p(x, z) = log Σ q(z) p(x, z)/q(z) = log E_q[p(x, z)/q(z)] ≥ E_q[log p(x, z) − log q(z)]."
+  - id: b0-information-theory-for-research-09
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      P = np.array([[0.25, 0.25], [0.25, 0.25]])
+      px, py = P.sum(1), P.sum(0)
+      print(np.sum(P * np.log2(P / np.outer(px, py))))
+    answer: "0.0"
+    explanation: "The joint equals the outer product of its marginals (0.5 × 0.5 = 0.25 everywhere): independent variables, zero mutual information."
+  - id: b0-information-theory-for-research-10
+    type: mcq
+    prompt: "In the proof that KL(p ‖ q) ≥ 0, which property of the logarithm does Jensen's inequality use?"
+    options:
+      - text: "log 0 is minus infinity"
+        why: "Zeros are a technicality; the proof rests on concavity."
+      - text: "log turns products into sums"
+        why: "Useful elsewhere (i.i.d. likelihoods), but not the key step here."
+      - text: "log is concave, so E_p[log(q/p)] ≤ log E_p[q/p]"
+        correct: true
+        why: "And E_p[q/p] = Σ q over the support of p ≤ 1, so the right side is ≤ 0."
+      - text: "log is increasing"
+        why: "Monotonicity is used for argmax arguments, not here."
+    explanation: "−KL = E_p[log(q/p)] ≤ log E_p[q/p] ≤ log 1 = 0."
+  - id: b0-information-theory-for-research-11
+    type: cloze
+    prompt: "A language model's average cross-entropy per token on text from a distribution can never go below the ____ of that distribution (one word)."
+    accept: [ "entropy" ]
+    explanation: "Cross-entropy = entropy + KL, and KL ≥ 0. The excess over the entropy is the KL from the data to the model."

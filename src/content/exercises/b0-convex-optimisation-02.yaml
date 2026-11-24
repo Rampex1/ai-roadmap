@@ -1,0 +1,52 @@
+id: b0-convex-optimisation-02
+lesson: research/b0/convex-optimisation
+title: Equality-constrained least squares via the KKT system
+prompt: |
+  Write `solve_eq_qp(Q, c, A, b)` for the problem
+
+  $$\min_{\mathbf{x}}\; \tfrac{1}{2}\mathbf{x}^\top Q\mathbf{x} + \mathbf{c}^\top\mathbf{x} \quad\text{subject to}\quad A\mathbf{x} = \mathbf{b}$$
+
+  with $Q$ symmetric $n \times n$, $A$ of shape $m \times n$ and $\mathbf{b}$ of length $m$. Build the KKT matrix
+  `[[Q, A.T], [A, 0]]`, solve one linear system, and return the tuple `(x, nu)`: the solution (length $n$) and the
+  Lagrange multipliers (length $m$), with the sign convention $Q\mathbf{x} + \mathbf{c} + A^\top\boldsymbol{\nu} = \mathbf{0}$.
+
+  The lesson's example $\min x^2 + 2y^2$ subject to $x + y = 3$ is `Q = diag(2, 4)`, `c = 0`, `A = [[1, 1]]`,
+  `b = [3]`, with answer `x = [2, 1]` and `nu = [-4]`.
+starter: |
+  import numpy as np
+
+  def solve_eq_qp(Q, c, A, b):
+      x = np.linalg.solve(Q, -c)   # ignores the constraint
+      nu = np.zeros(len(b))
+      return x, nu
+solution: |
+  import numpy as np
+
+  def solve_eq_qp(Q, c, A, b):
+      Q, c, A, b = (np.asarray(v, dtype=float) for v in (Q, c, A, b))
+      n, m = Q.shape[0], A.shape[0]
+      K = np.block([[Q, A.T], [A, np.zeros((m, m))]])
+      sol = np.linalg.solve(K, np.concatenate([-c, b]))
+      return sol[:n], sol[n:]
+tests: |
+  import numpy as np
+  _out = solve_eq_qp(np.diag([2.0, 4.0]), np.zeros(2), np.array([[1.0, 1.0]]), np.array([3.0]))
+  assert isinstance(_out, tuple) and len(_out) == 2, "Return a tuple (x, nu)"
+  np.testing.assert_allclose(_out[0], [2.0, 1.0], atol=1e-9, err_msg="For the lesson example x should be [2, 1]")
+  np.testing.assert_allclose(_out[1], [-4.0], atol=1e-9, err_msg="For the lesson example nu should be [-4]: check the sign convention Qx + c + A^T nu = 0")
+  _rng = np.random.default_rng(9)
+  for _n, _m in ((3, 1), (5, 2), (6, 3)):
+      _M = _rng.normal(size=(_n, _n)); _Q = _M @ _M.T + np.eye(_n)
+      _c = _rng.normal(size=_n); _A = _rng.normal(size=(_m, _n)); _b = _rng.normal(size=_m)
+      _x, _nu = solve_eq_qp(_Q, _c, _A, _b)
+      assert np.shape(_x) == (_n,) and np.shape(_nu) == (_m,), f"Expected x of shape ({_n},) and nu of shape ({_m},), got {np.shape(_x)} and {np.shape(_nu)}"
+      np.testing.assert_allclose(_A @ _x, _b, atol=1e-9, err_msg="The solution must satisfy the constraints A x = b")
+      np.testing.assert_allclose(_Q @ _x + _c + _A.T @ _nu, 0, atol=1e-9, err_msg="Stationarity Q x + c + A^T nu = 0 does not hold")
+      _N = np.linalg.svd(_A)[2][_m:].T   # directions that keep A x = b
+      for _ in range(5):
+          _y = _x + _N @ _rng.normal(size=_n - _m)
+          assert 0.5 * _y @ _Q @ _y + _c @ _y >= 0.5 * _x @ _Q @ _x + _c @ _x - 1e-9, "Another feasible point has a lower objective: x is not the constrained minimum"
+hints:
+  - "K = np.block([[Q, A.T], [A, np.zeros((m, m))]]) with m = A.shape[0]."
+  - "The right-hand side is np.concatenate([-c, b])."
+  - "The first n entries of the solution are x and the remaining m are nu."

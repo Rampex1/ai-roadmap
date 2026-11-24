@@ -1,0 +1,8 @@
+term: "KKT conditions"
+short: "Karush-Kuhn-Tucker conditions for inequality-constrained optima: stationarity, feasibility, non-negative multipliers and complementary slackness."
+body: |
+  For constraints $g_i(\mathbf{x}) \le 0$ with multipliers $\mu_i$: $\nabla f + \sum_i \mu_i\nabla g_i = \mathbf{0}$,
+  $g_i \le 0$, $\mu_i \ge 0$, and $\mu_i g_i = 0$ (each constraint is either active or has a zero multiplier).
+  For convex problems satisfying a regularity condition such as Slater's, they are necessary and sufficient for a
+  global optimum. They explain why only support vectors matter in an SVM.
+related: ["lagrange-multiplier", "convex-function"]
