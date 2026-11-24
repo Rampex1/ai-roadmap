@@ -1,7 +1,7 @@
 items:
   - id: f0-terminal-01
     type: output
-    prompt: "You type these two commands in a new Terminal window (your home folder is /Users/ada). What does the second one print?"
+    prompt: "Your terminal starts in your home folder, /Users/ada. You type these two commands. What does the second one print?"
     code: |
       cd Documents/../Desktop
       pwd

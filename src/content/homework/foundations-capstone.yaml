@@ -1,26 +1,29 @@
 id: foundations-capstone
 module: f11
 kind: capstone
-title: "Foundations capstone: Kaggle tabular project and an MLP on MNIST"
+title: "Foundations capstone: Adult Income classification and an MLP on MNIST"
 brief: |
   This capstone is the proof that you have mastered Foundations. You run two complete projects the way a
   practitioner would: decide everything with the training data, open the test set once, report numbers
   with their uncertainty, and write down what the model is for and where it fails. Download the starter
   notebook. Part A runs in local Jupyter (as set up in F0) or [Google Colab](https://colab.research.google.com/)
   (File > Upload notebook); Part B needs PyTorch, so run it in Colab with a GPU.
+  Before starting, review F2 (data analysis), F5 (estimation), F7–F8 (classical ML), F9 (neural
+  networks) and F11 (fairness).
 
   ## Part A: an end-to-end tabular project
 
   Predict whether a person earns more than 50,000 US dollars a year from the 1994 US census "Adult" data (48,842
   people, 14 features). It is downloaded from OpenML with `sklearn.datasets.fetch_openml`, so no Kaggle
-  account is needed.
+  account is needed. The notebook reserves a stratified 20% test split before exploration or feature
+  selection. Use only the training rows until the final evaluation.
 
   1. **Explore** (F2): the label balance, missing values, positive rates by group, and a two-panel figure.
   2. **Leakage scan and feature choices** (F7): the cross-validated AUC of every column on its own; drop
      the target, the census sampling weight `fnlwgt` and the duplicate education column; decide whether
      `sex` and `race` are inputs, and justify it.
-  3. **Split once**: a stratified 80/20 split; the test set is only reachable through a helper that
-     refuses a second call.
+  3. **Prepare the final evaluation**: set up a helper that applies your chosen columns to the
+     reserved test rows and refuses a second evaluation.
   4. **Compare models with CV** (F7, F8): a dummy baseline, a logistic regression inside a leakage-safe
      `Pipeline` with a `ColumnTransformer`, and gradient boosting (`HistGradientBoostingClassifier`), on
      the same 5 stratified folds. Justify the metric.
