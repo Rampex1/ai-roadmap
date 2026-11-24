@@ -1,0 +1,50 @@
+id: f6-linear-regression-by-gradient-descent-01
+lesson: foundations/f6/linear-regression-by-gradient-descent
+title: The vectorised MSE loss and gradient
+prompt: |
+  Write `mse_and_grad(A, w, y)` for the loss $L(\mathbf{w}) = \frac{1}{n}\lVert A\mathbf{w} - \mathbf{y}\rVert^2$.
+  `A` is an $n \times p$ matrix (already including any column of ones), `w` has length $p$ and `y`
+  has length $n$. Return `(loss, grad)` where `grad` is
+  $\frac{2}{n}A^\top(A\mathbf{w} - \mathbf{y})$, an array of length $p$.
+
+  Use matrix products, no Python loops over examples.
+
+  Check: with `A = [[1, 0], [1, 1], [1, 2]]`, `y = [1, 3, 5]` and `w = [0, 0]`, the loss is
+  `35 / 3` and the gradient is `[-6, -26 / 3]`.
+starter: |
+  import numpy as np
+
+  def mse_and_grad(A, w, y):
+      r = A @ w - y
+      loss = np.mean(r ** 2)
+      grad = np.zeros(len(w))
+      return loss, grad
+solution: |
+  import numpy as np
+
+  def mse_and_grad(A, w, y):
+      r = A @ w - y
+      loss = np.mean(r ** 2)
+      grad = 2 / len(y) * A.T @ r
+      return loss, grad
+tests: |
+  import numpy as np
+  _A = np.array([[1.0, 0.0], [1.0, 1.0], [1.0, 2.0]]); _y = np.array([1.0, 3.0, 5.0])
+  _r = mse_and_grad(_A, np.zeros(2), _y)
+  assert _r is not None and len(_r) == 2, "Return a pair: return loss, grad"
+  assert abs(_r[0] - 35 / 3) < 1e-12, f"Loss at w = 0 should be 35/3, got {_r[0]}"
+  np.testing.assert_allclose(_r[1], [-6.0, -26 / 3], err_msg="Gradient at w = 0 should be [-6, -26/3]")
+  _rng = np.random.default_rng(11)
+  for _n, _p in [(30, 4), (7, 2), (50, 6)]:
+      _A2 = _rng.normal(size=(_n, _p)); _y2 = _rng.normal(size=_n); _w2 = _rng.normal(size=_p)
+      _L = lambda w: np.mean((_A2 @ w - _y2) ** 2)
+      _loss, _g = mse_and_grad(_A2, _w2, _y2)
+      assert abs(_loss - _L(_w2)) < 1e-10, f"Wrong loss for an {_n} x {_p} problem"
+      assert np.shape(_g) == (_p,), f"The gradient should have shape ({_p},), got {np.shape(_g)}"
+      _num = np.array([(_L(_w2 + _e) - _L(_w2 - _e)) / 2e-6 for _e in np.eye(_p) * 1e-6])
+      np.testing.assert_allclose(_g, _num, rtol=1e-5, atol=1e-7, err_msg=f"Gradient fails the numerical check for an {_n} x {_p} problem: is it 2/n * A.T @ r?")
+  _ws, *_ = np.linalg.lstsq(_A2, _y2)
+  np.testing.assert_allclose(mse_and_grad(_A2, _ws, _y2)[1], 0, atol=1e-10, err_msg="At the least-squares solution the gradient should be zero")
+hints:
+  - "The residual r = A @ w - y has length n."
+  - "A.T @ r has one entry per weight; multiply it by 2 / n."

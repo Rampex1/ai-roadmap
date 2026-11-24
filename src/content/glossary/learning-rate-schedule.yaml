@@ -1,0 +1,7 @@
+term: "Learning-rate schedule"
+short: "A rule that changes the learning rate during training, usually large at first and smaller later."
+body: |
+  Common schedules are step decay (multiply by a factor at milestones), exponential decay, $1/t$ decay
+  and cosine decay, often preceded by a short warmup in which the rate rises from near zero. Decaying
+  the rate lets stochastic gradient descent settle closer to a minimum.
+related: ["learning-rate", "stochastic-gradient-descent"]

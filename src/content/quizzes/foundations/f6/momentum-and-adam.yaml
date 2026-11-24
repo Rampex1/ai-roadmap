@@ -1,0 +1,119 @@
+items:
+  - id: f6-momentum-and-adam-01
+    type: mcq
+    prompt: "Why does momentum reduce zigzagging in a long, narrow valley?"
+    explanation: "The velocity is a decaying sum of past gradients. Across the valley the gradient alternates in sign and mostly cancels; along it the gradient keeps its sign and accumulates."
+    options:
+      - text: Gradients across the valley alternate in sign and cancel in the velocity, while gradients along it add up
+        correct: true
+        why: Averaging keeps the consistent part and damps the oscillating part.
+      - text: It uses a smaller learning rate in the steep direction
+        why: Plain momentum uses the same learning rate for every coordinate; per-coordinate scaling is the idea behind RMSProp and Adam (AdaGrad came first).
+      - text: It computes the exact minimum of the valley
+        why: Momentum only combines past gradients; it never solves for the minimum.
+      - text: It ignores the gradient after the first step
+        why: Every step adds the new gradient to the velocity.
+  - id: f6-momentum-and-adam-02
+    type: numeric
+    prompt: "With momentum $\\beta = 0.9$ and the **same** gradient $g = 1$ every step, the velocity $v \\leftarrow \\beta v + g$ approaches what value?"
+    answer: 10
+    tol: 0.001
+    explanation: "At the fixed point v = 0.9v + 1, so 0.1v = 1 and v = 1/(1 - β) = 10. The effective step along a consistent direction is ten times larger."
+  - id: f6-momentum-and-adam-03
+    type: output
+    prompt: "What does this print? (Momentum with $\\beta = 0.5$, $\\eta = 0.1$.)"
+    code: |
+      theta, v = 1.0, 0.0
+      for g in [2.0, 2.0]:
+          v = 0.5 * v + g
+          theta = theta - 0.1 * v
+      print(round(v, 3), round(theta, 3))
+    answer: "3.0 0.5"
+    explanation: "Step 1: v = 2, θ = 1 - 0.2 = 0.8. Step 2: v = 0.5 × 2 + 2 = 3, θ = 0.8 - 0.3 = 0.5."
+  - id: f6-momentum-and-adam-04
+    type: mcq
+    prompt: "What does RMSProp divide each coordinate's gradient by?"
+    explanation: "RMSProp keeps a moving average s of squared gradients per coordinate and divides by √s + ε, the root mean square of recent gradients."
+    options:
+      - text: The square root of a moving average of that coordinate's squared gradients
+        correct: true
+        why: That is the root mean square of its recent gradients.
+      - text: The number of steps taken so far
+        why: That would shrink every coordinate equally, not adapt to each one.
+      - text: The norm of the whole gradient vector
+        why: That rescales all coordinates by the same amount.
+      - text: The current loss value
+        why: RMSProp's scaling uses gradient statistics, not the loss.
+  - id: f6-momentum-and-adam-05
+    type: mcq
+    prompt: "Why does Adam divide $\\mathbf{m}_t$ by $1 - \\beta_1^t$?"
+    explanation: "m starts at zero, so early moving averages are biased towards zero. Dividing by 1 - β₁ᵗ corrects exactly that bias; for large t the factor is about 1."
+    options:
+      - text: Because m starts at zero, early averages are too small, and this undoes that bias
+        correct: true
+        why: After one step m is (1 - β₁)g, and dividing by 1 - β₁ restores g.
+      - text: To make the learning rate decay over time
+        why: The factor approaches 1 as t grows, so it fades away rather than decaying the step.
+      - text: To keep m from becoming negative
+        why: m can be negative whenever the gradient is; the correction does not change its sign.
+      - text: To convert the gradient into a probability
+        why: Nothing in Adam is a probability.
+  - id: f6-momentum-and-adam-06
+    type: numeric
+    prompt: "Adam's first step ($t = 1$, $\\mathbf{m}_0 = \\mathbf{v}_0 = \\mathbf{0}$, $\\varepsilon$ negligible) with $\\eta = 0.01$ sees the gradient $g = 250$ for one parameter. By how much does that parameter change (give the size, a positive number)?"
+    answer: 0.01
+    rtol: 0.001
+    explanation: "On step 1, m̂ = g and v̂ = g², so the step is η g / |g| = η = 0.01 in size, regardless of how large g is."
+  - id: f6-momentum-and-adam-07
+    type: multi
+    prompt: "Which statements about Adam are true? Select all that apply."
+    explanation: "Adam keeps two moving averages (two extra numbers per parameter), scales each coordinate separately, and its common defaults are β₁ = 0.9 and β₂ = 0.999. The learning rate still often needs tuning."
+    options:
+      - text: It keeps two extra numbers per parameter
+        correct: true
+        why: The first moment m and the second moment v.
+      - text: It gives each parameter its own effective step size
+        correct: true
+        why: Dividing by √v̂ adapts the step per coordinate.
+      - text: Common defaults are β₁ = 0.9 and β₂ = 0.999
+        correct: true
+        why: These come from the original paper.
+      - text: It never needs its learning rate tuned
+        why: The defaults work often, but the learning rate is still the first thing to tune.
+  - id: f6-momentum-and-adam-08
+    type: mcq
+    prompt: "Setting $\\beta = 0$ in momentum $\\mathbf{v} \\leftarrow \\beta\\mathbf{v} + \\nabla L$, $\\boldsymbol{\\theta} \\leftarrow \\boldsymbol{\\theta} - \\eta\\mathbf{v}$ gives…"
+    explanation: "With β = 0 the velocity is just the current gradient, so the update is θ ← θ - η∇L: plain gradient descent."
+    options:
+      - text: plain gradient descent
+        correct: true
+        why: The velocity has no memory and equals the current gradient.
+      - text: a method that never moves
+        why: The gradient is still applied every step.
+      - text: Adam
+        why: Adam also needs the squared-gradient average and bias correction.
+      - text: divergence for any learning rate
+        why: It behaves exactly like gradient descent, which converges for small learning rates.
+  - id: f6-momentum-and-adam-09
+    type: order
+    prompt: "Order the lines of one Adam step."
+    items:
+      - "Compute the gradient g at the current parameters"
+      - "Update the moving averages m and v"
+      - "Bias-correct them into m̂ and v̂"
+      - "Update the parameters with m̂ / (√v̂ + ε)"
+    explanation: "You need the gradient before you can update the averages, the averages before correcting them, and the corrected values before the parameter update."
+  - id: f6-momentum-and-adam-10
+    type: mcq
+    prompt: "A model has 100 million parameters stored as 4-byte floats (400 MB). Roughly how much extra memory does Adam's state need?"
+    explanation: "Adam stores m and v, one number each per parameter: 2 × 400 MB = 800 MB on top of the model itself."
+    options:
+      - text: About 800 MB
+        correct: true
+        why: Two extra numbers per parameter, m and v.
+      - text: About 400 MB
+        why: That would be one extra number per parameter, as with plain momentum.
+      - text: Almost nothing
+        why: Adam's moving averages have one entry per parameter each.
+      - text: About 4 GB
+        why: That would be ten extra numbers per parameter.

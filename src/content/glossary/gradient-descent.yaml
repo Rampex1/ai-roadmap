@@ -1,0 +1,7 @@
+term: "Gradient descent"
+short: "An optimisation method that repeatedly steps the parameters against the gradient of the loss: θ ← θ − η∇L(θ)."
+body: |
+  Each step moves the parameters a small distance in the direction of steepest decrease. The step size
+  is set by the learning rate $\eta$. On a convex loss with a small enough learning rate it converges to
+  the minimum; on non-convex losses it finds a local minimum that depends on the starting point.
+related: ["gradient", "learning-rate", "loss-function", "stochastic-gradient-descent"]

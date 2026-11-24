@@ -1,0 +1,7 @@
+term: "Mini-batch"
+short: "A small random subset of the training examples used to estimate the gradient for one update."
+body: |
+  Typical sizes range from 16 to a few thousand. The noise in a mini-batch gradient shrinks roughly like
+  $1/\sqrt{B}$ for batch size $B$. Each epoch, the data are shuffled and cut into consecutive
+  mini-batches, giving $\lceil n/B \rceil$ updates per epoch.
+related: ["stochastic-gradient-descent", "epoch"]

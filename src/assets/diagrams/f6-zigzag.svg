@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 300" width="560" height="300" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title>Contours of f of x, y equals x squared plus 10 y squared are long thin ellipses. Gradient descent with learning rate 0.09 from (3, 1) zigzags across the narrow y direction while creeping slowly along the long x direction towards the minimum at the origin</title>
+<defs><marker id="f6zz-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#d97706"/></marker></defs>
+<g stroke="#8b93b8" stroke-width="1"><line x1="30" y1="150.0" x2="530" y2="150.0"/><line x1="280.0" y1="30" x2="280.0" y2="270"/></g>
+<ellipse cx="280.0" cy="150.0" rx="54.3" ry="25.3" fill="none" stroke="#4f46e5" stroke-width="1.5"/>
+<ellipse cx="280.0" cy="150.0" rx="108.7" ry="50.6" fill="none" stroke="#4f46e5" stroke-width="1.5"/>
+<ellipse cx="280.0" cy="150.0" rx="163.0" ry="75.9" fill="none" stroke="#4f46e5" stroke-width="1.5"/>
+<ellipse cx="280.0" cy="150.0" rx="236.9" ry="110.3" fill="none" stroke="#4f46e5" stroke-width="1.5"/>
+<line x1="443.0" y1="70.0" x2="413.7" y2="214.0" stroke="#d97706" stroke-width="1.8" marker-end="url(#f6zz-a)"/>
+<line x1="413.7" y1="214.0" x2="389.6" y2="98.8" stroke="#d97706" stroke-width="1.8" marker-end="url(#f6zz-a)"/>
+<line x1="389.6" y1="98.8" x2="369.9" y2="191.0" stroke="#d97706" stroke-width="1.8" marker-end="url(#f6zz-a)"/>
+<line x1="369.9" y1="191.0" x2="353.7" y2="117.2" stroke="#d97706" stroke-width="1.8" marker-end="url(#f6zz-a)"/>
+<line x1="353.7" y1="117.2" x2="340.4" y2="176.2" stroke="#d97706" stroke-width="1.8" marker-end="url(#f6zz-a)"/>
+<line x1="340.4" y1="176.2" x2="329.6" y2="129.0" stroke="#d97706" stroke-width="1.8" marker-end="url(#f6zz-a)"/>
+<line x1="329.6" y1="129.0" x2="320.6" y2="166.8" stroke="#d97706" stroke-width="1.8" marker-end="url(#f6zz-a)"/>
+<line x1="320.6" y1="166.8" x2="313.3" y2="136.6" stroke="#d97706" stroke-width="1.8" marker-end="url(#f6zz-a)"/>
+<line x1="313.3" y1="136.6" x2="307.3" y2="160.7" stroke="#d97706" stroke-width="1.8" marker-end="url(#f6zz-a)"/>
+<line x1="307.3" y1="160.7" x2="302.4" y2="141.4" stroke="#d97706" stroke-width="1.8" marker-end="url(#f6zz-a)"/>
+<line x1="302.4" y1="141.4" x2="298.4" y2="156.9" stroke="#d97706" stroke-width="1.8" marker-end="url(#f6zz-a)"/>
+<line x1="298.4" y1="156.9" x2="295.1" y2="144.5" stroke="#d97706" stroke-width="1.8" marker-end="url(#f6zz-a)"/>
+<line x1="295.1" y1="144.5" x2="292.4" y2="154.4" stroke="#d97706" stroke-width="1.8" marker-end="url(#f6zz-a)"/>
+<line x1="292.4" y1="154.4" x2="290.1" y2="146.5" stroke="#d97706" stroke-width="1.8" marker-end="url(#f6zz-a)"/>
+<circle cx="443.0" cy="70.0" r="5" fill="#0f766e"/><circle cx="280.0" cy="150.0" r="5" fill="#0f766e"/>
+<g font-size="13" fill="#8b93b8"><text x="451.0" y="64.0">start (3, 1)</text><text x="272.0" y="168.0" text-anchor="end">minimum</text><text x="550" y="144.0" text-anchor="end">x</text><text x="272.0" y="26" text-anchor="end">y (stretched)</text></g>
+</svg>

@@ -1,0 +1,68 @@
+id: f6-practical-optimisation-01
+lesson: foundations/f6/practical-optimisation
+title: Gradient descent that knows when to stop
+prompt: |
+  Write `run_gd(f, grad, x0, lr, max_steps=1000, tol=1e-6, blowup=1e10)` that runs gradient descent from
+  `x0` and returns a pair `(x, status)`, where `status` is one of three strings:
+
+  - `"diverged"`: the loss `f(x)` is not finite (`nan` or `inf`) or is larger than `blowup`;
+  - `"converged"`: the gradient norm `np.linalg.norm(grad(x))` is below `tol`;
+  - `"max_steps"`: neither happened within `max_steps` updates.
+
+  In each iteration, in this order: compute the loss and check for divergence; compute the gradient and
+  check for convergence; otherwise take the step `x = x - lr * g`. Return the `x` at which you stopped.
+
+  Check: on $f(x) = x^2$ from `[1.0]`, `lr = 0.1` converges, `lr = 1.1` diverges, and `lr = 1.0` bounces
+  between 1 and -1 forever, so it hits `"max_steps"`.
+starter: |
+  import numpy as np
+
+  def run_gd(f, grad, x0, lr, max_steps=1000, tol=1e-6, blowup=1e10):
+      x = np.array(x0, dtype=float)
+      for _ in range(max_steps):
+          x = x - lr * grad(x)
+      return x, "converged"
+solution: |
+  import numpy as np
+
+  def run_gd(f, grad, x0, lr, max_steps=1000, tol=1e-6, blowup=1e10):
+      x = np.array(x0, dtype=float)
+      for _ in range(max_steps):
+          loss = f(x)
+          if not np.isfinite(loss) or loss > blowup:
+              return x, "diverged"
+          g = grad(x)
+          if np.linalg.norm(g) < tol:
+              return x, "converged"
+          x = x - lr * g
+      return x, "max_steps"
+tests: |
+  import numpy as np
+  _f = lambda p: float(np.sum(p ** 2)); _g = lambda p: 2 * p
+  _r = run_gd(_f, _g, [1.0], 0.1)
+  assert _r is not None and len(_r) == 2, "Return a pair: return x, status"
+  assert _r[1] == "converged", f"x^2 with lr 0.1 should converge, got status {_r[1]!r}"
+  assert np.linalg.norm(_g(np.asarray(_r[0]))) < 1e-6, "When converged, the gradient at the returned x should be below tol"
+  _x, _s = run_gd(_f, _g, [1.0], 1.1)
+  assert _s == "diverged", f"x^2 with lr 1.1 should diverge, got {_s!r}"
+  _x, _s = run_gd(_f, _g, [1.0], 1.0, max_steps=50)
+  assert _s == "max_steps", f"x^2 with lr 1.0 bounces forever and should end with 'max_steps', got {_s!r}"
+  _x, _s = run_gd(_f, _g, [1.0], 0.001, max_steps=10)
+  assert _s == "max_steps", f"A tiny learning rate with only 10 steps should end with 'max_steps', got {_s!r}"
+  np.testing.assert_allclose(_x, [0.998 ** 10], err_msg="After max_steps updates return the current x")
+  _x, _s = run_gd(_f, _g, [0.0, 0.0], 0.5)
+  assert _s == "converged", "Starting exactly at the minimum should report 'converged' immediately"
+  np.testing.assert_allclose(_x, [0.0, 0.0], err_msg="Starting at the minimum, x should not move")
+  _q = lambda p: float(p[0]**4 - 3 * p[0]**2 + p[0]); _qg = lambda p: np.array([4 * p[0]**3 - 6 * p[0] + 1])
+  _x, _s = run_gd(_q, _qg, [-0.5], 0.02, max_steps=5000)
+  assert _s == "converged" and abs(_x[0] + 1.3008) < 1e-3, f"On x^4 - 3x^2 + x from -0.5 expected convergence near -1.30, got {_x}, {_s!r}"
+  _x, _s = run_gd(lambda p: float("nan"), _g, [1.0], 0.1)
+  assert _s == "diverged", "A nan loss must be reported as 'diverged'"
+  _x, _s = run_gd(lambda p: float(np.sum(p**2)) + 1e11, _g, [1.0], 0.1)
+  assert _s == "diverged", "A loss above blowup must be reported as 'diverged'"
+  _x, _s = run_gd(_f, _g, [3.0, -4.0], 0.2, tol=1e-3)
+  assert _s == "converged" and np.linalg.norm(2 * np.asarray(_x)) < 1e-3, "Use the norm of the whole gradient vector for the tol test"
+hints:
+  - "Inside the loop compute loss = f(x) first; return x, the string diverged if not np.isfinite(loss) or loss > blowup."
+  - "Then g = grad(x); return x, the string converged if np.linalg.norm(g) < tol; otherwise step."
+  - "If the loop finishes without returning, return x, the string max_steps."

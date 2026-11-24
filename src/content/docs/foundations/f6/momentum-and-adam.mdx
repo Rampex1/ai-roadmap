@@ -1,0 +1,202 @@
+---
+title: "Momentum, RMSProp and Adam"
+module: f6
+order: 4
+estMinutes: 18
+objectives:
+  - "Write the momentum update and explain why it damps zigzags and speeds up progress along valleys"
+  - "Explain how RMSProp and Adam give each parameter its own effective step size"
+  - "Implement one Adam step, including bias correction"
+goDeeper: distill-momentum
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import zigzagImg from '@/assets/diagrams/f6-zigzag.svg';
+
+Plain gradient descent has two weaknesses you have now seen. In a long, thin valley it zigzags across
+the steep direction and crawls along the flat one ([lesson 2](/foundations/f6/gradient-descent/)). With
+mini-batches its steps are noisy ([lesson 3](/foundations/f6/stochastic-gradient-descent/)). The
+optimisers that real libraries use fix both with one idea: **remember the past**. This lesson covers
+the three you will meet most: momentum, RMSProp and Adam.
+
+<Figure
+  src={zigzagImg}
+  alt="The zigzagging gradient descent path on the elongated contours of x squared plus 10 y squared, repeated from lesson 2"
+  caption="The problem to fix: consecutive steps in y point in opposite directions, while steps in x all point the same way."
+/>
+
+## Momentum
+
+Look at the zigzag again. In the steep $y$ direction, consecutive gradients point in *opposite*
+directions. In the flat $x$ direction they all point the *same* way. If we averaged the recent
+gradients, the $y$ parts would cancel and the $x$ parts would add up. That is exactly what
+<Term id="momentum" /> does. It keeps a running "velocity" $\mathbf{v}$:
+
+$$
+\mathbf{v}_{t+1} = \beta\,\mathbf{v}_t + \nabla L(\boldsymbol{\theta}_t), \qquad
+\boldsymbol{\theta}_{t+1} = \boldsymbol{\theta}_t - \eta\,\mathbf{v}_{t+1}
+$$
+
+- $\mathbf{v}$ starts at $\mathbf{0}$ and has the same shape as $\boldsymbol{\theta}$.
+- $\beta$ (beta), between 0 and 1, controls how long the memory lasts. $\beta = 0.9$ is the usual
+  default. With $\beta = 0$ this is plain gradient descent.
+
+Unrolled, $\mathbf{v}_{t+1} = \mathbf{g}_t + \beta\mathbf{g}_{t-1} + \beta^2\mathbf{g}_{t-2} + \dots$, a
+sum of past gradients $\mathbf{g}$ with geometrically fading weights. Two consequences:
+
+- **Consistent directions speed up.** If the gradient is the same $\mathbf{g}$ every step, $\mathbf{v}$
+  grows towards $\mathbf{g}(1 + \beta + \beta^2 + \dots) = \mathbf{g}/(1 - \beta)$. With $\beta = 0.9$
+  that is a 10 times larger effective step along the valley floor.
+- **Oscillating directions cancel.** Gradients that alternate in sign mostly cancel in the sum, so the
+  zigzag is damped.
+
+The physical picture: a heavy ball rolling downhill. It builds up speed on a long slope and is not
+knocked off course by every bump. The same averaging also smooths out mini-batch noise.
+
+:::note[Two conventions]
+Some texts write $\mathbf{v}_{t+1} = \beta\mathbf{v}_t + (1 - \beta)\nabla L$, an exponential moving
+average. It is the same method with the learning rate rescaled by $1 - \beta$. The version above is the
+one PyTorch's `SGD(momentum=0.9)` uses (as of late 2026).
+:::
+
+## RMSProp: a step size per parameter
+
+Momentum still uses one learning rate for every parameter. In the valley $x^2 + 50y^2$ the $y$ gradients
+are about 50 times larger than the $x$ gradients for the same distance from the minimum, so a learning
+rate small enough for $y$ is tiny for $x$. **RMSProp** divides each coordinate's step by a running
+estimate of that coordinate's typical gradient size:
+
+$$
+\mathbf{s}_{t+1} = \rho\,\mathbf{s}_t + (1 - \rho)\,\mathbf{g}_t^2, \qquad
+\boldsymbol{\theta}_{t+1} = \boldsymbol{\theta}_t - \eta\,\frac{\mathbf{g}_t}{\sqrt{\mathbf{s}_{t+1}} + \varepsilon}
+$$
+
+Here $\mathbf{g}_t = \nabla L(\boldsymbol{\theta}_t)$, and the square, square root and division are all
+**element-wise**, exactly like NumPy's `g**2`, `np.sqrt(s)` and `g / ...`. $\mathbf{s}$ is a moving
+average of squared gradients, so $\sqrt{\mathbf{s}}$ is the root mean square (RMS) of recent gradients
+for each parameter; $\rho \approx 0.9$ to $0.99$. The tiny $\varepsilon$ (often $10^{-8}$) avoids dividing
+by zero.
+
+Dividing by the RMS makes each step roughly $\eta$ in size *whatever the scale of the gradient*.
+Coordinates with huge gradients get damped and coordinates with tiny gradients get boosted.
+
+## Adam: momentum plus RMSProp
+
+<Term id="adam" text="Adam" /> (adaptive moment estimation, Kingma and Ba, 2014) combines the two. It
+keeps a moving average of the gradient (like momentum) **and** of the squared gradient (like RMSProp):
+
+$$
+\begin{aligned}
+\mathbf{m}_t &= \beta_1\,\mathbf{m}_{t-1} + (1 - \beta_1)\,\mathbf{g}_t \\
+\mathbf{v}_t &= \beta_2\,\mathbf{v}_{t-1} + (1 - \beta_2)\,\mathbf{g}_t^2 \\
+\hat{\mathbf{m}}_t &= \frac{\mathbf{m}_t}{1 - \beta_1^t}, \qquad \hat{\mathbf{v}}_t = \frac{\mathbf{v}_t}{1 - \beta_2^t} \\
+\boldsymbol{\theta}_t &= \boldsymbol{\theta}_{t-1} - \eta\,\frac{\hat{\mathbf{m}}_t}{\sqrt{\hat{\mathbf{v}}_t} + \varepsilon}
+\end{aligned}
+$$
+
+The step counter $t$ starts at 1, and $\mathbf{m}_0 = \mathbf{v}_0 = \mathbf{0}$. The defaults from the
+paper are $\eta = 0.001$, $\beta_1 = 0.9$, $\beta_2 = 0.999$ and $\varepsilon = 10^{-8}$, and they work
+surprisingly often, although $\eta$ usually still needs tuning.
+
+**Why the hats (bias correction)?** Because $\mathbf{m}$ starts at zero, early averages are dragged
+towards zero: after one step $\mathbf{m}_1 = 0.1\,\mathbf{g}_1$, only a tenth of the gradient. Dividing by
+$1 - \beta_1^t$ undoes exactly this: $\hat{\mathbf{m}}_1 = 0.1\,\mathbf{g}_1 / (1 - 0.9) = \mathbf{g}_1$.
+The same fix applies to $\mathbf{v}$. As $t$ grows, $\beta^t \to 0$ and the correction fades away.
+
+A neat consequence: on the very first step $\hat{\mathbf{m}}_1 = \mathbf{g}_1$ and
+$\hat{\mathbf{v}}_1 = \mathbf{g}_1^2$, so the update is $\eta\,\mathbf{g}_1 / |\mathbf{g}_1|$: every
+parameter moves by $\eta$ (ignoring $\varepsilon$), in the downhill direction, *whatever the size of its
+gradient*. Adam's step size is set by $\eta$, not by the gradient's magnitude.
+
+## Racing them
+
+Here are all three on the elongated bowl $f(x, y) = x^2 + 50y^2$ from $(3, 1)$. Gradient descent uses
+$\eta = 0.019$, just under its stability limit of $2/100 = 0.02$, which is about the best it can do.
+
+```python
+import numpy as np
+
+f = lambda p: p[0]**2 + 50 * p[1]**2
+grad = lambda p: np.array([2 * p[0], 100 * p[1]])
+
+def gd(lr, steps):
+    th = np.array([3.0, 1.0])
+    for _ in range(steps):
+        th = th - lr * grad(th)
+    return th
+
+def momentum(lr, beta, steps):
+    th, v = np.array([3.0, 1.0]), np.zeros(2)
+    for _ in range(steps):
+        v = beta * v + grad(th)
+        th = th - lr * v
+    return th
+
+def adam(lr, steps, b1=0.9, b2=0.999, eps=1e-8):
+    th, m, s = np.array([3.0, 1.0]), np.zeros(2), np.zeros(2)
+    for t in range(1, steps + 1):
+        g = grad(th)
+        m = b1 * m + (1 - b1) * g
+        s = b2 * s + (1 - b2) * g**2
+        m_hat = m / (1 - b1**t)
+        s_hat = s / (1 - b2**t)
+        th = th - lr * m_hat / (np.sqrt(s_hat) + eps)
+    return th
+
+for steps in [25, 50, 100, 200]:
+    print(f"{steps:3d} steps   GD {f(gd(0.019, steps)):9.2e}   "
+          f"momentum {f(momentum(0.01, 0.9, steps)):9.2e}   "
+          f"Adam {f(adam(0.1, steps)):9.2e}")
+```
+
+```text title="Output"
+ 25 steps   GD  1.55e+00   momentum  2.65e+00   Adam  2.18e+00
+ 50 steps   GD  1.88e-01   momentum  1.72e-01   Adam  2.97e-02
+100 steps   GD  3.88e-03   momentum  2.52e-04   Adam  8.05e-04
+200 steps   GD  1.68e-06   momentum  1.50e-08   Adam  5.42e-09
+```
+
+Early on, the methods are similar: momentum needs time to build up speed. By 200 steps both momentum
+and Adam reach a loss more than 100 times lower than plain gradient descent, and the gap keeps
+growing, because GD's slow $x$ direction shrinks only by a factor $1 - 2(0.019) = 0.962$ per step.
+
+:::caution[Do not over-read one race]
+Each method here has a hand-picked learning rate, and on a different problem the ranking can change.
+On a plain round bowl, gradient descent is already ideal and the extras buy nothing. The homework
+races these optimisers on a harder, curved valley.
+:::
+
+## Which one to use?
+
+As of late 2026, a reasonable default for neural networks is Adam, or its variant **AdamW**, which
+handles weight decay (a regulariser that pulls weights towards zero) more cleanly and is the common choice for
+transformers. SGD with momentum remains competitive, especially for image models, and often needs more
+learning-rate tuning. For small convex problems such as linear regression, plain gradient descent on
+well-scaled features, or a closed-form solver, is enough.
+
+| Method | Memory per parameter | Key hyperparameters | Fixes |
+|---|---|---|---|
+| Gradient descent / SGD | none | $\eta$ | |
+| Momentum | 1 number ($\mathbf{v}$) | $\eta$, $\beta \approx 0.9$ | zigzags, slow valleys, noise |
+| RMSProp | 1 number ($\mathbf{s}$) | $\eta$, $\rho$ | very different gradient scales |
+| Adam | 2 numbers ($\mathbf{m}$, $\mathbf{v}$) | $\eta$, $\beta_1 = 0.9$, $\beta_2 = 0.999$ | both |
+
+The memory column matters for big models: Adam stores two extra numbers for every parameter, so its
+state alone is twice the size of the model.
+
+## Try it
+
+<CodeExercise id="f6-momentum-and-adam-01" />
+
+<CodeExercise id="f6-momentum-and-adam-02" />
+
+## Summary
+
+- Momentum: $\mathbf{v} \leftarrow \beta\mathbf{v} + \nabla L$, $\boldsymbol{\theta} \leftarrow \boldsymbol{\theta} - \eta\mathbf{v}$.
+  Consistent gradients add up (up to $1/(1-\beta)$ times), oscillating ones cancel.
+- RMSProp divides each coordinate's step by the RMS of its recent gradients, so step sizes no longer
+  depend on gradient scale.
+- Adam combines both moving averages and corrects their bias towards zero at the start. Its first step
+  moves every parameter by about $\eta$.
+- Adam (or AdamW) is a strong default for neural networks; tune the learning rate whichever you use.

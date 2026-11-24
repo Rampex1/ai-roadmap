@@ -1,0 +1,256 @@
+---
+title: "Making optimisation work in practice"
+module: f6
+order: 5
+estMinutes: 18
+objectives:
+  - "Standardise features with training-set statistics and explain why it speeds up gradient descent"
+  - "Pick a learning rate with a sweep and describe step, exponential and cosine schedules"
+  - "Write stopping rules that detect convergence and divergence, and check a gradient with a relative error"
+goDeeper: dlbook-optimization
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+The previous lessons explained how the optimisers work. This one collects the habits that make them
+work on real problems: scaling the inputs, choosing and changing the learning rate, deciding when to
+stop, and making sure the gradient is right in the first place. None of it is glamorous, and all of it
+regularly decides whether a model trains at all.
+
+## Feature scaling
+
+Suppose we predict a house price from its floor area (40 to 200 m²) and its number of rooms (1 to 6),
+with a linear model $\hat{y} = w_1 x_1 + w_2 x_2 + b$. For the MSE loss, the curvature along each weight
+grows with the size of its feature *squared*. Floor areas are about 30 times larger than room counts,
+so the curvatures differ by a factor of hundreds or more: exactly the long, thin valley from
+[lesson 2](/foundations/f6/gradient-descent/). Worse, the bias's direction sees the constant 1, tinier
+still.
+
+The fix is to **standardise** each feature, a form of <Term id="feature-scaling" />: subtract its mean
+and divide by its standard deviation, so every feature has mean 0 and standard deviation 1:
+
+$$
+z_{ij} = \frac{x_{ij} - \mu_j}{\sigma_j}
+$$
+
+where $\mu_j$ and $\sigma_j$ are the mean and standard deviation of feature $j$ **over the training
+set**. The code below measures the effect. For a linear model the curvature of the MSE loss is
+described by the matrix $H = \frac{2}{n}X^\top X$ (the matrix of second derivatives), and gradient
+descent is stable for $\eta < 2/\lambda_{\max}$, the many-dimensional version of $\eta < 2/a$:
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(0)
+n = 200
+size = rng.uniform(40, 200, n)            # floor area in square metres
+rooms = rng.integers(1, 7, n).astype(float)
+price = 3.0 * size + 20 * rooms + 50 + rng.normal(0, 20, n)   # in thousands
+
+def curvature(X):
+    H = 2 / len(X) * X.T @ X              # second derivatives of the MSE loss
+    lam = np.linalg.eigvalsh(H)
+    return lam.max(), lam.max() / lam.min()
+
+ones = np.ones(n)
+X_raw = np.column_stack([size, rooms, ones])
+Z = np.column_stack([(size - size.mean()) / size.std(),
+                     (rooms - rooms.mean()) / rooms.std(), ones])
+
+for name, X in [("raw", X_raw), ("standardised", Z)]:
+    lam_max, cond = curvature(X)
+    print(f"{name:13s} largest safe lr {2 / lam_max:.2e}   condition number {cond:,.1f}")
+```
+
+```text title="Output"
+raw           largest safe lr 5.46e-05   condition number 203,144.1
+standardised  largest safe lr 9.04e-01   condition number 1.2
+```
+
+`np.linalg.eigvalsh` returns the eigenvalues of a symmetric matrix
+([F3](/foundations/f3/eigenvectors/)); the largest one is the steepest curvature. On the raw features
+the steepest direction is about 200,000 times more curved than the flattest. After standardising it is almost a round bowl,
+and the safe learning rate is over 10,000 times larger. Run 1,000 steps at half the safe rate on each:
+
+```python
+for name, X in [("raw", X_raw), ("standardised", Z)]:
+    lam_max, _ = curvature(X)
+    lr = 1.0 / lam_max
+    w = np.zeros(3)
+    for t in range(1000):
+        w = w - lr * 2 / n * X.T @ (X @ w - price)
+    best = np.linalg.lstsq(X, price)[0]
+    print(f"{name:13s} lr {lr:.1e}: after 1000 steps loss {np.mean((X @ w - price)**2):10.1f}"
+          f"  (best {np.mean((X @ best - price)**2):.1f})")
+```
+
+```text title="Output"
+raw           lr 2.7e-05: after 1000 steps loss     2177.4  (best 393.1)
+standardised  lr 4.5e-01: after 1000 steps loss      393.1  (best 393.1)
+```
+
+Same data, same model, same optimiser: the standardised version is done, while the raw one is still far
+away, crawling along the flat direction.
+
+:::caution[Use the training statistics everywhere]
+Compute $\mu_j$ and $\sigma_j$ on the training data only, then apply those *same* numbers to validation
+and test data and to every future input. Recomputing them on the test set changes what the model sees
+and leaks information about the test set into your pipeline. A feature that is constant has
+$\sigma_j = 0$; leave it out or skip dividing.
+:::
+
+Adaptive methods like Adam partly compensate for badly scaled features, but standardising is cheap and
+helps every optimiser, so do it by default.
+
+## Choosing the learning rate
+
+The learning rate is the most important hyperparameter. The standard way to choose it is a **sweep**:
+try values spaced by factors of about 3 or 10, run each for a short budget, and compare the losses.
+Here is a sweep for the two-parameter line fit of F4 on 50 noisy points:
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(3)
+x = rng.normal(size=50)
+y = 2 * x - 1 + rng.normal(0, 0.3, 50)
+
+for lr in [0.001, 0.01, 0.1, 0.5, 1.0, 1.2]:
+    w = b = 0.0
+    for _ in range(50):
+        r = w * x + b - y
+        w, b = w - lr * np.mean(2 * r * x), b - lr * np.mean(2 * r)
+    print(f"lr {lr:<5}  loss after 50 steps {np.mean((w * x + b - y) ** 2):.4g}")
+```
+
+```text title="Output"
+lr 0.001  loss after 50 steps 4.804
+lr 0.01   loss after 50 steps 0.6943
+lr 0.1    loss after 50 steps 0.09473
+lr 0.5    loss after 50 steps 0.09473
+lr 1.0    loss after 50 steps 1.029e+15
+lr 1.2    loss after 50 steps 6.913e+27
+```
+
+The pattern is typical: too small is slow, there is a broad good range, and just past it the loss
+explodes. The best value is often the largest one that is still clearly stable; if runs are noisy,
+back off by a factor of 2 or 3 from it.
+
+## Learning-rate schedules
+
+A large learning rate makes fast early progress; a small one settles precisely at the end. A
+<Term id="learning-rate-schedule" /> gets both by changing $\eta$ during training. With $\eta_0$ the
+starting rate, $t$ the step and $T$ the total number of steps:
+
+| Schedule | $\eta_t$ | Behaviour |
+|---|---|---|
+| Step decay | $\eta_0 \cdot \gamma^{\lfloor t / k \rfloor}$, e.g. $\gamma = 0.1$ every $k$ steps | Drops by a factor at fixed milestones |
+| Exponential | $\eta_0 \cdot \gamma^{t}$ with $\gamma$ slightly below 1 | Shrinks a little every step |
+| $1/t$ decay | $\eta_0 / (1 + t/k)$ | Decays slowly; classic for SGD theory |
+| Cosine | $\eta_{\min} + \tfrac{1}{2}(\eta_0 - \eta_{\min})\left(1 + \cos\frac{\pi t}{T}\right)$ | Smooth from $\eta_0$ down to $\eta_{\min}$ |
+
+$\lfloor\cdot\rfloor$ means round down. Cosine decay is a popular modern choice:
+
+```python
+import math
+
+def cosine_lr(t, T, lr_max, lr_min=0.0):
+    return lr_min + 0.5 * (lr_max - lr_min) * (1 + math.cos(math.pi * t / T))
+
+print([round(cosine_lr(t, 100, 0.1), 4) for t in [0, 25, 50, 75, 100]])
+```
+
+```text title="Output"
+[0.1, 0.0854, 0.05, 0.0146, 0.0]
+```
+
+Large models are often trained with a short **warmup** first: the learning rate rises linearly from
+near zero over the first few hundred or thousand steps, then decays. Early gradients from random
+initial weights can be large and erratic, and warmup keeps those first steps small. For the
+mini-batch noise of [lesson 3](/foundations/f6/stochastic-gradient-descent/), any decaying schedule
+shrinks the final jitter.
+
+## When to stop
+
+Combine several rules, and always keep a step budget as the last resort:
+
+- **Converged:** $\lVert\nabla L\rVert$ below a tolerance, or the loss improving by less than a tiny
+  amount over many steps.
+- **Diverged:** the loss is `nan` or `inf`, or it has grown far above where it started. There is no
+  point in continuing; lower the learning rate (a factor of 3 to 10) and restart.
+- **Overfitting:** in machine learning the real goal is low loss on *new* data. Keep a validation set,
+  evaluate it every epoch, and stop when its loss has not improved for a few epochs, keeping the best
+  parameters seen. This is **early stopping**; later modules cover validation sets properly.
+
+`np.isfinite(loss)` is `False` for both `nan` and `inf`, which makes the divergence test a one-liner.
+
+## Check the gradient
+
+A gradient with a bug still runs, and the optimiser will still lower *something*. The cure, from
+[F4](/foundations/f4/numerical-derivatives/), is to compare the analytic gradient with central
+differences at a random point. Compare with a **relative error**, so the test does not depend on the
+size of the gradient:
+
+$$
+\text{rel. error} = \frac{\lVert \mathbf{g}_{\text{analytic}} - \mathbf{g}_{\text{numeric}} \rVert}{\lVert \mathbf{g}_{\text{analytic}} \rVert + \lVert \mathbf{g}_{\text{numeric}} \rVert}
+$$
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(3)
+x = rng.normal(size=50)
+y = 2 * x - 1 + rng.normal(0, 0.3, 50)
+
+def loss(p):
+    w, b = p
+    return np.mean((w * x + b - y) ** 2)
+
+def grad_buggy(p):                       # forgot the factor 2
+    w, b = p
+    r = w * x + b - y
+    return np.array([np.mean(r * x), np.mean(r)])
+
+def numerical_grad(f, p, h=1e-5):
+    g = np.zeros_like(p)
+    for i in range(len(p)):
+        e = np.zeros_like(p); e[i] = h
+        g[i] = (f(p + e) - f(p - e)) / (2 * h)
+    return g
+
+def rel_error(a, b):
+    return np.linalg.norm(a - b) / (np.linalg.norm(a) + np.linalg.norm(b))
+
+p = np.array([0.5, 0.3])
+print(f"buggy:   {rel_error(grad_buggy(p), numerical_grad(loss, p)):.2e}")
+print(f"correct: {rel_error(2 * grad_buggy(p), numerical_grad(loss, p)):.2e}")
+```
+
+```text title="Output"
+buggy:   3.33e-01
+correct: 6.77e-12
+```
+
+A missing factor of 2 gives exactly $1/3$ (the analytic gradient is half the true one:
+$\frac{1/2}{1/2 + 1} = \frac{1}{3}$). A correct gradient agrees to many digits. As a rough guide in
+double precision, a relative error around $10^{-7}$ or smaller is fine, and anything above about
+$10^{-3}$ almost certainly means a bug. Check a few random points, not just one: a bug can hide at a
+special point such as all-zero parameters.
+
+## Try it
+
+<CodeExercise id="f6-practical-optimisation-01" />
+
+<CodeExercise id="f6-practical-optimisation-02" />
+
+## Summary
+
+- Standardise features with training-set means and standard deviations: it turns long valleys into
+  round bowls, allowing much larger learning rates.
+- Choose the learning rate with a log-spaced sweep; the best value is usually just below where training
+  becomes unstable.
+- Schedules (step, exponential, cosine, often with warmup) give large early steps and small late ones.
+- Stop on convergence, divergence (`not np.isfinite(loss)` or a blown-up loss) or a stalled validation
+  loss, with a step budget as backup.
+- Gradient-check with a relative error at several random points before trusting any hand-written
+  gradient.

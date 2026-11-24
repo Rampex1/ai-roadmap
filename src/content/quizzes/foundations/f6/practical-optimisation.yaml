@@ -1,0 +1,117 @@
+items:
+  - id: f6-practical-optimisation-01
+    type: mcq
+    prompt: "Why does standardising features usually make gradient descent on a linear model much faster?"
+    explanation: "Features on very different scales give very different curvatures, a long thin valley. Standardising evens them out, so the bowl is rounder, the condition number smaller and a larger learning rate is stable."
+    options:
+      - text: It makes the loss surface closer to a round bowl, so one learning rate suits every direction
+        correct: true
+        why: The condition number drops, so the steep direction no longer forces a tiny step on the flat ones.
+      - text: It makes the loss convex
+        why: The MSE of a linear model is convex either way.
+      - text: It removes noise from the data
+        why: Shifting and scaling a feature keeps all of its information, including noise.
+      - text: It reduces the number of parameters
+        why: The model has exactly the same parameters.
+  - id: f6-practical-optimisation-02
+    type: mcq
+    prompt: "You standardise features before training. Which means and standard deviations should you use for the **test** set?"
+    explanation: "Use the training statistics for every dataset. The model was fitted to features scaled that way, and computing statistics from the test set leaks information about it."
+    options:
+      - text: The ones computed on the training set
+        correct: true
+        why: The same transformation must be applied to all data the model sees.
+      - text: New ones computed on the test set
+        why: That changes the meaning of the features and leaks test information.
+      - text: The average of training and test statistics
+        why: That still uses the test set to build the pipeline.
+      - text: None; the test set should not be scaled
+        why: The model expects scaled inputs, so unscaled test data would give wrong predictions.
+  - id: f6-practical-optimisation-03
+    type: numeric
+    prompt: "A feature has training mean 50 and training standard deviation 10. What is the standardised value of a test input $x = 75$?"
+    answer: 2.5
+    tol: 0.0001
+    explanation: "z = (75 - 50) / 10 = 2.5, using the training statistics."
+  - id: f6-practical-optimisation-04
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import math
+      def cosine_lr(t, T, lr_max, lr_min=0.0):
+          return lr_min + 0.5 * (lr_max - lr_min) * (1 + math.cos(math.pi * t / T))
+      print(cosine_lr(0, 10, 0.2), cosine_lr(5, 10, 0.2), cosine_lr(10, 10, 0.2))
+    answer: "0.2 0.1 0.0"
+    explanation: "cos 0 = 1 gives the full 0.2; cos(π/2) = 0 gives half, 0.1; cos π = -1 gives 0."
+  - id: f6-practical-optimisation-05
+    type: numeric
+    prompt: "Step decay starts at $\\eta_0 = 0.1$ and multiplies by $\\gamma = 0.1$ every 30 epochs. What is the learning rate during epoch 65 (counting from epoch 0)?"
+    answer: 0.001
+    rtol: 0.001
+    explanation: "⌊65 / 30⌋ = 2 decays have happened: 0.1 × 0.1² = 0.001."
+  - id: f6-practical-optimisation-06
+    type: mcq
+    prompt: "A learning-rate sweep gives these losses after 100 steps: 1e-4: 2.31, 1e-3: 0.85, 1e-2: 0.12, 1e-1: 0.10, 1: nan. Which learning rate is the most sensible choice?"
+    explanation: "0.1 is the largest clearly stable value and has the lowest loss; 1 diverges. If runs were noisy you could back off 2 to 3 times from it."
+    options:
+      - text: "0.1"
+        correct: true
+        why: Lowest loss among the stable values.
+      - text: "1"
+        why: It diverged to nan.
+      - text: "1e-4"
+        why: Stable but far too slow.
+      - text: "1e-3"
+        why: Stable, but ten times slower than needed.
+  - id: f6-practical-optimisation-07
+    type: multi
+    prompt: "Which conditions should make a training loop report **divergence**? Select all that apply."
+    explanation: "nan or inf losses, and losses that have blown up far above their starting value, mean the optimiser is unstable. A slowly decreasing loss is fine, and a tiny gradient means convergence."
+    options:
+      - text: The loss becomes nan
+        correct: true
+        why: Arithmetic has broken down; nothing useful will follow.
+      - text: The loss becomes inf
+        correct: true
+        why: It has overflowed.
+      - text: The loss is a million times larger than at the start
+        correct: true
+        why: The parameters are running away, the typical sign of a too-large learning rate.
+      - text: The gradient norm drops below the tolerance
+        why: That is the convergence test.
+      - text: The loss decreases slowly
+        why: Slow is not unstable; it may just need more steps or a larger learning rate.
+  - id: f6-practical-optimisation-08
+    type: numeric
+    prompt: "An analytic gradient is exactly half of the true gradient $\\mathbf{g}$ (a missing factor of 2). What is the relative error $\\frac{\\lVert \\mathbf{a} - \\mathbf{g} \\rVert}{\\lVert \\mathbf{a} \\rVert + \\lVert \\mathbf{g} \\rVert}$? Give a decimal."
+    answer: 0.3333
+    tol: 0.001
+    explanation: "With a = g/2: ‖g/2‖ / (‖g/2‖ + ‖g‖) = (1/2) / (3/2) = 1/3."
+  - id: f6-practical-optimisation-09
+    type: mcq
+    prompt: "Why do many large models use learning-rate **warmup** at the start of training?"
+    explanation: "Early gradients from random initial weights can be large and erratic, so the learning rate is ramped up from near zero over the first steps to keep those updates small."
+    options:
+      - text: Early gradients from random weights can be large and erratic, so the first steps are kept small
+        correct: true
+        why: Warmup ramps the learning rate up gradually to avoid early instability.
+      - text: To make the loss start higher
+        why: Warmup does not change the starting loss.
+      - text: Because a small learning rate finds the global minimum
+        why: No learning rate guarantees a global minimum on a non-convex loss.
+      - text: To save memory
+        why: The learning rate has no effect on memory use.
+  - id: f6-practical-optimisation-10
+    type: mcq
+    prompt: "What is **early stopping**?"
+    explanation: "Early stopping tracks the loss on held-out validation data and stops when it no longer improves, keeping the best parameters, to avoid overfitting the training set."
+    options:
+      - text: Stopping when the validation loss has not improved for a while, and keeping the best parameters seen
+        correct: true
+        why: It targets performance on new data, the real goal.
+      - text: Stopping after the first epoch to save time
+        why: That is just a tiny step budget.
+      - text: Stopping as soon as the training loss increases once
+        why: With mini-batches the training loss goes up and down by chance.
+      - text: Stopping when the learning rate reaches zero
+        why: That is the end of a schedule, not a stopping rule based on data.

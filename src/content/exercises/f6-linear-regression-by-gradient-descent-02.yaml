@@ -1,0 +1,70 @@
+id: f6-linear-regression-by-gradient-descent-02
+lesson: foundations/f6/linear-regression-by-gradient-descent
+title: Fit a linear regression by gradient descent
+prompt: |
+  Write `fit_linear_gd(X, y, lr=0.1, steps=1000)` that fits $y \approx X\mathbf{w} + b$ by full-batch
+  gradient descent and returns `(slopes, intercept)` **in the original units of `X`**:
+
+  1. Standardise each column of `X` (`n` rows, `d` columns) with its mean `mu` and standard deviation
+     `sigma` (`axis=0`).
+  2. Append a column of ones: `A = np.column_stack([Z, np.ones(n)])`.
+  3. Start from `w = np.zeros(d + 1)` and take `steps` updates `w = w - lr * 2 / n * A.T @ (A @ w - y)`.
+  4. Convert back: `slopes = w[:d] / sigma` and `intercept = w[d] - np.sum(w[:d] * mu / sigma)`.
+
+  The tests compare your answer with `np.linalg.lstsq` on the raw data with a column of ones; they must
+  agree to about 6 decimal places.
+starter: |
+  import numpy as np
+
+  def fit_linear_gd(X, y, lr=0.1, steps=1000):
+      n, d = X.shape
+      A = np.column_stack([X, np.ones(n)])
+      w = np.zeros(d + 1)
+      for _ in range(steps):
+          w = w - lr * 2 / n * A.T @ (A @ w - y)
+      return w[:d], w[d]
+solution: |
+  import numpy as np
+
+  def fit_linear_gd(X, y, lr=0.1, steps=1000):
+      n, d = X.shape
+      mu, sigma = X.mean(axis=0), X.std(axis=0)
+      Z = (X - mu) / sigma
+      A = np.column_stack([Z, np.ones(n)])
+      w = np.zeros(d + 1)
+      for _ in range(steps):
+          w = w - lr * 2 / n * A.T @ (A @ w - y)
+      slopes = w[:d] / sigma
+      intercept = w[d] - np.sum(w[:d] * mu / sigma)
+      return slopes, intercept
+tests: |
+  import numpy as np
+  def _exact(X, y):
+      sol, *_ = np.linalg.lstsq(np.column_stack([X, np.ones(len(X))]), y)
+      return sol[:-1], sol[-1]
+  _rng = np.random.default_rng(42)
+  _X = _rng.normal(size=(500, 3)) * [1.0, 10.0, 0.1] + [0.0, 50.0, 1.0]
+  _y = _X @ np.array([2.0, -0.5, 30.0]) + 4.0 + _rng.normal(0, 1.0, 500)
+  with np.errstate(all="ignore"):
+      _r = fit_linear_gd(_X, _y)
+  assert _r is not None and len(_r) == 2, "Return a pair: return slopes, intercept"
+  _s, _b = _r
+  _es, _eb = _exact(_X, _y)
+  assert np.all(np.isfinite(_s)) and np.isfinite(_b), "Your weights are nan or inf: did you standardise X before the gradient descent loop?"
+  np.testing.assert_allclose(_s, _es, atol=1e-6, err_msg="Slopes (in original units) should match np.linalg.lstsq")
+  assert abs(_b - _eb) < 1e-6, f"Intercept should match np.linalg.lstsq: expected {_eb:.6f}, got {_b:.6f}"
+  _X2 = _rng.uniform(-100, 100, size=(200, 2)) + [1000.0, 0.0]
+  _y2 = _X2 @ np.array([-0.3, 0.07]) - 12.0 + _rng.normal(0, 0.5, 200)
+  with np.errstate(all="ignore"):
+      _s2, _b2 = fit_linear_gd(_X2, _y2, lr=0.2, steps=800)
+  _es2, _eb2 = _exact(_X2, _y2)
+  np.testing.assert_allclose(_s2, _es2, atol=1e-6, err_msg="Slopes are wrong on a second dataset (lr 0.2, 800 steps)")
+  assert abs(_b2 - _eb2) < 1e-6, "Intercept is wrong on a second dataset: check the conversion back to original units"
+  _X3 = _rng.normal(size=(60, 1)) * 5 + 3
+  _y3 = 7 * _X3[:, 0] - 2
+  _s3, _b3 = fit_linear_gd(_X3, _y3)
+  assert abs(_s3[0] - 7) < 1e-6 and abs(_b3 + 2) < 1e-6, f"On noise-free data y = 7x - 2 expected (7, -2), got ({_s3[0]}, {_b3})"
+hints:
+  - "mu = X.mean(axis=0) and sigma = X.std(axis=0); Z = (X - mu) / sigma."
+  - "Run the loop on A built from Z, not from X; the raw columns make the learning rate unstable."
+  - "Convert back with slopes = w[:d] / sigma and intercept = w[d] - np.sum(w[:d] * mu / sigma)."

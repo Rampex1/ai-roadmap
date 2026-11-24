@@ -1,0 +1,5 @@
+title: "An overview of gradient descent optimization algorithms (Sebastian Ruder)"
+url: https://www.ruder.io/optimizing-gradient-descent/
+kind: paper
+free: true
+modules: [f6]

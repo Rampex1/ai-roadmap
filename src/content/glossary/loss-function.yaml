@@ -1,0 +1,8 @@
+term: "Loss function"
+short: "A single number that measures how badly a model with given parameters fits the data; training minimises it."
+body: |
+  Also called the objective or cost. Most losses average a per-example loss over the training set, for
+  example the mean squared error $L(w, b) = \frac{1}{n}\sum_i (w x_i + b - y_i)^2$. The data are fixed
+  during training, so the loss is a function of the parameters only, and learning means finding
+  $\arg\min_{\boldsymbol{\theta}} L(\boldsymbol{\theta})$.
+related: ["gradient", "gradient-descent"]

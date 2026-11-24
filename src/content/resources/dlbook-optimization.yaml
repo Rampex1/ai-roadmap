@@ -1,0 +1,5 @@
+title: "Deep Learning, chapter 8: Optimization for Training Deep Models (Goodfellow, Bengio and Courville)"
+url: https://www.deeplearningbook.org/contents/optimization.html
+kind: book
+free: true
+modules: [f6]

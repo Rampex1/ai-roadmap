@@ -1,0 +1,54 @@
+id: f6-what-is-optimisation-01
+lesson: foundations/f6/what-is-optimisation
+title: Find the local minima of a sampled curve
+prompt: |
+  Write `local_minima(f)` that takes a 1-D NumPy array of function values sampled on a grid and returns
+  a NumPy array of the **indices** `i` where `f[i]` is strictly lower than both neighbours,
+  `f[i - 1]` and `f[i + 1]`. The first and last points have only one neighbour, so never count them.
+
+  Then write `global_min_index(f)` that returns the index of the smallest value.
+
+  Example: for `f = np.array([3, 1, 2, 0, 4])`, `local_minima(f)` is `[1, 3]` and
+  `global_min_index(f)` is `3`.
+starter: |
+  import numpy as np
+
+  def local_minima(f):
+      return np.array([], dtype=int)
+
+  def global_min_index(f):
+      return 0
+solution: |
+  import numpy as np
+
+  def local_minima(f):
+      f = np.asarray(f)
+      inner = f[1:-1]
+      is_min = (inner < f[:-2]) & (inner < f[2:])
+      return np.nonzero(is_min)[0] + 1
+
+  def global_min_index(f):
+      return int(np.argmin(f))
+tests: |
+  import numpy as np
+  def _ref(f):
+      return [i for i in range(1, len(f) - 1) if f[i] < f[i - 1] and f[i] < f[i + 1]]
+  _f = np.array([3, 1, 2, 0, 4])
+  _r = local_minima(_f)
+  assert _r is not None, "local_minima should return an array of indices"
+  assert list(np.asarray(_r)) == [1, 3], f"For [3, 1, 2, 0, 4] expected [1, 3], got {list(np.asarray(_r))}"
+  assert global_min_index(_f) == 3, "For [3, 1, 2, 0, 4] the smallest value is at index 3"
+  _x = np.linspace(-2.5, 2.5, 501)
+  _g = _x**4 - 3 * _x**2 + _x
+  assert list(np.asarray(local_minima(_g))) == _ref(_g), "On the lesson curve expected the two valleys near x = -1.30 and x = 1.13"
+  assert global_min_index(_g) == int(np.argmin(_g)), "global_min_index should find the lowest point of the lesson curve"
+  assert list(np.asarray(local_minima(np.array([0.0, 1.0, 2.0, 3.0])))) == [], "A rising curve has no interior local minimum (ends do not count)"
+  assert list(np.asarray(local_minima(np.array([1.0, 0.0, 0.0, 1.0])))) == [], "A flat bottom is not strictly lower than both neighbours"
+  _rng = np.random.default_rng(5)
+  for _ in range(5):
+      _h = _rng.normal(size=40)
+      assert list(np.asarray(local_minima(_h))) == _ref(_h), "Wrong indices on random data: compare each interior point with both neighbours"
+      assert global_min_index(_h) == int(np.argmin(_h)), "global_min_index is wrong on random data"
+hints:
+  - "Compare f[1:-1] with f[:-2] (left neighbours) and with f[2:] (right neighbours), then combine with &."
+  - "np.nonzero(mask)[0] gives positions in the inner slice; add 1 to turn them into indices of f."

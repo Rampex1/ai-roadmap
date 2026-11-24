@@ -1,0 +1,7 @@
+term: "Convex function"
+short: "A function whose graph never rises above the straight chord between any two of its points: a bowl with no bumps."
+body: |
+  Formally $f(t\mathbf{a} + (1-t)\mathbf{b}) \le t f(\mathbf{a}) + (1-t) f(\mathbf{b})$ for all
+  $\mathbf{a}, \mathbf{b}$ and $0 \le t \le 1$. For a convex function every local minimum is a global
+  minimum. The losses of linear and logistic regression are convex; those of neural networks are not.
+related: ["loss-function", "gradient-descent"]

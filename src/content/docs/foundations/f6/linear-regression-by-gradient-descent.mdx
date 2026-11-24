@@ -1,0 +1,208 @@
+---
+title: "Project: linear regression by gradient descent"
+module: f6
+order: 6
+estMinutes: 16
+objectives:
+  - "Derive the vectorised MSE gradient (2/n) Xᵀ(Xw − y) and check its shape"
+  - "Fit a multi-feature linear regression with gradient descent and match np.linalg.lstsq"
+  - "Compare closed-form least squares with gradient descent and say when each is the right tool"
+goDeeper: mml-book
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+This lesson puts the whole module together on one real task: fitting a linear regression with several
+features, end to end, with NumPy only. Because linear regression also has an exact answer (the
+[least-squares solution from F3](/foundations/f3/linear-systems/)), we can check <Term id="gradient-descent" /> against
+the truth to many decimal places, something you can almost never do for a neural network.
+
+## The model in matrix form
+
+With $n$ examples and $d$ features, stack the inputs into an $n \times d$ matrix and append a column of
+ones for the bias. Call the result $X$ ($n \times (d+1)$), and put all weights, bias last, into one
+vector $\mathbf{w}$ of length $d + 1$. Then all $n$ predictions at once are
+
+$$
+\hat{\mathbf{y}} = X\mathbf{w}
+$$
+
+and the MSE loss is
+
+$$
+L(\mathbf{w}) = \frac{1}{n}\lVert X\mathbf{w} - \mathbf{y} \rVert^2 = \frac{1}{n}\sum_{i=1}^{n} r_i^2,
+\qquad \mathbf{r} = X\mathbf{w} - \mathbf{y}
+$$
+
+## The gradient, vectorised
+
+In F4 you found, for one feature, $\frac{\partial L}{\partial w} = \frac{1}{n}\sum_i 2 r_i x_i$ and
+$\frac{\partial L}{\partial b} = \frac{1}{n}\sum_i 2 r_i$. The same chain-rule argument works for every
+weight: $r_i$ changes by $X_{ij}$ per unit of $w_j$, so
+
+$$
+\frac{\partial L}{\partial w_j} = \frac{2}{n}\sum_{i=1}^{n} X_{ij}\, r_i
+$$
+
+The bias is just the weight on the column of ones, so it is covered too. The sum over $i$ of
+$X_{ij} r_i$ is entry $j$ of $X^\top \mathbf{r}$ (row $j$ of $X^\top$ dotted with $\mathbf{r}$), so all
+$d + 1$ partial derivatives at once are
+
+$$
+\nabla L(\mathbf{w}) = \frac{2}{n}\, X^\top (X\mathbf{w} - \mathbf{y})
+$$
+
+**Shape check**, the habit that catches most matrix bugs: $X\mathbf{w}$ is $(n,)$, so the residual is
+$(n,)$; $X^\top$ is $(d+1) \times n$, so $X^\top\mathbf{r}$ is $(d+1,)$, one entry per weight, as a
+gradient must be. In NumPy: `2 / n * X.T @ (X @ w - y)`.
+
+Setting this gradient to zero gives $X^\top X\mathbf{w} = X^\top\mathbf{y}$, the normal equations from F3.
+The closed-form solution is exactly the point where gradient descent's steps shrink to nothing.
+
+## End to end
+
+Three features on very different scales, made from known weights plus noise:
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(42)
+n, d = 500, 3
+X = rng.normal(size=(n, d)) * [1.0, 10.0, 0.1] + [0.0, 50.0, 1.0]
+true_w = np.array([2.0, -0.5, 30.0])
+y = X @ true_w + 4.0 + rng.normal(0, 1.0, n)
+
+mu, sigma = X.mean(axis=0), X.std(axis=0)
+Z = (X - mu) / sigma                          # standardise (lesson 5)
+A = np.column_stack([Z, np.ones(n)])          # bias column last
+
+def loss(w):
+    return np.mean((A @ w - y) ** 2)
+
+def grad(w):
+    return 2 / n * A.T @ (A @ w - y)
+
+w = np.zeros(d + 1)
+lr = 0.1
+for step in range(201):
+    if step % 50 == 0:
+        print(f"step {step:3d}  loss {loss(w):10.4f}  |grad| {np.linalg.norm(grad(w)):.2e}")
+    w = w - lr * grad(w)
+
+w_exact, *_ = np.linalg.lstsq(A, y)
+print("GD:   ", np.round(w, 4))
+print("lstsq:", np.round(w_exact, 4))
+print("max difference:", f"{np.max(np.abs(w - w_exact)):.1e}")
+```
+
+```text title="Output"
+step   0  loss   113.7551  |grad| 2.10e+01
+step  50  loss     0.9933  |grad| 5.05e-04
+step 100  loss     0.9933  |grad| 1.91e-08
+step 150  loss     0.9933  |grad| 8.16e-13
+step 200  loss     0.9933  |grad| 9.17e-15
+GD:    [ 2.0043 -4.8852  2.9355  8.8744]
+lstsq: [ 2.0043 -4.8852  2.9355  8.8744]
+max difference: 3.7e-14
+```
+
+After 200 steps gradient descent agrees with the exact solver to about 13 decimal places. The final loss
+of about $0.99$ is the noise we added (variance $1$): no line can predict random noise. Standardising
+made this fast: the raw features differ in scale by a factor of 100, and without scaling the same loop
+would need a far smaller learning rate and far more steps.
+
+The weights are in *standardised* units: $-4.885$ is the change in $y$ per one standard deviation of
+feature 2. To recover weights for the original features, undo the scaling. Since
+$z_j = (x_j - \mu_j)/\sigma_j$, the slope on $x_j$ is $w_j/\sigma_j$, and the intercept absorbs the
+shifts:
+
+```python
+slopes = w[:d] / sigma
+intercept = w[d] - np.sum(w[:d] * mu / sigma)
+print("original units:", np.round(slopes, 3), round(intercept, 3))
+```
+
+```text title="Output"
+original units: [ 1.911 -0.498 30.39 ] 3.342
+```
+
+Close to the true $(2, -0.5, 30)$ and $4$, but not exact: with noisy data, *any* method recovers the
+weights only approximately. The third feature varies by just $\pm 0.1$, so its weight is the hardest to
+pin down, and the intercept inherits that error. That is a statistics question (F5), not an
+optimisation one: the optimiser found the best possible fit to *this* data.
+
+## The same fit with mini-batch SGD
+
+Replace the full gradient with mini-batch gradients
+([lesson 3](/foundations/f6/stochastic-gradient-descent/)), batch size 32, 10 epochs:
+
+```python
+rng = np.random.default_rng(0)
+w = np.zeros(d + 1)
+lr, B = 0.05, 32
+for epoch in range(1, 11):
+    order = rng.permutation(n)
+    for start in range(0, n, B):
+        idx = order[start:start + B]
+        Ab, yb = A[idx], y[idx]
+        w = w - lr * 2 / len(idx) * Ab.T @ (Ab @ w - yb)
+    if epoch % 2 == 0:
+        print(f"epoch {epoch:2d}  loss {loss(w):.4f}  max diff from lstsq {np.max(np.abs(w - w_exact)):.3f}")
+print(f"lstsq loss {loss(w_exact):.4f}")
+```
+
+```text title="Output"
+epoch  2  loss 1.1621  max diff from lstsq 0.339
+epoch  4  loss 0.9949  max diff from lstsq 0.027
+epoch  6  loss 0.9943  max diff from lstsq 0.029
+epoch  8  loss 0.9948  max diff from lstsq 0.028
+epoch 10  loss 0.9943  max diff from lstsq 0.026
+lstsq loss 0.9933
+```
+
+SGD gets within about $0.03$ of the exact weights in four epochs, then stalls there: that is the
+constant-learning-rate jitter from lesson 3. A decaying schedule would let it settle further. Note
+`len(idx)` rather than `B` in the gradient, so the shorter last batch is averaged correctly.
+
+## Closed form or gradient descent?
+
+| | Closed form (`np.linalg.lstsq`) | Gradient descent |
+|---|---|---|
+| Answer | Exact (up to rounding) | Approximate, improves with steps |
+| Cost | About $n d^2 + d^3$ operations, once | About $n d$ per full-batch step |
+| Memory | Needs the whole of $X$ at once (with `lstsq`; $X^\top X$ and $X^\top\mathbf{y}$ can be accumulated in chunks instead) | Mini-batches can stream from disk |
+| Hyperparameters | None | Learning rate, steps, batch size |
+| Works for other models? | Only linear least squares | Any differentiable loss |
+
+For linear regression with up to a few thousand features that fit in memory, use the closed form (or
+scikit-learn's `LinearRegression`, which uses such a solver): it is exact and has nothing to tune.
+Gradient descent wins when $d$ is huge, when the data do not fit in memory, and, above all, when there
+is no closed form at all. Logistic regression (F7) and every neural network (F9) are in that last group,
+and they are trained with exactly the loop you just wrote, just with a different loss and gradient.
+
+:::tip[The general recipe]
+1. Write the model's prediction and a loss.
+2. Derive the gradient and check it numerically (lesson 5).
+3. Scale the inputs.
+4. Sweep the learning rate, then train with a stopping rule.
+5. If you can, compare with a known answer.
+
+That last step is why this lesson used linear regression: when you later build a neural network, a
+gradient check and a tiny linear sanity test are the closest you get to a known answer.
+:::
+
+## Try it
+
+<CodeExercise id="f6-linear-regression-by-gradient-descent-01" />
+
+<CodeExercise id="f6-linear-regression-by-gradient-descent-02" />
+
+## Summary
+
+- With a bias column of ones, $L(\mathbf{w}) = \frac{1}{n}\lVert X\mathbf{w} - \mathbf{y}\rVert^2$ and
+  $\nabla L = \frac{2}{n}X^\top(X\mathbf{w} - \mathbf{y})$, shape $(d+1,)$.
+- Gradient descent on standardised features reaches the `lstsq` solution to many decimals within a few
+  hundred steps; mini-batch SGD gets close and then jitters.
+- Undo standardisation with slope $w_j/\sigma_j$ and an adjusted intercept.
+- Use the closed form when it exists and fits in memory. Use gradient descent when it does not, which
+  is the case for almost every model after this one.

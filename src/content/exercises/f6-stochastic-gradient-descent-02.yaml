@@ -1,0 +1,61 @@
+id: f6-stochastic-gradient-descent-02
+lesson: foundations/f6/stochastic-gradient-descent
+title: One epoch of mini-batch SGD for a line
+prompt: |
+  Write `sgd_epoch(w, b, x, y, lr, batches)` that runs one epoch of mini-batch SGD on the line
+  $\hat{y} = wx + b$ with mean squared error, and returns the new `(w, b)`.
+
+  `batches` is a list of index arrays (as from the previous exercise). For each batch `idx`, in order:
+
+  - take `xb = x[idx]` and `yb = y[idx]`;
+  - compute residuals `r = w * xb + b - yb` once;
+  - `dw = np.mean(2 * r * xb)`, `db = np.mean(2 * r)`;
+  - update `w = w - lr * dw` and `b = b - lr * db`.
+
+  Check: with `x = [0, 1, 2, 3]`, `y = [1, 3, 5, 7]`, `w = b = 0`, `lr = 0.1` and the single batch
+  `[np.array([0, 1, 2, 3])]`, you get `(1.7, 0.8)`, one full-batch step.
+starter: |
+  import numpy as np
+
+  def sgd_epoch(w, b, x, y, lr, batches):
+      return w, b
+solution: |
+  import numpy as np
+
+  def sgd_epoch(w, b, x, y, lr, batches):
+      for idx in batches:
+          xb, yb = x[idx], y[idx]
+          r = w * xb + b - yb
+          dw = np.mean(2 * r * xb)
+          db = np.mean(2 * r)
+          w = w - lr * dw
+          b = b - lr * db
+      return w, b
+tests: |
+  import numpy as np
+  _x = np.array([0.0, 1.0, 2.0, 3.0]); _y = np.array([1.0, 3.0, 5.0, 7.0])
+  _r = sgd_epoch(0.0, 0.0, _x, _y, 0.1, [np.array([0, 1, 2, 3])])
+  assert _r is not None and len(_r) == 2, "Return a pair: return w, b"
+  np.testing.assert_allclose(_r, (1.7, 0.8), err_msg="One full batch from (0, 0) with lr 0.1 should give (1.7, 0.8)")
+  def _ref(w, b, x, y, lr, batches):
+      for idx in batches:
+          r = w * x[idx] + b - y[idx]
+          w, b = w - lr * np.mean(2 * r * x[idx]), b - lr * np.mean(2 * r)
+      return w, b
+  np.testing.assert_allclose(sgd_epoch(0.0, 0.0, _x, _y, 0.1, [np.array([3]), np.array([0, 2]), np.array([1])]),
+      _ref(0.0, 0.0, _x, _y, 0.1, [np.array([3]), np.array([0, 2]), np.array([1])]),
+      err_msg="With three batches, update after each batch using only that batch's examples")
+  _rng = np.random.default_rng(3)
+  _x2 = _rng.uniform(-1, 1, 200); _y2 = -2 * _x2 + 0.5 + 0.1 * _rng.normal(size=200)
+  _order = _rng.permutation(200)
+  _bs = [_order[s:s + 16] for s in range(0, 200, 16)]
+  np.testing.assert_allclose(sgd_epoch(0.3, -0.2, _x2, _y2, 0.05, _bs), _ref(0.3, -0.2, _x2, _y2, 0.05, _bs), rtol=1e-10,
+      err_msg="Wrong result on a 200-point epoch with batches of 16")
+  _w, _b = 0.0, 0.0
+  for _ in range(20):
+      _o = _rng.permutation(200)
+      _w, _b = sgd_epoch(_w, _b, _x2, _y2, 0.1, [_o[s:s + 16] for s in range(0, 200, 16)])
+  assert abs(_w + 2) < 0.1 and abs(_b - 0.5) < 0.1, f"After 20 epochs SGD should be near w = -2, b = 0.5, got ({_w:.3f}, {_b:.3f})"
+hints:
+  - "Loop over batches; inside, slice x and y with idx, then do one gradient step exactly as in F4."
+  - "Compute dw and db from the same residuals before changing w or b."

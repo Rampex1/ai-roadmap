@@ -1,0 +1,114 @@
+items:
+  - id: f6-gradient-descent-01
+    type: mcq
+    prompt: "Which line is the gradient descent update?"
+    explanation: "Step against the gradient, scaled by the learning rate: θ ← θ - η∇L(θ)."
+    options:
+      - text: "θ ← θ - η ∇L(θ)"
+        correct: true
+        why: Moving against the gradient goes downhill.
+      - text: "θ ← θ + η ∇L(θ)"
+        why: That climbs uphill, which maximises the loss.
+      - text: "θ ← θ - η L(θ)"
+        why: The loss value is a single number with no direction; the gradient is needed.
+      - text: "θ ← ∇L(θ) / η"
+        why: That throws away the current position altogether.
+  - id: f6-gradient-descent-02
+    type: numeric
+    prompt: "On $f(x) = x^2$, gradient descent starts at $x_0 = 2$ with $\\eta = 0.25$. What is $x_1$?"
+    answer: 1
+    tol: 0.0001
+    explanation: "f'(2) = 4, so x₁ = 2 - 0.25 × 4 = 1. Equivalently the factor is 1 - 2η = 0.5."
+  - id: f6-gradient-descent-03
+    type: output
+    prompt: "What does this print?"
+    code: |
+      x = 1.0
+      for _ in range(3):
+          x = x - 0.75 * 2 * x
+      print(x)
+    answer: "-0.125"
+    explanation: "Each step multiplies x by 1 - 2(0.75) = -0.5. Three steps: 1 → -0.5 → 0.25 → -0.125. It overshoots each time but shrinks."
+  - id: f6-gradient-descent-04
+    type: numeric
+    prompt: "For $f(x) = \\frac{a}{2}x^2$ with $a = 8$, what is the largest learning rate below which gradient descent converges? (Converges for $\\eta$ strictly less than this value.)"
+    answer: 0.25
+    tol: 0.0001
+    explanation: "The factor is 1 - ηa, and |1 - ηa| < 1 needs 0 < η < 2/a = 2/8 = 0.25."
+  - id: f6-gradient-descent-05
+    type: mcq
+    prompt: "On $f(x) = x^2$, which learning rate makes gradient descent **oscillate around the minimum but still converge**?"
+    explanation: "The factor is r = 1 - 2η. Oscillating and converging means -1 < r < 0, so 0.5 < η < 1."
+    options:
+      - text: "0.8"
+        correct: true
+        why: r = -0.6, so the sign flips each step while the size shrinks.
+      - text: "0.3"
+        why: r = 0.4 is positive, so it approaches 0 without crossing it.
+      - text: "0.5"
+        why: r = 0, so it lands on the minimum in one step with no oscillation.
+      - text: "1.2"
+        why: r = -1.4, so the oscillation grows and it diverges.
+  - id: f6-gradient-descent-06
+    type: mcq
+    prompt: "Training loss goes 2.1, 1.7, 3.9, 25.0, 840.2, inf, nan. What is the most likely cause?"
+    explanation: "Loss that grows faster and faster then overflows is the signature of divergence from a learning rate that is too large."
+    options:
+      - text: The learning rate is too large
+        correct: true
+        why: Each step overshoots further than the last, so the loss explodes.
+      - text: The learning rate is too small
+        why: A tiny learning rate makes progress slow, not explosive.
+      - text: The model reached a local minimum
+        why: At a minimum the loss stops changing; it does not blow up.
+      - text: There are too few training steps
+        why: More steps would only make the explosion worse.
+  - id: f6-gradient-descent-07
+    type: mcq
+    prompt: "For $f(x, y) = x^2 + 100y^2$, which direction limits how large the learning rate can be?"
+    explanation: "The y direction has curvature 200 versus 2 for x. Stability needs η < 2/200 = 0.01, far below the 2/2 = 1 that x alone would allow."
+    options:
+      - text: The y direction, because it is far more curved
+        correct: true
+        why: The steepest curvature sets the stability limit, here η < 0.01.
+      - text: The x direction, because it is flatter
+        why: The flat direction makes progress slow but tolerates large steps.
+      - text: Neither; any learning rate below 1 converges
+        why: With η = 0.5 the y factor is 1 - 100 = -99, which diverges.
+      - text: Both equally, since the gradient has two entries
+        why: Each coordinate has its own curvature and its own limit.
+  - id: f6-gradient-descent-08
+    type: multi
+    prompt: "Which are reasonable stopping rules for gradient descent? Select all that apply."
+    explanation: "Common rules are a step budget, a small gradient norm and a loss that has stopped improving. The loss reaching exactly zero rarely happens, so that rule may never trigger."
+    options:
+      - text: Stop after a fixed number of steps
+        correct: true
+        why: A budget is always needed as a safety net.
+      - text: Stop when the norm of the gradient falls below a small tolerance
+        correct: true
+        why: The gradient is zero at a minimum, so a tiny gradient means you are close to a stationary point.
+      - text: Stop when the loss has improved by less than a tiny amount for a while
+        correct: true
+        why: Further steps are no longer buying anything.
+      - text: Stop when the loss is exactly zero
+        why: Most losses never reach zero, for example when the data are noisy, so this may never trigger.
+  - id: f6-gradient-descent-09
+    type: mcq
+    prompt: "Gradient descent on $f(x) = x^4 - 3x^2 + x$ from $x_0 = 2$ ends at the local minimum near $x = 1.13$, not the global one near $-1.30$. Why?"
+    explanation: "Gradient descent follows the local slope. From x = 2 the downhill path leads into the right-hand valley, and the hill at x ≈ 0.17 separates it from the deeper one."
+    options:
+      - text: It only follows the local slope, and the right-hand valley is downhill from the start
+        correct: true
+        why: The update rule never looks beyond the current point.
+      - text: The learning rate was too large
+        why: A too-large rate would cause oscillation or divergence, not neat convergence to a minimum.
+      - text: The function is convex
+        why: A convex function has only one valley; this one has two.
+      - text: Gradient descent always finds the minimum closest to zero
+        why: It finds whichever minimum its starting point drains into.
+  - id: f6-gradient-descent-10
+    type: cloze
+    prompt: "The ratio of the largest to the smallest curvature of a loss, which predicts how badly gradient descent zigzags, is called the ______ number."
+    accept: ["condition"]
+    explanation: "The condition number. A large value means a long, thin valley, where one learning rate is too big for the steep direction and too small for the flat one."

@@ -1,0 +1,7 @@
+term: "Learning rate"
+short: "The step size η in gradient descent; too small is slow, too large overshoots and can diverge."
+body: |
+  On a quadratic with curvature $a$, gradient descent converges only if $0 < \eta < 2/a$, so the most
+  curved direction of the loss caps the usable learning rate. It is usually chosen with a log-spaced
+  sweep and often changed during training by a learning-rate schedule.
+related: ["gradient-descent", "learning-rate-schedule"]

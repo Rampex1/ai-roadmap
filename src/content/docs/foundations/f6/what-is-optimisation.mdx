@@ -1,0 +1,169 @@
+---
+title: "What optimisation is: losses, parameters and minima"
+module: f6
+order: 1
+estMinutes: 12
+objectives:
+  - "Name the loss, the parameters and the data in a learning problem, and write it as an argmin"
+  - "Tell a local minimum from a global one, and recognise a saddle point"
+  - "Explain what convexity guarantees and why most neural network losses lack it"
+goDeeper: mml-book
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import minimaImg from '@/assets/diagrams/f6-minima.svg';
+
+At the end of F4 you fitted a line by repeatedly stepping against the gradient of a loss
+([the last lesson of F4](/foundations/f4/derivatives-and-learning/)). That loop is the heart of almost
+all machine learning. This module studies it properly: when it works, when it fails, how to make it
+fast, and how the optimisers inside real libraries improve on it. First, some vocabulary.
+
+## Three ingredients
+
+Every learning problem in this course can be written in the same shape:
+
+$$
+\boldsymbol{\theta}^\star = \arg\min_{\boldsymbol{\theta}} \; L(\boldsymbol{\theta})
+$$
+
+Read it as "$\boldsymbol{\theta}^\star$ is the value of $\boldsymbol{\theta}$ that makes $L$ as small as
+possible". The pieces:
+
+- **Parameters** $\boldsymbol{\theta}$: the numbers we are free to change. For the line
+  $\hat{y} = wx + b$ they are $\boldsymbol{\theta} = (w, b)$. A large language model has billions.
+- **Data**: the inputs $x_i$ and targets $y_i$. During training they are *fixed*.
+- **Objective**, or <Term id="loss-function" />: a single number $L(\boldsymbol{\theta})$ that measures
+  how badly the model with parameters $\boldsymbol{\theta}$ fits the data. Lower is better. The mean
+  squared error from F4 is one example:
+  $L(w, b) = \frac{1}{n}\sum_{i=1}^{n}(w x_i + b - y_i)^2$.
+
+$\arg\min$ returns the *place* where the minimum happens, while $\min$ returns the *value* there. For
+$L(w) = (w - 3)^2 + 1$, $\min_w L(w) = 1$ but $\arg\min_w L(w) = 3$.
+
+:::note[Maximising is the same problem]
+To maximise something (a likelihood, a reward), minimise its negative:
+$\arg\max_{\boldsymbol{\theta}} g(\boldsymbol{\theta}) = \arg\min_{\boldsymbol{\theta}} \left(-g(\boldsymbol{\theta})\right)$.
+That is why the field talks almost only about minimising.
+:::
+
+A third kind of number shows up too: settings such as the learning rate or the number of steps. They
+are not learned by the optimiser; we choose them. They are called **hyperparameters**, and choosing them
+well is half of this module.
+
+## Why not just try every value?
+
+For one parameter you *could* evaluate the loss on a fine grid and pick the smallest. With 100 grid
+values per parameter, 2 parameters need $100^2 = 10^4$ evaluations, and 10 parameters need
+$100^{10} = 10^{20}$. A small neural network has a million parameters. Grid search is hopeless beyond a
+handful of dimensions.
+
+Nor can we usually solve $\nabla L(\boldsymbol{\theta}) = \mathbf{0}$ with algebra. Linear regression is
+the lucky exception: in [F3](/foundations/f3/linear-systems/) you solved it with the normal equations.
+For almost every other model there is no formula. What we *can* always do is compute the gradient at
+the current point and take a step downhill. That local, iterative approach is what optimisation in
+machine learning means.
+
+## Minima, maxima and saddles
+
+A point where the gradient is zero is a **stationary point**. In one dimension it is where the tangent
+is flat. There are three kinds:
+
+- a **local minimum**: lower than every point *nearby*;
+- a **local maximum**: higher than every point nearby;
+- in two or more dimensions, a **saddle point**: a minimum along some directions and a maximum along
+  others.
+
+A **global minimum** is lower than (or equal to) every other point anywhere. Every global minimum is a
+local minimum, but not the other way round.
+
+<Figure
+  src={minimaImg}
+  alt="Left: the bowl y = x squared with a dashed chord between two points of the curve, above the curve, and a single minimum at 0. Right: the curve x to the fourth minus 3 x squared plus x, with a deep global minimum on the left, a shallower local minimum on the right and a local maximum between them"
+  caption="A convex function has one valley. A non-convex one can have several, and only one of them is the deepest."
+/>
+
+The right-hand curve is $f(x) = x^4 - 3x^2 + x$. Its derivative is $f'(x) = 4x^3 - 6x + 1$, which is
+zero at three places. Let NumPy find the lowest sampled point and every sampled local minimum:
+
+```python
+import numpy as np
+
+x = np.linspace(-2.5, 2.5, 501)
+f = x**4 - 3 * x**2 + x
+
+i = np.argmin(f)
+print(f"lowest sampled point: x = {x[i]:.2f}, f = {f[i]:.3f}")
+
+inner = f[1:-1]
+is_min = (inner < f[:-2]) & (inner < f[2:])   # lower than both neighbours
+print("local minima at x =", x[1:-1][is_min])
+print("f there           =", np.round(inner[is_min], 3))
+```
+
+```text title="Output"
+lowest sampled point: x = -1.30, f = -3.514
+local minima at x = [-1.3   1.13]
+f there           = [-3.514 -1.07 ]
+```
+
+Two valleys: the global minimum near $x = -1.30$ and a local one near $x = 1.13$. The slicing trick
+compares each interior value with its left neighbour (`f[:-2]`) and its right neighbour (`f[2:]`), a
+pattern from [F2](/foundations/f2/indexing-and-masks/).
+
+**Saddle example.** $g(x, y) = x^2 - y^2$ has $\nabla g = (2x, -2y)$, which is zero at the origin. Walk
+along $x$ and the origin is the bottom of a valley; walk along $y$ and it is the top of a ridge. A zero
+gradient alone does not tell you that you are at a minimum.
+
+:::caution[Gradient zero does not mean done]
+An optimiser that stops when the gradient vanishes might be at a minimum, a maximum or a saddle. In
+practice gradient descent almost never stays on a maximum or a saddle, because any small nudge rolls it
+off, but it can slow down near saddles, where the gradient is tiny.
+:::
+
+## Convex functions: one valley only
+
+A function is <Term id="convex-function" text="convex" /> if the straight line (chord) between any two
+points on its graph never dips below the graph. Intuitively: a bowl, with no bumps.
+
+$$
+f\big(t\,\mathbf{a} + (1-t)\,\mathbf{b}\big) \le t\,f(\mathbf{a}) + (1-t)\,f(\mathbf{b}) \quad \text{for all } \mathbf{a}, \mathbf{b} \text{ and } 0 \le t \le 1
+$$
+
+The left side is the function at a point between $\mathbf{a}$ and $\mathbf{b}$; the right side is the
+chord at the same place. The payoff is a guarantee:
+
+> For a convex function, **every local minimum is a global minimum**.
+
+So if gradient descent finds any valley, it has found the best one. In one dimension, a function with
+$f''(x) \ge 0$ everywhere is convex: $x^2$ and $e^x$ are; $|x|$ is convex too (check the chord
+definition, since $f''$ does not exist at 0); $x^3$ and $\sin x$ are not.
+
+Which losses are convex?
+
+| Problem | Convex in its parameters? |
+|---|---|
+| Linear regression with MSE | Yes: a bowl in $(w, b)$ |
+| Logistic regression with cross-entropy (F7) | Yes |
+| Any neural network with a hidden layer (F9) | No |
+
+Neural network losses are non-convex: they have many local minima and saddle points, and where you
+start can change where you end. Surprisingly, gradient-based training still works very well on them in
+practice; the theory of why is an active research area. The techniques in this module were developed
+largely for that non-convex world, but we will study them on convex examples first, where we can see
+exactly what happens.
+
+## Try it
+
+<CodeExercise id="f6-what-is-optimisation-01" />
+
+## Summary
+
+- Learning is minimisation: $\boldsymbol{\theta}^\star = \arg\min_{\boldsymbol{\theta}} L(\boldsymbol{\theta})$,
+  with the data held fixed. Maximise $g$ by minimising $-g$.
+- Grid search explodes with the number of parameters, and closed forms are rare, so we follow the
+  gradient step by step.
+- Stationary points ($\nabla L = \mathbf{0}$) can be minima, maxima or saddles. Local minima need not be
+  global.
+- Convex functions have no bad valleys: every local minimum is global. Linear and logistic regression
+  are convex; neural networks are not.

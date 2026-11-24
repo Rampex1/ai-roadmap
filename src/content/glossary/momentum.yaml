@@ -1,0 +1,8 @@
+term: "Momentum"
+short: "An optimiser that steps along a decaying sum of past gradients (a velocity), damping zigzags and speeding up along valleys."
+body: |
+  The update is $\mathbf{v} \leftarrow \beta\mathbf{v} + \nabla L$ and
+  $\boldsymbol{\theta} \leftarrow \boldsymbol{\theta} - \eta\mathbf{v}$, typically with $\beta = 0.9$.
+  Gradient components that keep their sign add up (up to $1/(1-\beta)$ times), while those that
+  alternate cancel.
+related: ["gradient-descent", "adam"]

@@ -1,0 +1,167 @@
+---
+title: "Stochastic and mini-batch gradient descent"
+module: f6
+order: 3
+estMinutes: 15
+objectives:
+  - "Explain why a mini-batch gradient is a noisy but unbiased estimate of the full gradient"
+  - "Split shuffled data into mini-batches for each epoch with a seeded random generator"
+  - "Describe how batch size trades gradient noise against the cost of each step"
+goDeeper: ruder-gradient-descent
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Every gradient in the last lesson was exact: to take one step we looked at *all* the data. For the four
+points of F4 that was free. For a million images it means a million forward and backward passes per
+step, and training needs many thousands of steps. This lesson shows the trick that makes training on
+large datasets possible: estimate the gradient from a small random sample.
+
+## The loss is an average
+
+Almost every training loss is an average of per-example losses:
+
+$$
+L(\boldsymbol{\theta}) = \frac{1}{n}\sum_{i=1}^{n} \ell_i(\boldsymbol{\theta}),
+\qquad
+\nabla L(\boldsymbol{\theta}) = \frac{1}{n}\sum_{i=1}^{n} \nabla \ell_i(\boldsymbol{\theta})
+$$
+
+where $\ell_i$ is the loss on example $i$ alone, for example $(w x_i + b - y_i)^2$. The gradient of an
+average is the average of the gradients (the sum rule from F4). So the full gradient is the *mean* of
+$n$ per-example gradients, and a mean can be estimated from a sample.
+
+## Mini-batches
+
+Pick a random subset $B$ of the examples, called a <Term id="mini-batch" />, of size $|B|$, and use
+
+$$
+\mathbf{g}_B = \frac{1}{|B|}\sum_{i \in B} \nabla \ell_i(\boldsymbol{\theta})
+$$
+
+in place of $\nabla L$. The update is unchanged: $\boldsymbol{\theta} \leftarrow \boldsymbol{\theta} - \eta\,\mathbf{g}_B$.
+
+Three names for three batch sizes:
+
+| Name | Batch size | Gradient per step |
+|---|---|---|
+| (Full-)batch gradient descent | $n$, all the data | Exact, expensive |
+| <Term id="stochastic-gradient-descent" text="Stochastic gradient descent (SGD)" /> | 1 | Very noisy, very cheap |
+| Mini-batch gradient descent | typically 16 to a few thousand | In between |
+
+In practice almost everyone uses mini-batches and still calls it "SGD"; libraries do the same.
+
+Because the batch is chosen at random, $\mathbf{g}_B$ is right *on average*: its expected value is the
+full gradient (it is **unbiased**). Any single batch is off by some random error, and the error shrinks
+as the batch grows. Its spread (standard deviation) falls roughly like $1/\sqrt{|B|}$, so a batch 100
+times bigger is only about 10 times less noisy.
+
+Let's measure it. Generate 1,000 points from $y = 3x + 2$ plus noise, and compare the full $\partial L/\partial w$
+at $w = b = 0$ with estimates from 2,000 random batches of each size:
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(0)
+n = 1000
+x = rng.uniform(-1, 1, n)
+y = 3 * x + 2 + rng.normal(0, 0.5, n)
+
+def grad(w, b, xb, yb):
+    r = w * xb + b - yb
+    return np.mean(2 * r * xb), np.mean(2 * r)
+
+print("full-batch dw at w = b = 0:", round(grad(0, 0, x, y)[0], 3))
+for B in [1, 10, 100]:
+    dws = [grad(0, 0, x[idx], y[idx])[0]
+           for idx in (rng.choice(n, B, replace=False) for _ in range(2000))]
+    print(f"batch {B:3d}: mean dw {np.mean(dws):6.3f}, std {np.std(dws):.3f}")
+```
+
+```text title="Output"
+full-batch dw at w = b = 0: -2.082
+batch   1: mean dw -2.067, std 2.939
+batch  10: mean dw -2.110, std 0.936
+batch 100: mean dw -2.079, std 0.279
+```
+
+All three batch sizes are right on average (about $-2.08$). The noise drops by about $\sqrt{10} \approx 3.2$
+each time the batch grows tenfold: $2.94 \to 0.94 \to 0.28$. A single example's gradient can even have
+the wrong sign, but a batch of 100 is already a decent compass.
+
+## Epochs and shuffling
+
+An <Term id="epoch" /> is one pass through the whole training set. The standard recipe:
+
+1. At the start of each epoch, shuffle the order of the examples.
+2. Cut the shuffled order into consecutive batches of size $B$. The last batch may be smaller.
+3. Take one update per batch.
+
+With $n$ examples, one epoch has $\lceil n / B \rceil$ steps: 1,000 examples with $B = 32$ give 32
+steps (31 full batches and one of 8). Shuffling without replacement, rather than drawing batches
+independently, guarantees every example is used exactly once per epoch.
+
+Shuffle with a seeded `np.random.Generator` from [F2](/foundations/f2/reshape-and-random/), so a run
+can be repeated exactly. `rng.permutation(n)` returns the numbers $0, \dots, n-1$ in random order:
+
+```python
+rng = np.random.default_rng(1)
+w, b, lr, B = 0.0, 0.0, 0.1, 32
+for epoch in range(1, 6):
+    order = rng.permutation(n)
+    for start in range(0, n, B):
+        idx = order[start:start + B]          # indices of this mini-batch
+        dw, db = grad(w, b, x[idx], y[idx])
+        w, b = w - lr * dw, b - lr * db
+    loss = np.mean((w * x + b - y) ** 2)
+    print(f"epoch {epoch}: loss {loss:.4f}  w {w:.3f}  b {b:.3f}")
+```
+
+```text title="Output"
+epoch 1: loss 0.3021  w 2.648  b 1.993
+epoch 2: loss 0.2739  w 2.954  b 1.893
+epoch 3: loss 0.2695  w 2.984  b 2.076
+epoch 4: loss 0.2630  w 2.997  b 2.006
+epoch 5: loss 0.2634  w 2.964  b 1.982
+```
+
+The exact least-squares answer has loss $0.2629$ with $w \approx 2.995$, $b \approx 1.994$. After a single
+epoch, 32 cheap steps, SGD is already close. But look at epochs 4 and 5: the loss went *up* slightly,
+and $w$ and $b$ keep wandering around the answer instead of settling on it.
+
+## Noise: the price and the bonus
+
+With a constant learning rate, mini-batch SGD does not converge to the exact minimum. Near the minimum
+the true gradient is almost zero, but each batch's gradient is not, so every step kicks the parameters
+by a random amount proportional to $\eta$. The parameters end up jittering in a small cloud around the
+minimum. Two common remedies:
+
+- **Shrink the learning rate over time** (a schedule, [lesson 5](/foundations/f6/practical-optimisation/)),
+  so the kicks get smaller.
+- **Use larger batches** near the end, so each gradient is less noisy.
+
+The noise is not only a cost. On non-convex losses the random kicks can help the parameters leave
+saddle points and shallow valleys that would trap exact gradient descent, and there is evidence that
+the noise can steer training towards solutions that generalise better. This is still debated, so treat
+it as intuition rather than law.
+
+:::tip[Choosing a batch size]
+Bigger batches give better gradient estimates but cost more per step, and on a GPU a batch of 64 often
+costs barely more time than a batch of 1, because the examples are processed in parallel. Common
+defaults are 32 to 256 for small models, limited in practice by memory. If you change the batch size a
+lot, re-tune the learning rate too.
+:::
+
+## Try it
+
+<CodeExercise id="f6-stochastic-gradient-descent-01" />
+
+## Summary
+
+- A loss that averages per-example losses has a gradient that averages per-example gradients.
+- A mini-batch gradient is an unbiased but noisy estimate of it. The noise shrinks like
+  $1/\sqrt{|B|}$.
+- One epoch = one pass over shuffled data = $\lceil n / B \rceil$ steps. Shuffle every epoch with a
+  seeded generator.
+- With a constant learning rate SGD jitters around the minimum; decay the learning rate to settle. The
+  noise can also help on non-convex losses.

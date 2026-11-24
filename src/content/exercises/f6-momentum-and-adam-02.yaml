@@ -1,0 +1,66 @@
+id: f6-momentum-and-adam-02
+lesson: foundations/f6/momentum-and-adam
+title: An Adam step
+prompt: |
+  Write `adam_step(theta, g, m, v, t, lr=0.001, b1=0.9, b2=0.999, eps=1e-8)` that performs Adam step
+  number `t` (starting from `t = 1`) and returns `(new_theta, new_m, new_v)`:
+
+  $$
+  \begin{aligned}
+  m &\leftarrow \beta_1 m + (1 - \beta_1)\,g, \qquad v \leftarrow \beta_2 v + (1 - \beta_2)\,g^2 \\
+  \hat{m} &= m / (1 - \beta_1^t), \qquad \hat{v} = v / (1 - \beta_2^t) \\
+  \theta &\leftarrow \theta - \eta\,\hat{m} / (\sqrt{\hat{v}} + \varepsilon)
+  \end{aligned}
+  $$
+
+  All operations are element-wise. Return the **uncorrected** `m` and `v` (without hats); they are
+  the state for the next step.
+
+  Check: on the first step (`t = 1`, `m = v = 0`) every parameter moves by almost exactly `lr` against
+  the sign of its gradient, so `adam_step(np.array([3.0, 1.0]), np.array([6.0, 100.0]), np.zeros(2), np.zeros(2), 1, lr=0.1)[0]`
+  is about `[2.9, 0.9]`.
+starter: |
+  import numpy as np
+
+  def adam_step(theta, g, m, v, t, lr=0.001, b1=0.9, b2=0.999, eps=1e-8):
+      m = b1 * m + (1 - b1) * g
+      v = b2 * v + (1 - b2) * g**2
+      theta = theta - lr * m / (np.sqrt(v) + eps)
+      return theta, m, v
+solution: |
+  import numpy as np
+
+  def adam_step(theta, g, m, v, t, lr=0.001, b1=0.9, b2=0.999, eps=1e-8):
+      m = b1 * m + (1 - b1) * g
+      v = b2 * v + (1 - b2) * g**2
+      m_hat = m / (1 - b1**t)
+      v_hat = v / (1 - b2**t)
+      theta = theta - lr * m_hat / (np.sqrt(v_hat) + eps)
+      return theta, m, v
+tests: |
+  import numpy as np
+  def _ref(theta, g, m, v, t, lr=0.001, b1=0.9, b2=0.999, eps=1e-8):
+      m = b1 * m + (1 - b1) * g
+      v = b2 * v + (1 - b2) * g**2
+      return theta - lr * (m / (1 - b1**t)) / (np.sqrt(v / (1 - b2**t)) + eps), m, v
+  _r = adam_step(np.array([3.0, 1.0]), np.array([6.0, 100.0]), np.zeros(2), np.zeros(2), 1, lr=0.1)
+  assert _r is not None and len(_r) == 3, "Return a triple: return theta, m, v"
+  np.testing.assert_allclose(_r[0], [2.9, 0.9], rtol=1e-6, err_msg="On step 1 each parameter should move by lr = 0.1: did you apply bias correction?")
+  np.testing.assert_allclose(_r[1], [0.6, 10.0], err_msg="Return the uncorrected m = (1 - b1) * g on step 1")
+  np.testing.assert_allclose(_r[2], [0.036, 10.0], rtol=1e-9, err_msg="Return the uncorrected v = (1 - b2) * g**2 on step 1")
+  _grad = lambda p: np.array([2 * p[0], 100 * p[1]])
+  _th, _m, _v = np.array([3.0, 1.0]), np.zeros(2), np.zeros(2)
+  _rt, _rm, _rv = _th.copy(), _m.copy(), _v.copy()
+  for _t in range(1, 51):
+      _th, _m, _v = adam_step(_th, _grad(_th), _m, _v, _t, lr=0.1)
+      _rt, _rm, _rv = _ref(_rt, _grad(_rt), _rm, _rv, _t, lr=0.1)
+  np.testing.assert_allclose(_th, _rt, rtol=1e-9, atol=1e-12, err_msg="After 50 Adam steps your theta differs from the reference: check the t in the bias correction")
+  np.testing.assert_allclose(_m, _rm, rtol=1e-9, atol=1e-12, err_msg="After 50 steps your m differs from the reference")
+  _p = np.array([0.5, -0.2, 1.0]); _g = np.array([0.3, -0.01, 2.0])
+  _a = adam_step(_p, _g, np.array([0.1, 0.0, -0.1]), np.array([0.01, 0.001, 0.5]), 7)
+  _b = _ref(_p, _g, np.array([0.1, 0.0, -0.1]), np.array([0.01, 0.001, 0.5]), 7)
+  for _x, _y, _name in zip(_a, _b, ["theta", "m", "v"]):
+      np.testing.assert_allclose(_x, _y, rtol=1e-9, err_msg=f"Wrong {_name} at step t = 7 with default hyperparameters")
+hints:
+  - "The starter is missing the bias correction: divide m by (1 - b1**t) and v by (1 - b2**t)."
+  - "Use the corrected values only in the theta update; return the uncorrected m and v."

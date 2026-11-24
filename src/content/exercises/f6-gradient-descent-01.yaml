@@ -1,0 +1,43 @@
+id: f6-gradient-descent-01
+lesson: foundations/f6/gradient-descent
+title: One gradient descent step
+prompt: |
+  Write `gd_step(theta, grad, lr)` that returns the parameters after **one** gradient descent step:
+  $\boldsymbol{\theta} - \eta\,\nabla L(\boldsymbol{\theta})$.
+
+  - `theta` is a 1-D NumPy array of parameters.
+  - `grad` is a function: `grad(theta)` returns the gradient at `theta` as an array of the same shape.
+  - `lr` is the learning rate $\eta$.
+
+  Return a **new** array and do not change `theta` itself.
+
+  Check: for $f(x, y) = x^2 + 10y^2$, `grad = lambda p: np.array([2 * p[0], 20 * p[1]])`, starting at
+  `[3.0, 1.0]` with `lr = 0.09`, one step gives `[2.46, -0.8]`.
+starter: |
+  import numpy as np
+
+  def gd_step(theta, grad, lr):
+      return theta
+solution: |
+  import numpy as np
+
+  def gd_step(theta, grad, lr):
+      return theta - lr * grad(theta)
+tests: |
+  import numpy as np
+  _grad = lambda p: np.array([2 * p[0], 20 * p[1]])
+  _t = np.array([3.0, 1.0])
+  _r = gd_step(_t, _grad, 0.09)
+  assert _r is not None, "gd_step should return the new parameters"
+  np.testing.assert_allclose(_r, [2.46, -0.8], err_msg="From [3, 1] with lr 0.09 on x^2 + 10y^2 expected [2.46, -0.8]")
+  np.testing.assert_allclose(_t, [3.0, 1.0], err_msg="Do not modify theta in place: return a new array")
+  _A = np.array([[3.0, 1.0, 0.0], [1.0, 2.0, 0.5], [0.0, 0.5, 1.0]])
+  _g2 = lambda p: _A @ p - np.array([1.0, -2.0, 0.5])
+  _rng = np.random.default_rng(1)
+  for _ in range(3):
+      _p = _rng.normal(size=3); _lr = float(_rng.uniform(0.01, 0.5))
+      np.testing.assert_allclose(gd_step(_p.copy(), _g2, _lr), _p - _lr * _g2(_p), err_msg=f"Wrong step for a 3-parameter problem with lr {_lr:.3f}")
+  np.testing.assert_allclose(gd_step(np.array([2.0]), lambda p: 2 * p, 0.5), [0.0], err_msg="For x^2 from x = 2 with lr 0.5 one step lands on 0")
+hints:
+  - "The whole update is one line of NumPy arithmetic."
+  - "Use theta - lr * grad(theta), which creates a new array; theta -= ... would change the input."

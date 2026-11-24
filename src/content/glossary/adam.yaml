@@ -1,0 +1,8 @@
+term: "Adam"
+short: "An optimiser that combines momentum with a per-parameter step size from a moving average of squared gradients."
+body: |
+  Adam (adaptive moment estimation) keeps moving averages $\mathbf{m}$ of the gradient and $\mathbf{v}$ of
+  the squared gradient, corrects their bias towards zero with $1 - \beta^t$, and steps by
+  $\eta\,\hat{\mathbf{m}}/(\sqrt{\hat{\mathbf{v}}} + \varepsilon)$. Common defaults are $\eta = 0.001$,
+  $\beta_1 = 0.9$, $\beta_2 = 0.999$. It stores two extra numbers per parameter.
+related: ["momentum", "gradient-descent", "learning-rate"]

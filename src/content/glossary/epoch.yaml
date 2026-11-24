@@ -1,0 +1,6 @@
+term: "Epoch"
+short: "One complete pass through the training set during training."
+body: |
+  With $n$ examples and batch size $B$, one epoch contains $\lceil n/B \rceil$ parameter updates. The
+  data are usually reshuffled at the start of every epoch so the mini-batches differ each time.
+related: ["mini-batch", "stochastic-gradient-descent"]

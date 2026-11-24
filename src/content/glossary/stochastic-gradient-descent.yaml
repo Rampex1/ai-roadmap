@@ -1,0 +1,8 @@
+term: "Stochastic gradient descent (SGD)"
+short: "Gradient descent that uses the gradient of a random example or mini-batch instead of the full dataset."
+body: |
+  The mini-batch gradient is an unbiased but noisy estimate of the full gradient, and much cheaper to
+  compute. Strictly, SGD uses one example per step, but the name is commonly used for mini-batch
+  training too. With a constant learning rate it jitters around the minimum; decaying the learning rate
+  lets it settle.
+related: ["gradient-descent", "mini-batch", "epoch"]

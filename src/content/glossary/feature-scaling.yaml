@@ -1,0 +1,7 @@
+term: "Feature scaling"
+short: "Rescaling input features to similar ranges, for example standardising each to mean 0 and standard deviation 1."
+body: |
+  Standardisation computes $z = (x - \mu)/\sigma$ with the mean and standard deviation of each feature on
+  the training set, then applies those same numbers to all other data. Features on very different scales
+  make the loss surface a long, thin valley, which slows gradient descent; scaling makes it rounder.
+related: ["gradient-descent", "learning-rate"]

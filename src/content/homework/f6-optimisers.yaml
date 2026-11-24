@@ -1,0 +1,34 @@
+id: f6-optimisers
+module: f6
+kind: homework
+title: "Race the optimisers: GD, SGD, momentum and Adam"
+brief: |
+  Implement four optimisers from scratch and race them on two problems: a 5-feature linear regression
+  whose exact answer you know from `np.linalg.lstsq`, and the Rosenbrock function
+  $f(x, y) = (1 - x)^2 + 100(y - x^2)^2$, whose long, curved valley is a classic test for optimisers.
+  Download the notebook and open it in local Jupyter or [Google Colab](https://colab.research.google.com/)
+  (File > Upload notebook). Only NumPy and matplotlib are needed.
+
+  Each task has `TODO` cells and a check cell that prints `OK` when your code is right:
+
+  1. **Gradients:** write the mini-batch MSE gradient and derive the Rosenbrock gradient on paper, then
+     pass a numerical gradient check.
+  2. **Optimiser steps:** `gd_step`, `momentum_step` and `adam_step` with a shared interface that keeps
+     each optimiser's memory (velocity, moving averages, step counter) in a `state` dictionary.
+  3. **Regression race:** a mini-batch training loop with a seeded generator; train full-batch GD, SGD,
+     momentum and Adam for 20 epochs, then plot the excess loss $L - L^\star$ per epoch on a log scale and
+     explain what you see, including why Adam with a small learning rate is slow here.
+  4. **Rosenbrock race:** run each optimiser from $(-1.5, 2)$ with divergence detection, plot the paths
+     over log-spaced contours and the loss per step.
+  5. **Learning-rate sweep:** find where each optimiser diverges or stalls, and explain the results with
+     the curvature limit, momentum's $1/(1 - \beta)$ and Adam's per-parameter scaling.
+
+  Stretch tasks add RMSProp, a cosine schedule for SGD, and other starting points.
+notebook: /homework/f6-optimisers.ipynb
+rubric:
+  - "Every check cell for Tasks 1 to 5 prints OK after restarting and running all cells"
+  - "The Rosenbrock gradient was derived on paper with the chain rule before being coded"
+  - "The regression plot shows all four runs on a log y-axis with labelled axes and a legend"
+  - "The Rosenbrock figure shows all three paths over log-spaced contours, with the start and the minimum marked"
+  - "The two written answers explain the results using the learning-rate limit, momentum's 1/(1 − β) and Adam's per-parameter step size"
+compute: "Any laptop or free Colab (CPU), under 15 minutes including reading; all cells together run in well under a minute"

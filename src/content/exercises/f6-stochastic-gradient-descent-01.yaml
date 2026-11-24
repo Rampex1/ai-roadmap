@@ -1,0 +1,56 @@
+id: f6-stochastic-gradient-descent-01
+lesson: foundations/f6/stochastic-gradient-descent
+title: A mini-batch iterator
+prompt: |
+  Write `minibatches(n, batch_size, rng)` that returns a **list** of 1-D integer arrays, the index
+  batches for one epoch over `n` examples:
+
+  1. Shuffle once with `order = rng.permutation(n)` (call it exactly once, so results are reproducible).
+  2. Cut `order` into consecutive slices of length `batch_size`. The last slice may be shorter.
+
+  Add an option `drop_last=False`: when it is `True`, leave out a final batch that is shorter than
+  `batch_size` (some training loops do this so every step averages the same number of examples).
+
+  Check: `len(minibatches(10, 4, np.random.default_rng(0)))` is `3` (sizes 4, 4 and 2), and together the
+  batches contain every index from 0 to 9 exactly once.
+starter: |
+  import numpy as np
+
+  def minibatches(n, batch_size, rng, drop_last=False):
+      order = np.arange(n)
+      return [order]
+solution: |
+  import numpy as np
+
+  def minibatches(n, batch_size, rng, drop_last=False):
+      order = rng.permutation(n)
+      batches = [order[start:start + batch_size] for start in range(0, n, batch_size)]
+      if drop_last and len(batches[-1]) < batch_size:
+          batches = batches[:-1]
+      return batches
+tests: |
+  import numpy as np
+  _b = minibatches(10, 4, np.random.default_rng(0))
+  assert isinstance(_b, list), "Return a list of index arrays"
+  assert [len(x) for x in _b] == [4, 4, 2], f"n = 10 with batch_size 4 should give sizes [4, 4, 2], got {[len(x) for x in _b]}"
+  assert sorted(np.concatenate(_b).tolist()) == list(range(10)), "Every index 0..9 must appear exactly once per epoch"
+  for _n, _bs, _seed in [(10, 4, 0), (100, 32, 7), (7, 7, 3), (5, 10, 1), (64, 16, 2)]:
+      _order = np.random.default_rng(_seed).permutation(_n)
+      _ref = [_order[s:s + _bs] for s in range(0, _n, _bs)]
+      _got = minibatches(_n, _bs, np.random.default_rng(_seed))
+      assert len(_got) == len(_ref), f"n={_n}, batch_size={_bs}: expected {len(_ref)} batches, got {len(_got)}"
+      for _g, _r in zip(_got, _ref):
+          assert np.array_equal(np.asarray(_g), _r), f"n={_n}, batch_size={_bs}: batches should be consecutive slices of rng.permutation(n)"
+  assert not np.array_equal(np.concatenate(minibatches(50, 10, np.random.default_rng(0))), np.arange(50)), "The order must be shuffled, not 0, 1, 2, ..."
+  _d = minibatches(10, 4, np.random.default_rng(0), drop_last=True)
+  assert [len(x) for x in _d] == [4, 4], f"With drop_last=True, n = 10 and batch_size 4 should give sizes [4, 4], got {[len(x) for x in _d]}"
+  _o = np.random.default_rng(0).permutation(10)
+  assert np.array_equal(np.concatenate(_d), _o[:8]), "drop_last should only remove the short final batch"
+  assert [len(x) for x in minibatches(12, 4, np.random.default_rng(0), drop_last=True)] == [4, 4, 4], "When n divides evenly, drop_last removes nothing"
+  _rng = np.random.default_rng(9)
+  _e1 = np.concatenate(minibatches(30, 8, _rng)); _e2 = np.concatenate(minibatches(30, 8, _rng))
+  assert not np.array_equal(_e1, _e2), "Two epochs with the same generator should get different shuffles"
+hints:
+  - "order = rng.permutation(n) gives a shuffled array of 0..n-1."
+  - "range(0, n, batch_size) gives the start of each batch; slicing past the end is safe."
+  - "For drop_last, remove the last batch only if it is shorter than batch_size."
