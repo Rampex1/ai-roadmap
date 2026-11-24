@@ -1,0 +1,91 @@
+items:
+  - id: a11-measure-load-and-tail-latency-01
+    type: mcq
+    prompt: When reporting a failure rate, which denominator keeps timeouts visible?
+    explanation: A timeout consumed an attempt.
+    options:
+      - text: Attempted requests
+        why: A timeout consumed an attempt.
+        correct: true
+      - text: Successful completions only
+        why: That would omit failures.
+      - text: Only accepted batches
+        why: A batch can contain multiple attempts.
+  - id: a11-measure-load-and-tail-latency-02
+    type: mcq
+    prompt: How is on-time goodput calculated?
+    explanation: It counts useful work per time window.
+    options:
+      - text: All attempted requests divided by p95
+        why: That mixes incompatible quantities.
+      - text: Number of model layers per batch
+        why: Layers do not represent completed requests.
+      - text: On-time completions divided by elapsed seconds
+        why: It counts useful work per time window.
+        correct: true
+  - id: a11-measure-load-and-tail-latency-03
+    type: mcq
+    prompt: Why may closed-loop load fall when latency rises?
+    explanation: Slower completions reduce submission rate.
+    options:
+      - text: It generates an unlimited fixed arrival rate
+        why: That describes a different workload model.
+      - text: Latency always triggers a hardware speedup
+        why: The benchmark cannot guarantee that.
+      - text: Clients wait for prior work before sending more
+        why: Slower completions reduce submission rate.
+        correct: true
+  - id: a11-measure-load-and-tail-latency-04
+    type: mcq
+    prompt: Why show the number of completed latency samples?
+    explanation: Nearest ranks are limited by sample size.
+    options:
+      - text: It changes measured latency values
+        why: Reporting does not change measurements.
+      - text: A tail estimate can be coarse with few observations
+        why: Nearest ranks are limited by sample size.
+        correct: true
+      - text: It proves no request failed
+        why: Completion counts need attempted counts too.
+  - id: a11-measure-load-and-tail-latency-05
+    type: multi
+    prompt: Which provide context for a throughput claim?
+    explanation: They describe the pressure on the system. They let readers calculate goodput.
+    options:
+      - text: Offered arrival rate and traffic mix
+        why: They describe the pressure on the system.
+        correct: true
+      - text: Measurement duration and on-time counts
+        why: They let readers calculate goodput.
+        correct: true
+      - text: Only the fastest completed request
+        why: That says little about capacity.
+  - id: a11-measure-load-and-tail-latency-06
+    type: cloze
+    prompt: The rate of useful on-time work is ______.
+    accept:
+      - goodput
+    explanation: Goodput includes only outcomes that meet the specified conditions.
+  - id: a11-measure-load-and-tail-latency-07
+    type: order
+    prompt: Order a load experiment.
+    items:
+      - Fix the offered workload and target
+      - Run a defined observation window
+      - Compute tails, failures and on-time throughput
+      - Compare candidate configurations
+    explanation: Rates are measured under a declared workload.
+  - id: a11-measure-load-and-tail-latency-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def load_summary(latencies, target_ms):
+          from math import ceil
+          succeeded = sorted(value for value in latencies if value is not None)
+          p95 = succeeded[ceil(0.95 * len(succeeded)) - 1] if succeeded else None
+          return {"attempted":len(latencies), "failed":len(latencies)-len(succeeded),
+                  "p95_success_ms":p95, "on_time":sum(value <= target_ms for value in succeeded)}
+
+      print(load_summary([4, 9, None], 6)["on_time"])
+    answer: "1"
+    explanation: Only the 4 ms success meets the target.

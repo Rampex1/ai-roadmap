@@ -1,0 +1,42 @@
+---
+title: Profile a workload before scaling
+module: a11
+order: 1
+estMinutes: 8
+objectives:
+  - Estimate a speedup limit from measured stage times
+  - Distinguish steady-state throughput from request latency
+goDeeper: pytorch-profiler-recipe
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Before adding accelerators, measure representative work. Break a training step into ingestion, CPU preprocessing, transfers, forward and backward passes, and synchronization. Warm up first and synchronize asynchronous device work at timing boundaries. Otherwise a host timer can measure launch overhead while kernels are still running.
+
+<Term id="amdahls-law" /> is useful when an optimization changes only one part of a serial pipeline. If an iteration takes 100 ms and the improved stage occupies 40 ms, making that stage twice as fast gives 60 + 20 = 80 ms. Overall speedup is 100 / 80 = 1.25. Even eliminating it leaves the other 60 ms.
+
+The same arithmetic does not apply directly when stages overlap. A prefetched batch can arrive while an accelerator works on the previous one. In that case inspect the critical path and measure the steady-state rate after warming. Record batch size, workload, hardware and timing scope so others can reproduce the measurement.
+
+## Worked example
+
+Only the 40 ms stage changes.
+
+```python
+def serial_speedup(unchanged_ms, improved_ms, factor):
+    if unchanged_ms < 0 or improved_ms < 0 or unchanged_ms + improved_ms == 0 or factor <= 0:
+        raise ValueError("invalid timing or speed factor")
+    return (unchanged_ms + improved_ms) / (unchanged_ms + improved_ms / factor)
+
+print(serial_speedup(60,40,2))
+```
+
+```text title="Output"
+1.25
+```
+
+Measure the end-to-end effect as well as improvements inside a single stage.
+
+## Try it
+
+<CodeExercise id="a11-profile-the-bottleneck-01" />

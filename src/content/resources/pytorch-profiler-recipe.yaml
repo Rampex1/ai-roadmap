@@ -1,0 +1,6 @@
+title: PyTorch Profiler recipe
+url: https://docs.pytorch.org/tutorials/recipes/recipes/profiler_recipe.html
+kind: tool
+free: true
+modules:
+  - a11

@@ -4,5 +4,7 @@ title: "Scaling"
 order: 11
 prereqs: ["a10"]
 objectives:
-  - "Explain the core ideas of scaling"
-  - "Apply scaling to a working ML project"
+  - Profile bottlenecks and estimate end-to-end speedup
+  - Compute global per-example gradients for distributed training
+  - Choose batching within a queue-delay budget
+  - Measure goodput and tail latency at a specified offered load

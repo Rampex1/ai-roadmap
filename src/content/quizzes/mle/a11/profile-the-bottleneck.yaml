@@ -1,0 +1,92 @@
+items:
+  - id: a11-profile-the-bottleneck-01
+    type: mcq
+    prompt: What limits the example’s maximum speedup?
+    explanation: It remains even if the other work disappears.
+    options:
+      - text: The 60 ms unchanged stage
+        why: It remains even if the other work disappears.
+        correct: true
+      - text: The batch label order
+        why: Label order is not the measured limit.
+      - text: Only the optimized kernel speed
+        why: The rest of the work still takes time.
+  - id: a11-profile-the-bottleneck-02
+    type: mcq
+    prompt: Why synchronize when timing asynchronous work?
+    explanation: Synchronization defines the measured boundary.
+    options:
+      - text: Launch completion may occur before device work finishes
+        why: Synchronization defines the measured boundary.
+        correct: true
+      - text: It removes every permanent bottleneck
+        why: It improves measurement, not throughput.
+      - text: It automatically warms the model
+        why: Warm-up is separate.
+  - id: a11-profile-the-bottleneck-03
+    type: mcq
+    prompt: When is the serial formula inappropriate?
+    explanation: Elapsed time is then not their sum.
+    options:
+      - text: When the timed stages substantially overlap
+        why: Elapsed time is then not their sum.
+        correct: true
+      - text: When stage times use milliseconds
+        why: Consistent units cancel.
+      - text: When improved time is nonzero
+        why: That is a normal input.
+  - id: a11-profile-the-bottleneck-04
+    type: mcq
+    prompt: Why measure after warm-up?
+    explanation: Compilation and caching can distort early runs.
+    options:
+      - text: Startup effects can differ from steady-state performance
+        why: Compilation and caching can distort early runs.
+        correct: true
+      - text: To remove the need to document hardware
+        why: Hardware still matters.
+      - text: To ensure launch time equals wall time
+        why: Device work can remain asynchronous.
+  - id: a11-profile-the-bottleneck-05
+    type: multi
+    prompt: Which belong in a performance report?
+    explanation: Results depend on the work processed. These make the comparison interpretable.
+    options:
+      - text: The workload and batch size
+        why: Results depend on the work processed.
+        correct: true
+      - text: Timing scope and hardware
+        why: These make the comparison interpretable.
+        correct: true
+      - text: Only a percentage without a baseline
+        why: A relative number needs a reference.
+  - id: a11-profile-the-bottleneck-06
+    type: cloze
+    prompt: The unchanged portion limits speedup according to ______ law.
+    accept:
+      - amdahl
+      - amdahls
+      - amdahl’s
+      - amdahl's
+    explanation: The unchanged portion bounds total improvement.
+  - id: a11-profile-the-bottleneck-07
+    type: order
+    prompt: Order a bottleneck investigation.
+    items:
+      - Define the representative workload
+      - Measure stage and whole-run timings
+      - Optimize the measured bottleneck
+      - Rerun the same whole-workload comparison
+    explanation: Measurements determine which stage to optimize.
+  - id: a11-profile-the-bottleneck-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def serial_speedup(unchanged_ms, improved_ms, factor):
+          if unchanged_ms < 0 or improved_ms < 0 or unchanged_ms + improved_ms == 0 or factor <= 0:
+              raise ValueError("invalid timing or speed factor")
+          return (unchanged_ms + improved_ms) / (unchanged_ms + improved_ms / factor)
+
+      print(serial_speedup(10, 10, 5))
+    answer: "1.6666666666666667"
+    explanation: Old time is 20 and revised time is 12; Python prints their ratio.

@@ -1,0 +1,36 @@
+id: a11-batch-inference-requests-01
+lesson: mle/a11/batch-inference-requests
+title: Schedule simple dynamic batches
+prompt: Implement dispatch_batches(arrivals, capacity, delay) for a sorted list of millisecond arrival times. Return (launch_time, batch_arrivals) pairs. Launch at the final arrival when full or at the oldest deadline otherwise. Reject nonpositive capacity and negative delay.
+starter: |
+  def dispatch_batches(arrivals, capacity, delay):
+      raise NotImplementedError
+solution: |
+  def dispatch_batches(arrivals, capacity, delay):
+      if capacity <= 0 or delay < 0:
+          raise ValueError("invalid batch settings")
+      batches = []
+      start = 0
+      while start < len(arrivals):
+          deadline = arrivals[start] + delay
+          end = start
+          while end < len(arrivals) and end - start < capacity and arrivals[end] <= deadline:
+              end += 1
+          launch = arrivals[end - 1] if end - start == capacity else deadline
+          batches.append((launch, arrivals[start:end]))
+          start = end
+      return batches
+tests: |
+  assert dispatch_batches([0,2,3,10],3,4) == [(3,[0,2,3]),(14,[10])]
+  assert dispatch_batches([0,4,5],3,4) == [(4,[0,4]),(9,[5])]
+  assert dispatch_batches([0,0,1],2,0) == [(0,[0,0]),(1,[1])]
+  assert dispatch_batches([],1,1) == []
+  for args in [([1],0,1),([],1,-1)]:
+      try:
+          dispatch_batches(*args)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError("reject nonpositive capacity and negative delay")
+hints:
+  - Find how many arrivals fit by the deadline without exceeding capacity.

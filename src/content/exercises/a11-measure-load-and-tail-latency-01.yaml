@@ -1,0 +1,22 @@
+id: a11-measure-load-and-tail-latency-01
+lesson: mle/a11/measure-load-and-tail-latency
+title: Summarize one load window
+prompt: Implement load_summary(latencies, target_ms) for a list of successful millisecond latencies and None for failures. Return attempted, failed, nearest-rank p95_success_ms or None, and number of successes at or below target.
+starter: |
+  def load_summary(latencies, target_ms):
+      raise NotImplementedError
+solution: |
+  def load_summary(latencies, target_ms):
+      from math import ceil
+      succeeded = sorted(value for value in latencies if value is not None)
+      p95 = succeeded[ceil(0.95 * len(succeeded)) - 1] if succeeded else None
+      return {"attempted":len(latencies), "failed":len(latencies)-len(succeeded),
+              "p95_success_ms":p95, "on_time":sum(value <= target_ms for value in succeeded)}
+tests: |
+  assert load_summary([15,None,60,20],20) == {"attempted":4,"failed":1,"p95_success_ms":60,"on_time":2}
+  assert load_summary([None],10) == {"attempted":1,"failed":1,"p95_success_ms":None,"on_time":0}
+  assert load_summary(list(range(1,21)),19)["p95_success_ms"] == 19
+  assert load_summary(list(range(1,12)),0)["p95_success_ms"] == 11
+  assert load_summary([],5)["attempted"] == 0
+hints:
+  - Sort only successful latencies, but count every attempt.

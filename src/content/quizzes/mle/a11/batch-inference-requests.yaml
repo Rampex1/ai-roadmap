@@ -1,0 +1,99 @@
+items:
+  - id: a11-batch-inference-requests-01
+    type: mcq
+    prompt: What happens when capacity is reached early?
+    explanation: No more wait is needed to fill the batch.
+    options:
+      - text: The fixture launches immediately
+        why: No more wait is needed to fill the batch.
+        correct: true
+      - text: It always waits out the delay
+        why: A full batch launches early.
+      - text: It keeps accepting requests beyond capacity
+        why: Extra arrivals wait for another batch.
+  - id: a11-batch-inference-requests-02
+    type: mcq
+    prompt: Why group compatible requests?
+    explanation: Incompatible versions or heavy padding can hurt.
+    options:
+      - text: To lower accuracy on short requests
+        why: Accuracy is a separate measurement.
+      - text: To remove the need for latency measurements
+        why: Queue policy changes latency.
+      - text: Inputs can share an execution path and efficient shapes
+        why: Incompatible versions or heavy padding can hurt.
+        correct: true
+  - id: a11-batch-inference-requests-03
+    type: mcq
+    prompt: What happens if requests rarely fill the batch?
+    explanation: Low load still needs a time bound.
+    options:
+      - text: The oldest deadline dispatches a partial batch
+        why: Low load still needs a time bound.
+        correct: true
+      - text: The queue can never drain
+        why: The deadline provides a launch condition.
+      - text: All requests are dropped automatically
+        why: The modeled policy dispatches partial batches.
+  - id: a11-batch-inference-requests-04
+    type: mcq
+    prompt: Which latency can grow directly from batching?
+    explanation: The first requests wait for others.
+    options:
+      - text: Only model download time
+        why: Downloads are separate.
+      - text: Only network bandwidth
+        why: Bandwidth is a rate, not a delay metric.
+      - text: Queue delay
+        why: The first requests wait for others.
+        correct: true
+  - id: a11-batch-inference-requests-05
+    type: multi
+    prompt: Which should accompany a batching latency summary?
+    explanation: It defines how heavily queues are loaded. Successful timings omit missing results.
+    options:
+      - text: The offered request rate
+        why: It defines how heavily queues are loaded.
+        correct: true
+      - text: Failure and timeout counts
+        why: Successful timings omit missing results.
+        correct: true
+      - text: Only model parameter count
+        why: Parameter count does not capture queueing.
+  - id: a11-batch-inference-requests-06
+    type: cloze
+    prompt: Waiting briefly to combine requests is dynamic ______.
+    accept:
+      - batching
+    explanation: The scheduler forms groups at runtime.
+  - id: a11-batch-inference-requests-07
+    type: order
+    prompt: Order a batch dispatch.
+    items:
+      - Queue an eligible request
+      - Accumulate compatible arrivals
+      - Reach capacity or the deadline
+      - Launch the selected batch
+    explanation: Capacity or time closes the batch.
+  - id: a11-batch-inference-requests-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def dispatch_batches(arrivals, capacity, delay):
+          if capacity <= 0 or delay < 0:
+              raise ValueError("invalid batch settings")
+          batches = []
+          start = 0
+          while start < len(arrivals):
+              deadline = arrivals[start] + delay
+              end = start
+              while end < len(arrivals) and end - start < capacity and arrivals[end] <= deadline:
+                  end += 1
+              launch = arrivals[end - 1] if end - start == capacity else deadline
+              batches.append((launch, arrivals[start:end]))
+              start = end
+          return batches
+
+      print(dispatch_batches([1, 4, 8], 2, 2))
+    answer: "[(3, [1]), (6, [4]), (10, [8])]"
+    explanation: Each later arrival misses the previous deadline.

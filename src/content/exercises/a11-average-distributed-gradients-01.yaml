@@ -1,0 +1,35 @@
+id: a11-average-distributed-gradients-01
+lesson: mle/a11/average-distributed-gradients
+title: Recover a global per-example gradient
+prompt: Implement global_gradient(rows) for a list of (nonnegative count, finite gradient mean vector) pairs. Reject negative counts and unequal vector lengths. Return None for no examples.
+starter: |
+  def global_gradient(rows):
+      raise NotImplementedError
+solution: |
+  def global_gradient(rows):
+      if not rows:
+          return None
+      width = len(rows[0][1])
+      sums = [0.0] * width
+      total = 0
+      for count, means in rows:
+          if count < 0 or len(means) != width:
+              raise ValueError("invalid local gradient summary")
+          total += count
+          for index, mean in enumerate(means):
+              sums[index] += count * mean
+      return [value / total for value in sums] if total else None
+tests: |
+  assert global_gradient([(1,[0,8]),(3,[4,0])]) == [3,2]
+  assert global_gradient([(0,[9]),(2,[4])]) == [4]
+  assert global_gradient([]) is None
+  assert global_gradient([(0,[1])]) is None
+  for rows in ([(1,[0]),(1,[0,1])],[(-1,[0])]):
+      try:
+          global_gradient(rows)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError("reject inconsistent summaries")
+hints:
+  - Multiply every local mean by its number of examples.

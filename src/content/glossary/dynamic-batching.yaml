@@ -1,0 +1,4 @@
+term: "Dynamic batching"
+short: "Combining compatible requests that arrive close together into a single execution batch."
+body: "A server-side scheduler holds incoming requests until a batch reaches a maximum size or the oldest request reaches a maximum queue delay, then runs them together. Larger batches raise accelerator throughput, and the delay cap limits the extra queue latency each request can take on."
+related: ["latency","request-budget"]

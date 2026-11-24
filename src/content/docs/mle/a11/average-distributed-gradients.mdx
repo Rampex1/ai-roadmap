@@ -1,0 +1,51 @@
+---
+title: Combine gradients across workers
+module: a11
+order: 2
+estMinutes: 8
+objectives:
+  - Distinguish per-worker batches from the effective global batch
+  - Aggregate uneven local means using sample counts
+goDeeper: pytorch-ddp-reference
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+In <Term id="data-parallel-training" />, each worker computes a local gradient and the workers synchronize before updating model parameters. With identical local batch sizes, averaging local per-example gradients gives the global per-example mean. When local sample counts vary, these means need weights proportional to counts. Uniformly averaging a worker with one example and a worker with three overweights the singleton.
+
+Many distributed trainers average gradients over ranks by default. Verify the reduction, each rank's loss normalization and what happens on the final partial batch. The exercise computes the mathematical target for unequal local counts; it does not replace the trainer's reduction setup.
+
+With equal local batch size, the effective batch is local size times worker count times accumulation steps, assuming independent samples and no partial steps. Larger batches can change learning dynamics. Record the global batch, optimizer step count and sample budget before comparing training curves. Communication and stragglers can limit speedup even with correct gradients.
+
+## Worked example
+
+The larger worker contributes three times the weight.
+
+```python
+def global_gradient(rows):
+    if not rows:
+        return None
+    width = len(rows[0][1])
+    sums = [0.0] * width
+    total = 0
+    for count, means in rows:
+        if count < 0 or len(means) != width:
+            raise ValueError("invalid local gradient summary")
+        total += count
+        for index, mean in enumerate(means):
+            sums[index] += count * mean
+    return [value / total for value in sums] if total else None
+
+print(global_gradient([(1,[0,8]),(3,[4,0])]))
+```
+
+```text title="Output"
+[3.0, 2.0]
+```
+
+Inspect the distributed loss and reduction together, especially for incomplete batches.
+
+## Try it
+
+<CodeExercise id="a11-average-distributed-gradients-01" />

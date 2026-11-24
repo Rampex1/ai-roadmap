@@ -1,0 +1,4 @@
+term: "Amdahl’s law"
+short: "The bound on overall speedup imposed by the fraction of work that a proposed improvement leaves unchanged."
+body: "If a fraction p of run time is sped up by a factor s, overall speedup is 1 / ((1 − p) + p/s). As s grows this approaches 1 / (1 − p), so a stage taking 40% of the time can give at most about 1.67× overall. It assumes the stages run one after another."
+related: ["latency","experiment-run"]

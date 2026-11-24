@@ -1,0 +1,6 @@
+title: "Google SRE book, chapter 4: Service Level Objectives"
+url: https://sre.google/sre-book/service-level-objectives/
+kind: book
+free: true
+modules:
+  - a11

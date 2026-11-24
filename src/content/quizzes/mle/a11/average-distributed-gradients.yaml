@@ -1,0 +1,98 @@
+items:
+  - id: a11-average-distributed-gradients-01
+    type: mcq
+    prompt: When is the unweighted mean of local means valid here?
+    explanation: The workers then represent equal numbers of examples.
+    options:
+      - text: Whenever workers have the same hardware
+        why: Hardware does not set sample counts.
+      - text: When local batch sizes are equal
+        why: The workers then represent equal numbers of examples.
+        correct: true
+      - text: Only when gradients are all positive
+        why: Signs do not determine weights.
+  - id: a11-average-distributed-gradients-02
+    type: mcq
+    prompt: How many examples contribute to one update when each of two workers processes four distinct examples per accumulation step and the update follows three full steps?
+    explanation: Multiply the three counts under the stated assumptions.
+    options:
+      - text: 24 examples
+        why: Multiply the three counts under the stated assumptions.
+        correct: true
+      - text: 8 examples
+        why: That omits accumulation.
+      - text: 12 examples
+        why: That omits the worker count.
+  - id: a11-average-distributed-gradients-03
+    type: mcq
+    prompt: Why can throughput scale sublinearly?
+    explanation: Workers can wait for communication and slower ranks.
+    options:
+      - text: More workers guarantee faster iteration
+        why: Training may be bottlenecked elsewhere.
+      - text: All ranks have no communication
+        why: Correct synchronized updates involve a reduction.
+      - text: Synchronization and stragglers add overhead
+        why: Workers can wait for communication and slower ranks.
+        correct: true
+  - id: a11-average-distributed-gradients-04
+    type: mcq
+    prompt: What should be checked for a partial batch?
+    explanation: Unequal means can otherwise be misweighted.
+    options:
+      - text: The per-rank counts and reduction semantics
+        why: Unequal means can otherwise be misweighted.
+        correct: true
+      - text: Only the file names
+        why: They do not identify counts.
+      - text: Only the validation labels
+        why: The question concerns gradient aggregation.
+  - id: a11-average-distributed-gradients-05
+    type: multi
+    prompt: Which affect a fair scaling comparison?
+    explanation: It can change optimization behaviour. Both govern the learning schedule.
+    options:
+      - text: Training examples and optimizer steps
+        why: Both govern the learning schedule.
+        correct: true
+      - text: Only the reported number of hosts
+        why: Hosts alone do not fix the workload.
+      - text: Global batch size
+        why: It can change optimization behaviour.
+        correct: true
+  - id: a11-average-distributed-gradients-06
+    type: cloze
+    prompt: Each worker has a replica in data-______ training.
+    accept:
+      - parallel
+    explanation: Workers process different input data with the same replicated model.
+  - id: a11-average-distributed-gradients-07
+    type: order
+    prompt: Order one synchronous update.
+    items:
+      - Distribute distinct examples
+      - Compute local gradients
+      - Reduce to a common gradient
+      - Update the replicated weights
+    explanation: Reduction happens before synchronized optimizer steps.
+  - id: a11-average-distributed-gradients-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def global_gradient(rows):
+          if not rows:
+              return None
+          width = len(rows[0][1])
+          sums = [0.0] * width
+          total = 0
+          for count, means in rows:
+              if count < 0 or len(means) != width:
+                  raise ValueError("invalid local gradient summary")
+              total += count
+              for index, mean in enumerate(means):
+                  sums[index] += count * mean
+          return [value / total for value in sums] if total else None
+
+      print(global_gradient([(2, [1]), (2, [3])]))
+    answer: "[2.0]"
+    explanation: Both workers have equal counts, so the mean is two.

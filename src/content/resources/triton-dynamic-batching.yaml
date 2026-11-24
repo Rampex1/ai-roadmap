@@ -1,0 +1,6 @@
+title: NVIDIA Triton batchers guide
+url: https://docs.nvidia.com/deeplearning/triton-inference-server/archives/triton-inference-server-2620/user-guide/docs/user_guide/batcher.html
+kind: tool
+free: true
+modules:
+  - a11

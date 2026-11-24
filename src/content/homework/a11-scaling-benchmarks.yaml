@@ -1,0 +1,22 @@
+id: a11-scaling-benchmarks
+module: a11
+kind: homework
+title: Compare scaling decisions using measurement fixtures
+brief: |-
+  A classifier needs a reproducible scaling report. Use a serial timing trace, worker summaries, request arrivals and served latencies to compare candidate resource decisions.
+
+  1. Calculate the effect of speeding up one stage.
+  2. Reduce local means with per-example weights.
+  3. Schedule dynamic batches under a size and wait bound.
+  4. Report latency percentiles, failures and on-time completions.
+  5. Compare simulated batching policies with the same arrivals.
+
+  Choose whether to add workers, optimize ingestion or change a batch deadline. State the measurement that would justify the choice and a controlled comparison you would run next.
+notebook: /homework/a11-scaling-benchmarks.ipynb
+rubric:
+  - The speedup uses wall times under explicit assumptions.
+  - Uneven workers are weighted correctly.
+  - Batch dispatch respects size and wait limits.
+  - The report retains attempted, failed and on-time counts.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

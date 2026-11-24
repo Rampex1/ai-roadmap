@@ -1,0 +1,52 @@
+---
+title: Batch inference within a delay budget
+module: a11
+order: 3
+estMinutes: 8
+objectives:
+  - Explain the latency-throughput trade-off in dynamic batching
+  - Schedule launches under a batch size and delay cap
+goDeeper: triton-dynamic-batching
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+<Term id="dynamic-batching" /> can increase accelerator utilization. Waiting briefly allows compatible requests to run in a larger batch. The benefit is higher throughput at the possible cost of added queue delay. At low arrival rates, a target batch may rarely fill. Enforce an oldest-request delay cap rather than waiting indefinitely.
+
+Bucket only compatible requests, such as inputs that share a model version and appropriate shape. Padding very long inputs together with short inputs can waste compute. Measure queue time and service time separately. Compare p95 or p99 at a fixed offered load and report timeouts and rejects alongside successful latency.
+
+The fixture models one compatible queue with sorted arrival times. It ignores the accelerator's busy periods and treats launch as instantaneous. A batch dispatches when full or when the oldest arrival reaches its delay. Arrivals at the deadline can join if capacity permits.
+
+## Worked example
+
+The first queue fills before its deadline; the last request waits out its delay.
+
+```python
+def dispatch_batches(arrivals, capacity, delay):
+    if capacity <= 0 or delay < 0:
+        raise ValueError("invalid batch settings")
+    batches = []
+    start = 0
+    while start < len(arrivals):
+        deadline = arrivals[start] + delay
+        end = start
+        while end < len(arrivals) and end - start < capacity and arrivals[end] <= deadline:
+            end += 1
+        launch = arrivals[end - 1] if end - start == capacity else deadline
+        batches.append((launch, arrivals[start:end]))
+        start = end
+    return batches
+
+print(dispatch_batches([0,2,3,10], 3, 4))
+```
+
+```text title="Output"
+[(3, [0, 2, 3]), (14, [10])]
+```
+
+Choose a batching policy using end-to-end latency and rejects at a repeatable load.
+
+## Try it
+
+<CodeExercise id="a11-batch-inference-requests-01" />

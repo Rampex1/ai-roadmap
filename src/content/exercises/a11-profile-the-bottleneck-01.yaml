@@ -1,0 +1,26 @@
+id: a11-profile-the-bottleneck-01
+lesson: mle/a11/profile-the-bottleneck
+title: Estimate serial workload speedup
+prompt: Implement serial_speedup(unchanged_ms, improved_ms, factor) for finite nonnegative times totalling more than zero and a finite positive factor. Reject invalid times or nonpositive factors.
+starter: |
+  def serial_speedup(unchanged_ms, improved_ms, factor):
+      raise NotImplementedError
+solution: |
+  def serial_speedup(unchanged_ms, improved_ms, factor):
+      if unchanged_ms < 0 or improved_ms < 0 or unchanged_ms + improved_ms == 0 or factor <= 0:
+          raise ValueError("invalid timing or speed factor")
+      return (unchanged_ms + improved_ms) / (unchanged_ms + improved_ms / factor)
+tests: |
+  assert serial_speedup(60,40,2) == 1.25
+  assert serial_speedup(0,10,2) == 2
+  assert serial_speedup(10,0,5) == 1
+  assert serial_speedup(5,5,0.5) < 1
+  for args in [(0,0,1),(-1,2,1),(2,1,0)]:
+      try:
+          serial_speedup(*args)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError("reject invalid input")
+hints:
+  - Divide the old total by the revised total.
