@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 240" width="720" height="240" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>The unit square under four linear maps: a scaling stretches it into a wide flat rectangle, a 45 degree rotation turns it into a diamond, a shear slants it into a parallelogram, and a projection onto the x-axis flattens it into a segment</title>
+  <defs>
+    <marker id="f3t-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="#0f766e"/></marker>
+    <marker id="f3t-indigo" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="#4f46e5"/></marker>
+  </defs>
+  <g font-size="15" font-weight="700" fill="#8b93b8" text-anchor="middle">
+    <text x="100" y="34">Scale</text>
+    <text x="275" y="34">Rotate 45°</text>
+    <text x="450" y="34">Shear</text>
+    <text x="625" y="34">Project onto x-axis</text>
+  </g>
+  <g font-size="13" fill="#8b93b8" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace">
+    <text x="100" y="196">[[1.5, 0],</text><text x="100" y="214"> [0, 0.5]]</text>
+    <text x="275" y="196">[[0.71, -0.71],</text><text x="275" y="214"> [0.71,  0.71]]</text>
+    <text x="450" y="196">[[1, 1],</text><text x="450" y="214"> [0, 1]]</text>
+    <text x="625" y="196">[[1, 0],</text><text x="625" y="214"> [0, 0]]</text>
+  </g>
+  <!-- axes -->
+  <g stroke="#8b93b8" stroke-width="1.5" opacity="0.6">
+    <path d="M50 150H170M70 170V60"/>
+    <path d="M215 150H335M270 170V60"/>
+    <path d="M380 150H520M400 170V60"/>
+    <path d="M560 150H680M580 170V60"/>
+  </g>
+  <!-- original unit square, dashed -->
+  <g fill="none" stroke="#8b93b8" stroke-width="1.5" stroke-dasharray="4 4">
+    <path d="M70 150H120V100H70z"/>
+    <path d="M270 150H320V100H270z"/>
+    <path d="M400 150H450V100H400z"/>
+    <path d="M580 150H630V100H580z"/>
+  </g>
+  <!-- transformed square -->
+  <g fill="#d97706" fill-opacity="0.25" stroke="#d97706" stroke-width="2">
+    <path d="M70 150L145 150L145 125L70 125z"/>
+    <path d="M270 150L305.4 114.6L270 79.3L234.6 114.6z"/>
+    <path d="M400 150L450 150L500 100L450 100z"/>
+    <path d="M580 150L630 150" stroke-width="5"/>
+  </g>
+  <!-- images of e1 (teal) and e2 (indigo) -->
+  <g stroke-width="2.5" fill="none">
+    <path d="M70 150L145 150" stroke="#0f766e" marker-end="url(#f3t-teal)"/>
+    <path d="M70 150L70 125" stroke="#4f46e5" marker-end="url(#f3t-indigo)"/>
+    <path d="M270 150L305.4 114.6" stroke="#0f766e" marker-end="url(#f3t-teal)"/>
+    <path d="M270 150L234.6 114.6" stroke="#4f46e5" marker-end="url(#f3t-indigo)"/>
+    <path d="M400 150L450 150" stroke="#0f766e" marker-end="url(#f3t-teal)"/>
+    <path d="M400 150L450 100" stroke="#4f46e5" marker-end="url(#f3t-indigo)"/>
+    <path d="M580 150L630 150" stroke="#0f766e" marker-end="url(#f3t-teal)"/>
+  </g>
+  <circle cx="580" cy="150" r="4" fill="#4f46e5"/>
+  <g font-size="12" fill="#8b93b8">
+    <text x="360" y="234" text-anchor="middle">Dashed: the unit square. Orange: its image. Teal: where e1 lands (column 1). Indigo: where e2 lands (column 2).</text>
+  </g>
+</svg>

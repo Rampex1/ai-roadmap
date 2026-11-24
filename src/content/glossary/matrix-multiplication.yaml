@@ -1,0 +1,7 @@
+term: "Matrix multiplication"
+short: "The product AB of an m×n and an n×p matrix is m×p; entry (i, j) is row i of A dotted with column j of B."
+body: |
+  The inner sizes must match. $AB$ means "apply $B$, then $A$", so order matters and in general
+  $AB \ne BA$. It is associative, $(AB)C = A(BC)$. In NumPy use `A @ B`; `A * B` is element-wise and
+  is a different operation.
+related: ["matrix", "transpose", "linear-transformation"]

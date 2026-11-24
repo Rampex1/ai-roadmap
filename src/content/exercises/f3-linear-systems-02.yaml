@@ -1,0 +1,35 @@
+id: f3-linear-systems-02
+lesson: foundations/f3/linear-systems
+title: Fit a line with the normal equations
+prompt: |
+  Write `fit_line(x, y)` that fits $y \approx w_0 + w_1 x$ by least squares and returns the array
+  `[w0, w1]`.
+
+  1. Build the design matrix `X` whose rows are $(1, x_i)$ (try `np.column_stack`).
+  2. Solve the normal equations $X^\top X\,\mathbf{w} = X^\top\mathbf{y}$ with `np.linalg.solve`.
+
+  Do not use `np.linalg.lstsq` or `np.polyfit`; the tests compare against them.
+starter: |
+  import numpy as np
+
+  def fit_line(x, y):
+      # TODO: design matrix, then the normal equations
+      return np.array([0.0, 0.0])
+solution: |
+  import numpy as np
+
+  def fit_line(x, y):
+      X = np.column_stack([np.ones_like(x), x])
+      return np.linalg.solve(X.T @ X, X.T @ y)
+tests: |
+  import numpy as np
+  np.testing.assert_allclose(fit_line(np.array([0.0, 1.0, 2.0]), np.array([1.0, 3.0, 5.0])), [1.0, 2.0], atol=1e-9, err_msg="Points on y = 1 + 2x should give [1, 2]")
+  np.testing.assert_allclose(fit_line(np.array([0.0, 1.0, 2.0, 3.0, 4.0]), np.array([1.1, 2.9, 5.2, 7.1, 8.8])), [1.1, 1.96], atol=1e-9, err_msg="The lesson example should give about [1.1, 1.96]")
+  _rng = np.random.default_rng(12)
+  _x = _rng.uniform(-3, 3, size=40)
+  _y = -0.5 + 3.0 * _x + _rng.normal(scale=0.3, size=40)
+  _want = np.polyfit(_x, _y, 1)[::-1]
+  np.testing.assert_allclose(fit_line(_x, _y), _want, rtol=1e-8, err_msg="Wrong fit for 40 noisy points; compare with np.polyfit")
+hints:
+  - "X = np.column_stack([np.ones_like(x), x]) gives rows (1, x_i)."
+  - "w = np.linalg.solve(X.T @ X, X.T @ y)."

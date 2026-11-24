@@ -1,0 +1,7 @@
+term: "Basis"
+short: "A set of linearly independent vectors whose combinations reach every vector in the space; its size is the dimension."
+body: |
+  The standard basis of $\mathbb{R}^n$ is $\mathbf{e}_1, \dots, \mathbf{e}_n$. Every vector has exactly
+  one set of coordinates in a given basis. PCA picks a new basis aligned with the directions in which
+  the data varies most.
+related: ["linear-independence", "rank", "pca"]

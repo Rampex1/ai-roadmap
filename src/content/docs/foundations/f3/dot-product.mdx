@@ -1,0 +1,246 @@
+---
+title: "Dot product, length and cosine similarity"
+module: f3
+order: 2
+estMinutes: 20
+objectives:
+  - "Compute a dot product by hand, with a loop and with NumPy, and read it as a weighted sum"
+  - "Compute a vector's length (norm), the distance between two points and a unit vector"
+  - "Use the dot product to find the angle between vectors and compute cosine similarity"
+  - "Explain why cosine similarity is used to compare embeddings"
+goDeeper: 3b1b-essence-linear-algebra
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+The [previous lesson](/foundations/f3/vectors/) gave you vectors and two ways to combine them, adding
+and scaling. This lesson adds the most important operation in all of ML: the
+<Term id="dot-product" />. It turns two vectors into one number, and that number measures how much
+they agree. A linear model's prediction, a neuron's input, an attention score in a transformer and
+a search engine's relevance score are all dot products.
+
+## The definition: multiply and add
+
+Take two vectors of the same length, multiply them component by component, and add up the products:
+
+$$
+\mathbf{a}\cdot\mathbf{b} = a_1 b_1 + a_2 b_2 + \dots + a_n b_n = \sum_{i=1}^{n} a_i b_i
+$$
+
+For $\mathbf{a} = (1, 2, 3)$ and $\mathbf{b} = (4, -5, 6)$:
+
+$$
+\mathbf{a}\cdot\mathbf{b} = 1\cdot 4 + 2\cdot(-5) + 3\cdot 6 = 4 - 10 + 18 = 12
+$$
+
+The result is a single number (a scalar), not a vector. In code you can write the loop yourself,
+or let NumPy do it with `np.dot` or the `@` operator:
+
+```python
+import numpy as np
+
+a = np.array([1.0, 2.0, 3.0])
+b = np.array([4.0, -5.0, 6.0])
+
+total = 0.0
+for i in range(len(a)):
+    total += a[i] * b[i]
+print(total)
+print(np.dot(a, b))
+print(a @ b)
+print(np.sum(a * b))   # element-wise product, then sum
+```
+
+```text title="Output"
+12.0
+12.0
+12.0
+12.0
+```
+
+All four agree. Use `a @ b` in real code: it is short and runs in fast compiled code. Note that `a * b`
+on its own is the element-wise product `[4, -10, 18]`, a vector; you still have to add it up.
+
+## A weighted sum: the linear model
+
+Read $\mathbf{w}\cdot\mathbf{x}$ as "a weighted sum of the features of $\mathbf{x}$, with weights
+$\mathbf{w}$". That is exactly a linear model. To predict a house price from area, bedrooms and age:
+
+$$
+\hat{y} = \mathbf{w}\cdot\mathbf{x} + b = w_1 x_1 + w_2 x_2 + w_3 x_3 + b
+$$
+
+Here $\hat{y}$ ("y hat") is the prediction and $b$ is a constant called the bias.
+
+```python
+import numpy as np
+
+x = np.array([120.0, 3.0, 15.0])     # area, bedrooms, age
+w = np.array([2.5, 10.0, -1.0])      # price per unit of each feature, in thousands
+b = 50.0
+print(w @ x + b)
+```
+
+```text title="Output"
+365.0
+```
+
+Positive weights push the prediction up, negative ones (age, here) push it down, and larger weights
+matter more. A single artificial neuron computes exactly this, then passes it through a nonlinear
+function. Training a model means finding good weights.
+
+## Length: the norm
+
+The length of a vector comes from Pythagoras. In 2-D, the arrow $(3, 4)$ is the long side of a right
+triangle with sides 3 and 4, so its length is $\sqrt{3^2 + 4^2} = 5$. The same formula works in any
+dimension, and it is the square root of the vector dotted with itself:
+
+$$
+\lVert\mathbf{v}\rVert = \sqrt{v_1^2 + v_2^2 + \dots + v_n^2} = \sqrt{\mathbf{v}\cdot\mathbf{v}}
+$$
+
+This is the (Euclidean, or L2) <Term id="vector-norm" text="norm" />. Two related ideas:
+
+- **Distance.** The distance between points $\mathbf{a}$ and $\mathbf{b}$ is the length of the arrow
+  between them, $\lVert\mathbf{a} - \mathbf{b}\rVert$. Nearest-neighbour methods are built on it.
+- **Unit vectors.** Dividing a nonzero vector by its length gives a vector of length 1 pointing the
+  same way, $\hat{\mathbf{v}} = \mathbf{v} / \lVert\mathbf{v}\rVert$. This is called **normalising**.
+
+```python
+import numpy as np
+
+v = np.array([3.0, 4.0])
+print(np.sqrt(v @ v))
+print(np.linalg.norm(v))
+
+a = np.array([1.0, 1.0])
+b = np.array([4.0, 5.0])
+print(np.linalg.norm(a - b))     # distance
+
+u = v / np.linalg.norm(v)
+print(u, np.linalg.norm(u))
+```
+
+```text title="Output"
+5.0
+5.0
+5.0
+[0.6 0.8] 1.0
+```
+
+:::note[Other norms]
+You will also meet the L1 norm, $\lVert\mathbf{v}\rVert_1 = |v_1| + \dots + |v_n|$ (the "taxicab"
+distance), for example in L1 regularisation later in the course. `np.linalg.norm(v, 1)` computes it. When people
+say "the norm" without a subscript they almost always mean L2.
+:::
+
+## The angle between two vectors
+
+Here is the geometric meaning of the dot product. If $\theta$ is the angle between the arrows
+$\mathbf{a}$ and $\mathbf{b}$, then
+
+$$
+\mathbf{a}\cdot\mathbf{b} = \lVert\mathbf{a}\rVert\,\lVert\mathbf{b}\rVert\cos\theta
+$$
+
+You do not need to prove this to use it (the 3Blue1Brown video on dot products gives a lovely
+picture of why it holds). Since lengths are never negative, the **sign** of the dot product comes
+from $\cos\theta$:
+
+| Angle $\theta$ | $\cos\theta$ | Dot product | Meaning |
+|---|---|---|---|
+| $0°$ | $1$ | largest positive | same direction |
+| under $90°$ | positive | positive | roughly agree |
+| $90°$ | $0$ | zero | perpendicular (**orthogonal**) |
+| over $90°$ | negative | negative | roughly disagree |
+| $180°$ | $-1$ | most negative | opposite directions |
+
+So $\mathbf{a}\cdot\mathbf{b} = 0$ is a quick test for "at right angles". For example
+$(1, 2)\cdot(-2, 1) = -2 + 2 = 0$.
+
+Rearranging gives the angle itself:
+
+```python
+import numpy as np
+
+a = np.array([1.0, 0.0])
+b = np.array([1.0, 1.0])
+cos_theta = (a @ b) / (np.linalg.norm(a) * np.linalg.norm(b))
+print(round(cos_theta, 4))
+print(np.degrees(np.arccos(cos_theta)))
+```
+
+```text title="Output"
+0.7071
+45.00000000000001
+```
+
+The tiny error at the end is floating point (F1), not a mistake.
+
+## Cosine similarity
+
+The quantity we just computed has its own name:
+
+$$
+\text{cos\_sim}(\mathbf{a}, \mathbf{b}) = \frac{\mathbf{a}\cdot\mathbf{b}}{\lVert\mathbf{a}\rVert\,\lVert\mathbf{b}\rVert}
+$$
+
+<Term id="cosine-similarity" text="Cosine similarity" /> runs from $-1$ (opposite) through $0$
+(unrelated) to $1$ (same direction). Crucially, it **ignores length**: $\mathbf{a}$ and
+$10\,\mathbf{a}$ have cosine similarity 1.
+
+That is why it is the standard way to compare **embeddings**. A model maps each word, sentence or
+image to a vector, trained so that things with similar meaning point in similar directions. The
+length often reflects things like word frequency or text length, which you usually want to ignore.
+Here is a toy example with made-up 4-D "embeddings" (real ones have hundreds of dimensions):
+
+```python
+import numpy as np
+
+def cos_sim(a, b):
+    return (a @ b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
+cat    = np.array([0.9, 0.8, 0.1, 0.0])
+kitten = np.array([0.8, 0.9, 0.2, 0.1])
+car    = np.array([0.1, 0.0, 0.9, 0.8])
+
+print(round(cos_sim(cat, kitten), 3))
+print(round(cos_sim(cat, car), 3))
+print(round(cos_sim(cat, 10 * cat), 3))
+```
+
+```text title="Output"
+0.987
+0.123
+1.0
+```
+
+Semantic search, recommendation and retrieval-augmented generation (RAG, in Track C) all boil down
+to: embed the query, compute its cosine similarity with every stored vector, return the top few.
+
+:::tip[Normalise once, then just dot]
+If every vector already has length 1, cosine similarity is just the dot product. Vector databases
+often normalise stored embeddings once, then score a query against a whole matrix of them with a
+single matrix-vector product, which you will meet in [lesson 3](/foundations/f3/matrices/).
+:::
+
+:::caution[The zero vector]
+Cosine similarity divides by the lengths, so it is undefined if either vector is all zeros. NumPy
+gives `nan` and a warning. Real code checks for this or adds a tiny number to the denominator.
+:::
+
+## Try it
+
+<CodeExercise id="f3-dot-product-01" />
+
+<CodeExercise id="f3-dot-product-02" />
+
+<CodeExercise id="f3-dot-product-03" />
+
+## Summary
+
+- $\mathbf{a}\cdot\mathbf{b} = \sum_i a_i b_i$, a single number. In NumPy: `a @ b`.
+- $\mathbf{w}\cdot\mathbf{x} + b$ is a linear model: a weighted sum of features.
+- $\lVert\mathbf{v}\rVert = \sqrt{\mathbf{v}\cdot\mathbf{v}}$; distance is $\lVert\mathbf{a}-\mathbf{b}\rVert$; $\mathbf{v}/\lVert\mathbf{v}\rVert$ is a unit vector.
+- $\mathbf{a}\cdot\mathbf{b} = \lVert\mathbf{a}\rVert\lVert\mathbf{b}\rVert\cos\theta$: positive means same general direction, zero means perpendicular.
+- Cosine similarity compares direction only, which is why it is used to compare embeddings.

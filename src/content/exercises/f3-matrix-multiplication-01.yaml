@@ -1,0 +1,57 @@
+id: f3-matrix-multiplication-01
+lesson: foundations/f3/matrix-multiplication
+title: Matrix multiplication with loops
+prompt: |
+  Write `matmul(A, B)` that returns the product $AB$ of two 2-D arrays using three nested loops and
+  the rule $C_{ij} = \sum_k A_{ik} B_{kj}$ (no `@`, no `np.dot`, no `np.matmul`).
+
+  If the inner sizes do not match (the number of columns of `A` differs from the number of rows of
+  `B`), raise a `ValueError`. The tests compare your result with `A @ B`.
+starter: |
+  import numpy as np
+
+  def matmul(A, B):
+      m, n = A.shape
+      n2, p = B.shape
+      C = np.zeros((m, p))
+      # TODO: check the shapes, then fill C[i, j]
+      return C
+solution: |
+  import numpy as np
+
+  def matmul(A, B):
+      m, n = A.shape
+      n2, p = B.shape
+      if n != n2:
+          raise ValueError(f"cannot multiply ({m}, {n}) by ({n2}, {p})")
+      C = np.zeros((m, p))
+      for i in range(m):
+          for j in range(p):
+              for k in range(n):
+                  C[i, j] += A[i, k] * B[k, j]
+      return C
+tests: |
+  import linecache as _lc, re as _re
+  _code = _re.sub(r"#.*", "", "".join(_lc.cache["<your code>"][2]))
+  for _bad in ['@', 'np.dot', '.dot(', 'np.matmul', 'np.einsum', 'np.tensordot']:
+      assert _bad not in _code, f"Use three nested loops here: do not use @, np.dot or np.matmul (found {_bad})"
+  import numpy as np
+  _A = np.array([[1.0, 2.0], [3.0, 4.0]])
+  _B = np.array([[5.0, 6.0], [7.0, 8.0]])
+  np.testing.assert_allclose(matmul(_A, _B), [[19.0, 22.0], [43.0, 50.0]], err_msg="A @ B should be [[19, 22], [43, 50]]")
+  np.testing.assert_allclose(matmul(_B, _A), [[23.0, 34.0], [31.0, 46.0]], err_msg="B @ A should be [[23, 34], [31, 46]]")
+  _rng = np.random.default_rng(7)
+  for _m, _n, _p in [(2, 3, 4), (1, 5, 1), (4, 1, 3)]:
+      _X, _Y = _rng.normal(size=(_m, _n)), _rng.normal(size=(_n, _p))
+      _C = matmul(_X, _Y)
+      assert np.shape(_C) == (_m, _p), f"({_m}x{_n}) times ({_n}x{_p}) should have shape ({_m}, {_p}), got {np.shape(_C)}"
+      np.testing.assert_allclose(_C, _X @ _Y, err_msg=f"Wrong result for ({_m}x{_n}) times ({_n}x{_p})")
+  try:
+      matmul(np.ones((2, 3)), np.ones((2, 3)))
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("matmul should raise ValueError for (2x3) times (2x3)")
+hints:
+  - "The result has shape (m, p): rows of A by columns of B."
+  - "Loop over i in range(m) and j in range(p); inside, loop over k in range(n) and add A[i, k] * B[k, j]."

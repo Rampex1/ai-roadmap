@@ -1,0 +1,45 @@
+id: f3-span-and-rank-02
+lesson: foundations/f3/span-and-rank
+title: Drop redundant features
+prompt: |
+  A data matrix `X` may contain columns that are combinations of earlier columns (the same quantity
+  in two units, or a "total" column that is the sum of others). Write `keep_columns(X)` that returns a
+  list of column indices to keep, going **left to right**: keep column `j` only if adding it to the
+  columns already kept **increases the rank**.
+
+  The kept columns are then independent and span the same space as all the columns of `X`.
+starter: |
+  import numpy as np
+
+  def keep_columns(X):
+      kept = []
+      # TODO: for each column j, keep it if it raises the rank
+      return list(range(X.shape[1]))
+solution: |
+  import numpy as np
+
+  def keep_columns(X):
+      kept = []
+      rank = 0
+      for j in range(X.shape[1]):
+          r = np.linalg.matrix_rank(X[:, kept + [j]])
+          if r > rank:
+              kept.append(j)
+              rank = r
+      return kept
+tests: |
+  import numpy as np
+  _h = np.array([1.62, 1.75, 1.80, 1.68, 1.59])
+  _w = np.array([60.0, 72.0, 80.0, 65.0, 52.0])
+  _X = np.column_stack([_h, _h * 100, _w])
+  assert list(keep_columns(_X)) == [0, 2], f"Height in cm duplicates height in m: expected [0, 2], got {keep_columns(_X)}"
+  _rng = np.random.default_rng(13)
+  _A = _rng.normal(size=(20, 3))
+  _Y = np.column_stack([_A[:, 0], _A[:, 1], _A[:, 0] + _A[:, 1], np.zeros(20), _A[:, 2], 2 * _A[:, 2] - _A[:, 0]])
+  assert list(keep_columns(_Y)) == [0, 1, 4], f"Expected [0, 1, 4]; columns 2, 3 and 5 are combinations of earlier ones (or zero). Got {keep_columns(_Y)}"
+  _Z = _rng.normal(size=(10, 4))
+  assert list(keep_columns(_Z)) == [0, 1, 2, 3], "Four random columns are independent: keep them all"
+hints:
+  - "Keep a list kept and the current rank, starting at 0."
+  - "X[:, kept + [j]] selects the kept columns plus column j."
+  - "Keep j when np.linalg.matrix_rank of that selection is larger than the current rank."

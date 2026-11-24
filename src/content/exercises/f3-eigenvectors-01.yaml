@@ -1,0 +1,48 @@
+id: f3-eigenvectors-01
+lesson: foundations/f3/eigenvectors
+title: Power iteration
+prompt: |
+  Write `power_iteration(A, steps)` that finds the dominant eigenvector of a square matrix `A` (the one
+  whose eigenvalue has the largest absolute value):
+
+  1. Start from `x = np.ones(n)` where `n` is the size of `A`.
+  2. Repeat `steps` times: `x = A @ x`, then divide `x` by its norm.
+  3. Return the tuple `(lam, x)` where `lam = x @ A @ x` is the eigenvalue estimate.
+
+  Do not use `np.linalg.eig` (the tests use it to check you).
+starter: |
+  import numpy as np
+
+  def power_iteration(A, steps=100):
+      x = np.ones(A.shape[0])
+      # TODO
+      lam = 0.0
+      return lam, x
+solution: |
+  import numpy as np
+
+  def power_iteration(A, steps=100):
+      x = np.ones(A.shape[0])
+      for _ in range(steps):
+          x = A @ x
+          x = x / np.linalg.norm(x)
+      lam = x @ A @ x
+      return lam, x
+tests: |
+  import math
+  import numpy as np
+  _lam, _v = power_iteration(np.array([[2.0, 1.0], [1.0, 2.0]]), 50)
+  assert math.isclose(_lam, 3.0, rel_tol=1e-6), f"The dominant eigenvalue of [[2, 1], [1, 2]] is 3, got {_lam}"
+  assert math.isclose(abs(_v @ np.array([1.0, 1.0]) / math.sqrt(2)), 1.0, rel_tol=1e-6), "The eigenvector should point along (1, 1)"
+  assert math.isclose(np.linalg.norm(_v), 1.0, rel_tol=1e-9), "Return a unit vector"
+  _rng = np.random.default_rng(14)
+  _M = _rng.normal(size=(5, 5))
+  _S = _M @ _M.T + np.diag([10.0, 0, 0, 0, 0])
+  _vals, _vecs = np.linalg.eigh(_S)
+  _lam, _v = power_iteration(_S, 500)
+  assert math.isclose(_lam, _vals[-1], rel_tol=1e-6), f"For a random symmetric 5x5 matrix expected eigenvalue {_vals[-1]:.4f}, got {_lam}"
+  assert math.isclose(abs(_v @ _vecs[:, -1]), 1.0, rel_tol=1e-6), "The vector should match the top eigenvector (up to sign)"
+  np.testing.assert_allclose(_S @ _v, _lam * _v, atol=1e-6, err_msg="A @ v should equal lam * v")
+hints:
+  - "Inside a for loop: x = A @ x, then x = x / np.linalg.norm(x)."
+  - "After the loop, x @ A @ x is the eigenvalue estimate because x has length 1."

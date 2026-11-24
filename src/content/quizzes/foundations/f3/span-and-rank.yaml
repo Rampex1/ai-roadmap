@@ -1,0 +1,93 @@
+items:
+  - id: f3-span-and-rank-01
+    type: mcq
+    prompt: "What is the span of $(2, 1)$ and $(-4, -2)$ in $\\mathbb{R}^2$?"
+    explanation: "$(-4, -2) = -2\\,(2, 1)$, so it adds no new direction. Every combination lies on the line through $(2, 1)$."
+    options:
+      - text: The line through the origin and (2, 1)
+        correct: true
+        why: The second vector is a multiple of the first.
+      - text: The whole plane
+        why: That would need two vectors in different directions.
+      - text: Just the two points (2, 1) and (-4, -2)
+        why: The span includes every combination, such as 0.5 (2, 1).
+  - id: f3-span-and-rank-02
+    type: multi
+    prompt: "Which sets of vectors are linearly **dependent**?"
+    explanation: "A set is dependent if some vector is a combination of the others. Containing zero, having a multiple, or having more vectors than dimensions all force dependence."
+    options:
+      - text: (1, 0), (0, 1), (5, 7)
+        correct: true
+        why: Three vectors in 2-D; (5, 7) = 5 e1 + 7 e2.
+      - text: (1, 2, 3), (2, 4, 6)
+        correct: true
+        why: The second is twice the first.
+      - text: (0, 0), (1, 1)
+        correct: true
+        why: Any set containing the zero vector is dependent.
+      - text: (1, 0, 0), (1, 1, 0), (1, 1, 1)
+        why: None is a combination of the others; these form a basis of 3-D space.
+  - id: f3-span-and-rank-03
+    type: numeric
+    prompt: "What is the rank of $\\begin{pmatrix} 1 & 2 & 3 \\\\ 2 & 4 & 6 \\end{pmatrix}$?"
+    answer: 1
+    tol: 0
+    explanation: "The second row is twice the first, so there is only one independent row (and so one independent column)."
+  - id: f3-span-and-rank-04
+    type: numeric
+    prompt: "A matrix has shape $5 \\times 3$. What is the largest rank it can have?"
+    answer: 3
+    tol: 0
+    explanation: "Rank is at most $\\min(m, n) = \\min(5, 3) = 3$: there are only 3 columns."
+  - id: f3-span-and-rank-05
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      X = np.array([[1.0, 2.0, 3.0],
+                    [4.0, 5.0, 9.0],
+                    [7.0, 8.0, 15.0]])
+      print(np.linalg.matrix_rank(X))
+    answer: "2"
+    explanation: "The third column is the sum of the first two, so only two columns are independent."
+  - id: f3-span-and-rank-06
+    type: mcq
+    prompt: "A square $4 \\times 4$ matrix has rank 3. Which statement is true?"
+    explanation: "Full rank for a square matrix would be 4. Rank 3 means it squashes 4-D space into 3-D, so its determinant is 0 and it is not invertible."
+    options:
+      - text: Its determinant is 0 and it has no inverse
+        correct: true
+        why: Not full rank means singular.
+      - text: It is invertible, because 3 is close to 4
+        why: Square matrices need full rank to be invertible.
+      - text: It must have a row of zeros
+        why: A row can be a combination of other rows without being zero.
+  - id: f3-span-and-rank-07
+    type: numeric
+    prompt: "In the basis $\\mathbf{b}_1 = (1, 0)$, $\\mathbf{b}_2 = (1, 1)$, the vector $(5, 2)$ has coordinates $(c_1, c_2)$. What is $c_1$?"
+    answer: 3
+    tol: 1e-9
+    explanation: "$c_1(1, 0) + c_2(1, 1) = (c_1 + c_2, c_2) = (5, 2)$, so $c_2 = 2$ and $c_1 = 3$."
+  - id: f3-span-and-rank-08
+    type: mcq
+    prompt: "A data matrix $X$ has 1000 rows and 6 columns, but `np.linalg.matrix_rank(X)` is 5. What is the most likely cause?"
+    explanation: "With far more rows than columns, rank below 6 means one column is a combination of the others: a redundant feature."
+    options:
+      - text: One feature is a linear combination of the others, such as the same quantity in two units
+        correct: true
+        why: Dependent columns lower the rank.
+      - text: There are too many rows
+        why: More rows can only help the rank reach the number of columns.
+      - text: Some values are negative
+        why: Signs have nothing to do with independence.
+  - id: f3-span-and-rank-09
+    type: numeric
+    prompt: "A $500 \\times 400$ weight update is stored in LoRA style as $B$ ($500 \\times 8$) times $A$ ($8 \\times 400$). How many numbers do $B$ and $A$ hold together?"
+    answer: 7200
+    tol: 0
+    explanation: "$500\\cdot 8 + 8\\cdot 400 = 4000 + 3200 = 7200$, compared with $200{,}000$ for the full matrix."
+  - id: f3-span-and-rank-10
+    type: cloze
+    prompt: "A set of vectors that is linearly independent and spans the whole space is called a ____ ."
+    accept: ["basis"]
+    explanation: "A basis has no redundancy and reaches everything; its size is the dimension."

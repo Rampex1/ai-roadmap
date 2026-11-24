@@ -1,0 +1,209 @@
+---
+title: "Linear systems and the inverse"
+module: f3
+order: 6
+estMinutes: 17
+objectives:
+  - "Write a system of linear equations as Ax = b and solve it with np.linalg.solve"
+  - "Explain what the inverse matrix does and compute a 2×2 inverse by formula"
+  - "Recognise when a matrix has no inverse (determinant 0, squashed space) and what that means for the solutions"
+  - "Fit a line by least squares with the normal equations"
+goDeeper: mml-book
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+So far we have pushed vectors **forward** through a matrix: given $\mathbf{x}$, compute $A\mathbf{x}$.
+The reverse question is just as important: given the output $\mathbf{b}$, which input $\mathbf{x}$
+produced it? That is solving a linear system, and the tool that undoes a matrix is its
+<Term id="matrix-inverse" text="inverse" />. We keep this light: you need the ideas and the NumPy
+calls, not the hand algorithms.
+
+## Equations as a matrix
+
+Two notebooks and three pens cost 8; one notebook and one pen cost 3. What does each cost? With
+$x_1$ for a notebook and $x_2$ for a pen:
+
+$$
+\begin{aligned} 2x_1 + 3x_2 &= 8 \\ x_1 + x_2 &= 3 \end{aligned}
+\qquad\Longleftrightarrow\qquad
+\underbrace{\begin{pmatrix} 2 & 3 \\ 1 & 1 \end{pmatrix}}_{A}
+\underbrace{\begin{pmatrix} x_1 \\ x_2 \end{pmatrix}}_{\mathbf{x}}
+=
+\underbrace{\begin{pmatrix} 8 \\ 3 \end{pmatrix}}_{\mathbf{b}}
+$$
+
+Each equation is one row of $A$ dotted with $\mathbf{x}$, exactly the row view of $A\mathbf{x}$. Any
+number of linear equations in any number of unknowns fits the same form $A\mathbf{x} = \mathbf{b}$.
+
+There are two pictures of what solving means:
+
+- **Row picture.** Each equation is a line in the plane. The solution is where the lines cross.
+- **Column picture.** Find the coefficients that combine the columns $(2, 1)$ and $(3, 1)$ into $(8, 3)$.
+
+NumPy solves it in one call:
+
+```python
+import numpy as np
+
+A = np.array([[2.0, 3.0],
+              [1.0, 1.0]])
+b = np.array([8.0, 3.0])
+x = np.linalg.solve(A, b)
+print(x)
+print(A @ x)       # check: should give back b
+```
+
+```text title="Output"
+[1. 2.]
+[8. 3.]
+```
+
+A notebook costs 1 and a pen costs 2. Always check a solution by multiplying back.
+
+## The inverse
+
+If $A$ moves $\mathbf{x}$ to $\mathbf{b}$, the inverse $A^{-1}$ moves $\mathbf{b}$ back to
+$\mathbf{x}$. It is the matrix with
+
+$$
+A^{-1}A = AA^{-1} = I
+$$
+
+so $\mathbf{x} = A^{-1}\mathbf{b}$. Geometrically: if $A$ rotates by 30°, $A^{-1}$ rotates by −30°;
+if $A$ stretches x by 2, $A^{-1}$ shrinks x by 2. Only square matrices can have an inverse.
+
+For a $2 \times 2$ matrix there is a formula. Swap the diagonal, negate the off-diagonal, and divide
+by the determinant:
+
+$$
+\begin{pmatrix} a & b \\ c & d \end{pmatrix}^{-1} = \frac{1}{ad - bc}\begin{pmatrix} d & -b \\ -c & a \end{pmatrix}
+$$
+
+```python
+import numpy as np
+
+A = np.array([[2.0, 3.0],
+              [1.0, 1.0]])
+A_inv = np.linalg.inv(A)
+print(A_inv)
+print(A_inv @ A)
+print(A_inv @ np.array([8.0, 3.0]))
+```
+
+```text title="Output"
+[[-1.  3.]
+ [ 1. -2.]]
+[[1. 0.]
+ [0. 1.]]
+[1. 2.]
+```
+
+Here $ad - bc = 2 - 3 = -1$, and the formula gives $\frac{1}{-1}\begin{pmatrix} 1 & -3 \\ -1 & 2 \end{pmatrix}$,
+which matches.
+
+:::tip[Solve, do not invert]
+In code, prefer `np.linalg.solve(A, b)` to `np.linalg.inv(A) @ b`. It is faster and more accurate,
+because it never builds the inverse. Use `inv` only when you need the matrix itself.
+:::
+
+## When there is no inverse
+
+In the [last lesson](/foundations/f3/linear-transformations/) a projection squashed the plane onto a
+line. Once $(3, 1)$ and $(3, 5)$ have both landed on $(3, 0)$, no matrix can tell them apart again,
+so there is no inverse. Such a matrix is called **singular**.
+
+The <Term id="determinant" /> detects this. It is the factor by which $A$ scales area, and squashing
+the plane flat makes every area 0. So
+
+$$
+A \text{ is invertible} \iff \det(A) \ne 0
+$$
+
+You can see the trouble in the formula too: it divides by $ad - bc$. In the matrix below, the second
+column is twice the first, so every output $A\mathbf{x}$ lies on the single line through $(1, 2)$:
+
+```python
+import numpy as np
+
+A = np.array([[1.0, 2.0],
+              [2.0, 4.0]])
+print(np.linalg.det(A))
+```
+
+```text title="Output"
+0.0
+```
+
+On a standard NumPy install, `np.linalg.inv(A)` and `np.linalg.solve(A, b)` then raise
+`LinAlgError: Singular matrix`. (The in-browser Python on this site returns arrays full of `nan`
+instead, so check the result with `np.allclose(A @ x, b)` (or `np.isfinite`) before trusting it.)
+
+What happens to $A\mathbf{x} = \mathbf{b}$ then depends on $\mathbf{b}$. In the row picture, the two
+equations are parallel lines:
+
+| Case | Row picture | Example $\mathbf{b}$ for the matrix above |
+|---|---|---|
+| $\det A \ne 0$ | lines cross at one point | (any $\mathbf{b}$ works for an invertible $A$) |
+| no solution | parallel lines that never meet | $(1, 1)$: is $x_1 + 2x_2$ equal to 1 or to 0.5? |
+| infinitely many | the same line twice | $(1, 2)$: any point with $x_1 + 2x_2 = 1$ |
+
+Two more facts worth knowing:
+
+- $\det(AB) = \det(A)\det(B)$, because the area factors multiply. So a product is invertible exactly when both factors are, and $(AB)^{-1} = B^{-1}A^{-1}$ (undo the last step first, like taking off socks and shoes).
+- In floating point, a determinant is rarely exactly 0. A matrix that is *nearly* singular is called **ill-conditioned**: tiny changes in $\mathbf{b}$ cause huge changes in $\mathbf{x}$. `np.linalg.cond(A)` measures this; a huge value is a warning sign.
+
+## Least squares: more equations than unknowns
+
+ML problems usually have far more equations than unknowns. Fitting a line $y = w_0 + w_1 x$ to 100
+points gives 100 equations in 2 unknowns, and no line passes through every point. Write the data as
+$X\mathbf{w} \approx \mathbf{y}$, where each row of $X$ is $(1, x_i)$ (the 1 multiplies the intercept
+$w_0$). We cannot make $X\mathbf{w} = \mathbf{y}$ exactly, so we make the error
+$\lVert X\mathbf{w} - \mathbf{y}\rVert^2$ as small as possible. This is **least squares**.
+
+The best $\mathbf{w}$ satisfies the **normal equations**:
+
+$$
+X^\top X\,\mathbf{w} = X^\top\mathbf{y}
+$$
+
+Here $X^\top X$ is a small square matrix ($2 \times 2$ for a line), so it is an ordinary system you can
+solve. (Where this comes from: the best prediction $X\mathbf{w}$ is the projection of $\mathbf{y}$
+onto the outputs $X$ can produce, so the error is perpendicular to every column of $X$, which is
+$X^\top(\mathbf{y} - X\mathbf{w}) = \mathbf{0}$. You will derive it again with calculus in F4 and F6.)
+
+```python
+import numpy as np
+
+x = np.array([0.0, 1.0, 2.0, 3.0, 4.0])
+y = np.array([1.1, 2.9, 5.2, 7.1, 8.8])
+X = np.column_stack([np.ones_like(x), x])     # rows (1, x_i)
+w = np.linalg.solve(X.T @ X, X.T @ y)
+print(np.round(w, 3))
+w2, *_ = np.linalg.lstsq(X, y)
+print(np.round(w2, 3))
+```
+
+```text title="Output"
+[1.1  1.96]
+[1.1  1.96]
+```
+
+The fitted line is $y \approx 1.1 + 1.96x$. `np.linalg.lstsq` solves the same problem more robustly.
+
+If two features are copies of each other (the same length in metres and in feet), the columns of
+$X$ are dependent, $X^\top X$ is singular and the normal equations have no unique answer. The
+[next lesson](/foundations/f3/span-and-rank/) gives this a name: rank.
+
+## Try it
+
+<CodeExercise id="f3-linear-systems-01" />
+
+<CodeExercise id="f3-linear-systems-02" />
+
+## Summary
+
+- A system of linear equations is $A\mathbf{x} = \mathbf{b}$. Solve with `np.linalg.solve(A, b)` and check with `A @ x`.
+- The inverse undoes $A$: $A^{-1}A = I$. For $2 \times 2$: swap the diagonal, negate the rest, divide by $ad - bc$.
+- $A$ is invertible exactly when $\det A \ne 0$. A zero determinant means $A$ flattens space, and the system has no solution or infinitely many.
+- Least squares fits $X\mathbf{w} \approx \mathbf{y}$ by solving $X^\top X\mathbf{w} = X^\top\mathbf{y}$, or with `np.linalg.lstsq`.

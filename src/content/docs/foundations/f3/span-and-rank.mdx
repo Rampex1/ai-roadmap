@@ -1,0 +1,196 @@
+---
+title: "Span, independence, basis and rank"
+module: f3
+order: 7
+estMinutes: 16
+objectives:
+  - "Describe the span of a set of vectors and decide whether vectors are linearly independent"
+  - "Explain what a basis is and find a vector's coordinates in a new basis"
+  - "Compute the rank of a matrix with NumPy and connect it to invertibility and redundant features"
+  - "Explain why a low-rank matrix can be stored as the product of two thin matrices"
+goDeeper: 3b1b-essence-linear-algebra
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Two lessons ago a projection flattened the plane, and in the last lesson that flattening was what
+made a matrix impossible to invert. This lesson gives you the vocabulary to say precisely **how much
+space** a set of vectors, or a matrix, really covers. It all builds on the
+[linear combination](/foundations/f3/vectors/) from lesson 1.
+
+## Span
+
+The **span** of some vectors is the set of every linear combination of them: every point you can
+reach by scaling them and adding.
+
+- The span of one nonzero vector in $\mathbb{R}^2$ is a **line** through the origin.
+- The span of two vectors pointing in different directions is the whole **plane** $\mathbb{R}^2$.
+- The span of $(1, 2)$ and $(2, 4)$ is only a line, because the second is a multiple of the first:
+  it adds no new direction.
+- In $\mathbb{R}^3$, two vectors in different directions span a plane through the origin, and a
+  third vector reaches all of space only if it sticks out of that plane.
+
+Connect this to matrices with the column view: $A\mathbf{x}$ is a combination of the columns of $A$,
+so **the set of all possible outputs of $A$ is the span of its columns**. This is called the
+**column space**. $A\mathbf{x} = \mathbf{b}$ has a solution exactly when $\mathbf{b}$ is in the
+column space.
+
+## Linear independence
+
+Vectors are <Term id="linear-independence" text="linearly independent" /> when none of them is a
+linear combination of the others: each one adds a genuinely new direction. Otherwise they are
+**dependent**, and at least one is redundant: removing it does not shrink the span.
+
+An equivalent test that is easier to use in proofs: the only way to combine them into the zero vector
+is with all coefficients zero,
+
+$$
+c_1\mathbf{v}_1 + \dots + c_k\mathbf{v}_k = \mathbf{0} \implies c_1 = \dots = c_k = 0
+$$
+
+For example $(1, 0, 1)$, $(0, 1, 1)$ and $(1, 1, 2)$ are dependent, because the third is the sum of
+the first two: $1\cdot\mathbf{v}_1 + 1\cdot\mathbf{v}_2 - 1\cdot\mathbf{v}_3 = \mathbf{0}$. Some quick facts:
+
+- Any set containing the zero vector is dependent.
+- More than $n$ vectors in $\mathbb{R}^n$ are always dependent. (Three vectors in the plane cannot all add new directions.)
+- Two vectors are dependent exactly when one is a multiple of the other.
+
+## Basis and dimension
+
+A <Term id="basis" /> of a space is a set of vectors that is
+
+1. linearly independent (no redundancy), and
+2. spans the space (reaches everything).
+
+The standard basis of $\mathbb{R}^n$ is $\mathbf{e}_1, \dots, \mathbf{e}_n$. Every basis of a given
+space has the same number of vectors, called its **dimension**: the plane has dimension 2 whatever
+basis you choose.
+
+In a basis, every vector has exactly **one** set of coefficients, its **coordinates** in that basis.
+Using the basis $\mathbf{b}_1 = (1, 1)$ and $\mathbf{b}_2 = (1, -1)$, the vector $(3, 1)$ is
+$2\mathbf{b}_1 + 1\mathbf{b}_2$, so its coordinates in that basis are $(2, 1)$. Finding them is
+solving a linear system with the basis vectors as columns:
+
+```python
+import numpy as np
+
+B = np.array([[1.0,  1.0],
+              [1.0, -1.0]])      # columns are b1 and b2
+v = np.array([3.0, 1.0])
+c = np.linalg.solve(B, v)
+print(c)
+print(B @ c)
+```
+
+```text title="Output"
+[2. 1.]
+[3. 1.]
+```
+
+Choosing a good basis is one of the most powerful moves in applied maths. PCA
+([lesson 9](/foundations/f3/svd-and-pca/)) is exactly this: it finds a basis lined up with the
+directions in which your data varies most, so the first few coordinates carry most of the
+information.
+
+## Rank
+
+The <Term id="rank" /> of a matrix is the number of linearly independent columns, which is the
+dimension of its column space: **how many dimensions its outputs really fill**. A remarkable fact is
+that the number of independent rows is always the same, so an $m \times n$ matrix has rank at most
+$\min(m, n)$.
+
+```python
+import numpy as np
+
+A = np.array([[1.0, 0.0, 1.0],
+              [0.0, 1.0, 1.0],
+              [1.0, 1.0, 2.0]])    # third column = first + second
+print(np.linalg.matrix_rank(A))
+print(round(np.linalg.det(A), 10))
+print(np.linalg.matrix_rank(np.eye(3)))
+print(np.linalg.matrix_rank(np.array([[1.0, 2.0], [2.0, 4.0]])))
+```
+
+```text title="Output"
+2
+0.0
+3
+1
+```
+
+A matrix with the largest rank its shape allows has **full rank**; otherwise it is
+**rank-deficient**. For a square $n \times n$ matrix, these all say the same thing:
+
+$$
+\text{rank}(A) = n \iff \text{columns independent} \iff \det A \ne 0 \iff A \text{ invertible}
+$$
+
+The first matrix above has rank 2, so it squashes $\mathbb{R}^3$ onto a plane, its determinant is 0,
+and it has no inverse.
+
+:::note[Rank in floating point]
+Real data is noisy, so a column is rarely an *exact* combination of others. `matrix_rank` counts
+directions that are not tiny compared with the largest one (it uses the singular values from
+[lesson 9](/foundations/f3/svd-and-pca/) and a tolerance). "Numerically low rank" is the useful idea
+in practice.
+:::
+
+## Rank in ML
+
+**Redundant features.** If your data matrix $X$ has a column for height in metres and another for
+height in centimetres, its columns are dependent and its rank is less than its number of columns.
+Then $X^\top X$ is singular and the least-squares fit of the
+[last lesson](/foundations/f3/linear-systems/) has no unique answer. Checking
+`np.linalg.matrix_rank(X)` against `X.shape[1]` catches this; regularisation (F7) is the usual cure.
+
+```python
+import numpy as np
+
+height_m = np.array([1.62, 1.75, 1.80, 1.68])
+weight = np.array([60.0, 72.0, 80.0, 65.0])
+X = np.column_stack([height_m, height_m * 100, weight])
+print(X.shape, np.linalg.matrix_rank(X))
+```
+
+```text title="Output"
+(4, 3) 2
+```
+
+**Low-rank matrices are cheap.** The product of a column vector and a row vector, an **outer
+product** $\mathbf{u}\mathbf{v}^\top$, is a matrix of rank 1: every column is a multiple of
+$\mathbf{u}$. More generally, an $m \times r$ matrix times an $r \times n$ matrix has rank at most $r$.
+That means a big $m \times n$ matrix that happens to have rank $r$ can be stored as two thin factors
+with $r(m + n)$ numbers instead of $mn$.
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(0)
+B = rng.normal(size=(1000, 4))
+A = rng.normal(size=(4, 1000))
+W = B @ A                       # a 1000 x 1000 matrix
+print(W.shape, np.linalg.matrix_rank(W))
+print(W.size, B.size + A.size)  # numbers stored
+```
+
+```text title="Output"
+(1000, 1000) 4
+1000000 8000
+```
+
+This idea powers **LoRA**, the standard way to fine-tune large language models cheaply (Track C):
+instead of updating a huge weight matrix, you learn a low-rank update $BA$ with a small $r$.
+
+## Try it
+
+<CodeExercise id="f3-span-and-rank-01" />
+
+<CodeExercise id="f3-span-and-rank-02" />
+
+## Summary
+
+- The span of some vectors is every linear combination of them. The column space of $A$ (all possible $A\mathbf{x}$) is the span of its columns.
+- Vectors are independent when none is a combination of the others. More than $n$ vectors in $\mathbb{R}^n$ are always dependent.
+- A basis is independent and spans the space; its size is the dimension. Coordinates in a basis come from solving a linear system.
+- Rank = number of independent columns = number of independent rows. Square $A$ is invertible exactly when it has full rank.
+- Duplicated features make $X$ rank-deficient. A rank-$r$ matrix factors into thin pieces, the idea behind LoRA.

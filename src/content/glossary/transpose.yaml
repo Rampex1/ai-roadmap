@@ -1,0 +1,6 @@
+term: "Transpose"
+short: "Flipping a matrix over its diagonal so rows become columns; an m×n matrix becomes n×m."
+body: |
+  $(A^\top)_{ij} = A_{ji}$. Useful rules: $(A^\top)^\top = A$ and $(AB)^\top = B^\top A^\top$. The dot
+  product can be written $\mathbf{u}^\top\mathbf{v}$. In NumPy: `A.T`.
+related: ["matrix", "matrix-multiplication"]

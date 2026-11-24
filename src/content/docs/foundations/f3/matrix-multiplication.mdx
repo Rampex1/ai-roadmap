@@ -1,0 +1,233 @@
+---
+title: "Matrix multiplication, identity and transpose"
+module: f3
+order: 4
+estMinutes: 17
+objectives:
+  - "Multiply two matrices by hand and with @, and predict the shape of the result"
+  - "Explain matrix multiplication as composing two linear maps, and why AB and BA usually differ"
+  - "Use the identity matrix and the transpose, including the rule (AB)ᵀ = BᵀAᵀ"
+  - "Apply a linear layer to a whole batch of inputs as X @ W.T + b"
+goDeeper: 3b1b-essence-linear-algebra
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+You can now multiply a matrix by a vector. <Term id="matrix-multiplication" text="Multiplying two matrices" />
+is the same thing done several times: treat each column of the second matrix as a vector, and
+multiply. It is the single most common operation in deep learning. GPUs exist largely to do it fast.
+
+## The rule
+
+Let $A$ be $m \times n$ and $B$ be $n \times p$. The product $C = AB$ is $m \times p$, and its entry in
+row $i$, column $j$ is the dot product of **row $i$ of $A$** with **column $j$ of $B$**:
+
+$$
+C_{ij} = \sum_{k=1}^{n} A_{ik}\,B_{kj}
+$$
+
+A worked example:
+
+$$
+\begin{pmatrix} 1 & 2 \\ 3 & 4 \end{pmatrix}
+\begin{pmatrix} 5 & 6 \\ 7 & 8 \end{pmatrix}
+=
+\begin{pmatrix} 1\cdot 5 + 2\cdot 7 & 1\cdot 6 + 2\cdot 8 \\ 3\cdot 5 + 4\cdot 7 & 3\cdot 6 + 4\cdot 8 \end{pmatrix}
+=
+\begin{pmatrix} 19 & 22 \\ 43 & 50 \end{pmatrix}
+$$
+
+Equivalently, column $j$ of $AB$ is $A$ times column $j$ of $B$. So everything from the
+[matrices lesson](/foundations/f3/matrices/) carries over.
+
+**Shape rule.** $(m \times n)(n \times p) \to (m \times p)$. The **inner** sizes must match (they are
+the length of the dot products) and the **outer** sizes give the result. A $(2 \times 3)$ times a
+$(3 \times 4)$ is $(2 \times 4)$; a $(2 \times 3)$ times a $(2 \times 3)$ is undefined.
+
+```python
+import numpy as np
+
+A = np.array([[1, 2],
+              [3, 4]])
+B = np.array([[5, 6],
+              [7, 8]])
+print(A @ B)
+
+C = np.ones((2, 3))
+D = np.ones((3, 4))
+print((C @ D).shape)
+```
+
+```text title="Output"
+[[19 22]
+ [43 50]]
+(2, 4)
+```
+
+:::caution[`@` is not `*`]
+For arrays, `A * B` multiplies **entry by entry** (and needs equal or broadcastable shapes). That is
+a different operation, sometimes called the Hadamard product. `A @ B` is matrix multiplication.
+Mixing them up gives wrong numbers without any error when both matrices are square:
+
+```python
+import numpy as np
+
+A = np.array([[1, 2],
+              [3, 4]])
+B = np.array([[5, 6],
+              [7, 8]])
+print(A * B)
+```
+
+```text title="Output"
+[[ 5 12]
+ [21 32]]
+```
+:::
+
+## Why this rule? Composition
+
+The rule looks arbitrary until you see what it means. Applying $B$ to $\mathbf{x}$ and then applying
+$A$ to the result is the same as applying the single matrix $AB$:
+
+$$
+A(B\mathbf{x}) = (AB)\mathbf{x}
+$$
+
+So **$AB$ means "first do $B$, then do $A$"**, read right to left like function composition
+$f(g(x))$. The row-times-column rule is exactly what makes this equation true.
+
+This is also why stacking linear layers without a nonlinear function in between is pointless: two
+layers $W_2(W_1\mathbf{x})$ equal the one layer $(W_2 W_1)\mathbf{x}$. The nonlinear activation
+functions you will meet in F9 are what stop a deep network from collapsing into a single matrix.
+
+## Order matters
+
+With numbers, $3 \times 5 = 5 \times 3$. With matrices, in general $AB \ne BA$. Sometimes only one
+order is even defined: a $(2 \times 3)$ times a $(3 \times 4)$ works, but $(3 \times 4)(2 \times 3)$
+does not. Even for square matrices the answers usually differ, because "rotate then stretch" is a
+different motion from "stretch then rotate":
+
+```python
+import numpy as np
+
+A = np.array([[1, 2],
+              [3, 4]])
+B = np.array([[5, 6],
+              [7, 8]])
+print(B @ A)
+print(np.array_equal(A @ B, B @ A))
+```
+
+```text title="Output"
+[[23 34]
+ [31 46]]
+False
+```
+
+What *does* hold is **associativity**: $(AB)C = A(BC)$, so you may drop the brackets and write
+$ABC$. The order of the matrices must stay the same; only the grouping is free. Grouping does
+change the amount of work, which matters for big matrices.
+
+**Cost.** Each of the $m \times p$ entries is a dot product of length $n$, so $AB$ takes
+$m \cdot n \cdot p$ multiplications. Two $1000 \times 1000$ matrices take a billion. NumPy hands this
+to a highly optimised library, which is why `@` is thousands of times faster than Python loops.
+
+## The identity matrix
+
+The **identity** $I$ is the square matrix with 1s on the diagonal and 0s elsewhere:
+
+$$
+I = \begin{pmatrix} 1 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 & 1 \end{pmatrix}
+$$
+
+Its columns are $\mathbf{e}_1, \mathbf{e}_2, \mathbf{e}_3$, so it sends every axis to itself: it is the
+"do nothing" map. For any matrix of a compatible size, $IA = A$ and $AI = A$, just as $1 \cdot x = x$.
+In NumPy, `np.eye(n)` builds it. A **diagonal** matrix more generally has zeros off the diagonal; it
+scales each axis by its own factor.
+
+## The transpose
+
+The <Term id="transpose" /> $A^\top$ flips a matrix over its diagonal: row $i$ becomes column $i$, so
+$(A^\top)_{ij} = A_{ji}$ and an $m \times n$ matrix becomes $n \times m$. In NumPy it is `A.T`.
+
+$$
+\begin{pmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \end{pmatrix}^{\!\top} = \begin{pmatrix} 1 & 4 \\ 2 & 5 \\ 3 & 6 \end{pmatrix}
+$$
+
+Three facts you will use constantly:
+
+- **The dot product as a product.** If vectors are columns, $\mathbf{u}\cdot\mathbf{v} = \mathbf{u}^\top\mathbf{v}$: a $(1 \times n)$ times an $(n \times 1)$ gives a $1 \times 1$ number. Papers write it this way.
+- **Transpose of a product reverses the order:** $(AB)^\top = B^\top A^\top$. (Check the shapes: if $A$ is $m \times n$ and $B$ is $n \times p$, then $B^\top A^\top$ is $(p \times n)(n \times m)$, which works.)
+- **$X^\top X$** for a data matrix $X$ ($N \times d$) is a $d \times d$ matrix of dot products between feature columns. It appears in linear regression ([lesson 6](/foundations/f3/linear-systems/)) and, after centring, it is $(N-1)$ times the covariance matrix behind PCA ([lesson 9](/foundations/f3/svd-and-pca/)). A matrix equal to its own transpose, like this one, is **symmetric**.
+
+```python
+import numpy as np
+
+A = np.array([[1, 2, 3],
+              [4, 5, 6]])
+B = np.array([[1, 0],
+              [2, 1],
+              [0, 3]])
+print(A.T.shape)
+print(np.array_equal((A @ B).T, B.T @ A.T))
+print(A.T @ A)
+```
+
+```text title="Output"
+(3, 2)
+True
+[[17 22 27]
+ [22 29 36]
+ [27 36 45]]
+```
+
+## A batch through a linear layer
+
+The last lesson pushed one vector through a layer, $W\mathbf{x} + \mathbf{b}$ with $W$ of shape
+(outputs, inputs). In practice you push a whole **batch** at once. Stack $N$ inputs as the rows of
+$X$ ($N \times d_\text{in}$). Then
+
+$$
+Y = XW^\top + \mathbf{b}
+$$
+
+has shape $(N \times d_\text{in})(d_\text{in} \times d_\text{out}) = N \times d_\text{out}$: one row of
+outputs per input row. The bias vector is added to every row by [broadcasting](/foundations/f2/broadcasting/). Row $i$ of $Y$ is
+exactly $W\mathbf{x}_i + \mathbf{b}$, so nothing new is happening; the transpose only appears because
+examples are stored as rows. This is what PyTorch's `nn.Linear` computes.
+
+```python
+import numpy as np
+
+W = np.array([[0.5, -1.0, 2.0],
+              [1.0,  0.0, 0.5]])          # 2 outputs, 3 inputs
+b = np.array([0.1, -0.2])
+X = np.array([[1.0, 2.0, 3.0],
+              [0.0, 1.0, 0.0],
+              [2.0, 2.0, 2.0],
+              [1.0, 0.0, 1.0]])           # a batch of 4 inputs
+Y = X @ W.T + b
+print(Y.shape)
+print(Y[0], W @ X[0] + b)
+```
+
+```text title="Output"
+(4, 2)
+[4.6 2.3] [4.6 2.3]
+```
+
+## Try it
+
+<CodeExercise id="f3-matrix-multiplication-01" />
+
+<CodeExercise id="f3-matrix-multiplication-02" />
+
+## Summary
+
+- $(AB)_{ij}$ = row $i$ of $A$ dotted with column $j$ of $B$. Shapes: $(m \times n)(n \times p) \to (m \times p)$.
+- $AB$ means "do $B$, then $A$". In general $AB \ne BA$, but $(AB)C = A(BC)$.
+- `@` is matrix multiplication; `*` is element-wise.
+- $I$ (`np.eye(n)`) does nothing: $IA = AI = A$.
+- $A^\top$ swaps rows and columns; $(AB)^\top = B^\top A^\top$; $\mathbf{u}\cdot\mathbf{v} = \mathbf{u}^\top\mathbf{v}$.
+- A batch through a linear layer is `X @ W.T + b`, shape $(N, d_\text{out})$.

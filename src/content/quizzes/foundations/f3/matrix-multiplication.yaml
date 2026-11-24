@@ -1,0 +1,118 @@
+items:
+  - id: f3-matrix-multiplication-01
+    type: mcq
+    prompt: "$A$ is $3 \\times 5$ and $B$ is $5 \\times 2$. What is the shape of $AB$, and is $BA$ defined?"
+    explanation: "Inner sizes 5 and 5 match, outer sizes give $3 \\times 2$. For $BA$ the inner sizes are 2 and 3, which do not match."
+    options:
+      - text: AB is 3 x 2; BA is not defined
+        correct: true
+        why: Outer sizes for AB; mismatched inner sizes for BA.
+      - text: AB is 5 x 5; BA is 3 x 2
+        why: The outer sizes, not the inner ones, give the shape.
+      - text: AB is 3 x 2; BA is 2 x 3
+        why: BA would need B's 2 columns to match A's 3 rows.
+      - text: AB is 2 x 3; BA is not defined
+        why: The result has A's rows (3) and B's columns (2).
+  - id: f3-matrix-multiplication-02
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      A = np.array([[1, 0],
+                    [2, 1]])
+      B = np.array([[3, 1],
+                    [0, 2]])
+      print(A @ B)
+    answer: |
+      [[3 1]
+       [6 4]]
+    explanation: "Row 1 of A is (1, 0): it copies row 1 of B, (3, 1). Row 2 is (2, 1): 2(3, 1) + 1(0, 2) = (6, 4)."
+  - id: f3-matrix-multiplication-03
+    type: numeric
+    prompt: "Compute the entry in row 2, column 1 of $\\begin{pmatrix} 1 & 2 \\\\ 3 & 4 \\end{pmatrix}\\begin{pmatrix} 2 & 0 \\\\ 1 & 5 \\end{pmatrix}$."
+    answer: 10
+    tol: 0
+    explanation: "Row 2 of the first, (3, 4), dotted with column 1 of the second, (2, 1): $6 + 4 = 10$."
+  - id: f3-matrix-multiplication-04
+    type: mcq
+    prompt: "In $(AB)\\mathbf{x}$, which matrix acts on $\\mathbf{x}$ first?"
+    explanation: "$(AB)\\mathbf{x} = A(B\\mathbf{x})$: $B$ transforms $\\mathbf{x}$, then $A$ transforms the result. Read right to left."
+    options:
+      - text: B, then A
+        correct: true
+        why: The matrix next to x acts first, like g in f(g(x)).
+      - text: A, then B
+        why: That would be BA.
+      - text: They act at the same time, so order does not matter
+        why: Order matters; AB and BA are usually different matrices.
+  - id: f3-matrix-multiplication-05
+    type: multi
+    prompt: "For square matrices $A$, $B$, $C$ of the same size, which are **always** true?"
+    explanation: "Matrix multiplication is associative and the identity does nothing, but it is not commutative, and the transpose of a product reverses the order."
+    options:
+      - text: (AB)C = A(BC)
+        correct: true
+        why: Associativity always holds.
+      - text: AI = A
+        correct: true
+        why: The identity is the do-nothing map.
+      - text: AB = BA
+        why: This fails for most pairs, for example a rotation and a stretch.
+      - text: (AB) transposed equals A transposed times B transposed
+        why: The order reverses, giving B transposed times A transposed.
+  - id: f3-matrix-multiplication-06
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      A = np.array([[1, 2],
+                    [3, 4]])
+      print(A * np.eye(2, dtype=int))
+      print(A @ np.eye(2, dtype=int))
+    answer: |
+      [[1 0]
+       [0 4]]
+      [[1 2]
+       [3 4]]
+    explanation: "`*` multiplies entry by entry, so it keeps only the diagonal. `@` with the identity returns A unchanged."
+  - id: f3-matrix-multiplication-07
+    type: numeric
+    prompt: "How many scalar multiplications does the loop algorithm use to compute $AB$ for $A$ of shape $10 \\times 20$ and $B$ of shape $20 \\times 30$?"
+    answer: 6000
+    tol: 0
+    explanation: "There are $10 \\times 30 = 300$ entries, each a dot product of length 20: $10 \\cdot 20 \\cdot 30 = 6000$."
+  - id: f3-matrix-multiplication-08
+    type: mcq
+    prompt: "A batch `X` of shape (64, 10) goes through a layer with weight `W` of shape (3, 10) and bias `b` of shape (3,). Which line computes all 64 outputs?"
+    explanation: "Examples are rows, so you need $(64 \\times 10)(10 \\times 3) = 64 \\times 3$, which is `X @ W.T`, with `b` broadcast onto every row."
+    options:
+      - text: X @ W.T + b
+        correct: true
+        why: Shapes (64, 10) and (10, 3) give (64, 3).
+      - text: W @ X + b
+        why: (3, 10) times (64, 10) has mismatched inner sizes.
+      - text: X @ W + b
+        why: (64, 10) times (3, 10) has mismatched inner sizes.
+      - text: X * W + b
+        why: Element-wise multiplication of (64, 10) by (3, 10) does not broadcast and is not a layer.
+  - id: f3-matrix-multiplication-09
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      A = np.array([[1, 2, 3]])
+      print(A.T.shape, (A @ A.T).shape, (A.T @ A).shape)
+    answer: "(3, 1) (1, 1) (3, 3)"
+    explanation: "A is 1 x 3. $AA^\\top$ is $(1\\times 3)(3\\times 1) = 1\\times 1$ (a dot product); $A^\\top A$ is $(3\\times 1)(1\\times 3) = 3\\times 3$."
+  - id: f3-matrix-multiplication-10
+    type: mcq
+    prompt: "A network applies $W_1$ then $W_2$ with **no** activation function in between. What is true?"
+    explanation: "$W_2(W_1\\mathbf{x}) = (W_2W_1)\\mathbf{x}$, so the two layers equal one linear layer with matrix $W_2 W_1$."
+    options:
+      - text: It is equivalent to a single linear layer with matrix W2 W1
+        correct: true
+        why: Composition of linear maps is one matrix product.
+      - text: It can represent more functions than a single layer
+        why: Without a nonlinearity, it is still one linear map.
+      - text: It is equivalent to a single layer with matrix W1 W2
+        why: W1 acts first, so it sits on the right, next to x.

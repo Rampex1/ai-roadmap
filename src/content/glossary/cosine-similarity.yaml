@@ -1,0 +1,7 @@
+term: "Cosine similarity"
+short: "The cosine of the angle between two vectors, a·b / (||a|| ||b||), from -1 (opposite) to 1 (same direction)."
+body: |
+  Cosine similarity ignores length and compares only direction. It is the standard way to compare
+  embeddings: two texts with similar meaning get vectors pointing in similar directions, so their
+  cosine similarity is close to 1. It is undefined for a zero vector.
+related: ["dot-product", "vector-norm"]

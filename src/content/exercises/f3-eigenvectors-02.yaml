@@ -1,0 +1,49 @@
+id: f3-eigenvectors-02
+lesson: foundations/f3/eigenvectors
+title: The direction of greatest spread
+prompt: |
+  Write `main_direction(X)` for a data matrix `X` of shape `(N, d)` that returns a tuple
+  `(variance, direction)`:
+
+  1. Centre the data: subtract the mean of each column.
+  2. Build the covariance matrix $C = X_c^\top X_c / (N - 1)$ yourself (shape `(d, d)`).
+  3. Use `np.linalg.eigh(C)` and return the **largest** eigenvalue and its eigenvector (a unit vector).
+
+  Remember that `eigh` sorts eigenvalues in ascending order and returns eigenvectors as columns.
+starter: |
+  import numpy as np
+
+  def main_direction(X):
+      # TODO: centre, covariance, eigh
+      return 0.0, np.zeros(X.shape[1])
+solution: |
+  import numpy as np
+
+  def main_direction(X):
+      Xc = X - X.mean(axis=0)
+      C = Xc.T @ Xc / (X.shape[0] - 1)
+      vals, vecs = np.linalg.eigh(C)
+      return vals[-1], vecs[:, -1]
+tests: |
+  import math
+  import numpy as np
+  _X = np.array([[0.0, 0.0], [2.0, 0.0], [4.0, 0.0], [6.0, 0.0]])
+  _var, _d = main_direction(_X)
+  assert math.isclose(_var, np.var(_X[:, 0], ddof=1)), f"Points on the x-axis: the variance should be {np.var(_X[:, 0], ddof=1):.4f}, got {_var}"
+  assert math.isclose(abs(_d[0]), 1.0), f"Points on the x-axis: the direction should be (1, 0) or (-1, 0), got {_d}"
+  _rng = np.random.default_rng(15)
+  _t = _rng.normal(size=400)
+  _Y = np.column_stack([_t, -2 * _t + 0.05 * _rng.normal(size=400)]) + np.array([5.0, 3.0])
+  _var, _d = main_direction(_Y)
+  _true = np.array([1.0, -2.0]) / math.sqrt(5)
+  assert abs(abs(_d @ _true) - 1) < 1e-3, f"Data along the line y = -2x: expected a direction close to +-(0.447, -0.894), got {_d}"
+  _C = np.cov(_Y, rowvar=False)
+  assert math.isclose(_var, np.linalg.eigvalsh(_C)[-1], rel_tol=1e-9), "The variance should be the largest eigenvalue of the covariance matrix (did you centre and divide by N - 1?)"
+  _Z = _rng.normal(size=(50, 4)) * np.array([1.0, 3.0, 0.5, 1.0])
+  _var, _d = main_direction(_Z)
+  assert math.isclose(np.linalg.norm(_d), 1.0), "Return a unit vector"
+  np.testing.assert_allclose(np.cov(_Z, rowvar=False) @ _d, _var * _d, atol=1e-9, err_msg="direction should be an eigenvector of the covariance matrix with eigenvalue variance")
+hints:
+  - "X - X.mean(axis=0) centres every column."
+  - "C = Xc.T @ Xc / (N - 1) is a d by d matrix."
+  - "vals[-1] and vecs[:, -1] are the largest eigenvalue and its eigenvector."

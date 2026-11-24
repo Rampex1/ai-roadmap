@@ -1,0 +1,47 @@
+id: f3-dot-product-01
+lesson: foundations/f3/dot-product
+title: Dot product by hand
+prompt: |
+  Write `dot(a, b)` that returns the dot product $\sum_i a_i b_i$ of two 1-D arrays using a `for` loop
+  (no `np.dot`, no `@`, no `np.sum`). The tests compare your result with `np.dot`.
+
+  If the two vectors have different lengths the dot product is not defined: raise a `ValueError`.
+starter: |
+  import numpy as np
+
+  def dot(a, b):
+      total = 0.0
+      # TODO: check the lengths, then multiply and add
+      return total
+solution: |
+  import numpy as np
+
+  def dot(a, b):
+      if len(a) != len(b):
+          raise ValueError(f"lengths differ: {len(a)} and {len(b)}")
+      total = 0.0
+      for i in range(len(a)):
+          total += a[i] * b[i]
+      return total
+tests: |
+  import linecache as _lc, re as _re
+  _code = _re.sub(r"#.*", "", "".join(_lc.cache["<your code>"][2]))
+  for _bad in ['@', 'np.dot', '.dot(', 'np.sum', '.sum(', 'np.inner', 'np.matmul']:
+      assert _bad not in _code, f"Write the loop yourself: do not use @, np.dot, np.sum or np.inner here (found {_bad})"
+  import math
+  import numpy as np
+  assert math.isclose(dot(np.array([1.0, 2.0, 3.0]), np.array([4.0, -5.0, 6.0])), 12.0), "(1, 2, 3) . (4, -5, 6) should be 12"
+  assert math.isclose(dot(np.array([1.0, 2.0]), np.array([-2.0, 1.0])), 0.0, abs_tol=1e-12), "Perpendicular vectors should give 0"
+  _rng = np.random.default_rng(2)
+  for _n in (1, 5, 50):
+      _a, _b = _rng.normal(size=_n), _rng.normal(size=_n)
+      assert math.isclose(dot(_a, _b), float(np.dot(_a, _b)), rel_tol=1e-9, abs_tol=1e-12), f"Wrong result for random vectors of length {_n}"
+  try:
+      dot(np.array([1.0, 2.0]), np.array([1.0, 2.0, 3.0]))
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("dot should raise ValueError when the lengths differ")
+hints:
+  - "Loop with for i in range(len(a)): and add a[i] * b[i] to the total."
+  - "Before the loop, compare len(a) and len(b) and raise ValueError if they differ."

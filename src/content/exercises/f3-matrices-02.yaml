@@ -1,0 +1,41 @@
+id: f3-matrices-02
+lesson: foundations/f3/matrices
+title: A linear layer
+prompt: |
+  Write `linear_layer(W, b, x)` that returns $W\mathbf{x} + \mathbf{b}$ (use `@` now).
+
+  Then write `layer_shapes(n_inputs, n_outputs)` that returns a tuple `(W_shape, b_shape)` with the
+  shapes the weight matrix and bias vector must have for a layer that maps `n_inputs` numbers to
+  `n_outputs` numbers. For example `layer_shapes(3, 2)` returns `((2, 3), (2,))`.
+starter: |
+  import numpy as np
+
+  def linear_layer(W, b, x):
+      # TODO
+      return x
+
+  def layer_shapes(n_inputs, n_outputs):
+      # TODO: W is (outputs, inputs)
+      return ((n_inputs, n_outputs), (n_inputs,))
+solution: |
+  import numpy as np
+
+  def linear_layer(W, b, x):
+      return W @ x + b
+
+  def layer_shapes(n_inputs, n_outputs):
+      return ((n_outputs, n_inputs), (n_outputs,))
+tests: |
+  import numpy as np
+  _W = np.array([[0.5, -1.0, 2.0], [1.0, 0.0, 0.5]])
+  np.testing.assert_allclose(linear_layer(_W, np.array([0.1, -0.2]), np.array([1.0, 2.0, 3.0])), [4.6, 2.3], err_msg="Expected [4.6, 2.3]")
+  _rng = np.random.default_rng(6)
+  for _i, _o in [(4, 1), (2, 5), (3, 3)]:
+      _Ws, _bs = layer_shapes(_i, _o)
+      assert tuple(_Ws) == (_o, _i), f"layer_shapes({_i}, {_o}): W should be ({_o}, {_i}) = (outputs, inputs), got {_Ws}"
+      assert tuple(_bs) == (_o,), f"layer_shapes({_i}, {_o}): b should be ({_o},), got {_bs}"
+      _M, _b, _x = _rng.normal(size=(_o, _i)), _rng.normal(size=_o), _rng.normal(size=_i)
+      np.testing.assert_allclose(linear_layer(_M, _b, _x), _M @ _x + _b, err_msg=f"linear_layer is wrong for {_i} inputs and {_o} outputs")
+hints:
+  - "linear_layer is one line: W @ x + b."
+  - "Each output neuron has one row of W holding a weight for every input, so W has n_outputs rows and n_inputs columns."

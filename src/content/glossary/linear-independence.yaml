@@ -1,0 +1,7 @@
+term: "Linear independence"
+short: "Vectors are linearly independent when none of them is a linear combination of the others."
+body: |
+  Equivalently, $c_1\mathbf{v}_1 + \dots + c_k\mathbf{v}_k = \mathbf{0}$ only when every $c_i = 0$.
+  Independent vectors each add a new direction. Two features that are copies of each other (metres and
+  feet, say) make the columns of a data matrix dependent.
+related: ["basis", "rank"]

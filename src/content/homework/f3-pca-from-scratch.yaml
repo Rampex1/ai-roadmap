@@ -1,0 +1,33 @@
+id: f3-pca-from-scratch
+module: f3
+kind: homework
+title: "PCA from scratch on the iris flowers"
+brief: |
+  Implement principal component analysis with nothing but NumPy, check it against scikit-learn, and
+  use it to draw a 4-dimensional dataset (150 iris flowers, 4 measurements each) in 2-D. Download the
+  notebook and open it in local Jupyter (`uv run --with jupyter jupyter lab` in a project that has
+  numpy, matplotlib and scikit-learn) or in [Google Colab](https://colab.research.google.com/)
+  (File > Upload notebook), which already has them.
+
+  Each task has a `TODO` cell and a check cell that prints `OK` when your code is right:
+
+  1. **`standardise(X)`**: give every feature mean 0 and standard deviation 1.
+  2. **`covariance(X)`**: build the covariance matrix $X_c^\top X_c / (N - 1)$ with `@` and `.T`.
+  3. **`pca_eig(X, k)`**: principal components and variances from the eigenvectors of the covariance
+     matrix (`np.linalg.eigh`), sorted largest first.
+  4. **`pca_svd(X, k)`**: the same through the SVD of the centred data, plus the projected data `Z`.
+  5. **`explained_variance_ratio(X)`**: the fraction of variance per component, with a bar chart and
+     running total.
+  6. **2-D plot**: scatter the projected flowers coloured by species, and write what you see.
+  7. **Compare with scikit-learn's `PCA`**, allowing for sign flips.
+  8. **`reconstruction_error(X, k)`**: map back from `k` dimensions and measure what is lost.
+
+  Stretch tasks: PCA on the unscaled data, PCA on handwritten digits, and PCA by power iteration.
+notebook: /homework/f3-pca-from-scratch.ipynb
+rubric:
+  - "Every check cell for Tasks 1 to 5, 7 and 8 prints OK after restarting the kernel and running all cells"
+  - "covariance, pca_eig and pca_svd use NumPy linear algebra (@, eigh, svd), not scikit-learn"
+  - "The Task 5 chart shows the explained variance ratio per component and the running total, and you can say how many components keep 95% of the variance"
+  - "The Task 6 scatter plot has one colour per species, a legend and axis labels with the percentage of variance"
+  - "The Task 6 markdown cell names the species that separates cleanly and the component that separates it"
+compute: "Any laptop or free Colab (no GPU), under 5 minutes of run time"

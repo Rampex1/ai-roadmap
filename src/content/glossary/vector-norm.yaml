@@ -1,0 +1,7 @@
+term: "Norm (vector length)"
+short: "The length of a vector, usually the Euclidean norm ||v|| = sqrt(v·v)."
+body: |
+  The Euclidean (L2) norm is $\lVert\mathbf{v}\rVert = \sqrt{v_1^2 + \dots + v_n^2}$, which is Pythagoras in
+  $n$ dimensions. The distance between two points is the norm of their difference. Dividing a vector by
+  its norm gives a unit vector. In NumPy: `np.linalg.norm(v)`.
+related: ["vector", "dot-product"]

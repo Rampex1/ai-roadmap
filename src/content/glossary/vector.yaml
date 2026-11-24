@@ -1,0 +1,7 @@
+term: "Vector"
+short: "An ordered list of numbers, pictured as an arrow from the origin; written like v = (v1, ..., vn)."
+body: |
+  A vector in $\mathbb{R}^n$ has $n$ components. You can add vectors component by component and scale
+  them by a number. In ML a data row, a weight vector, a gradient and an embedding are all vectors.
+  In NumPy a vector is a 1-D array with shape `(n,)`.
+related: ["dot-product", "vector-norm", "matrix"]

@@ -1,0 +1,53 @@
+id: f3-matrices-01
+lesson: foundations/f3/matrices
+title: Matrix-vector product with loops
+prompt: |
+  Write `matvec(A, x)` that returns $A\mathbf{x}$ for a 2-D array `A` of shape `(m, n)` and a 1-D array
+  `x` of length `n`, using the **row view**: entry `i` of the result is the dot product of row `i`
+  of `A` with `x`. Use loops (no `@`, no `np.dot`).
+
+  If `len(x)` does not equal the number of columns of `A`, raise a `ValueError`.
+starter: |
+  import numpy as np
+
+  def matvec(A, x):
+      m, n = A.shape
+      y = np.zeros(m)
+      # TODO: fill y[i] with row i of A dotted with x
+      return y
+solution: |
+  import numpy as np
+
+  def matvec(A, x):
+      m, n = A.shape
+      if len(x) != n:
+          raise ValueError(f"A has {n} columns but x has {len(x)} components")
+      y = np.zeros(m)
+      for i in range(m):
+          for j in range(n):
+              y[i] += A[i, j] * x[j]
+      return y
+tests: |
+  import linecache as _lc, re as _re
+  _code = _re.sub(r"#.*", "", "".join(_lc.cache["<your code>"][2]))
+  for _bad in ['@', 'np.dot', '.dot(', 'np.matmul', 'np.einsum']:
+      assert _bad not in _code, f"Use loops here: do not use @, np.dot or np.matmul (found {_bad})"
+  import numpy as np
+  _A = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+  np.testing.assert_allclose(matvec(_A, np.array([1.0, 0.0, -1.0])), [-2.0, -2.0], err_msg="A @ (1, 0, -1) should be (-2, -2)")
+  np.testing.assert_allclose(matvec(np.array([[2.0, -1.0], [1.0, 1.0]]), np.array([3.0, 2.0])), [4.0, 5.0], err_msg="Expected (4, 5)")
+  _rng = np.random.default_rng(5)
+  for _m, _n in [(1, 4), (5, 3), (4, 4)]:
+      _M, _x = _rng.normal(size=(_m, _n)), _rng.normal(size=_n)
+      _y = matvec(_M, _x)
+      assert np.shape(_y) == (_m,), f"For a ({_m}, {_n}) matrix the result should have shape ({_m},), got {np.shape(_y)}"
+      np.testing.assert_allclose(_y, _M @ _x, err_msg=f"Wrong result for a random ({_m}, {_n}) matrix")
+  try:
+      matvec(_A, np.array([1.0, 2.0]))
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("matvec should raise ValueError when len(x) differs from the number of columns")
+hints:
+  - "m, n = A.shape gives the number of rows and columns."
+  - "Two nested loops: for each row i, add up A[i, j] * x[j] over all columns j."

@@ -1,0 +1,69 @@
+id: f3-svd-and-pca-02
+lesson: foundations/f3/svd-and-pca
+title: PCA from scratch
+prompt: |
+  Write `pca(X, k)` for a data matrix `X` of shape `(N, d)`. Return a tuple
+  `(Z, components, ratio)`:
+
+  - `components`: the first `k` principal components as the rows of a `(k, d)` array;
+  - `Z`: the centred data projected onto them, shape `(N, k)`;
+  - `ratio`: the explained variance ratio of each of the `k` components, shape `(k,)`
+    (each component's variance divided by the total variance of **all** components).
+
+  Use `np.linalg.svd` on the centred data. The tests compare with scikit-learn, allowing for sign flips.
+  The plot at the bottom shows a 3-D cloud projected to 2-D.
+starter: |
+  import numpy as np
+  import matplotlib.pyplot as plt
+
+  def pca(X, k):
+      # TODO: centre, SVD, keep k components
+      return X[:, :k], np.eye(X.shape[1])[:k], np.zeros(k)
+
+  rng = np.random.default_rng(0)
+  t = rng.normal(size=300)
+  X = np.column_stack([t, 2 * t + 0.3 * rng.normal(size=300), rng.normal(size=300)])
+  Z, comps, ratio = pca(X, 2)
+  plt.scatter(Z[:, 0], Z[:, 1], s=8)
+  plt.xlabel("PC 1")
+  plt.ylabel("PC 2")
+solution: |
+  import numpy as np
+  import matplotlib.pyplot as plt
+
+  def pca(X, k):
+      Xc = X - X.mean(axis=0)
+      U, s, Vt = np.linalg.svd(Xc, full_matrices=False)
+      components = Vt[:k]
+      Z = Xc @ components.T
+      var = s ** 2
+      ratio = var[:k] / var.sum()
+      return Z, components, ratio
+
+  rng = np.random.default_rng(0)
+  t = rng.normal(size=300)
+  X = np.column_stack([t, 2 * t + 0.3 * rng.normal(size=300), rng.normal(size=300)])
+  Z, comps, ratio = pca(X, 2)
+  plt.scatter(Z[:, 0], Z[:, 1], s=8)
+  plt.xlabel("PC 1")
+  plt.ylabel("PC 2")
+tests: |
+  import numpy as np
+  from sklearn.decomposition import PCA
+  _rng = np.random.default_rng(17)
+  for _N, _d, _k in [(100, 4, 2), (60, 5, 3), (40, 3, 1)]:
+      _X = _rng.normal(size=(_N, _d)) @ _rng.normal(size=(_d, _d)) + 3.0
+      _Z, _C, _r = pca(_X, _k)
+      assert np.shape(_Z) == (_N, _k), f"Z should have shape ({_N}, {_k}), got {np.shape(_Z)}"
+      assert np.shape(_C) == (_k, _d), f"components should have shape ({_k}, {_d}), got {np.shape(_C)}"
+      assert np.shape(_r) == (_k,), f"ratio should have shape ({_k},), got {np.shape(_r)}"
+      _sk = PCA(n_components=_k).fit(_X)
+      _sg = np.sign(np.sum(_C * _sk.components_, axis=1))
+      assert np.all(_sg != 0), "each component should be a unit vector along one of sklearn's components"
+      np.testing.assert_allclose(_C * _sg[:, None], _sk.components_, atol=1e-8, err_msg="each row of components should equal sklearn's matching row, or its negative")
+      np.testing.assert_allclose(_r, _sk.explained_variance_ratio_, rtol=1e-8, err_msg="ratio should match sklearn's explained_variance_ratio_ (divide by the total over all components)")
+      np.testing.assert_allclose(_Z * _sg, _sk.transform(_X), atol=1e-8, err_msg="Z should match sklearn's transform (after the same sign flips): did you centre X before projecting?")
+hints:
+  - "Centre with Xc = X - X.mean(axis=0), then U, s, Vt = np.linalg.svd(Xc, full_matrices=False)."
+  - "The components are Vt[:k] and the projection is Xc @ Vt[:k].T."
+  - "The variances are proportional to s ** 2; divide the first k by the sum over all of them."

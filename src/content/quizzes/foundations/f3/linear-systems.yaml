@@ -1,0 +1,106 @@
+items:
+  - id: f3-linear-systems-01
+    type: mcq
+    prompt: "Which matrix equation represents the system $x_1 - x_2 = 1$, $3x_1 + 2x_2 = 8$?"
+    explanation: "Each equation becomes one row of $A$, with the coefficients of $x_1$ and $x_2$ in order, and the right-hand sides form $\\mathbf{b}$."
+    options:
+      - text: "A = [[1, -1], [3, 2]], b = (1, 8)"
+        correct: true
+        why: One row per equation.
+      - text: "A = [[1, 3], [-1, 2]], b = (1, 8)"
+        why: This puts the equations in the columns, which is the transpose.
+      - text: "A = [[1, -1], [3, 2]], b = (8, 1)"
+        why: The right-hand sides must stay in the same order as the equations.
+  - id: f3-linear-systems-02
+    type: numeric
+    prompt: "What is $\\det\\begin{pmatrix} 4 & 2 \\\\ 6 & 3 \\end{pmatrix}$?"
+    answer: 0
+    tol: 1e-9
+    explanation: "$4\\cdot 3 - 2\\cdot 6 = 0$. The second column is half the first, so the matrix is singular."
+  - id: f3-linear-systems-03
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      A = np.array([[2.0, 0.0],
+                    [0.0, 4.0]])
+      print(np.linalg.inv(A))
+    answer: |
+      [[0.5  0.  ]
+       [0.   0.25]]
+    explanation: "A stretches x by 2 and y by 4, so the inverse shrinks x by 2 and y by 4. A diagonal matrix inverts entry by entry."
+  - id: f3-linear-systems-04
+    type: multi
+    prompt: "For a $2 \\times 2$ matrix $A$, which statements each mean that $A$ has **no** inverse?"
+    explanation: "Singular, zero determinant and squashing space flat are the same condition seen three ways."
+    options:
+      - text: det(A) = 0
+        correct: true
+        why: Zero area scaling means space is flattened.
+      - text: A squashes the plane onto a line
+        correct: true
+        why: Different inputs land on the same output, so they cannot be told apart.
+      - text: One column of A is a multiple of another
+        correct: true
+        why: Then all outputs lie on one line.
+      - text: A has a negative entry
+        why: Plenty of invertible matrices have negative entries, such as rotations.
+  - id: f3-linear-systems-05
+    type: mcq
+    prompt: "You need to solve $A\\mathbf{x} = \\mathbf{b}$ for a large invertible $A$. What is the recommended NumPy call?"
+    explanation: "`solve` never forms the inverse, so it is faster and more accurate than inverting and multiplying."
+    options:
+      - text: np.linalg.solve(A, b)
+        correct: true
+        why: It solves the system directly.
+      - text: np.linalg.inv(A) @ b
+        why: It works but is slower and less accurate.
+      - text: b / A
+        why: That divides element by element, which is not solving the system.
+      - text: A.T @ b
+        why: The transpose is not the inverse, except for special matrices such as rotations.
+  - id: f3-linear-systems-06
+    type: mcq
+    prompt: "The equations $x_1 + x_2 = 2$ and $2x_1 + 2x_2 = 5$ have how many solutions?"
+    explanation: "The second says $x_1 + x_2 = 2.5$, which contradicts the first. The lines are parallel and never meet."
+    options:
+      - text: None
+        correct: true
+        why: Parallel lines that never cross.
+      - text: Exactly one
+        why: That needs a nonzero determinant; here it is 1 times 2 minus 1 times 2, which is 0.
+      - text: Infinitely many
+        why: That would need the second equation to be exactly twice the first, with right side 4.
+  - id: f3-linear-systems-07
+    type: numeric
+    prompt: "$\\det(A) = 3$ and $\\det(B) = -2$. What is $\\det(AB)$?"
+    answer: -6
+    tol: 1e-9
+    explanation: "Area factors multiply: $\\det(AB) = \\det(A)\\det(B) = -6$."
+  - id: f3-linear-systems-08
+    type: mcq
+    prompt: "In least squares we solve $X^\\top X\\mathbf{w} = X^\\top\\mathbf{y}$ instead of $X\\mathbf{w} = \\mathbf{y}$. Why?"
+    explanation: "With more data points than unknowns, $X\\mathbf{w} = \\mathbf{y}$ usually has no exact solution. The normal equations give the $\\mathbf{w}$ with the smallest squared error."
+    options:
+      - text: There are more equations than unknowns, so usually no w fits every point exactly
+        correct: true
+        why: The normal equations find the best compromise.
+      - text: X is always singular
+        why: X is usually not square, so the inverse is not even defined; the issue is that no exact solution exists.
+      - text: It makes the predictions exact
+        why: The fit minimises the error but rarely makes it zero.
+  - id: f3-linear-systems-09
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      A = np.array([[1.0, 1.0],
+                    [1.0, -1.0]])
+      print(np.linalg.solve(A, np.array([5.0, 1.0])))
+    answer: "[3. 2.]"
+    explanation: "$x_1 + x_2 = 5$ and $x_1 - x_2 = 1$; adding gives $2x_1 = 6$, so $x_1 = 3$ and $x_2 = 2$."
+  - id: f3-linear-systems-10
+    type: cloze
+    prompt: "A square matrix with no inverse (determinant 0) is called ____ ."
+    accept: ["singular", "non-invertible", "noninvertible", "degenerate"]
+    explanation: "Singular is the standard name. Its determinant is 0 and it flattens space."

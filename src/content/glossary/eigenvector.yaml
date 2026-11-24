@@ -1,0 +1,8 @@
+term: "Eigenvector"
+short: "A nonzero vector v that a matrix only stretches, Av = λv; the stretch factor λ is its eigenvalue."
+body: |
+  Eigenvectors are the directions a linear map leaves pointing the same way (or exactly reversed).
+  Applying $A$ many times grows or shrinks each eigen-direction by $\lambda^k$. Symmetric matrices,
+  such as covariance matrices, have real eigenvalues and perpendicular eigenvectors. In NumPy:
+  `np.linalg.eig(A)`, or `np.linalg.eigh(A)` for symmetric matrices.
+related: ["matrix", "pca", "svd"]

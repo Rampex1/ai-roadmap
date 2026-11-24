@@ -1,0 +1,7 @@
+term: "Principal component analysis (PCA)"
+short: "A method that finds the directions of greatest variance in data and projects onto the top few to reduce dimensions."
+body: |
+  Centre the data matrix $X$, take its SVD $X_c = U\Sigma V^\top$, and the rows of $V^\top$ are the
+  principal components, sorted by the variance they explain ($\sigma_i^2 / (n-1)$). Projecting onto
+  the first $k$ gives a $k$-dimensional summary of each row. Scale features first if their units differ.
+related: ["svd", "eigenvector", "basis"]

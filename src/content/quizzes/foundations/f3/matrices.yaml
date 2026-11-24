@@ -1,0 +1,113 @@
+items:
+  - id: f3-matrices-01
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      A = np.array([[1, 2],
+                    [3, 4],
+                    [5, 6]])
+      print(A.shape, A[2, 0], A[:, 1])
+    answer: "(3, 2) 5 [2 4 6]"
+    explanation: "Three rows and two columns. `A[2, 0]` is row 2 (the third), column 0. `A[:, 1]` is the whole second column."
+  - id: f3-matrices-02
+    type: mcq
+    prompt: "$A$ is $4 \\times 3$. For which vector length is $A\\mathbf{x}$ defined, and what is the length of the result?"
+    explanation: "Each of the 4 rows (3 numbers long) is dotted with $\\mathbf{x}$, so $\\mathbf{x}$ needs 3 components and the result has 4."
+    options:
+      - text: x has 3 components; the result has 4
+        correct: true
+        why: The vector matches the number of columns, and there is one output per row.
+      - text: x has 4 components; the result has 3
+        why: This swaps the rule. x is dotted with the rows, which have 3 entries.
+      - text: x has 3 components; the result has 3
+        why: The result has one entry per row, and there are 4 rows.
+      - text: x can have any length
+        why: The inner sizes must match or the dot products are undefined.
+  - id: f3-matrices-03
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      A = np.array([[2, 0],
+                    [1, 3]])
+      print(A @ np.array([1, -1]))
+    answer: "[ 2 -2]"
+    explanation: "Row view: (2, 0)·(1, -1) = 2 and (1, 3)·(1, -1) = -2."
+  - id: f3-matrices-04
+    type: mcq
+    prompt: "A $2 \\times 2$ matrix has columns $(3, 1)$ and $(0, 2)$. Where does it send $\\mathbf{e}_2 = (0, 1)$?"
+    explanation: "Multiplying by $\\mathbf{e}_2$ picks out the second column: the columns are where the axes land."
+    options:
+      - text: (0, 2)
+        correct: true
+        why: The second column is the image of e2.
+      - text: (3, 1)
+        why: That is where e1 goes.
+      - text: (1, 2)
+        why: That would be the second row read as a column; A e2 is the second column.
+      - text: (0, 1); e2 never moves
+        why: Only the identity matrix leaves every vector in place.
+  - id: f3-matrices-05
+    type: multi
+    prompt: "$X$ is a $100 \\times 5$ data matrix and $\\mathbf{w}$ has 5 components. Which statements are true?"
+    explanation: "$X\\mathbf{w}$ dots each of the 100 rows with $\\mathbf{w}$, giving 100 predictions. By the column view it is also a combination of the 5 feature columns."
+    options:
+      - text: X @ w has shape (100,)
+        correct: true
+        why: One output per row.
+      - text: Entry i of X @ w is the prediction for example i
+        correct: true
+        why: It is row i (example i) dotted with the weights.
+      - text: X @ w is a linear combination of the columns of X with coefficients from w
+        correct: true
+        why: That is the column view of a matrix-vector product.
+      - text: X @ w has shape (5,)
+        why: The result has one entry per row of X, not per column.
+  - id: f3-matrices-06
+    type: numeric
+    prompt: "Compute the second entry of $\\begin{pmatrix} 1 & 2 & 0 \\\\ -1 & 4 & 2 \\end{pmatrix}\\begin{pmatrix} 3 \\\\ 1 \\\\ 2 \\end{pmatrix}$."
+    answer: 5
+    tol: 0
+    explanation: "Row 2 dotted with the vector: $-1\\cdot 3 + 4\\cdot 1 + 2\\cdot 2 = -3 + 4 + 4 = 5$."
+  - id: f3-matrices-07
+    type: mcq
+    prompt: "A linear layer maps 784 inputs (a flattened image) to 128 outputs as $W\\mathbf{x} + \\mathbf{b}$. What is the shape of $W$?"
+    explanation: "Each of the 128 output neurons has one row of 784 weights, so $W$ is $128 \\times 784$, and $(128 \\times 784)(784) \\to (128)$."
+    options:
+      - text: (128, 784)
+        correct: true
+        why: Outputs by inputs.
+      - text: (784, 128)
+        why: Then W x would need x to have 128 components.
+      - text: (784,)
+        why: That is the shape of the input vector, not the weights.
+  - id: f3-matrices-08
+    type: mcq
+    prompt: "Which property must every linear map $T$ have?"
+    explanation: "Linearity gives $T(\\mathbf{0}) = T(0\\cdot\\mathbf{0}) = 0\\cdot T(\\mathbf{0}) = \\mathbf{0}$, so the origin stays fixed."
+    options:
+      - text: It sends the zero vector to the zero vector
+        correct: true
+        why: Scaling by 0 shows T(0) = 0.
+      - text: It keeps every vector the same length
+        why: Stretches are linear maps that change lengths.
+      - text: It sends every vector to a different direction
+        why: Scaling by 2 keeps every direction and is linear.
+      - text: Its output has the same number of components as its input
+        why: A 2 by 3 matrix maps 3-D vectors to 2-D vectors and is still linear.
+  - id: f3-matrices-09
+    type: cloze
+    prompt: "In the shape rule $(m \\times n)(n) \\to (m)$, the vector's length must equal the number of ____ of the matrix."
+    accept: ["columns", "column"]
+    explanation: "Each row has $n$ entries (one per column) and is dotted with the vector, so the vector needs $n$ components."
+  - id: f3-matrices-10
+    type: output
+    prompt: "What does this print? (Hint: use the column view.)"
+    code: |
+      import numpy as np
+      A = np.array([[1, 10, 100],
+                    [2, 20, 200]])
+      print(A @ np.array([0, 1, 0]))
+    answer: "[10 20]"
+    explanation: "With coefficients (0, 1, 0) the combination picks out exactly the second column."

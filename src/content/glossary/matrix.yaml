@@ -1,0 +1,8 @@
+term: "Matrix"
+short: "A rectangular table of numbers with m rows and n columns; it also acts as a function that maps vectors to vectors."
+body: |
+  An $m \times n$ matrix $A$ has entries $A_{ij}$ (row $i$, column $j$). As a table it can hold a dataset
+  $X$ with one row per example. As a map it sends $\mathbf{x} \in \mathbb{R}^n$ to
+  $A\mathbf{x} \in \mathbb{R}^m$. A neural network's weights $W$ are matrices. In NumPy a matrix is a
+  2-D array with shape `(m, n)`.
+related: ["vector", "matrix-multiplication", "linear-transformation"]

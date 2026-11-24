@@ -1,0 +1,213 @@
+---
+title: "SVD and PCA"
+module: f3
+order: 9
+estMinutes: 18
+objectives:
+  - "Describe the SVD A = UΣVᵀ as rotate, scale, rotate, and compute it with np.linalg.svd"
+  - "Build the best rank-k approximation of a matrix and measure how much it keeps"
+  - "Run PCA with the SVD: centre the data, find the principal components, project to k dimensions and report explained variance"
+  - "Check a from-scratch PCA against scikit-learn, allowing for sign flips"
+goDeeper: mml-book
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+The [eigenvector lesson](/foundations/f3/eigenvectors/) ended with a promise: the directions in
+which data spreads out most can be found with linear algebra. This lesson keeps it. The tool is the
+<Term id="svd" text="singular value decomposition" /> (SVD), which works for **every** matrix,
+square or not. Its most famous use is <Term id="pca" text="principal component analysis" /> (PCA),
+the standard way to squeeze many features into a few, to plot high-dimensional data, and to see
+the structure in a table of embeddings.
+
+## The SVD: rotate, scale, rotate
+
+Any $m \times n$ matrix $A$ can be written as
+
+$$
+A = U\,\Sigma\,V^\top
+$$
+
+- $V^\top$ ($n \times n$) is a rotation (possibly with a reflection) of the input space. Its rows, the columns of $V$, are perpendicular unit vectors called the **right singular vectors**.
+- $\Sigma$ (capital sigma) is diagonal. Its entries $\sigma_1 \ge \sigma_2 \ge \dots \ge 0$ are the **singular values**: how much $A$ stretches along each of those directions.
+- $U$ ($m \times m$) is a rotation (possibly with a reflection) of the output space. Its columns are the **left singular vectors**.
+
+Read right to left, as always: **every linear map is a rotation, then a stretch along the axes, then
+another rotation.** The eigendecomposition $Q\Lambda Q^\top$ from the last lesson did this only for
+symmetric matrices; the SVD does it for all of them. In fact the two are linked: the right singular
+vectors of $A$ are the eigenvectors of $A^\top A$, and $\sigma_i^2$ are its eigenvalues.
+
+In NumPy, pass `full_matrices=False` to get the compact version, where the shapes are just big
+enough. Note that NumPy returns the singular values as a 1-D array `s` and returns $V^\top$ (called
+`Vt`), not $V$:
+
+```python
+import numpy as np
+
+A = np.array([[3.0, 1.0, 1.0],
+              [-1.0, 3.0, 1.0]])
+U, s, Vt = np.linalg.svd(A, full_matrices=False)
+print(U.shape, s.shape, Vt.shape)
+print(np.round(s, 4))
+print(np.allclose(U @ np.diag(s) @ Vt, A))
+```
+
+```text title="Output"
+(2, 2) (2,) (2, 3)
+[3.4641 3.1623]
+True
+```
+
+## Low-rank approximation
+
+Expanding the product shows that $A$ is a sum of rank-1 pieces, ordered from most to least
+important:
+
+$$
+A = \sigma_1\mathbf{u}_1\mathbf{v}_1^\top + \sigma_2\mathbf{u}_2\mathbf{v}_2^\top + \dots
+$$
+
+Keep only the first $k$ terms and you get $A_k$, a matrix of rank $k$. A theorem (Eckart–Young) says
+that $A_k$ is the **best possible** rank-$k$ approximation of $A$: no other rank-$k$ matrix is closer.
+When the singular values drop off quickly, a small $k$ keeps almost everything. This is how SVD
+compresses images, removes noise, and why the low-rank updates of
+[lesson 7](/foundations/f3/span-and-rank/) can work so well.
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(0)
+signal = rng.normal(size=(50, 2)) @ rng.normal(size=(2, 30))   # rank 2
+A = signal + 0.01 * rng.normal(size=(50, 30))                  # plus a little noise
+U, s, Vt = np.linalg.svd(A, full_matrices=False)
+print(np.round(s[:4], 2))
+
+k = 2
+A_k = U[:, :k] @ np.diag(s[:k]) @ Vt[:k]
+print(round(np.linalg.norm(A - A_k) / np.linalg.norm(A), 4))
+```
+
+```text title="Output"
+[43.23 28.86  0.11  0.11]
+0.007
+```
+
+Two singular values are large and the rest are noise. The rank-2 approximation is within 1% of
+the original while storing $k(m + n + 1) = 162$ numbers instead of 1500.
+
+## PCA: the directions of greatest variance
+
+Now apply this to a data matrix $X$ with $N$ rows (examples) and $d$ columns (features). PCA asks:
+which direction in $\mathbb{R}^d$ does the cloud of points spread out along the most? Then which
+perpendicular direction is next, and so on. Those directions are the **principal components**.
+
+The recipe:
+
+1. **Centre** the data: subtract each column's mean, giving $X_c$. PCA measures spread around the
+   centre, not distance from the origin.
+2. **SVD**: $X_c = U\Sigma V^\top$.
+3. The **rows of $V^\top$** are the principal components, already sorted from most to least important.
+4. The variance along component $i$ is $\sigma_i^2 / (N - 1)$. Dividing by the total gives the **explained variance ratio**.
+5. **Project** onto the first $k$ components: $Z = X_c V_k$, where $V_k$ holds the first $k$ columns of $V$. Each row of $Z$ is the new $k$-dimensional description of an example.
+
+Why does this work? The covariance matrix is $C = X_c^\top X_c / (N - 1)$, and its eigenvectors
+are the directions of greatest variance (last lesson). Since $X_c^\top X_c = V\Sigma^2V^\top$, those
+eigenvectors are exactly the right singular vectors, with eigenvalues $\sigma_i^2 / (N - 1)$. Using
+the SVD skips forming $C$, which is faster and more accurate.
+
+Step 5 is just the projection from [lesson 5](/foundations/f3/linear-transformations/): dotting a
+centred point with a unit vector measures how far it reaches along that direction. PCA is a change
+of <Term id="basis" /> to axes lined up with the data, followed by dropping the axes that carry little
+variance.
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(1)
+t = rng.normal(size=200)
+X = np.column_stack([t,
+                     2 * t + 0.3 * rng.normal(size=200),
+                     -t + 0.3 * rng.normal(size=200)])   # 3 features, really about 1-D
+
+Xc = X - X.mean(axis=0)
+U, s, Vt = np.linalg.svd(Xc, full_matrices=False)
+var = s**2 / (len(X) - 1)
+print(np.round(Vt[0], 3))                  # first principal component
+print(np.round(var / var.sum(), 4))        # explained variance ratio
+Z = Xc @ Vt[:2].T                          # project to 2-D
+print(Z.shape)
+```
+
+```text title="Output"
+[-0.403 -0.823  0.4  ]
+[0.9829 0.0145 0.0026]
+(200, 2)
+```
+
+The first component is close to $(1, 2, -1)$ scaled to length 1, which is $(0.408, 0.816, -0.408)$:
+the direction the data was built along. Here the SVD happened to return it with every sign flipped,
+which describes the same line. It explains about 98% of the variance. Three features, one real
+direction.
+
+## Checking against scikit-learn
+
+scikit-learn's `PCA` does the same computation. Its `components_` are our `Vt[:k]` and
+`explained_variance_ratio_` is our ratio. One catch: an eigenvector or singular vector is only
+defined **up to sign**, so a library may return $-\mathbf{v}$ where you got $\mathbf{v}$. Compare
+absolute values, or flip signs to match.
+
+```python
+import numpy as np
+from sklearn.decomposition import PCA
+
+rng = np.random.default_rng(1)
+t = rng.normal(size=200)
+X = np.column_stack([t,
+                     2 * t + 0.3 * rng.normal(size=200),
+                     -t + 0.3 * rng.normal(size=200)])
+Xc = X - X.mean(axis=0)
+U, s, Vt = np.linalg.svd(Xc, full_matrices=False)
+
+pca = PCA(n_components=2).fit(X)       # sklearn centres for you
+print(np.allclose(np.abs(pca.components_), np.abs(Vt[:2])))
+print(np.round(pca.explained_variance_ratio_, 4))
+Z_ours = Xc @ Vt[:2].T
+print(np.allclose(np.abs(pca.transform(X)), np.abs(Z_ours)))
+```
+
+```text title="Output"
+True
+[0.9829 0.0145]
+True
+```
+
+:::caution[Scale your features first]
+PCA chases variance, and variance depends on units. If one column is income in dollars and another is
+age in years, the income column's variance is millions of times larger and the first component
+will simply be "income". When features have different units, standardise them first (subtract the
+mean and divide by the standard deviation of each column, or use scikit-learn's `StandardScaler`).
+:::
+
+## Where you will see PCA and SVD
+
+- **Visualising** high-dimensional data: project embeddings or image features to 2-D and plot them. You will do this with the iris flowers in the homework.
+- **Compression and speed**: fewer features for a downstream model, with little information lost.
+- **Denoising**: drop the small singular values, which often carry mostly noise.
+- **Understanding models**: analysing the singular values of weight matrices, and low-rank fine-tuning (LoRA) in Track C.
+
+PCA only finds **linear** structure: straight directions. Data lying on a curve needs nonlinear
+methods such as t-SNE or UMAP, which you may meet later.
+
+## Try it
+
+<CodeExercise id="f3-svd-and-pca-01" />
+
+<CodeExercise id="f3-svd-and-pca-02" />
+
+## Summary
+
+- Every matrix factors as $A = U\Sigma V^\top$: rotate, scale by the singular values $\sigma_1 \ge \sigma_2 \ge \dots \ge 0$, rotate. `U, s, Vt = np.linalg.svd(A, full_matrices=False)`.
+- Keeping the top $k$ singular values gives the best rank-$k$ approximation.
+- PCA: centre $X$, take its SVD; the rows of $V^\top$ are the principal components, $\sigma_i^2/(N-1)$ the variances, and $Z = X_cV_k$ the projected data.
+- Principal components are only defined up to sign; compare with scikit-learn using absolute values.
+- Standardise features with different units before PCA.

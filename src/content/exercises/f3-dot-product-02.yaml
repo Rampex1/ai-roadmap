@@ -1,0 +1,45 @@
+id: f3-dot-product-02
+lesson: foundations/f3/dot-product
+title: Cosine similarity
+prompt: |
+  Write `cosine_similarity(a, b)` that returns
+  $\dfrac{\mathbf{a}\cdot\mathbf{b}}{\lVert\mathbf{a}\rVert\,\lVert\mathbf{b}\rVert}$ for two 1-D arrays.
+  You may use `@` and `np.linalg.norm` now.
+
+  If either vector has length 0 (all zeros), raise a `ValueError` instead of returning `nan`.
+starter: |
+  import numpy as np
+
+  def cosine_similarity(a, b):
+      # TODO
+      return a @ b
+solution: |
+  import numpy as np
+
+  def cosine_similarity(a, b):
+      na, nb = np.linalg.norm(a), np.linalg.norm(b)
+      if na == 0 or nb == 0:
+          raise ValueError("cosine similarity is undefined for a zero vector")
+      return (a @ b) / (na * nb)
+tests: |
+  import math
+  import numpy as np
+  _a = np.array([1.0, 0.0])
+  assert math.isclose(cosine_similarity(_a, np.array([1.0, 1.0])), 1 / math.sqrt(2)), "45 degrees should give about 0.7071"
+  assert math.isclose(cosine_similarity(_a, np.array([-3.0, 0.0])), -1.0), "Opposite directions should give -1"
+  assert math.isclose(cosine_similarity(np.array([1.0, 2.0]), np.array([-2.0, 1.0])), 0.0, abs_tol=1e-12), "Perpendicular vectors should give 0"
+  _v = np.array([0.3, -1.2, 2.0, 0.5])
+  assert math.isclose(cosine_similarity(_v, 10 * _v), 1.0), "Scaling a vector should not change its direction: expected 1"
+  _rng = np.random.default_rng(3)
+  _x, _y = _rng.normal(size=8), _rng.normal(size=8)
+  _want = float(_x @ _y / (np.linalg.norm(_x) * np.linalg.norm(_y)))
+  assert math.isclose(cosine_similarity(_x, _y), _want, rel_tol=1e-9), "Wrong value for two random 8-D vectors"
+  try:
+      cosine_similarity(np.zeros(3), np.array([1.0, 2.0, 3.0]))
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("cosine_similarity should raise ValueError for a zero vector")
+hints:
+  - "Compute both norms first with np.linalg.norm."
+  - "If either norm equals 0, raise ValueError before dividing."

@@ -1,0 +1,244 @@
+---
+title: "Vectors: lists of numbers and arrows"
+module: f3
+order: 1
+estMinutes: 16
+objectives:
+  - "Describe a vector both as a list of numbers (a data row) and as an arrow in space"
+  - "Add, subtract and scale vectors by hand and with NumPy, and draw what each operation does"
+  - "Write a linear combination of vectors and recognise one in ML code such as a gradient step"
+goDeeper: 3b1b-essence-linear-algebra
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import vectorAddition from '@/assets/diagrams/f3-vector-addition.svg';
+
+Linear algebra is the language machine learning is written in. A dataset is a table of numbers, a
+model's weights are tables of numbers, and training is mostly multiplying those tables together very
+fast. This module teaches the handful of ideas you need to read that language: vectors, matrices,
+the ways matrices move space around, and two tools (eigenvectors and the SVD) that let you find the
+important directions in data.
+
+Everything starts with the <Term id="vector" />.
+
+## Two ways to see a vector
+
+**As a list of numbers.** A vector is an ordered list of numbers. A house could be described by its
+floor area in square metres, its number of bedrooms and its age in years:
+
+$$
+\mathbf{x} = (120,\ 3,\ 15)
+$$
+
+Each number is a **component**. This vector has 3 components, so we say it lives in
+$\mathbb{R}^3$ ("R three"), the set of all lists of three real numbers. In general a vector
+$\mathbf{v} = (v_1, v_2, \dots, v_n)$ lives in $\mathbb{R}^n$, and $n$ is its **dimension**. We write
+vectors in bold lower case, and $v_i$ means the $i$-th component. (Maths counts from 1; NumPy counts
+from 0, so $v_1$ is `v[0]`.)
+
+In [NumPy](/foundations/f2/numpy-arrays/), a vector is a 1-D array:
+
+```python
+import numpy as np
+
+house = np.array([120.0, 3.0, 15.0])   # area, bedrooms, age
+print(house.shape)
+print(house[0])
+```
+
+```text title="Output"
+(3,)
+120.0
+```
+
+The shape `(3,)` says "one axis with 3 numbers". Order matters: `(3, 120, 15)` would be a very small,
+very crowded house.
+
+**As an arrow.** With two components you can draw a vector. Treat $(2, 1)$ as an instruction: start
+at the origin, go 2 to the right and 1 up. The arrow from the origin to that point is the vector. The
+same picture works in 3-D, and the algebra works the same way in 100 or 4096 dimensions even though
+nobody can draw them.
+
+Both views matter in ML. A row of a spreadsheet is a vector (the list view). An
+**embedding**, the vector a language model uses to represent a word or sentence, is also a vector,
+and there the arrow view is what makes it useful: words with similar meanings get arrows pointing in
+similar directions. You will measure that in the [next lesson](/foundations/f3/dot-product/).
+
+## Adding vectors
+
+Two vectors of the same dimension are added **component by component**:
+
+$$
+\mathbf{a} + \mathbf{b} = (a_1 + b_1,\ a_2 + b_2,\ \dots,\ a_n + b_n)
+$$
+
+As arrows, addition means "walk along $\mathbf{a}$, then walk along $\mathbf{b}$". You put the tail
+of $\mathbf{b}$ on the tip of $\mathbf{a}$, and $\mathbf{a} + \mathbf{b}$ points to where you end up.
+
+<Figure
+  src={vectorAddition}
+  alt="Grid with arrow a from the origin to (2, 1), arrow b from the tip of a up to (3, 4), and arrow a + b from the origin straight to (3, 4). A dashed copy of b starts at the origin."
+  caption="Tip to tail: a + b is where you land after walking along a and then along b. Starting with b gives the same point, so a + b = b + a."
+/>
+
+Subtraction is component by component too. $\mathbf{a} - \mathbf{b}$ is the arrow that goes **from
+the tip of $\mathbf{b}$ to the tip of $\mathbf{a}$**: it is what you add to $\mathbf{b}$ to reach
+$\mathbf{a}$. That makes it the natural way to compare two data points, as you will see when we
+measure distances.
+
+## Scaling a vector
+
+Multiplying a vector by a single number $c$ (a **scalar**) multiplies every component:
+
+$$
+c\,\mathbf{v} = (c\,v_1,\ c\,v_2,\ \dots,\ c\,v_n)
+$$
+
+As an arrow, $2\mathbf{v}$ points the same way and is twice as long, $0.5\mathbf{v}$ is half as long,
+and $-\mathbf{v}$ points the opposite way. NumPy does all of this with ordinary operators:
+
+```python
+import numpy as np
+
+a = np.array([2.0, 1.0])
+b = np.array([1.0, 3.0])
+print(a + b)
+print(a - b)
+print(3 * a)
+print(-0.5 * b)
+```
+
+```text title="Output"
+[3. 4.]
+[ 1. -2.]
+[6. 3.]
+[-0.5 -1.5]
+```
+
+:::caution[Lists are not vectors]
+Python lists do not do vector arithmetic. `+` on lists joins them end to end, and `*` repeats them:
+
+```python
+import numpy as np
+
+print([2, 1] + [1, 3])
+print(np.array([2, 1]) + np.array([1, 3]))
+print(2 * [2, 1])
+```
+
+```text title="Output"
+[2, 1, 1, 3]
+[3 4]
+[2, 1, 2, 1]
+```
+
+Convert to arrays first. Adding vectors of different dimensions is not defined; NumPy raises a
+`ValueError` (or, with some shapes, broadcasts in a way you did not intend), so check `.shape`.
+:::
+
+## Linear combinations
+
+Scale some vectors and add the results, and you have a **linear combination**:
+
+$$
+c_1\mathbf{v}_1 + c_2\mathbf{v}_2 + \dots + c_k\mathbf{v}_k
+$$
+
+The numbers $c_i$ are the **coefficients**. This one idea runs through the whole module. For a start,
+any 2-D vector is a linear combination of the two unit arrows along the axes,
+$\mathbf{e}_1 = (1, 0)$ and $\mathbf{e}_2 = (0, 1)$:
+
+$$
+(3, 2) = 3\,\mathbf{e}_1 + 2\,\mathbf{e}_2
+$$
+
+```python
+import numpy as np
+
+e1 = np.array([1.0, 0.0])
+e2 = np.array([0.0, 1.0])
+print(3 * e1 + 2 * e2)
+
+a = np.array([2.0, 1.0])
+b = np.array([1.0, 3.0])
+print(2 * a - 1 * b)
+```
+
+```text title="Output"
+[3. 2.]
+[ 3. -1.]
+```
+
+Linear combinations are everywhere in ML code, often without the name:
+
+- **A gradient descent step**, $\mathbf{w}_{\text{new}} = \mathbf{w} - \eta\,\mathbf{g}$, combines the
+  weight vector $\mathbf{w}$ and the <Term id="gradient" text="gradient" /> $\mathbf{g}$ with
+  coefficients $1$ and $-\eta$ (the learning rate). You will derive it in F6.
+- **An average** of data points is a linear combination with every coefficient equal to $1/n$.
+- **Mixing embeddings**: the famous example "king minus man plus woman lands near queen" is a linear
+  combination of three word vectors. (It works only roughly, but it shows that directions in
+  embedding space can carry meaning.)
+
+```python
+import numpy as np
+
+w = np.array([0.5, -1.2, 2.0])      # current weights
+g = np.array([0.1, -0.4, 0.3])      # gradient of the loss
+lr = 0.1                            # learning rate
+print(w - lr * g)
+```
+
+```text title="Output"
+[ 0.49 -1.16  1.97]
+```
+
+## Many vectors at once: the data matrix
+
+A dataset is a stack of vectors, one per example. Stack three houses as rows and you get a 2-D array,
+which the next lessons will call a matrix $X$:
+
+```python
+import numpy as np
+
+X = np.array([[120.0, 3.0, 15.0],
+              [ 85.0, 2.0, 40.0],
+              [200.0, 4.0,  5.0]])
+print(X.shape)
+print(X[1])                       # the second house, a vector
+mean = (X[0] + X[1] + X[2]) / 3   # a linear combination of the rows
+print(mean)
+print(X.mean(axis=0))             # the same thing, done by NumPy
+```
+
+```text title="Output"
+(3, 3)
+[85.  2. 40.]
+[135.   3.  20.]
+[135.   3.  20.]
+```
+
+Each row is a point in $\mathbb{R}^3$, so a dataset is a **cloud of points**. Much of ML is about the
+shape of that cloud: which way it stretches, which points are close together, and how to separate
+one group from another. Keep that picture in mind; we come back to it in the
+[PCA lesson](/foundations/f3/svd-and-pca/).
+
+:::note[Rows or columns?]
+In maths books a vector is often written as a **column** of numbers. In code and in data tables an
+example is usually a **row**. Both are the same list of numbers. The difference only matters once
+we multiply by matrices, and we will be careful about it then.
+:::
+
+## Try it
+
+<CodeExercise id="f3-vectors-01" />
+
+<CodeExercise id="f3-vectors-02" />
+
+## Summary
+
+- A vector is an ordered list of $n$ numbers, a point or arrow in $\mathbb{R}^n$. In NumPy it is a 1-D array of shape `(n,)`.
+- Addition and scaling work component by component. Geometrically: tip to tail, and stretch or flip.
+- $\mathbf{a} - \mathbf{b}$ points from $\mathbf{b}$ to $\mathbf{a}$.
+- A linear combination $c_1\mathbf{v}_1 + \dots + c_k\mathbf{v}_k$ scales and adds vectors. Gradient steps and averages are linear combinations.
+- A dataset is a stack of row vectors: a cloud of points.

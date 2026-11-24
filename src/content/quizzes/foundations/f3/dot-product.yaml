@@ -1,0 +1,94 @@
+items:
+  - id: f3-dot-product-01
+    type: numeric
+    prompt: "Compute $(2, -1, 3)\\cdot(4, 5, -1)$."
+    answer: 0
+    tol: 0
+    explanation: "$2\\cdot 4 + (-1)\\cdot 5 + 3\\cdot(-1) = 8 - 5 - 3 = 0$. A zero dot product means the vectors are perpendicular."
+  - id: f3-dot-product-02
+    type: output
+    prompt: "What does this print? Watch the operator."
+    code: |
+      import numpy as np
+      a = np.array([1, 2, 3])
+      b = np.array([2, 0, 1])
+      print(a * b)
+      print(a @ b)
+    answer: |
+      [2 0 3]
+      5
+    explanation: "`*` is element-wise and gives a vector; `@` multiplies element-wise and then adds, giving the dot product 2 + 0 + 3 = 5."
+  - id: f3-dot-product-03
+    type: numeric
+    prompt: "What is the length $\\lVert\\mathbf{v}\\rVert$ of $\\mathbf{v} = (2, 3, 6)$?"
+    answer: 7
+    tol: 1e-9
+    explanation: "$\\sqrt{4 + 9 + 36} = \\sqrt{49} = 7$."
+  - id: f3-dot-product-04
+    type: mcq
+    prompt: "Two nonzero vectors have a negative dot product. What can you conclude?"
+    explanation: "$\\mathbf{a}\\cdot\\mathbf{b} = \\lVert\\mathbf{a}\\rVert\\lVert\\mathbf{b}\\rVert\\cos\\theta$ and the lengths are positive, so $\\cos\\theta < 0$, which means $\\theta$ is more than 90 degrees."
+    options:
+      - text: The angle between them is more than 90 degrees
+        correct: true
+        why: A negative cosine means an obtuse angle.
+      - text: One of the vectors has negative length
+        why: Lengths are never negative.
+      - text: They point in exactly opposite directions
+        why: That is only the extreme case of 180 degrees; any obtuse angle gives a negative dot product.
+      - text: They are perpendicular
+        why: Perpendicular vectors have a dot product of exactly 0.
+  - id: f3-dot-product-05
+    type: numeric
+    prompt: "What is the cosine similarity of $\\mathbf{a} = (1, 2)$ and $\\mathbf{b} = (3, 6)$?"
+    answer: 1
+    tol: 1e-9
+    explanation: "$\\mathbf{b} = 3\\mathbf{a}$, so they point the same way and the cosine similarity is 1. Cosine similarity ignores length."
+  - id: f3-dot-product-06
+    type: multi
+    prompt: "Which statements about cosine similarity are true?"
+    explanation: "It compares direction only, ranges from -1 to 1, and is undefined for the zero vector. For unit vectors it equals the plain dot product."
+    options:
+      - text: Scaling one vector by 5 does not change it
+        correct: true
+        why: The 5 appears in both the numerator and the norm in the denominator, and cancels.
+      - text: For two unit-length vectors it equals their dot product
+        correct: true
+        why: Both norms are 1, so the denominator is 1.
+      - text: It can be larger than 1 for long vectors
+        why: Dividing by the lengths keeps it between -1 and 1.
+      - text: It is defined for the zero vector and equals 0
+        why: The denominator would be 0, so it is undefined.
+  - id: f3-dot-product-07
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      v = np.array([0.0, 5.0, 0.0])
+      print(v / np.linalg.norm(v))
+    answer: "[0. 1. 0.]"
+    explanation: "The norm is 5, so dividing gives the unit vector (0, 1, 0) pointing the same way."
+  - id: f3-dot-product-08
+    type: numeric
+    prompt: "A linear model has weights $\\mathbf{w} = (2, -1)$ and bias $b = 3$. What does it predict for $\\mathbf{x} = (4, 5)$?"
+    answer: 6
+    tol: 1e-9
+    explanation: "$\\mathbf{w}\\cdot\\mathbf{x} + b = 2\\cdot 4 - 1\\cdot 5 + 3 = 6$."
+  - id: f3-dot-product-09
+    type: mcq
+    prompt: "Why do embedding search systems usually rank results by cosine similarity rather than by the raw dot product?"
+    explanation: "Embedding lengths often reflect things like frequency or text length. Cosine similarity removes length so only direction (meaning) is compared."
+    options:
+      - text: It compares only direction, so a long vector does not win just for being long
+        correct: true
+        why: Dividing by the norms removes the effect of length.
+      - text: It is much faster to compute than the dot product
+        why: It needs the dot product plus two norms, so it is not faster.
+      - text: The dot product does not work for vectors longer than 3 components
+        why: The dot product works in any dimension.
+  - id: f3-dot-product-10
+    type: numeric
+    prompt: "What is the distance between the points $(1, 1)$ and $(4, 5)$?"
+    answer: 5
+    tol: 1e-9
+    explanation: "The difference is $(3, 4)$, and its length is $\\sqrt{9 + 16} = 5$."

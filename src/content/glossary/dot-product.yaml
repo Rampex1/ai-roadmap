@@ -1,0 +1,8 @@
+term: "Dot product"
+short: "Multiply two equal-length vectors component by component and add the results: a·b = a1b1 + ... + anbn."
+body: |
+  The dot product $\mathbf{a}\cdot\mathbf{b} = \sum_i a_i b_i$ is a single number. Geometrically it equals
+  $\lVert\mathbf{a}\rVert\,\lVert\mathbf{b}\rVert\cos\theta$, so it is positive when the vectors point the
+  same way, zero when they are perpendicular and negative when they point apart. A linear model's
+  prediction $\mathbf{w}\cdot\mathbf{x} + b$ is a dot product. In NumPy: `a @ b` or `np.dot(a, b)`.
+related: ["vector", "vector-norm", "cosine-similarity"]

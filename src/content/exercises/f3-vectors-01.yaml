@@ -1,0 +1,41 @@
+id: f3-vectors-01
+lesson: foundations/f3/vectors
+title: Build a linear combination
+prompt: |
+  Write `linear_combination(coeffs, vectors)` that returns
+  $c_1\mathbf{v}_1 + c_2\mathbf{v}_2 + \dots + c_k\mathbf{v}_k$ as a NumPy array.
+
+  - `coeffs` is a list of numbers $c_1, \dots, c_k$.
+  - `vectors` is a list of 1-D NumPy arrays $\mathbf{v}_1, \dots, \mathbf{v}_k$, all the same length.
+
+  Use a loop that scales each vector and adds it to a running total. For example
+  `linear_combination([2, -1], [np.array([2.0, 1.0]), np.array([1.0, 3.0])])` returns `array([ 3., -1.])`.
+starter: |
+  import numpy as np
+
+  def linear_combination(coeffs, vectors):
+      total = np.zeros(len(vectors[0]))
+      # TODO: add each coefficient times its vector to total
+      return total
+solution: |
+  import numpy as np
+
+  def linear_combination(coeffs, vectors):
+      total = np.zeros(len(vectors[0]))
+      for c, v in zip(coeffs, vectors):
+          total = total + c * v
+      return total
+tests: |
+  import numpy as np
+  _a, _b = np.array([2.0, 1.0]), np.array([1.0, 3.0])
+  np.testing.assert_allclose(linear_combination([2, -1], [_a, _b]), [3.0, -1.0], err_msg="2a - b should be [3, -1]")
+  np.testing.assert_allclose(linear_combination([3, 2], [np.array([1.0, 0.0]), np.array([0.0, 1.0])]), [3.0, 2.0], err_msg="3 e1 + 2 e2 should be [3, 2]")
+  np.testing.assert_allclose(linear_combination([0.5], [np.array([4.0, -2.0, 6.0])]), [2.0, -1.0, 3.0], err_msg="A single vector should just be scaled")
+  _rng = np.random.default_rng(0)
+  _vs = [_rng.normal(size=5) for _ in range(4)]
+  _cs = [1.5, -2.0, 0.0, 3.0]
+  np.testing.assert_allclose(linear_combination(_cs, _vs), sum(c * v for c, v in zip(_cs, _vs)), err_msg="Wrong result for 4 random vectors in 5-D")
+  assert isinstance(linear_combination([1], [_a]), np.ndarray), "Return a NumPy array"
+hints:
+  - "Loop over pairs with zip(coeffs, vectors)."
+  - "Inside the loop, update the total with total = total + c * v."

@@ -1,0 +1,7 @@
+term: "Singular value decomposition (SVD)"
+short: "Writing any matrix as A = UΣVᵀ: a rotation, a scaling along axes by the singular values, then another rotation."
+body: |
+  The singular values $\sigma_1 \ge \sigma_2 \ge \dots \ge 0$ on the diagonal of $\Sigma$ measure how much
+  $A$ stretches each direction. Keeping only the top $k$ gives the best rank-$k$ approximation of $A$.
+  PCA is the SVD of the centred data matrix. In NumPy: `np.linalg.svd(A, full_matrices=False)`.
+related: ["rank", "pca", "eigenvector"]

@@ -1,0 +1,7 @@
+term: "Rank"
+short: "The number of linearly independent columns of a matrix (equal to the number of independent rows): the dimension of its output space."
+body: |
+  An $m \times n$ matrix has rank at most $\min(m, n)$. A square matrix is invertible exactly when it
+  has full rank. Low-rank matrices can be written as a product of two thin matrices, which is the idea
+  behind compression with SVD and behind LoRA fine-tuning. In NumPy: `np.linalg.matrix_rank(A)`.
+related: ["linear-independence", "basis", "svd"]

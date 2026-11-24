@@ -1,0 +1,236 @@
+---
+title: "Matrices: tables and linear maps"
+module: f3
+order: 3
+estMinutes: 17
+objectives:
+  - "Read a matrix's shape, entries, rows and columns, in notation and in NumPy"
+  - "Compute a matrix-vector product with the row view (dot products) and the column view (a linear combination)"
+  - "Use the shape rule to predict the shape of Ax, Xw and Wx + b"
+  - "Explain how a matrix acts as a function that moves vectors, and why its columns say where the axes go"
+goDeeper: 3b1b-essence-linear-algebra
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="matrix" /> is a rectangle of numbers. Like vectors, matrices have two personalities.
+As a **table** a matrix stores data: a dataset, an image, a set of embeddings. As a **map** a matrix
+is a machine that takes in a vector and puts out another vector. A neural network layer is exactly
+such a machine. The matrix-vector product connects the two views.
+
+## A matrix as a table
+
+A matrix with $m$ rows and $n$ columns is called $m \times n$ ("m by n"). We name matrices with
+capital letters and write the entry in row $i$, column $j$ as $A_{ij}$:
+
+$$
+A = \begin{pmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \end{pmatrix}
+\qquad A \text{ is } 2\times 3,\quad A_{12} = 2,\quad A_{21} = 4
+$$
+
+Rows first, then columns, always. In NumPy a matrix is a 2-D array and the same rule holds, but
+indices start at 0:
+
+```python
+import numpy as np
+
+A = np.array([[1, 2, 3],
+              [4, 5, 6]])
+print(A.shape)
+print(A[0, 1])     # row 0, column 1: the maths A_12
+print(A[1])        # second row
+print(A[:, 2])     # third column
+```
+
+```text title="Output"
+(2, 3)
+2
+[4 5 6]
+[3 6]
+```
+
+The most important table in ML is the **data matrix** $X$. Each row is one example and each column is
+one feature, so a dataset of $N$ examples with $d$ features is $N \times d$. Row $i$, written
+$\mathbf{x}_i$, is the feature vector of example $i$. Column $j$ holds every example's value of
+feature $j$. When you load a CSV into pandas (F2) and call `.to_numpy()`, this is what you get.
+
+## Multiplying a matrix by a vector
+
+In the [previous lesson](/foundations/f3/dot-product/) a linear model predicted one house price with
+a dot product, $\mathbf{w}\cdot\mathbf{x}$. With a whole dataset you want one prediction per row:
+dot each row of $X$ with $\mathbf{w}$. That is precisely the matrix-vector product.
+
+**Row view.** For an $m \times n$ matrix $A$ and a vector $\mathbf{x}$ with $n$ components,
+$A\mathbf{x}$ is the vector of $m$ dot products, one per row:
+
+$$
+(A\mathbf{x})_i = (\text{row } i \text{ of } A)\cdot\mathbf{x} = \sum_{j=1}^{n} A_{ij}\,x_j
+$$
+
+$$
+\begin{pmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \end{pmatrix}
+\begin{pmatrix} 1 \\ 0 \\ -1 \end{pmatrix}
+= \begin{pmatrix} 1\cdot 1 + 2\cdot 0 + 3\cdot(-1) \\ 4\cdot 1 + 5\cdot 0 + 6\cdot(-1) \end{pmatrix}
+= \begin{pmatrix} -2 \\ -2 \end{pmatrix}
+$$
+
+**Shape rule.** $(m \times n)$ times $(n)$ gives $(m)$. The vector's length must equal the number of
+**columns**, because each row is dotted with it. The output has one entry per **row**. When the
+sizes do not match, NumPy refuses:
+
+```python
+import numpy as np
+
+A = np.array([[1, 2, 3],
+              [4, 5, 6]])
+x = np.array([1, 0, -1])
+print(A @ x)
+print(np.array([A[0] @ x, A[1] @ x]))   # the row view, by hand
+try:
+    A @ np.array([1, 2])
+except ValueError as e:
+    print("ValueError")
+```
+
+```text title="Output"
+[-2 -2]
+[-2 -2]
+ValueError
+```
+
+For the data matrix this means all predictions at once:
+
+```python
+import numpy as np
+
+X = np.array([[120.0, 3.0, 15.0],
+              [ 85.0, 2.0, 40.0],
+              [200.0, 4.0,  5.0]])
+w = np.array([2.5, 10.0, -1.0])
+b = 50.0
+print(X @ w + b)      # (3 x 3) @ (3,) -> (3,), one price per house
+```
+
+```text title="Output"
+[365.  242.5 585. ]
+```
+
+One line, no loop, and it scales to millions of rows. This is why ML code is written with matrices.
+
+**Column view.** There is a second way to read the same product, and it is the key to everything that
+follows. $A\mathbf{x}$ is a **linear combination of the columns of $A$**, with the components of
+$\mathbf{x}$ as coefficients:
+
+$$
+\begin{pmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \end{pmatrix}
+\begin{pmatrix} 1 \\ 0 \\ -1 \end{pmatrix}
+= 1\begin{pmatrix} 1 \\ 4 \end{pmatrix} + 0\begin{pmatrix} 2 \\ 5 \end{pmatrix} - 1\begin{pmatrix} 3 \\ 6 \end{pmatrix}
+= \begin{pmatrix} -2 \\ -2 \end{pmatrix}
+$$
+
+Both views give the same numbers; they just group the multiplications differently. The row view is
+how you compute by hand. The column view tells you what outputs are **possible**: whatever
+$\mathbf{x}$ you choose, $A\mathbf{x}$ is some mix of the columns of $A$. That idea becomes "span"
+and "rank" in [lesson 7](/foundations/f3/span-and-rank/).
+
+## A matrix as a map
+
+Now fix $A$ and let $\mathbf{x}$ vary. The rule $\mathbf{x} \mapsto A\mathbf{x}$ is a function that
+takes vectors with $n$ components to vectors with $m$ components. Take a $2 \times 2$ example:
+
+$$
+A = \begin{pmatrix} 2 & -1 \\ 1 & 1 \end{pmatrix}
+$$
+
+Where does it send the two unit vectors $\mathbf{e}_1 = (1, 0)$ and $\mathbf{e}_2 = (0, 1)$? By the
+column view, $A\mathbf{e}_1$ picks out column 1 and $A\mathbf{e}_2$ picks out column 2:
+
+$$
+A\mathbf{e}_1 = \begin{pmatrix} 2 \\ 1 \end{pmatrix}, \qquad A\mathbf{e}_2 = \begin{pmatrix} -1 \\ 1 \end{pmatrix}
+$$
+
+**The columns of a matrix are where the axes land.** And because every vector is a combination of
+$\mathbf{e}_1$ and $\mathbf{e}_2$, knowing where those two land tells you where everything lands:
+$(3, 2) = 3\mathbf{e}_1 + 2\mathbf{e}_2$ goes to $3(2, 1) + 2(-1, 1) = (4, 5)$.
+
+```python
+import numpy as np
+
+A = np.array([[2, -1],
+              [1,  1]])
+print(A @ np.array([1, 0]))
+print(A @ np.array([0, 1]))
+print(A @ np.array([3, 2]))
+```
+
+```text title="Output"
+[2 1]
+[-1  1]
+[4 5]
+```
+
+This works because matrix multiplication has two properties, which together are called
+**linearity**:
+
+$$
+A(\mathbf{u} + \mathbf{v}) = A\mathbf{u} + A\mathbf{v}, \qquad A(c\,\mathbf{v}) = c\,(A\mathbf{v})
+$$
+
+A function with these two properties is a <Term id="linear-transformation" text="linear map" />
+(or linear transformation), and every linear map between $\mathbb{R}^n$ and $\mathbb{R}^m$ is
+multiplication by some matrix. Linearity is a strong restriction: the origin must stay put (since
+$A\mathbf{0} = \mathbf{0}$), and straight evenly spaced grid lines stay straight and evenly spaced. In
+[lesson 5](/foundations/f3/linear-transformations/) you will see the shapes this allows: rotations,
+stretches, shears and projections.
+
+## The linear layer
+
+A fully connected neural network layer with 3 inputs and 2 outputs stores a $2 \times 3$ weight
+matrix $W$ and a bias vector $\mathbf{b}$ with 2 components, and computes
+
+$$
+\mathbf{y} = W\mathbf{x} + \mathbf{b}
+$$
+
+Each output $y_i$ is a weighted sum of all inputs: row $i$ of $W$ holds the weights of output neuron
+$i$. So the shape of $W$ is **(outputs, inputs)**. (PyTorch's `nn.Linear` stores its weight in this
+order too, as you will see in F9.)
+
+```python
+import numpy as np
+
+W = np.array([[0.5, -1.0, 2.0],
+              [1.0,  0.0, 0.5]])     # 2 outputs, 3 inputs
+b = np.array([0.1, -0.2])
+x = np.array([1.0, 2.0, 3.0])
+y = W @ x + b
+print(y, y.shape)
+```
+
+```text title="Output"
+[4.6 2.3] (2,)
+```
+
+A deep network stacks such layers with a nonlinear function in between. Without the nonlinearity,
+a stack of linear layers would collapse into one matrix, as the
+[next lesson](/foundations/f3/matrix-multiplication/) shows.
+
+:::tip[Shapes first]
+Most bugs in ML code are shape bugs. Before you run a product, say the shapes out loud:
+"(2 by 3) times (3) gives (2)". If the inner numbers do not match, the code is wrong, and NumPy will
+usually tell you with a `ValueError` mentioning "mismatch in its core dimension".
+:::
+
+## Try it
+
+<CodeExercise id="f3-matrices-01" />
+
+<CodeExercise id="f3-matrices-02" />
+
+## Summary
+
+- An $m \times n$ matrix has $m$ rows and $n$ columns; $A_{ij}$ is row $i$, column $j$. In NumPy, `A[i, j]`, `A[i]`, `A[:, j]`.
+- The data matrix $X$ is $N \times d$: one row per example, one column per feature.
+- Row view: $(A\mathbf{x})_i$ is row $i$ dotted with $\mathbf{x}$. Column view: $A\mathbf{x}$ is a linear combination of the columns.
+- Shape rule: $(m \times n)(n) \to (m)$. `X @ w + b` predicts for every row at once.
+- A matrix is a linear map; its columns are where $\mathbf{e}_1, \dots, \mathbf{e}_n$ land. A linear layer computes $W\mathbf{x} + \mathbf{b}$ with $W$ of shape (outputs, inputs).

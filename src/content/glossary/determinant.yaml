@@ -1,0 +1,7 @@
+term: "Determinant"
+short: "A number det(A) for a square matrix that says how much A scales area (2-D) or volume; zero means A squashes space flat."
+body: |
+  For a $2 \times 2$ matrix $\begin{pmatrix} a & b \\ c & d \end{pmatrix}$ the determinant is $ad - bc$.
+  A negative sign means orientation is flipped. $\det(AB) = \det(A)\det(B)$, and $A$ is invertible
+  exactly when $\det(A) \ne 0$. In NumPy: `np.linalg.det(A)`.
+related: ["matrix-inverse", "rank", "linear-transformation"]

@@ -1,0 +1,217 @@
+---
+title: "Linear transformations you can see"
+module: f3
+order: 5
+estMinutes: 17
+objectives:
+  - "Write down the 2×2 matrix for a scaling, rotation, shear, reflection or projection by asking where e1 and e2 land"
+  - "Combine transformations by multiplying their matrices in the right order"
+  - "Project a vector onto another vector and split it into a parallel part and a perpendicular part"
+goDeeper: 3b1b-essence-linear-algebra
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import transformations from '@/assets/diagrams/f3-transformations.svg';
+
+In the [matrices lesson](/foundations/f3/matrices/) you learned that a matrix is a function on
+vectors and that **its columns are where the axes land**. That one fact lets you build a matrix for
+any <Term id="linear-transformation" /> you can picture, and read off what a matrix does by looking
+at it. We stay in 2-D so you can draw everything; the same ideas hold in any number of dimensions.
+
+## The recipe
+
+To find the matrix of a linear map in 2-D:
+
+1. Decide where $\mathbf{e}_1 = (1, 0)$ should go. That is column 1.
+2. Decide where $\mathbf{e}_2 = (0, 1)$ should go. That is column 2.
+
+Because the map is linear, the whole plane follows along: the grid of unit squares turns into a grid
+of identical parallelograms, the origin stays fixed, and straight lines stay straight. The picture
+below shows four classic maps acting on the unit square.
+
+<Figure
+  src={transformations}
+  alt="Four panels. Scale: the unit square becomes a rectangle 1.5 wide and 0.5 tall. Rotate 45 degrees: the square becomes a diamond standing on a corner. Shear: the square slants right into a parallelogram whose top edge runs from (1, 1) to (2, 1). Project onto x-axis: the square collapses to the segment from 0 to 1 on the x-axis."
+  caption="The unit square under four linear maps. Each matrix's columns are exactly the teal and indigo arrows."
+/>
+
+## Scaling
+
+$$
+S = \begin{pmatrix} s_1 & 0 \\ 0 & s_2 \end{pmatrix}
+$$
+
+sends $\mathbf{e}_1$ to $(s_1, 0)$ and $\mathbf{e}_2$ to $(0, s_2)$: it stretches the x-direction by
+$s_1$ and the y-direction by $s_2$. A diagonal matrix is always an axis-by-axis scaling. A negative
+entry also flips that axis, so $\begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}$ is a **reflection**
+in the y-axis. In ML, standardising features (dividing each column by its standard deviation) is
+multiplication by a diagonal matrix.
+
+## Rotation
+
+Rotating by an angle $\theta$ counterclockwise sends $\mathbf{e}_1$ to $(\cos\theta, \sin\theta)$
+and $\mathbf{e}_2$ to $(-\sin\theta, \cos\theta)$, which gives
+
+$$
+R_\theta = \begin{pmatrix} \cos\theta & -\sin\theta \\ \sin\theta & \cos\theta \end{pmatrix}
+$$
+
+```python
+import numpy as np
+
+theta = np.pi / 2                     # 90 degrees
+R = np.array([[np.cos(theta), -np.sin(theta)],
+              [np.sin(theta),  np.cos(theta)]])
+v = np.array([2.0, 1.0])
+print(np.round(R @ v, 6))
+print(np.linalg.norm(v), np.linalg.norm(R @ v))
+```
+
+```text title="Output"
+[-1.  2.]
+2.23606797749979 2.23606797749979
+```
+
+A rotation keeps every length and every angle. (The `np.round` hides floating-point noise like
+`6e-17` where an exact 0 should be.) Rotations show up in data augmentation for images and, in a
+higher-dimensional form, in the rotary position embeddings used by many LLMs.
+
+## Shear
+
+$$
+H = \begin{pmatrix} 1 & k \\ 0 & 1 \end{pmatrix}
+$$
+
+keeps $\mathbf{e}_1$ fixed and moves $\mathbf{e}_2$ to $(k, 1)$. Each point slides sideways by $k$
+times its height, like pushing the top of a deck of cards. The area of the square does not change:
+the parallelogram has the same base and height.
+
+## Projection
+
+Projection onto the x-axis keeps the x-coordinate and throws away y:
+
+$$
+P = \begin{pmatrix} 1 & 0 \\ 0 & 0 \end{pmatrix}
+$$
+
+$\mathbf{e}_2$ lands on the zero vector, and the whole plane is squashed onto a line. This map loses
+information: $(3, 1)$ and $(3, 5)$ both land on $(3, 0)$, so nothing can undo it. Remember this; it
+is the reason some matrices have no inverse ([next lesson](/foundations/f3/linear-systems/)).
+
+### Projecting onto any direction
+
+More useful is projecting onto the line through any vector $\mathbf{u}$. The projection of
+$\mathbf{a}$ is the point on that line closest to $\mathbf{a}$, its "shadow":
+
+$$
+\text{proj}_{\mathbf{u}}(\mathbf{a}) = \frac{\mathbf{a}\cdot\mathbf{u}}{\mathbf{u}\cdot\mathbf{u}}\,\mathbf{u}
+$$
+
+The fraction is a number that says how far along $\mathbf{u}$ to go. If $\mathbf{u}$ is a unit
+vector, $\mathbf{u}\cdot\mathbf{u} = 1$ and the length along $\mathbf{u}$ is simply
+$\mathbf{a}\cdot\mathbf{u}$. That is another meaning of the dot product: **the dot product with a
+unit vector measures how far you go in that direction.**
+
+The leftover part, $\mathbf{a} - \text{proj}_{\mathbf{u}}(\mathbf{a})$, is perpendicular to
+$\mathbf{u}$. So every vector splits into a piece along $\mathbf{u}$ plus a piece at right angles to it:
+
+```python
+import numpy as np
+
+a = np.array([3.0, 1.0])
+u = np.array([1.0, 1.0])
+p = (a @ u) / (u @ u) * u
+r = a - p
+print(p)
+print(r)
+print(r @ u)          # perpendicular to u
+print(p + r)          # the pieces add back to a
+```
+
+```text title="Output"
+[2. 2.]
+[ 1. -1.]
+0.0
+[3. 1.]
+```
+
+This shows up all over ML. Linear regression finds the projection of the target vector onto the
+space of predictions the features can make; the leftover is the error. PCA (lesson 9) projects
+data points onto the few directions that keep the most information.
+
+## Combining transformations
+
+Doing one map after another is matrix multiplication, as the
+[last lesson](/foundations/f3/matrix-multiplication/) showed. "Rotate by 90°, then scale x by 2" is
+$S R$, with the first map on the right:
+
+```python
+import numpy as np
+
+R = np.array([[0, -1],
+              [1,  0]])    # rotate 90 degrees
+S = np.array([[2, 0],
+              [0, 1]])     # stretch x by 2
+v = np.array([1, 0])
+print(S @ R @ v)           # rotate, then stretch
+print(R @ S @ v)           # stretch, then rotate
+```
+
+```text title="Output"
+[0 1]
+[0 2]
+```
+
+Rotating $(1, 0)$ first points it up, so the x-stretch does nothing to it. Stretching first makes it
+$(2, 0)$, which then rotates to $(0, 2)$. Different order, different result.
+
+## Area and the determinant, a first look
+
+Look again at the figure. The scaling turned the unit square (area 1) into a rectangle of area
+$1.5 \times 0.5 = 0.75$. The rotation and the shear kept the area at 1. The projection squashed it to
+area 0. That area factor is a single number attached to every square matrix, called the
+<Term id="determinant" />, and it is the same for every shape you transform, not just the unit
+square. For a $2 \times 2$ matrix
+
+$$
+\det\begin{pmatrix} a & b \\ c & d \end{pmatrix} = ad - bc
+$$
+
+```python
+import numpy as np
+
+for M in ([[1.5, 0], [0, 0.5]], [[1, 1], [0, 1]], [[1, 0], [0, 0]], [[0, 1], [1, 0]]):
+    print(round(np.linalg.det(np.array(M)), 4))
+```
+
+```text title="Output"
+0.75
+1.0
+0.0
+-1.0
+```
+
+The last matrix swaps the axes, a reflection: the area is unchanged but the orientation flips, which
+the determinant reports as a minus sign. A determinant of **0** means the map squashes the plane
+onto a line or a point, and that is exactly when information is lost.
+
+:::note[What is not linear]
+Moving everything right by 1, $\mathbf{x} \mapsto \mathbf{x} + (1, 0)$, is not linear, because it
+moves the origin. A map $\mathbf{x} \mapsto A\mathbf{x} + \mathbf{b}$ is called **affine**: linear,
+then shifted. Every neural network layer is affine before its activation function.
+:::
+
+## Try it
+
+<CodeExercise id="f3-linear-transformations-01" />
+
+<CodeExercise id="f3-linear-transformations-02" />
+
+## Summary
+
+- To build a 2-D linear map, put the image of $\mathbf{e}_1$ in column 1 and the image of $\mathbf{e}_2$ in column 2.
+- Diagonal matrices scale each axis (negative entries reflect). $R_\theta$ rotates and keeps lengths. $\begin{pmatrix} 1 & k \\ 0 & 1 \end{pmatrix}$ shears.
+- A projection squashes space onto a line or plane and cannot be undone.
+- $\text{proj}_{\mathbf{u}}(\mathbf{a}) = \frac{\mathbf{a}\cdot\mathbf{u}}{\mathbf{u}\cdot\mathbf{u}}\mathbf{u}$; the remainder is perpendicular to $\mathbf{u}$.
+- "First $B$, then $A$" is $AB$. The determinant is the area scaling factor; 0 means space is flattened.

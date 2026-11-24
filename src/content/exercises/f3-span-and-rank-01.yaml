@@ -1,0 +1,49 @@
+id: f3-span-and-rank-01
+lesson: foundations/f3/span-and-rank
+title: Independent or not?
+prompt: |
+  Write `is_independent(vectors)` that returns `True` if the list of 1-D arrays `vectors` is linearly
+  independent and `False` otherwise.
+
+  Stack them as the **columns** of a matrix (`np.column_stack`) and compare its rank
+  (`np.linalg.matrix_rank`) with the number of vectors.
+
+  Then write `in_span(vectors, b)` that returns `True` when `b` is a linear combination of `vectors`.
+  Hint: adding `b` as an extra column leaves the rank unchanged exactly when `b` adds no new direction.
+starter: |
+  import numpy as np
+
+  def is_independent(vectors):
+      # TODO
+      return True
+
+  def in_span(vectors, b):
+      # TODO
+      return True
+solution: |
+  import numpy as np
+
+  def is_independent(vectors):
+      A = np.column_stack(vectors)
+      return np.linalg.matrix_rank(A) == len(vectors)
+
+  def in_span(vectors, b):
+      A = np.column_stack(vectors)
+      Ab = np.column_stack(list(vectors) + [b])
+      return np.linalg.matrix_rank(Ab) == np.linalg.matrix_rank(A)
+tests: |
+  import numpy as np
+  _v1, _v2, _v3 = np.array([1.0, 0.0, 1.0]), np.array([0.0, 1.0, 1.0]), np.array([1.0, 1.0, 2.0])
+  assert is_independent([_v1, _v2]) == True, "(1, 0, 1) and (0, 1, 1) are independent"
+  assert is_independent([_v1, _v2, _v3]) == False, "(1, 1, 2) = (1, 0, 1) + (0, 1, 1), so the three are dependent"
+  assert is_independent([np.array([1.0, 2.0]), np.array([2.0, 4.0])]) == False, "(2, 4) is a multiple of (1, 2)"
+  assert is_independent([np.array([1.0, 2.0]), np.array([3.0, 1.0]), np.array([0.0, 1.0])]) == False, "Three vectors in 2-D are always dependent"
+  assert is_independent([np.array([1.0, 0.0]), np.array([0.0, 1.0])]) == True, "e1 and e2 are independent"
+  assert is_independent([np.array([0.0, 0.0, 0.0]), _v1]) == False, "A set containing the zero vector is dependent"
+  assert in_span([_v1, _v2], np.array([2.0, 3.0, 5.0])) == True, "(2, 3, 5) = 2(1, 0, 1) + 3(0, 1, 1) is in the span"
+  assert in_span([_v1, _v2], np.array([0.0, 0.0, 1.0])) == False, "(0, 0, 1) is not in the plane spanned by (1, 0, 1) and (0, 1, 1)"
+  assert in_span([np.array([1.0, 2.0])], np.array([-3.0, -6.0])) == True, "(-3, -6) lies on the line through (1, 2)"
+hints:
+  - "np.column_stack(vectors) puts each vector in its own column."
+  - "Independent means the rank equals the number of vectors."
+  - "For in_span, compare the rank with and without b as an extra column."

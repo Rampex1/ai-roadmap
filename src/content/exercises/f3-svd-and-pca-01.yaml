@@ -1,0 +1,52 @@
+id: f3-svd-and-pca-01
+lesson: foundations/f3/svd-and-pca
+title: Best rank-k approximation
+prompt: |
+  Write `rank_k(A, k)` that returns the best rank-`k` approximation of the matrix `A`, using
+  `np.linalg.svd(A, full_matrices=False)` and keeping only the `k` largest singular values:
+  $A_k = U_k\,\Sigma_k\,V_k^\top$.
+
+  Then write `energy(A, k)` that returns the fraction $\dfrac{\sigma_1^2 + \dots + \sigma_k^2}{\sigma_1^2 + \dots + \sigma_r^2}$
+  of the total "energy" (the sum of squared singular values) kept by the top `k`.
+starter: |
+  import numpy as np
+
+  def rank_k(A, k):
+      U, s, Vt = np.linalg.svd(A, full_matrices=False)
+      # TODO: keep the first k pieces
+      return A
+
+  def energy(A, k):
+      # TODO
+      return 1.0
+solution: |
+  import numpy as np
+
+  def rank_k(A, k):
+      U, s, Vt = np.linalg.svd(A, full_matrices=False)
+      return U[:, :k] @ np.diag(s[:k]) @ Vt[:k]
+
+  def energy(A, k):
+      s = np.linalg.svd(A, compute_uv=False)
+      return (s[:k] ** 2).sum() / (s ** 2).sum()
+tests: |
+  import math
+  import numpy as np
+  _rng = np.random.default_rng(16)
+  _A = _rng.normal(size=(8, 6))
+  for _k in (1, 2, 4):
+      _Ak = rank_k(_A, _k)
+      assert np.shape(_Ak) == _A.shape, f"rank_k should keep the shape {_A.shape}, got {np.shape(_Ak)}"
+      assert np.linalg.matrix_rank(_Ak) == _k, f"rank_k(A, {_k}) should have rank {_k}, got {np.linalg.matrix_rank(_Ak)}"
+  np.testing.assert_allclose(rank_k(_A, 6), _A, atol=1e-10, err_msg="Keeping every singular value should give back A")
+  _B = _rng.normal(size=(10, 2)) @ _rng.normal(size=(2, 7))
+  np.testing.assert_allclose(rank_k(_B, 2), _B, atol=1e-10, err_msg="A rank-2 matrix is reproduced exactly with k = 2")
+  _s = np.linalg.svd(_A, compute_uv=False)
+  assert math.isclose(np.linalg.norm(_A - rank_k(_A, 2)), math.sqrt((_s[2:] ** 2).sum()), rel_tol=1e-9), "The error of the best rank-2 approximation should equal sqrt of the sum of the dropped squared singular values"
+  assert math.isclose(energy(_B, 2), 1.0, rel_tol=1e-9), "A rank-2 matrix keeps all its energy with k = 2"
+  assert math.isclose(energy(np.diag([3.0, 4.0]), 1), 16 / 25), "For diag(3, 4) the top singular value 4 keeps 16/25 of the energy"
+  assert math.isclose(energy(_A, 3), (_s[:3] ** 2).sum() / (_s ** 2).sum(), rel_tol=1e-9), "energy(A, 3) is wrong for a random matrix"
+hints:
+  - "U[:, :k] keeps the first k columns of U, and Vt[:k] the first k rows of Vt."
+  - "np.diag(s[:k]) turns the first k singular values into a k by k diagonal matrix."
+  - "The singular values come sorted from largest to smallest, so the top k are s[:k]."

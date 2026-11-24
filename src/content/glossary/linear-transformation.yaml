@@ -1,0 +1,7 @@
+term: "Linear transformation"
+short: "A function on vectors that keeps addition and scaling: T(u + v) = T(u) + T(v) and T(cv) = cT(v). Every one is a matrix."
+body: |
+  Geometrically a linear map keeps grid lines straight, parallel and evenly spaced, and keeps the
+  origin fixed. Rotations, scalings, shears, reflections and projections are examples. The columns of
+  its matrix are where the basis vectors $\mathbf{e}_1, \dots, \mathbf{e}_n$ land.
+related: ["matrix", "matrix-multiplication", "determinant"]

@@ -1,0 +1,7 @@
+term: "Matrix inverse"
+short: "The matrix A⁻¹ that undoes A, so A⁻¹A = I; it exists only for square matrices with nonzero determinant."
+body: |
+  If $A$ squashes space onto a line or a point, information is lost and no inverse exists (the matrix
+  is singular). To solve $A\mathbf{x} = \mathbf{b}$ in code, prefer `np.linalg.solve(A, b)` to
+  forming `np.linalg.inv(A)`: it is faster and more accurate.
+related: ["determinant", "rank", "matrix"]

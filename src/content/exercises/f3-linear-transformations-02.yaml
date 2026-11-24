@@ -1,0 +1,44 @@
+id: f3-linear-transformations-02
+lesson: foundations/f3/linear-transformations
+title: Project onto a vector
+prompt: |
+  Write `project(a, u)` that returns the projection of `a` onto the line through the nonzero vector `u`:
+  $\dfrac{\mathbf{a}\cdot\mathbf{u}}{\mathbf{u}\cdot\mathbf{u}}\,\mathbf{u}$.
+
+  Then write `split(a, u)` that returns a tuple `(parallel, perpendicular)`: the projection, and the
+  remainder `a - projection`. The tests check that the remainder is perpendicular to `u` and that the
+  two pieces add back to `a`. Your functions must work in any dimension, not just 2-D.
+starter: |
+  import numpy as np
+
+  def project(a, u):
+      # TODO
+      return a
+
+  def split(a, u):
+      # TODO
+      return a, np.zeros_like(a)
+solution: |
+  import numpy as np
+
+  def project(a, u):
+      return (a @ u) / (u @ u) * u
+
+  def split(a, u):
+      p = project(a, u)
+      return p, a - p
+tests: |
+  import numpy as np
+  np.testing.assert_allclose(project(np.array([3.0, 1.0]), np.array([1.0, 1.0])), [2.0, 2.0], err_msg="Projecting (3, 1) onto (1, 1) should give (2, 2)")
+  np.testing.assert_allclose(project(np.array([3.0, 4.0]), np.array([5.0, 0.0])), [3.0, 0.0], err_msg="Projecting onto the x-axis keeps x and zeroes y, whatever the length of u")
+  _rng = np.random.default_rng(10)
+  for _n in (2, 3, 6):
+      _a, _u = _rng.normal(size=_n), _rng.normal(size=_n)
+      _p, _r = split(_a, _u)
+      np.testing.assert_allclose(_p + _r, _a, err_msg="parallel + perpendicular should equal a")
+      assert abs(_r @ _u) < 1e-10, f"The perpendicular part should have dot product 0 with u, got {_r @ _u}"
+      np.testing.assert_allclose(_p, (_a @ _u) / (_u @ _u) * _u, err_msg=f"Wrong projection in {_n}-D")
+      np.testing.assert_allclose(project(_a, 7 * _u), project(_a, _u), err_msg="The projection depends only on the line through u, not on the length of u")
+hints:
+  - "a @ u / (u @ u) is a single number: how many copies of u to take."
+  - "split can call project and then subtract."
