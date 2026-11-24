@@ -2,8 +2,71 @@ id: foundations-capstone
 module: f11
 kind: capstone
 title: "Foundations capstone: Kaggle tabular project and an MLP on MNIST"
-brief: "Placeholder brief. Written when module f11 ships."
+brief: |
+  This capstone is the proof that you have mastered Foundations. You run two complete projects the way a
+  practitioner would: decide everything with the training data, open the test set once, report numbers
+  with their uncertainty, and write down what the model is for and where it fails. Download the starter
+  notebook. Part A runs in local Jupyter (as set up in F0) or [Google Colab](https://colab.research.google.com/)
+  (File > Upload notebook); Part B needs PyTorch, so run it in Colab with a GPU.
+
+  ## Part A: an end-to-end tabular project
+
+  Predict whether a person earns more than 50,000 US dollars a year from the 1994 US census "Adult" data (48,842
+  people, 14 features). It is downloaded from OpenML with `sklearn.datasets.fetch_openml`, so no Kaggle
+  account is needed.
+
+  1. **Explore** (F2): the label balance, missing values, positive rates by group, and a two-panel figure.
+  2. **Leakage scan and feature choices** (F7): the cross-validated AUC of every column on its own; drop
+     the target, the census sampling weight `fnlwgt` and the duplicate education column; decide whether
+     `sex` and `race` are inputs, and justify it.
+  3. **Split once**: a stratified 80/20 split; the test set is only reachable through a helper that
+     refuses a second call.
+  4. **Compare models with CV** (F7, F8): a dummy baseline, a logistic regression inside a leakage-safe
+     `Pipeline` with a `ColumnTransformer`, and gradient boosting (`HistGradientBoostingClassifier`), on
+     the same 5 stratified folds. Justify the metric.
+  5. **Choose the decision threshold** from out-of-fold predictions, with a rule you state in advance.
+  6. **Evaluate once** on the test set, with 95% bootstrap confidence intervals (F5) for the AUC and for
+     your threshold metric.
+  7. **Fairness check** (F11): selection rate, TPR, FPR and precision by `sex`, the demographic parity
+     and equal opportunity gaps, and how a proxy such as `relationship` carries group information.
+  8. **Model card**: one page with intended use, data, metrics with intervals, results by group and
+     caveats.
+
+  Optional: apply the same workflow to a Kaggle Playground Series competition and compare your CV score
+  with the leaderboard.
+
+  ## Part B: an MLP on MNIST in PyTorch
+
+  1. **A configurable MLP** (F9): `make_mlp(sizes, dropout)`.
+  2. **A training function** that seeds everything and records training loss, validation loss and
+     validation accuracy per epoch, on a 55,000/5,000 train/validation split.
+  3. **An experiment log** with the baseline and at least three controlled changes, each changing one
+     kind of setting: architecture (width or depth), optimisation (learning rate or optimiser) and
+     regularisation (dropout or weight decay). A check cell verifies that each run changes exactly one
+     kind.
+  4. **Learning curves** for every run: training and validation loss, and validation accuracy.
+  5. **The test set, once**: your final model reaches **at least 98% test accuracy**.
+
+  ## Milestones (a suggested pace)
+
+  - **Week 1:** Part A steps 1 to 4. Write the notes cells as you go.
+  - **Week 2:** Part A steps 5 to 8, including the model card.
+  - **Week 3:** Part B, then the write-up. Restart and run all, and check that every check cell prints `OK`.
+
+  ## Deliverables
+
+  - The completed notebook, run top to bottom, with every check cell printing `OK`.
+  - The model card (section A8 of the notebook).
+  - A write-up of about one page (the last cell): Part A's choices and results with intervals, Part B's
+    experiment table and learning curves, and what you would do next.
 notebook: /homework/foundations-capstone.ipynb
 rubric:
-  - "Placeholder rubric item"
-compute: "Placeholder; set when the capstone is written."
+  - "Every check cell prints OK after restarting and running all cells, and each test set was used exactly once"
+  - "Part A uses only leakage-safe choices: fnlwgt and the duplicate education column are removed, preprocessing is inside a Pipeline, and the threshold comes from out-of-fold predictions"
+  - "The CV comparison reports mean and standard deviation for the dummy, logistic and boosting models, and the notes justify the metric and judge the gap against the fold-to-fold spread"
+  - "The test AUC and the threshold metric are reported with 95% bootstrap intervals and compared with the CV estimate"
+  - "The fairness notes give the selection-rate and TPR gaps by sex, relate them to the base rates, and explain the role of a proxy such as relationship"
+  - "The model card covers intended and out-of-scope use, data, metrics with intervals, results by group, and caveats, using your own numbers"
+  - "The experiment log has at least three controlled changes covering architecture, optimisation and regularisation, each with an expectation and an outcome, and the learning-curve figure has labelled axes and a legend"
+  - "The final MNIST MLP reaches at least 98% test accuracy, chosen on validation accuracy"
+compute: "Part A: any laptop or free Colab CPU, under 10 minutes of compute (the solution's cells took about 1 minute on a laptop), plus a small (a few MB) OpenML download. Part B: free Colab T4 GPU about 10 to 20 minutes including the ~12 MB MNIST download; on a CPU allow about 30 to 40 minutes (the solution's five runs took about 2 minutes on a laptop CPU)"
