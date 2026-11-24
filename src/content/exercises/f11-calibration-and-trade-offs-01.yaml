@@ -1,0 +1,70 @@
+id: f11-calibration-and-trade-offs-01
+lesson: foundations/f11/calibration-and-trade-offs
+title: A calibration table per group
+prompt: |
+  Write `calibration_table(score, y, group, edges)` for NumPy arrays `score` (between 0 and 1), `y`
+  (0 or 1) and `group`, and a list of bin `edges` such as `[0, 0.5, 1]`.
+
+  Return a DataFrame with **one row per score bin** (in order, from `pd.cut(score, edges)`) and **one
+  column per group** (sorted), holding the **fraction of positives** (`y == 1`) among that group's
+  people in that bin.
+
+  For the starter data, the table is
+
+  | bin | A | B |
+  |---|---|---|
+  | (0, 0.5] | 0.25 | 0.0 |
+  | (0.5, 1] | 1.0 | 0.5 |
+
+  so a score above 0.5 means "always repays" in group A but only "half repay" in group B.
+starter: |
+  import numpy as np
+  import pandas as pd
+
+  score = np.array([0.1, 0.15, 0.3, 0.35, 0.7, 0.8,   0.1, 0.2, 0.3, 0.4, 0.6, 0.9])
+  y     = np.array([0,   0,    1,   0,    1,   1,     0,   0,   0,   0,   1,   0])
+  group = np.array(["A"] * 6 + ["B"] * 6)
+
+  def calibration_table(score, y, group, edges):
+      df = pd.DataFrame({"y": y, "group": group, "bin": pd.cut(score, edges)})
+      # TODO: one column per group, not one overall rate per bin
+      return df.groupby("bin", observed=True)[["y"]].mean()
+
+  print(calibration_table(score, y, group, [0, 0.5, 1]))
+solution: |
+  import numpy as np
+  import pandas as pd
+
+  score = np.array([0.1, 0.15, 0.3, 0.35, 0.7, 0.8,   0.1, 0.2, 0.3, 0.4, 0.6, 0.9])
+  y     = np.array([0,   0,    1,   0,    1,   1,     0,   0,   0,   0,   1,   0])
+  group = np.array(["A"] * 6 + ["B"] * 6)
+
+  def calibration_table(score, y, group, edges):
+      df = pd.DataFrame({"y": y, "group": group, "bin": pd.cut(score, edges)})
+      return df.groupby(["bin", "group"], observed=True)["y"].mean().unstack()
+
+  print(calibration_table(score, y, group, [0, 0.5, 1]))
+tests: |
+  import numpy as np
+  import pandas as pd
+  _s = np.array([0.1, 0.15, 0.3, 0.35, 0.7, 0.8, 0.1, 0.2, 0.3, 0.4, 0.6, 0.9])
+  _y = np.array([0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0])
+  _g = np.array(["A"] * 6 + ["B"] * 6)
+  _r = calibration_table(_s, _y, _g, [0, 0.5, 1])
+  assert isinstance(_r, pd.DataFrame), f"Return a DataFrame, got {type(_r).__name__}"
+  assert [str(c) for c in _r.columns] == ["A", "B"], f"There should be one column per group (A, B), got {list(_r.columns)}. Try unstack() after grouping by bin and group"
+  assert _r.shape == (2, 2), f"Expected 2 bins x 2 groups, got shape {_r.shape}"
+  np.testing.assert_allclose(_r.to_numpy(dtype=float), [[0.25, 0.0], [1.0, 0.5]], err_msg="For the starter data the table should be [[0.25, 0.0], [1.0, 0.5]]")
+  _rng = np.random.default_rng(11)
+  _s2 = _rng.uniform(0.001, 0.999, 3000)
+  _g2 = _rng.choice(["p", "q", "r"], 3000)
+  _y2 = (_rng.random(3000) < _s2 * np.where(_g2 == "q", 0.5, 1.0)).astype(int)
+  _e = [0, 0.25, 0.5, 0.75, 1.0]
+  _r2 = calibration_table(_s2, _y2, _g2, _e)
+  assert _r2.shape == (4, 3), f"With 4 bins and 3 groups expected shape (4, 3), got {_r2.shape}"
+  _b = np.digitize(_s2, _e[1:-1], right=True)
+  _want = [[_y2[(_b == i) & (_g2 == k)].mean() for k in ["p", "q", "r"]] for i in range(4)]
+  np.testing.assert_allclose(_r2.to_numpy(dtype=float), _want, err_msg="Wrong values for a random 3-group, 4-bin test. Rows should follow the bins in order, columns the sorted groups")
+hints:
+  - "Group by two columns at once: `df.groupby([\"bin\", \"group\"], observed=True)[\"y\"].mean()`."
+  - "That gives a Series with a two-level index; `.unstack()` turns the inner level (group) into columns."

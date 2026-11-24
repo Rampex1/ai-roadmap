@@ -1,0 +1,7 @@
+term: "Quasi-identifier"
+short: "A column that does not identify anyone alone but can single people out in combination with others, such as ZIP code, sex and birth date."
+body: |
+  Quasi-identifiers are dangerous because they also appear in other datasets (voter rolls, public profiles),
+  which allows linking an "anonymised" record back to a name. Generalising them (age bands instead of ages,
+  districts instead of full postcodes) is how k-anonymity is achieved.
+related: ["k-anonymity", "differential-privacy"]

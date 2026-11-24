@@ -1,0 +1,8 @@
+term: "Differential privacy"
+short: "A guarantee that a computation's output barely changes whether or not any one person's data is included, achieved by adding calibrated noise."
+body: |
+  Formally, adding or removing one person changes the probability of any output by at most a factor
+  $e^{\varepsilon}$; smaller $\varepsilon$ means stronger privacy. The Laplace mechanism answers a counting
+  query (sensitivity 1) by adding Laplace noise with scale $1/\varepsilon$. Privacy loss adds up over repeated
+  queries, so systems track a privacy budget. DP-SGD applies the idea to training.
+related: ["k-anonymity", "quasi-identifier"]

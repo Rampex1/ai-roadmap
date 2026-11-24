@@ -1,0 +1,202 @@
+---
+title: "Privacy: anonymisation, differential privacy and memorisation"
+module: f11
+order: 5
+estMinutes: 16
+objectives:
+  - "Explain why removing names does not anonymise a dataset, using quasi-identifiers and documented re-identification cases"
+  - "Check whether a table is k-anonymous and generalise columns to raise k"
+  - "Answer a counting query with Laplace noise and explain what the privacy parameter epsilon controls"
+  - "Describe how large models can memorise training data, and name data minimisation as the first defence"
+goDeeper: dwork-roth-dp-book
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+ML runs on data about people: purchases, messages, medical records, photos, locations. Privacy asks what
+someone could learn about a **particular person** from your dataset, your published statistics or your
+trained model. The answer is usually "more than you would expect".
+
+**Personal data** is any information relating to an identifiable person. That covers obvious identifiers
+(name, email, ID number) but also anything that can single someone out when combined with other data:
+a precise location history, a face, a device ID.
+
+## Removing names is not anonymisation
+
+The intuitive fix is to delete names and IDs and publish the rest. Three well-known cases show why that
+fails:
+
+- **Medical records and a governor (1990s).** Massachusetts released "anonymised" hospital records of
+  state employees, keeping ZIP code, birth date and sex. Latanya Sweeney bought the voter roll for
+  Cambridge, Massachusetts, which listed the same three fields with names, and matched them to identify
+  the governor's own medical records. In later work she estimated that about 87% of the US population
+  (using 1990 census data) was likely to be uniquely identified by **5-digit ZIP code, sex and date of
+  birth** alone. Later estimates with newer census data were lower (about 63%), still a majority.
+- **The Netflix Prize (data released 2006).** Netflix published movie ratings from about half a million
+  subscribers with names removed. [Narayanan and Shmatikov](https://arxiv.org/abs/cs/0610105) showed that
+  knowing 8 of someone's ratings (2 of which could be completely wrong) with dates accurate to within
+  14 days was enough to uniquely identify 99% of records. Public reviews on other sites could supply that
+  knowledge.
+- **AOL search logs (2006).** AOL released three months of search queries with user names replaced by
+  numbers. Journalists at the *New York Times* identified one user from the content of her searches alone.
+
+The columns that do the damage are <Term id="quasi-identifier" text="quasi-identifiers" />: not identifying
+alone, but identifying in combination, and available elsewhere for linking.
+
+:::caution[Rich data is identifying data]
+The more columns a record has, and the more detailed each one is, the more likely it is unique. For
+high-dimensional data like ratings, locations or browsing histories, almost every record is unique, and
+"anonymised" is rarely a safe description.
+:::
+
+## k-anonymity
+
+<Term id="k-anonymity" /> is a classic, simple test. A table is **k-anonymous** with respect to a set of
+quasi-identifiers if every combination of their values that appears is shared by **at least $k$ rows**.
+Then any record links to at least $k$ people, not one. To compute $k$, group by the quasi-identifiers and
+take the smallest group size.
+
+```python
+import pandas as pd
+
+df = pd.DataFrame({
+    "age":       [34, 36, 31, 52, 57, 55, 38, 33],
+    "postcode":  ["LS6 1AA", "LS6 2BB", "LS6 3CC", "YO1 7DD", "YO1 8EE", "YO1 9FF", "LS6 4GG", "LS6 5HH"],
+    "diagnosis": ["flu", "asthma", "flu", "diabetes", "flu", "asthma", "diabetes", "flu"],
+})
+print(df.groupby(["age", "postcode"]).size().min())
+```
+
+```text title="Output"
+1
+```
+
+$k = 1$: every person is unique on (age, postcode). The fix is **generalisation**: coarsen the
+quasi-identifiers until groups are large enough. Ages become decades, full postcodes become districts:
+
+```python
+gen = pd.DataFrame({
+    "age": (df["age"] // 10 * 10).astype(str) + "s",
+    "area": df["postcode"].str.split().str[0],
+    "diagnosis": df["diagnosis"],
+})
+print(gen.groupby(["age", "area"]).size())
+```
+
+```text title="Output"
+age  area
+30s  LS6     5
+50s  YO1     3
+dtype: int64
+```
+
+Now $k = 3$. The cost is detail: an analyst can no longer study age effects within a decade.
+
+k-anonymity has well-known holes. If everyone in a group has the **same** diagnosis, knowing someone is in
+the group reveals it (a **homogeneity attack**; refinements such as l-diversity require variety in the
+sensitive column). And it only protects against linking on the columns you listed as quasi-identifiers.
+These weaknesses led researchers to a stronger, mathematical definition.
+
+## Differential privacy: the intuition
+
+<Term id="differential-privacy" /> (DP) changes the question. Instead of making the **data** look
+anonymous, it makes the **answers** computed from it barely depend on any single person. The promise:
+whatever an attacker learns from the output, they would have learned almost the same if your record had
+not been in the dataset at all. So joining the dataset carries little extra risk for you.
+
+The standard way to achieve it is to add carefully sized random noise. For a **counting query** ("how
+many patients have diabetes?"), adding or removing one person changes the true count by at most 1; this
+is the query's **sensitivity**. The **Laplace mechanism** returns
+
+$$
+\text{noisy count} = \text{true count} + \text{Laplace}(0, b), \qquad b = \frac{\text{sensitivity}}{\varepsilon} = \frac{1}{\varepsilon}
+$$
+
+The Laplace distribution is a symmetric, peaked distribution centred on 0 with scale $b$; its standard
+deviation is $\sqrt{2}\,b$. $\varepsilon$ (epsilon) is the **privacy parameter**: smaller $\varepsilon$
+means more noise and stronger privacy. NumPy draws Laplace noise with `rng.laplace(0, b)`:
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(0)
+true_count = 42
+for eps in [1.0, 0.1]:
+    noisy = true_count + rng.laplace(0, 1 / eps, size=5)
+    print(eps, noisy.round(1))
+```
+
+```text title="Output"
+1.0 [42.3 41.4 39.5 38.6 43. ]
+0.1 [59.5 44.4 48.1 42.9 62.4]
+```
+
+With $\varepsilon = 1$, answers are within a few of 42: useful for a count in the thousands, and no single
+person changes the picture. With $\varepsilon = 0.1$, the noise is ten times larger.
+
+Three things to know about DP:
+
+- **Privacy loss adds up.** Asking many questions spends privacy: roughly, $k$ queries at $\varepsilon$
+  each cost $k\varepsilon$ in total. Systems track a **privacy budget**. Repeating one query and averaging
+  would otherwise cancel the noise.
+- **It is used in practice.** The US Census Bureau used differential privacy to protect 2020 census
+  results, and several technology companies use it to collect usage statistics.
+- **It applies to training too.** **DP-SGD** clips each example's gradient and adds noise during
+  stochastic gradient descent (F6), so the trained model provably depends little on any one example, at
+  some cost in accuracy.
+
+:::note[Why noise and not rounding?]
+Any deterministic answer can, in principle, be compared across two datasets that differ by one person.
+Randomness is what makes the outputs on "with you" and "without you" nearly indistinguishable. The
+mathematical definition says the probability of any output changes by at most a factor $e^{\varepsilon}$
+when one person is added or removed.
+:::
+
+## Models remember: memorisation
+
+A trained model is a summary of its data, and sometimes too good a summary. Large models with many
+parameters can **memorise** rare training examples verbatim. In 2021, [Carlini and colleagues](https://arxiv.org/abs/2012.07805)
+showed that querying GPT-2 could extract hundreds of verbatim sequences from its training data, including
+names, phone numbers and email addresses that appeared in just one document, and found larger models
+more vulnerable than smaller ones. Similar extraction has since been shown for image generation models.
+
+Related attacks:
+
+- **Membership inference**: guess whether a particular record was in the training set, often from how
+  confident the model is on it (models tend to be more confident on examples they trained on).
+- **Model inversion**: reconstruct typical features of a class or person from a model's outputs.
+
+This applies directly to the large language models from F10. The takeaway: if sensitive data goes in, assume a
+model **might** be able to give some of it back.
+
+## Data minimisation and other defences
+
+The cheapest privacy protection is data you never collected. **Data minimisation** means collecting and
+keeping only what the stated purpose needs, for only as long as it needs it. Practical habits:
+
+1. Drop columns that the model does not need before they reach the training pipeline.
+2. Coarsen what you keep: year of birth instead of date, district instead of full address.
+3. Delete raw data on a schedule; keep aggregates if they suffice.
+4. Remove duplicates and obvious personal identifiers (emails, phone numbers) from text corpora, since
+   repeated data is memorised more readily.
+5. Restrict who can access sensitive columns, including the group attribute kept for fairness audits.
+6. Where the risk justifies the accuracy cost, train or release statistics with differential privacy.
+
+Data protection law in many places, such as the EU's GDPR, builds in principles like purpose limitation
+and data minimisation; the details are beyond this course.
+
+<CodeExercise id="f11-privacy-01" />
+
+<CodeExercise id="f11-privacy-02" />
+
+## Summary
+
+- Removing names is not anonymisation. Quasi-identifiers such as ZIP code, sex and birth date, or a few
+  movie ratings, can single people out by linking with other data.
+- A table is k-anonymous if every quasi-identifier combination appears at least $k$ times; generalising
+  columns raises $k$ at the cost of detail, and homogeneous groups still leak.
+- Differential privacy adds noise so outputs barely depend on any one person. The Laplace mechanism for a
+  count adds noise of scale $1/\varepsilon$; smaller $\varepsilon$ means stronger privacy and noisier
+  answers, and repeated queries spend the budget.
+- Large models can memorise and regurgitate training data. Data minimisation, deduplication and DP
+  training are the main defences.

@@ -1,0 +1,63 @@
+id: f11-privacy-01
+lesson: foundations/f11/privacy
+title: Check k-anonymity
+prompt: |
+  Write two functions for a pandas DataFrame `df` and a list of quasi-identifier column names
+  `quasi_ids`:
+
+  - `k_of(df, quasi_ids)` returns the table's $k$: the size of the **smallest** group of rows sharing the
+    same values in all the quasi-identifier columns (as a plain number).
+  - `is_k_anonymous(df, quasi_ids, k)` returns `True` if the table is k-anonymous for that `k`, that is,
+    every group has at least `k` rows.
+
+  For the starter table, `k_of(people, ["age_band", "area"])` is `2`, so the table is 2-anonymous but
+  not 3-anonymous. With `["age_band"]` alone, $k$ is `3`.
+starter: |
+  import pandas as pd
+
+  people = pd.DataFrame({
+      "age_band": ["30s", "30s", "30s", "50s", "50s", "50s", "30s"],
+      "area":     ["LS6", "LS6", "YO1", "YO1", "YO1", "YO1", "YO1"],
+      "diagnosis": ["flu", "asthma", "flu", "flu", "diabetes", "asthma", "flu"],
+  })
+
+  def k_of(df, quasi_ids):
+      return len(df)
+
+  def is_k_anonymous(df, quasi_ids, k):
+      return True
+
+  print(k_of(people, ["age_band", "area"]), is_k_anonymous(people, ["age_band", "area"], 3))
+solution: |
+  import pandas as pd
+
+  people = pd.DataFrame({
+      "age_band": ["30s", "30s", "30s", "50s", "50s", "50s", "30s"],
+      "area":     ["LS6", "LS6", "YO1", "YO1", "YO1", "YO1", "YO1"],
+      "diagnosis": ["flu", "asthma", "flu", "flu", "diabetes", "asthma", "flu"],
+  })
+
+  def k_of(df, quasi_ids):
+      return int(df.groupby(quasi_ids).size().min())
+
+  def is_k_anonymous(df, quasi_ids, k):
+      return k_of(df, quasi_ids) >= k
+
+  print(k_of(people, ["age_band", "area"]), is_k_anonymous(people, ["age_band", "area"], 3))
+tests: |
+  import pandas as pd
+  _p = pd.DataFrame({"age_band": ["30s", "30s", "30s", "50s", "50s", "50s", "30s"], "area": ["LS6", "LS6", "YO1", "YO1", "YO1", "YO1", "YO1"], "diagnosis": ["flu", "asthma", "flu", "flu", "diabetes", "asthma", "flu"]})
+  _k = k_of(_p, ["age_band", "area"])
+  assert _k == 2, f"k_of(people, ['age_band', 'area']) should be 2 (the (30s, LS6) and (30s, YO1) groups have 2 rows each), got {_k!r}"
+  assert k_of(_p, ["age_band"]) == 3, f"With only age_band as quasi-identifier the groups have 4 and 3 rows, so k is 3; got {k_of(_p, ['age_band'])!r}"
+  assert k_of(_p, ["area"]) == 2, f"With only area, the groups have 2 and 5 rows, so k is 2; got {k_of(_p, ['area'])!r}"
+  assert k_of(_p, ["age_band", "area", "diagnosis"]) == 1, "Adding diagnosis as a quasi-identifier makes some rows unique, so k should be 1"
+  assert bool(is_k_anonymous(_p, ["age_band", "area"], 2)) is True, "The starter table is 2-anonymous on age_band and area"
+  assert bool(is_k_anonymous(_p, ["age_band", "area"], 3)) is False, "The starter table is not 3-anonymous on age_band and area"
+  assert bool(is_k_anonymous(_p, ["age_band"], 3)) is True, "On age_band alone the table is 3-anonymous"
+  _q = pd.DataFrame({"zip": ["123"] * 5 + ["456"] * 5, "sex": ["F", "M"] * 5})
+  assert k_of(_q, ["zip", "sex"]) == 2 and k_of(_q, ["zip"]) == 5, "Wrong k for a second table: each (zip, sex) group has 2 or 3 rows, each zip has 5"
+hints:
+  - "`df.groupby(quasi_ids).size()` counts the rows in every combination of the quasi-identifier values."
+  - "k is the smallest of those counts: add `.min()`, and wrap it in `int(...)` to get a plain number."
+  - "is_k_anonymous can call k_of and compare with k."

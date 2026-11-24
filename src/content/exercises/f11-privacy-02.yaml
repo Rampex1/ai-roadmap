@@ -1,0 +1,53 @@
+id: f11-privacy-02
+lesson: foundations/f11/privacy
+title: A differentially private count
+prompt: |
+  Write `private_count(values, threshold, epsilon, rng)` that answers "how many values are **greater
+  than** `threshold`?" with the **Laplace mechanism**:
+
+  - compute the true count (a counting query has sensitivity 1);
+  - add one draw of Laplace noise with mean 0 and scale $b = 1/\varepsilon$ using `rng.laplace(0, b)`;
+  - return the noisy count as a float (do not round it).
+
+  `values` is a NumPy array and `rng` is a NumPy `Generator`. The tests call your function thousands of
+  times and check that the answers average to the true count and spread out by the right amount for
+  each epsilon.
+starter: |
+  import numpy as np
+
+  ages = np.array([23, 35, 41, 52, 67, 29, 71, 44, 38, 60])
+  rng = np.random.default_rng(0)
+
+  def private_count(values, threshold, epsilon, rng):
+      true_count = np.sum(values > threshold)
+      return float(true_count)
+
+  print(private_count(ages, 40, 1.0, rng))   # the true count is 6
+solution: |
+  import numpy as np
+
+  ages = np.array([23, 35, 41, 52, 67, 29, 71, 44, 38, 60])
+  rng = np.random.default_rng(0)
+
+  def private_count(values, threshold, epsilon, rng):
+      true_count = np.sum(values > threshold)
+      return float(true_count + rng.laplace(0, 1 / epsilon))
+
+  print(private_count(ages, 40, 1.0, rng))   # the true count is 6
+tests: |
+  import numpy as np
+  _ages = np.array([23, 35, 41, 52, 67, 29, 71, 44, 38, 60])
+  _rng = np.random.default_rng(123)
+  _a = np.array([private_count(_ages, 40, 1.0, _rng) for _ in range(6000)], dtype=float)
+  assert np.std(_a) > 0.5, "Every answer is (almost) the same: add Laplace noise with rng.laplace(0, 1 / epsilon)"
+  assert abs(_a.mean() - 6) < 0.1, f"Answers should average to the true count 6 (values greater than 40), got a mean of {_a.mean():.2f}. Is the noise centred on 0, and is the comparison strictly greater?"
+  assert abs(_a.std() - np.sqrt(2)) < 0.12, f"With epsilon = 1 the noise scale is 1, so the standard deviation should be about sqrt(2) = 1.41; got {_a.std():.2f}"
+  _inside = np.mean(np.abs(_a - 6) < 1.0)
+  assert abs(_inside - (1 - np.exp(-1))) < 0.03, f"About 63% of Laplace(0, 1) draws lie within 1 of 0, got {_inside:.2f}. Use rng.laplace, not normal noise"
+  _b = np.array([private_count(_ages, 30, 0.25, _rng) for _ in range(6000)], dtype=float)
+  assert abs(_b.mean() - 8) < 0.4, f"For threshold 30 the true count is 8; answers should average about 8, got {_b.mean():.2f}"
+  assert abs(_b.std() - 4 * np.sqrt(2)) < 0.5, f"With epsilon = 0.25 the scale is 1/0.25 = 4 and the standard deviation about 5.66; got {_b.std():.2f}. Use scale 1 / epsilon"
+hints:
+  - "One draw of noise: `rng.laplace(0, 1 / epsilon)`."
+  - "Smaller epsilon means a larger scale, so more noise and more privacy."
+  - "Return `float(true_count + noise)`."

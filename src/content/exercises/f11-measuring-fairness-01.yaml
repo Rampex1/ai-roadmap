@@ -1,0 +1,77 @@
+id: f11-measuring-fairness-01
+lesson: foundations/f11/measuring-fairness
+title: Confusion-matrix rates per group
+prompt: |
+  Write `group_rates(y_true, y_pred, group)` for three NumPy arrays of the same length (`y_true` and
+  `y_pred` hold 0s and 1s). Return a pandas DataFrame with **one row per group** (the group values as the
+  index, sorted) and three columns:
+
+  - `selection_rate`: the fraction of the group with `y_pred == 1`;
+  - `tpr`: among the group's actual positives (`y_true == 1`), the fraction predicted 1;
+  - `fpr`: among the group's actual negatives (`y_true == 0`), the fraction predicted 1.
+
+  You may assume every group has at least one positive and one negative. For the lesson's data the
+  result is A: `0.6, 0.833, 0.25` and B: `0.3, 0.5, 0.167`.
+starter: |
+  import numpy as np
+  import pandas as pd
+
+  group  = np.array(["A"] * 10 + ["B"] * 10)
+  y_true = np.array([1, 1, 1, 1, 1, 1, 0, 0, 0, 0,   1, 1, 1, 1, 0, 0, 0, 0, 0, 0])
+  y_pred = np.array([1, 1, 1, 1, 1, 0, 1, 0, 0, 0,   1, 1, 0, 0, 1, 0, 0, 0, 0, 0])
+
+  def group_rates(y_true, y_pred, group):
+      rows = {}
+      for g in np.unique(group):
+          m = group == g
+          rows[g] = {"selection_rate": y_pred[m].mean(), "tpr": 0.0, "fpr": 0.0}   # TODO tpr, fpr
+      return pd.DataFrame(rows).T
+
+  print(group_rates(y_true, y_pred, group).round(3))
+solution: |
+  import numpy as np
+  import pandas as pd
+
+  group  = np.array(["A"] * 10 + ["B"] * 10)
+  y_true = np.array([1, 1, 1, 1, 1, 1, 0, 0, 0, 0,   1, 1, 1, 1, 0, 0, 0, 0, 0, 0])
+  y_pred = np.array([1, 1, 1, 1, 1, 0, 1, 0, 0, 0,   1, 1, 0, 0, 1, 0, 0, 0, 0, 0])
+
+  def group_rates(y_true, y_pred, group):
+      rows = {}
+      for g in np.unique(group):
+          m = group == g
+          t, p = y_true[m], y_pred[m]
+          rows[g] = {
+              "selection_rate": p.mean(),
+              "tpr": p[t == 1].mean(),
+              "fpr": p[t == 0].mean(),
+          }
+      return pd.DataFrame(rows).T
+
+  print(group_rates(y_true, y_pred, group).round(3))
+tests: |
+  import numpy as np
+  import pandas as pd
+  _g = np.array(["A"] * 10 + ["B"] * 10)
+  _t = np.array([1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0])
+  _p = np.array([1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0])
+  _r = group_rates(_t, _p, _g)
+  assert isinstance(_r, pd.DataFrame), f"Return a DataFrame, got {type(_r).__name__}"
+  assert sorted(_r.columns) == ["fpr", "selection_rate", "tpr"], f"Columns should be selection_rate, tpr and fpr, got {list(_r.columns)}"
+  assert list(_r.index) == ["A", "B"], f"The index should be the groups A and B, got {list(_r.index)}"
+  np.testing.assert_allclose(_r.loc["A", ["selection_rate", "tpr", "fpr"]].to_numpy(dtype=float), [0.6, 5 / 6, 0.25], err_msg="Group A should have selection_rate 0.6, tpr 0.833, fpr 0.25")
+  np.testing.assert_allclose(_r.loc["B", ["selection_rate", "tpr", "fpr"]].to_numpy(dtype=float), [0.3, 0.5, 1 / 6], err_msg="Group B should have selection_rate 0.3, tpr 0.5, fpr 0.167. TPR is computed among actual positives only, FPR among actual negatives only")
+  _rng = np.random.default_rng(7)
+  _g2 = _rng.choice(["x", "y", "z"], size=300)
+  _t2 = (_rng.random(300) < 0.4).astype(int)
+  _p2 = (_rng.random(300) < np.where(_t2 == 1, 0.7, 0.2)).astype(int)
+  _r2 = group_rates(_t2, _p2, _g2)
+  assert list(_r2.index) == ["x", "y", "z"], f"Expected one row per group x, y, z (sorted), got {list(_r2.index)}"
+  for _k in ["x", "y", "z"]:
+      _m = _g2 == _k
+      _want = [_p2[_m].mean(), _p2[_m & (_t2 == 1)].mean(), _p2[_m & (_t2 == 0)].mean()]
+      np.testing.assert_allclose(_r2.loc[_k, ["selection_rate", "tpr", "fpr"]].to_numpy(dtype=float), _want, err_msg=f"Wrong rates for group {_k} in a random 3-group test")
+hints:
+  - "Inside the loop, slice both arrays with the group mask: `t, p = y_true[m], y_pred[m]`."
+  - "TPR is the mean of the predictions among actual positives: `p[t == 1].mean()`."
+  - "FPR is the same among actual negatives: `p[t == 0].mean()`."

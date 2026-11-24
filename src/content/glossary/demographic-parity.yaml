@@ -1,0 +1,7 @@
+term: "Demographic parity"
+short: "The fairness criterion that every group has the same selection rate, P(prediction = 1 | group)."
+body: |
+  Also called statistical parity or independence. Its gap is usually reported as the difference (or ratio)
+  between the highest and lowest group selection rates. It ignores the true outcomes, so when base rates
+  really differ it usually means selecting people with different chances of success.
+related: ["equalized-odds", "confusion-matrix", "calibration"]

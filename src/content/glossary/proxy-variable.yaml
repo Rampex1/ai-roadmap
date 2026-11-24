@@ -1,0 +1,8 @@
+term: "Proxy variable"
+short: "A feature correlated with a sensitive attribute (such as postcode with ethnicity), which lets a model use that attribute without seeing it."
+body: |
+  Removing a sensitive column ("fairness through unawareness") rarely stops a model from discriminating,
+  because proxies carry the same information. A quick test: if the other features can predict group
+  membership, the model can use it. "Proxy" is also used for a stand-in target, such as health costs used
+  in place of health needs.
+related: ["algorithmic-bias"]

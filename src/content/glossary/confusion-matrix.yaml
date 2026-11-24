@@ -1,0 +1,7 @@
+term: "Confusion matrix"
+short: "A table counting a classifier's true positives, false negatives, false positives and true negatives."
+body: |
+  Rows are the actual class and columns the predicted class. Rates come from it: the true positive rate
+  TP / (TP + FN), the false positive rate FP / (FP + TN), precision TP / (TP + FP) and the selection rate
+  (TP + FP) / n. For fairness audits, compute one confusion matrix per group and compare the rates.
+related: ["demographic-parity", "equalized-odds"]

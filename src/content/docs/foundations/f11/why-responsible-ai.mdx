@@ -1,0 +1,162 @@
+---
+title: "Why responsible AI matters"
+module: f11
+order: 1
+estMinutes: 10
+objectives:
+  - "Describe three documented cases where an ML system harmed or disadvantaged a group of people, and what went wrong in each"
+  - "Explain how a feedback loop lets a model's own predictions shape the data it is later trained on"
+  - "Distinguish harms of allocation (who gets a resource) from harms of quality of service (who the system works well for)"
+goDeeper: gender-shades
+---
+import Term from '@/components/Term.astro';
+
+So far this course has been about making models *work*: arrays, gradients, probability, optimisation, and
+in F7 to F10 classifiers, trees, neural networks and language models. This module asks a different question:
+**work for whom, and at what cost?** A model that is 95% accurate overall can still be wrong in a
+systematic way for one group of people, leak the private data it was trained on, or break silently when
+the world changes. None of these show up in a single accuracy number.
+
+The point of this module is not to make you afraid of building things. It is to give you the habits of
+an engineer who checks: measure per group, ask where the labels came from, keep less data than you could,
+and write down what your model is not for.
+
+## Three documented cases
+
+These are real, widely reported cases. The details matter, so each one says what was actually found and
+by whom.
+
+### A hiring tool that learned from past hiring
+
+In 2018, [Reuters reported](https://www.reuters.com/article/us-amazon-com-jobs-automation-insight-idUSKCN1MK08G)
+that Amazon had built an experimental tool to rate job applicants' CVs. It was trained on CVs submitted
+over the previous ten years, most of which came from men, reflecting who worked in tech. According to
+the report, the system learned to penalise CVs containing the word "women's" (as in "women's chess club
+captain") and downgraded graduates of two all-women's colleges. Amazon edited the system to be neutral
+to those particular terms, but could not be sure it would not find other ways to sort candidates
+unfairly, and the team was disbanded. Amazon said the tool was never used by its recruiters to evaluate
+candidates.
+
+The lesson: nobody told the model to prefer men. It was asked to imitate past decisions, and past
+decisions were skewed. Removing the obvious word does not remove the pattern, because many other words
+correlate with it. Lesson 2 calls these **proxies**.
+
+### Face analysis that works better for some faces
+
+In the 2018 [Gender Shades](https://proceedings.mlr.press/v81/buolamwini18a.html) study, Joy Buolamwini
+and Timnit Gebru tested three commercial systems that classify the gender of a face. They built a test
+set balanced by skin type and gender, and found that darker-skinned women were the most misclassified
+group, with error rates of up to 34.7%, while the maximum error rate for lighter-skinned men was 0.8%.
+Popular benchmark datasets of the time were mostly lighter-skinned faces, so headline accuracy hid the
+gap.
+
+A larger government study followed. In December 2019 the US National Institute of Standards and
+Technology (NIST) [evaluated 189 face recognition algorithms](https://www.nist.gov/news-events/news/2019/12/nist-study-evaluates-effects-race-age-sex-face-recognition-software)
+from 99 developers. For one-to-one matching (is this the same person?), many algorithms had false
+positive rates 10 to 100 times higher for some demographic groups than for others, depending on the
+algorithm. NIST also stressed that algorithms varied widely: some showed much smaller differences, so
+the gap is a property of particular systems and their training data, not an unavoidable law.
+
+### A health algorithm that predicted the wrong thing
+
+A 2019 paper in *Science* by [Obermeyer and colleagues](https://doi.org/10.1126/science.aax2342) studied
+a widely used commercial algorithm that US health systems used to pick patients for extra care
+programmes. It predicted each patient's future **health-care costs**, as a stand-in for their health
+**needs**. Because of unequal access to care, less money was spent on Black patients than on equally
+sick White patients. So at the same risk score, Black patients were considerably sicker. The authors
+estimated that fixing the disparity would raise the share of Black patients selected for extra help from
+17.7% to 46.5%.
+
+The lesson: the model may have predicted costs well. The harm came from **choosing the target**. "What
+exactly are we predicting, and is it the thing we care about?" is a fairness question, not just a
+modelling one.
+
+:::note[Allocation and quality of service]
+Two kinds of harm recur. **Allocation** harms decide who gets a job interview, a loan, extra care or
+extra police attention. **Quality of service** harms mean the product simply works worse for some
+people, like a face matcher or a speech recogniser that makes more errors for some accents. Both are
+worth measuring; they call for different metrics.
+:::
+
+## Feedback loops: when predictions make their own data
+
+Some systems change the world they later learn from. Predictive policing is the standard example. If
+officers are sent where past records show the most crime, they find more incidents *there*, simply
+because that is where they are looking. Those incidents enter the records, which send even more patrols
+the same way. Researchers have analysed this both with real data (Lum and Isaac, 2016, using drug
+arrest records from Oakland) and mathematically ([Ensign and colleagues, 2018](https://arxiv.org/abs/1706.09847),
+"Runaway feedback loops in predictive policing").
+
+A <Term id="feedback-loop" /> is easy to simulate. Two districts have **exactly the same** true rate of
+incidents. District 0 starts with one extra incident on record. Each day the single patrol goes to
+whichever district has more records, and incidents only get recorded where the patrol is:
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(0)
+true_rate = np.array([0.3, 0.3])   # the same real chance of finding an incident in both districts
+recorded = np.array([6, 5])        # district 0 starts with one extra incident on record
+
+for day in range(365):
+    d = np.argmax(recorded)                       # patrol where the records say crime is
+    recorded[d] += rng.random() < true_rate[d]    # incidents are only recorded where you look
+
+print(recorded)
+print("share of records in district 0:", round(recorded[0] / recorded.sum(), 2))
+```
+
+```text title="Output"
+[101   5]
+share of records in district 0: 0.95
+```
+
+After a year, 95% of the records point at district 0, and the data now "prove" it is the high-crime
+district. The data are not lying about what was recorded; they are silent about what was never looked
+for. The same shape appears in recommendation systems (you only get feedback on items you showed), in
+lending (you only learn whether *approved* applicants repay), and in content moderation.
+
+:::caution[A model's training data are often its own past decisions]
+Whenever a model decides what gets observed, its future training data are filtered by its past
+predictions. Checking for this before deployment, and keeping some decisions independent of the model
+(for example a small amount of random exploration), are standard defences.
+:::
+
+## What "responsible AI" covers
+
+The rest of the module takes the main concerns one at a time:
+
+| Lesson | Question |
+|---|---|
+| Bias in data and models | Where does unfairness come from, if nobody programs it in? |
+| Measuring fairness | How do you put numbers on "the model treats groups differently"? |
+| Calibration and trade-offs | Why can't one model satisfy every fairness definition at once? |
+| Privacy | How can training data leak, and how do you protect people in a dataset? |
+| Safety, reliability and transparency | What happens when the world changes, and how do you document and oversee a model? |
+
+Three principles run through all of it:
+
+1. **Disaggregate.** Report metrics per group, not just overall. Averages hide the people the system fails.
+2. **Question the data.** Who collected it, who is missing, and what do the labels really measure?
+3. **Keep humans accountable.** A model is a tool someone chose to deploy. "The algorithm decided" is not
+   an answer anyone affected should accept.
+
+:::tip[Not only an ethics problem]
+Every case above is also an engineering failure: wrong target, unrepresentative test set, unmeasured
+subgroup errors, feedback in the data. The fixes are mostly engineering too, which is why they belong in
+an ML course rather than a separate one.
+:::
+
+## Summary
+
+- Reuters reported that an experimental hiring tool learned to penalise CVs mentioning "women's" from ten
+  years of mostly male CVs; removing the word did not guarantee removing the bias.
+- Gender Shades found error rates of up to 34.7% for darker-skinned women versus at most 0.8% for
+  lighter-skinned men in commercial gender classifiers; NIST found large demographic differences in many,
+  but not all, face recognition algorithms.
+- A health algorithm used cost as a proxy for need, and so under-selected Black patients who were just as
+  sick.
+- Feedback loops arise when a model's decisions control what data are collected; even identical districts
+  can end up looking completely different.
+- Harms are of allocation (who gets something) or quality of service (who it works for). Always report
+  metrics per group.

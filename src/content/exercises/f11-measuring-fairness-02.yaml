@@ -1,0 +1,72 @@
+id: f11-measuring-fairness-02
+lesson: foundations/f11/measuring-fairness
+title: Demographic parity and equalized odds gaps
+prompt: |
+  Write `fairness_gaps(y_true, y_pred, group)` that returns a dict with three numbers, each the
+  **largest minus the smallest** value across groups:
+
+  - `"demographic_parity"`: the gap in selection rates, $P(\hat{y} = 1 \mid A)$;
+  - `"equal_opportunity"`: the gap in true positive rates;
+  - `"equalized_odds"`: the larger of the TPR gap and the FPR gap.
+
+  It must work for any number of groups. For the lesson's data the answer is
+  `{"demographic_parity": 0.3, "equal_opportunity": 0.333, "equalized_odds": 0.333}`.
+starter: |
+  import numpy as np
+
+  group  = np.array(["A"] * 10 + ["B"] * 10)
+  y_true = np.array([1, 1, 1, 1, 1, 1, 0, 0, 0, 0,   1, 1, 1, 1, 0, 0, 0, 0, 0, 0])
+  y_pred = np.array([1, 1, 1, 1, 1, 0, 1, 0, 0, 0,   1, 1, 0, 0, 1, 0, 0, 0, 0, 0])
+
+  def fairness_gaps(y_true, y_pred, group):
+      sel = [y_pred[group == g].mean() for g in np.unique(group)]
+      return {"demographic_parity": sel[0] - sel[1], "equal_opportunity": 0.0, "equalized_odds": 0.0}
+
+  print(fairness_gaps(y_true, y_pred, group))
+solution: |
+  import numpy as np
+
+  group  = np.array(["A"] * 10 + ["B"] * 10)
+  y_true = np.array([1, 1, 1, 1, 1, 1, 0, 0, 0, 0,   1, 1, 1, 1, 0, 0, 0, 0, 0, 0])
+  y_pred = np.array([1, 1, 1, 1, 1, 0, 1, 0, 0, 0,   1, 1, 0, 0, 1, 0, 0, 0, 0, 0])
+
+  def fairness_gaps(y_true, y_pred, group):
+      groups = np.unique(group)
+      sel = np.array([y_pred[group == g].mean() for g in groups])
+      tpr = np.array([y_pred[(group == g) & (y_true == 1)].mean() for g in groups])
+      fpr = np.array([y_pred[(group == g) & (y_true == 0)].mean() for g in groups])
+      gap = lambda r: r.max() - r.min()
+      return {
+          "demographic_parity": gap(sel),
+          "equal_opportunity": gap(tpr),
+          "equalized_odds": max(gap(tpr), gap(fpr)),
+      }
+
+  print(fairness_gaps(y_true, y_pred, group))
+tests: |
+  import math
+  import numpy as np
+  _g = np.array(["A"] * 10 + ["B"] * 10)
+  _t = np.array([1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0])
+  _p = np.array([1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0])
+  _r = fairness_gaps(_t, _p, _g)
+  assert isinstance(_r, dict), f"Return a dict, got {type(_r).__name__}"
+  assert sorted(_r) == ["demographic_parity", "equal_opportunity", "equalized_odds"], f"The keys should be demographic_parity, equal_opportunity and equalized_odds, got {sorted(_r)}"
+  assert math.isclose(_r["demographic_parity"], 0.3), f"demographic_parity should be 0.6 - 0.3 = 0.3, got {_r['demographic_parity']}"
+  assert math.isclose(_r["equal_opportunity"], 1 / 3), f"equal_opportunity should be 0.833 - 0.5 = 0.333, got {_r['equal_opportunity']}"
+  assert math.isclose(_r["equalized_odds"], 1 / 3), f"equalized_odds should be max(0.333, 0.083) = 0.333, got {_r['equalized_odds']}"
+  # Reversed group order must still give positive gaps (largest minus smallest).
+  _r1 = fairness_gaps(_t[::-1].copy(), _p[::-1].copy(), _g[::-1].copy())
+  assert math.isclose(_r1["demographic_parity"], 0.3), "Gaps should be largest minus smallest, so they are never negative"
+  # Three groups, where the FPR gap is the larger one.
+  _g3 = np.array(["a"] * 4 + ["b"] * 4 + ["c"] * 4)
+  _t3 = np.array([1, 1, 0, 0] * 3)
+  _p3 = np.array([1, 0, 0, 0,  1, 0, 1, 1,  1, 1, 0, 0])
+  _r3 = fairness_gaps(_t3, _p3, _g3)
+  assert math.isclose(_r3["demographic_parity"], 0.75 - 0.25), f"With three groups, demographic_parity should be 0.75 - 0.25 = 0.5, got {_r3['demographic_parity']}"
+  assert math.isclose(_r3["equal_opportunity"], 0.5), f"With three groups, equal_opportunity should be 1.0 - 0.5 = 0.5, got {_r3['equal_opportunity']}"
+  assert math.isclose(_r3["equalized_odds"], 1.0), f"Here the FPR gap (1.0 - 0.0) is larger than the TPR gap, so equalized_odds should be 1.0, got {_r3['equalized_odds']}"
+hints:
+  - "Build arrays of per-group rates with list comprehensions over `np.unique(group)`."
+  - "For TPR, combine masks: `y_pred[(group == g) & (y_true == 1)].mean()`."
+  - "A gap is `r.max() - r.min()`; equalized_odds is `max(tpr_gap, fpr_gap)`."

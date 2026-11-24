@@ -1,0 +1,7 @@
+term: "Model card"
+short: "A short document shipped with a trained model describing its intended use, evaluation data and performance broken down by group, plus caveats."
+body: |
+  Proposed by Mitchell and colleagues (2019). Typical sections: model details, intended and out-of-scope
+  uses, factors performance may vary across, metrics, evaluation and training data, disaggregated results,
+  ethical considerations and caveats. Datasheets for datasets are the companion document for data.
+related: ["distribution-shift", "algorithmic-bias"]

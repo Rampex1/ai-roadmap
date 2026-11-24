@@ -1,0 +1,140 @@
+items:
+  - id: f11-safety-and-transparency-01
+    type: mcq
+    prompt: "A fraud model was trained when 1% of transactions were fraud. During a coordinated attack, 10% are fraud, but each fraudulent transaction looks the same as before. Which kind of shift is this?"
+    options:
+      - text: "Label (prior) shift"
+        correct: true
+        why: "The base rate of the target changed while the relationship between features and label did not."
+      - text: "Covariate shift"
+        why: "Covariate shift is a change in the inputs' distribution, such as a new sensor, with the same x-to-y relationship."
+      - text: "Concept shift"
+        why: "Concept shift means the relationship between x and y itself changes, which the scenario rules out."
+      - text: "No shift"
+        why: "The base rate changed tenfold, which changes precision and the value of the model's alerts."
+    explanation: "Label shift changes P(y); covariate shift changes P(x); concept shift changes how x relates to y."
+  - id: f11-safety-and-transparency-02
+    type: mcq
+    prompt: "In the lesson's simulation, a sensor offset dropped accuracy from 84% to 58%. What did the model report while this happened?"
+    options:
+      - text: "Nothing: it kept making predictions with no error or warning"
+        correct: true
+        why: "Models do not know their inputs have shifted. That is why deployed models need monitoring."
+      - text: "An error saying the inputs were out of range"
+        why: "Nothing in a plain model checks this; you have to add monitoring yourself."
+      - text: "Lower confidence on every prediction"
+        why: "A shifted input can produce confident wrong predictions."
+      - text: "It retrained itself automatically"
+        why: "A deployed model does not retrain unless you build that pipeline."
+    explanation: "Silent failure is the danger of distribution shift. Track input statistics and, when labels arrive, accuracy over time."
+  - id: f11-safety-and-transparency-03
+    type: mcq
+    prompt: "A pneumonia detector scores well on test images from the same hospitals it was trained on, but worse on a new hospital. It turns out it can also tell which hospital an image came from. What is the most likely explanation?"
+    options:
+      - text: "Shortcut learning: it partly relied on hospital-specific features that happened to predict the label"
+        correct: true
+        why: "Hospital differences in equipment and patient mix correlated with pneumonia rates, so the model used them."
+      - text: "The new hospital's labels must all be wrong"
+        why: "Possible but not the best explanation, given the model can identify the hospital."
+      - text: "The model is too small to learn pneumonia"
+        why: "It scored well on the same-source test set, so capacity is not the issue."
+      - text: "Overfitting to individual training images"
+        why: "Same-source test performance was fine, so classic overfitting does not explain the drop."
+    explanation: "Testing on data from a different source than training is the best way to catch shortcuts."
+  - id: f11-safety-and-transparency-04
+    type: multi
+    prompt: "Which sections does the model cards paper propose? Select all that apply."
+    options:
+      - text: "Intended use and out-of-scope uses"
+        correct: true
+        why: "Readers need to know what the model is for and not for."
+      - text: "Quantitative results broken down by group"
+        correct: true
+        why: "Disaggregated evaluation is a central part of a model card."
+      - text: "Ethical considerations and caveats"
+        correct: true
+        why: "Known limitations and risks belong in the card."
+      - text: "The full training code and every weight"
+        why: "A model card is a short document about the model, not a copy of its code or weights."
+    explanation: "Model cards document intended use, evaluation data and per-group performance, plus caveats."
+  - id: f11-safety-and-transparency-05
+    type: mcq
+    prompt: "What is a datasheet for a dataset?"
+    options:
+      - text: "A document describing why a dataset was made, what it contains, how it was collected and labelled, who is represented, and recommended uses"
+        correct: true
+        why: "Proposed by Gebru and colleagues by analogy with electronic component datasheets."
+      - text: "A spreadsheet version of the dataset"
+        why: "It is documentation about the data, not the data itself."
+      - text: "A list of the model's hyperparameters"
+        why: "That belongs to model documentation, not dataset documentation."
+      - text: "A legal licence for the data"
+        why: "A datasheet may mention licensing, but its purpose is much broader."
+    explanation: "Datasheets make the sources of sampling and label bias visible to anyone who reuses the data."
+  - id: f11-safety-and-transparency-06
+    type: mcq
+    prompt: "A loan officer must approve or reject each application within 30 seconds and sees only the model's recommendation. Why is this weak human oversight?"
+    options:
+      - text: "Automation bias: with little time or information, the human is likely to rubber-stamp the model"
+        correct: true
+        why: "Meaningful oversight needs time, information and authority to disagree."
+      - text: "Humans should never be involved in automated decisions"
+        why: "Human oversight is valuable when designed well; the problem here is the design."
+      - text: "The model must be wrong if a human checks it"
+        why: "Checking is not evidence of error; the issue is whether the check is real."
+      - text: "It is strong oversight, because a human makes the final call"
+        why: "A final call made without time or information is oversight in name only."
+    explanation: "Good oversight also includes logging decisions and a route for affected people to contest them."
+  - id: f11-safety-and-transparency-07
+    type: mcq
+    prompt: "An agent in a boat-racing game, rewarded for points, learns to circle endlessly collecting points instead of finishing the race. What is this called?"
+    options:
+      - text: "Specification gaming (reward hacking)"
+        correct: true
+        why: "The optimiser found a way to score highly on the written objective without doing what was intended."
+      - text: "Distribution shift"
+        why: "Nothing about the data changed; the objective was mis-specified."
+      - text: "Membership inference"
+        why: "That is a privacy attack on training data."
+      - text: "Underfitting"
+        why: "The agent optimised the reward very well, just not the intended goal."
+    explanation: "Optimisation exploits any gap between the objective and the intent, which matters more as systems gain autonomy."
+  - id: f11-safety-and-transparency-08
+    type: mcq
+    prompt: "Which best describes the EU AI Act, as of late 2026?"
+    options:
+      - text: "A regulation that sorts AI uses by risk, prohibiting a few and placing requirements such as documentation and human oversight on high-risk uses, with obligations phasing in over several years"
+        correct: true
+        why: "It entered into force in August 2024 and takes a risk-based approach."
+      - text: "A voluntary code of conduct with no legal force"
+        why: "It is an EU regulation (2024/1689), which is binding law."
+      - text: "A ban on all machine learning in the EU"
+        why: "Only a small set of uses are prohibited; most AI is lightly regulated or not covered."
+      - text: "A law that applies only to models with more than one billion parameters"
+        why: "Its main structure is based on the use and its risk, not simply on model size."
+    explanation: "For anything that matters, read the current official text and get proper legal advice; timelines and guidance have been revised."
+  - id: f11-safety-and-transparency-09
+    type: mcq
+    prompt: "How is an adversarial example for an image classifier typically found?"
+    options:
+      - text: "By following the gradient of the loss with respect to the input pixels, making a tiny change that flips the prediction"
+        correct: true
+        why: "The same gradient machinery used for training, pointed at the input instead of the weights."
+      - text: "By retraining the model on random noise"
+        why: "Adversarial examples attack a fixed, trained model."
+      - text: "By deleting pixels until the model fails"
+        why: "The changes are usually tiny and spread out, often invisible to people."
+      - text: "By changing the model's weights"
+        why: "The attacker changes the input, not the model."
+    explanation: "Small, carefully computed input changes can flip predictions, which is a robustness concern."
+  - id: f11-safety-and-transparency-10
+    type: numeric
+    prompt: "A fraud model has TPR 0.9 and FPR 0.05. At a 1% fraud rate its precision is about 0.15. During an attack the fraud rate rises to 10% while TPR and FPR stay the same (label shift). What is its precision now? (Use Bayes: precision = TPR x p / (TPR x p + FPR x (1 - p)).)"
+    answer: 0.667
+    tol: 0.005
+    explanation: "0.9 x 0.1 = 0.09 true alerts and 0.05 x 0.9 = 0.045 false ones per transaction, so precision = 0.09 / 0.135, about 0.667. Label shift changed precision fourfold without the model changing at all."
+  - id: f11-safety-and-transparency-11
+    type: cloze
+    prompt: "The short document shipped with a trained model, describing its intended use and its performance broken down by group, is called a model ____ (one word)."
+    accept: ["card"]
+    explanation: "Model cards were proposed by Mitchell and colleagues in 2019. Datasheets for datasets are the companion document for data."

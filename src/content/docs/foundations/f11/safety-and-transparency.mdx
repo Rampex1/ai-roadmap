@@ -1,0 +1,185 @@
+---
+title: "Safety, reliability and transparency"
+module: f11
+order: 6
+estMinutes: 11
+objectives:
+  - "Explain distribution shift and shortcut learning, and show with numpy how a fixed model degrades when its inputs drift"
+  - "List what a model card and a datasheet for a dataset should contain, and why they exist"
+  - "Describe human oversight, misuse and specification gaming as safety concerns, and what the EU AI Act is at a high level"
+goDeeper: model-cards-paper
+---
+import Term from '@/components/Term.astro';
+
+The earlier lessons asked whether a model is fair and whether it protects the people in its data. This
+one asks whether it **keeps working** once deployed, whether people can tell **what it is for and where
+it fails**, and what can go wrong when capable systems pursue goals we specified imperfectly.
+
+## Robustness: small changes, big mistakes
+
+Models can be surprisingly fragile:
+
+- **Adversarial examples.** In image classifiers, a tiny, carefully computed change to the pixels,
+  invisible to a person, can flip the prediction. The perturbation is found by following the gradient
+  of the loss with respect to the **input** (the same gradient machinery as F4 and F6, pointed at the
+  image instead of the weights).
+- **Natural perturbations.** Blur, lighting, a different camera, a typo, an unusual accent: inputs that
+  are perfectly ordinary but unlike most of the training data.
+- **Prompt injection** in language-model systems: instructions hidden in a web page or document that the
+  model follows as if they came from the user. Track C covers this in depth.
+
+## Distribution shift
+
+Training assumes the future looks like the past: that test and deployment data come from the same
+distribution as training data. <Term id="distribution-shift" /> is when that stops being true. Common
+forms:
+
+| Kind | What changes | Example |
+|---|---|---|
+| **Covariate shift** | the inputs $x$ | a new camera model, a different hospital's scanner, a sensor that drifts |
+| **Label (prior) shift** | the base rate of $y$ | fraud is rare in training but spikes during an attack |
+| **Concept shift** | the relationship between $x$ and $y$ | what counts as spam changes as spammers adapt |
+
+A tiny simulation. A one-feature classifier learns the best threshold on clean data, and is then deployed
+where the sensor reads high by an offset:
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(3)
+def sample(n, offset=0.0):
+    y = rng.random(n) < 0.5
+    x = rng.normal(np.where(y, 2.0, 0.0), 1.0) + offset   # offset = a sensor that reads high
+    return x, y
+
+x_train, y_train = sample(5000)
+thresholds = np.linspace(-2, 4, 601)
+acc = [np.mean((x_train > t) == y_train) for t in thresholds]
+t_best = thresholds[np.argmax(acc)]
+print("threshold:", round(t_best, 2))
+
+for offset in [0.0, 1.0, 2.0]:
+    x, y = sample(5000, offset)
+    print("offset", offset, "accuracy", round(np.mean((x > t_best) == y), 3))
+```
+
+```text title="Output"
+threshold: 1.0
+offset 0.0 accuracy 0.843
+offset 1.0 accuracy 0.732
+offset 2.0 accuracy 0.582
+```
+
+Nothing about the model changed, and it raised no error. Accuracy just fell from 84% to 58%, close to a
+coin flip. That is why deployed models need **monitoring**: track input statistics and, when labels
+arrive, accuracy over time (Track A covers monitoring and drift detection). Shift also interacts with
+fairness: if one group's data drift more (a new branch opens in their area), their error rates rise first.
+
+### Shortcut learning
+
+A model can score well for the wrong reason, by latching onto a feature that happens to predict the
+label in the training data. A 2018 study by Zech and colleagues (*PLOS Medicine*) found that a
+pneumonia detector trained on chest X-rays could also identify which hospital system an image came from,
+and that its performance was often worse on hospitals it had not been trained on: hospital differences in
+equipment and patient mix were part of what it had learned. Shortcuts look like success on a test set
+drawn from the same source, and fail the moment the source changes. Testing on data from a **different**
+source than training is the best way to catch them.
+
+## Transparency: model cards and datasheets
+
+If a model will be used by people who did not build it, they need to know what it is for and where it
+fails. Two widely adopted documents:
+
+**<Term id="model-card" text="Model cards" />** ([Mitchell and colleagues, 2019](https://arxiv.org/abs/1810.03993))
+are short documents shipped with a trained model. The paper proposes sections including:
+
+- model details (who built it, version, type);
+- **intended use**, and uses that are out of scope;
+- factors (groups, environments) the performance may vary across;
+- metrics, with evaluation data described;
+- **quantitative results broken down by group**, exactly the disaggregated metrics from lesson 3;
+- ethical considerations, caveats and recommendations.
+
+**Datasheets for datasets** ([Gebru and colleagues](https://arxiv.org/abs/1803.09010)) do the same for
+data, by analogy with the datasheets that come with electronic components: why the dataset was created,
+what it contains, how it was collected and labelled, who is (and is not) represented, what
+pre-processing was done, recommended and inappropriate uses, and how it is maintained.
+
+Model hubs such as Hugging Face show a model card on every model page, so you will read many of these. In
+the homework you will write a short version for your own audit.
+
+:::tip[Explanations]
+Transparency also covers explaining individual predictions: which features pushed this applicant's score
+down? Tools for this (feature importance, SHAP, counterfactual explanations) are covered in Tracks A and B.
+A simple model you can read is often better than a complex one plus an explanation tool.
+:::
+
+## Human oversight
+
+"Keep a human in the loop" is common advice, and it only works if the human can actually overrule the
+model. Two failure modes:
+
+- **Automation bias**: people tend to accept a system's output, especially under time pressure, so the
+  human reviewer becomes a rubber stamp.
+- **No route to challenge**: people affected by a decision cannot find out it was automated, or cannot
+  appeal it.
+
+Meaningful oversight means reviewers who have the time, information and authority to disagree; logging
+decisions so they can be audited; and a way for affected people to contest outcomes.
+
+## Misuse and dual use
+
+Some harms come not from errors but from the system working as built, in the wrong hands: synthetic
+media used to impersonate real people, face recognition used for covert mass surveillance, language
+models used to produce spam or scams at scale. Responsible release practices include assessing misuse
+before launch, staged access, usage policies and monitoring, and declining to build or release some
+capabilities at all.
+
+## AI safety and alignment, briefly
+
+As systems become more capable and are given more autonomy (acting in software, writing and running code,
+browsing the web), a further set of concerns grows in importance. The 2016 paper [Concrete Problems in AI
+Safety](https://arxiv.org/abs/1606.06565) named several, which remain central:
+
+- **Specification gaming (reward hacking).** An optimiser finds a way to score highly on the objective you
+  wrote down without doing what you meant. A widely cited example is an agent trained on a boat-racing
+  game that learned to circle endlessly collecting points instead of finishing the race. Optimisation
+  (F6) is very good at exploiting gaps between the objective and the intent.
+- **Side effects.** Achieving the goal while breaking things nobody thought to forbid.
+- **Safe exploration and robustness to shift**, as above.
+- **Scalable oversight.** How do you supervise a system on tasks where checking its work is hard for you?
+
+**Alignment** is the research area concerned with making AI systems pursue the goals their designers
+and users actually intend, and stay honest and controllable as they get more capable. Experts disagree
+about how quickly risks will grow and which are most serious, but the basic engineering point is not
+controversial: the more autonomy and capability a system has, the more a mis-specified objective
+matters. Track B and Track C return to evaluation and safety techniques for large models.
+
+## Regulation (as of late 2026)
+
+Governments have begun regulating AI. The most comprehensive law so far is the **EU AI Act**
+([Regulation (EU) 2024/1689](https://eur-lex.europa.eu/eli/reg/2024/1689/oj)), which entered into force in
+August 2024 with obligations phasing in over several years. It takes a **risk-based approach**: a few uses
+are prohibited, "high-risk" uses (examples in its annexes include some uses in hiring, credit and access
+to essential services) face requirements such as risk management, data governance, documentation, human
+oversight and accuracy and robustness, and other uses carry lighter transparency duties. Timelines and
+guidance have been revised since adoption, and other countries take different approaches. This is not
+legal advice: if you build systems in a regulated area, read the current official texts and work with
+people who know the law.
+
+Notice how much of this lesson maps onto what such rules ask for: documented data (datasheets),
+documented models (model cards), per-group evaluation (lesson 3), robustness testing and monitoring, and
+human oversight. Good engineering practice and compliance point the same way.
+
+## Summary
+
+- Models can fail on tiny adversarial changes, on ordinary but unfamiliar inputs, and silently under
+  distribution shift: a sensor offset took the example from 84% to 58% accuracy with no error raised.
+- Shortcut learning makes a model look good on same-source test data; test on data from a different source.
+- Model cards document intended use and per-group performance; datasheets document how a dataset was made
+  and who it covers.
+- Human oversight needs reviewers who can really disagree, plus logging and a route to contest decisions.
+- Safety concerns include misuse and specification gaming; alignment research aims to keep capable systems
+  pursuing intended goals.
+- As of late 2026 the EU AI Act regulates AI by risk level, with obligations phasing in; check the official
+  text for anything that matters.

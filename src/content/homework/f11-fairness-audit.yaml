@@ -1,0 +1,38 @@
+id: f11-fairness-audit
+module: f11
+kind: homework
+title: "Audit a loan-approval model for group fairness"
+brief: |
+  A bank approves loans when its model's score is at least 0.5. Audit it: measure how its decisions and
+  errors differ between two groups, check whether its scores mean the same thing for both, try one
+  mitigation, and write up the trade-offs. The data are synthetic and generated in the notebook, so you can
+  see exactly where the unfairness comes from. Download the notebook and open it in local Jupyter (as set
+  up in F0) or [Google Colab](https://colab.research.google.com/) (File > Upload notebook). Only NumPy,
+  pandas and matplotlib are needed.
+
+  Each task has a `TODO` cell and a check cell that prints `OK` when your code is right:
+
+  1. **`group_rates(df, thresholds)`**: per-group size, base rate, selection rate, TPR, FPR, precision and
+     accuracy, with a separate threshold allowed for each group.
+  2. **`gaps(rates)`**: the demographic parity, equal opportunity, equalized odds and precision gaps for the
+     bank's model.
+  3. **Calibration**: a per-group calibration table over ten score bins and a reliability diagram, plus a
+     sentence on which group the score under-rates and why.
+  4. **A chart of the audit**: grouped bars of selection rate, TPR, FPR and precision per group.
+  5. **Mitigation**: `threshold_for_tpr` finds a threshold for group B that matches group A's TPR; compare
+     every gap and the overall accuracy before and after, and plot the comparison.
+  6. **Reflection** (200 to 300 words): what the audit found, what the mitigation changed and cost, which
+     fairness criterion you would choose for loans and why, a better upstream fix, and a three-line model
+     card note.
+
+  A stretch task sweeps group B's threshold to draw the whole trade-off curve, then audits a score with the
+  proxy feature removed.
+notebook: /homework/f11-fairness-audit.ipynb
+rubric:
+  - "Every check cell for Tasks 1, 2, 3 and 5 prints OK after restarting and running all cells"
+  - "The reliability diagram has one line per group, the dashed diagonal, labelled axes and a legend"
+  - "The audit bar chart and the before-and-after chart have titles and labelled y axes"
+  - "The Task 3 answer names years_at_address as the proxy and states that group B repays more often than its score suggests"
+  - "The reflection reports the size of the gaps before and after, names at least one cost of the per-group threshold (higher FPR or lower precision for B), and justifies a choice of fairness criterion"
+  - "The reflection proposes an upstream fix (such as removing or replacing the proxy feature) and names a risk of per-group thresholds"
+compute: "Any laptop or free Colab (CPU), under 15 minutes including reading; every cell runs in seconds"

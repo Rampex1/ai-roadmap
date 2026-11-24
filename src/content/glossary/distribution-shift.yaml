@@ -1,0 +1,7 @@
+term: "Distribution shift"
+short: "When the data a model sees in deployment differ from its training data, so its performance can silently degrade."
+body: |
+  Covariate shift changes the inputs (a new sensor or hospital), label shift changes the base rate of the
+  target, and concept shift changes the relationship between inputs and target. Models raise no error when
+  this happens, which is why deployed models are monitored and evaluated on data from new sources.
+related: ["feedback-loop", "model-card"]

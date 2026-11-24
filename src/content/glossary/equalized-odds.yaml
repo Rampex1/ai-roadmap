@@ -1,0 +1,8 @@
+term: "Equalized odds"
+short: "The fairness criterion that true positive rates and false positive rates are both equal across groups."
+body: |
+  Equalized odds conditions on the true outcome: among people who are actually positive, and separately
+  among those who are negative, the chance of a positive prediction should not depend on group. The weaker
+  version that only equalises true positive rates is called equal opportunity. With different base rates and
+  an imperfect model, it cannot hold together with equal precision or calibration.
+related: ["demographic-parity", "calibration", "confusion-matrix"]

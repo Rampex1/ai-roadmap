@@ -1,0 +1,108 @@
+items:
+  - id: f11-measuring-fairness-01
+    type: numeric
+    prompt: "In one group, a loan model has TP = 30, FN = 10, FP = 15, TN = 45. What is the group's true positive rate?"
+    answer: 0.75
+    tol: 0.001
+    explanation: "TPR = TP / (TP + FN) = 30 / 40 = 0.75: three quarters of the people who would repay are approved."
+  - id: f11-measuring-fairness-02
+    type: numeric
+    prompt: "Same group: TP = 30, FN = 10, FP = 15, TN = 45. What is the false positive rate?"
+    answer: 0.25
+    tol: 0.001
+    explanation: "FPR = FP / (FP + TN) = 15 / 60 = 0.25: a quarter of the people who would default are approved."
+  - id: f11-measuring-fairness-03
+    type: numeric
+    prompt: "Same group: TP = 30, FN = 10, FP = 15, TN = 45. What is the selection rate?"
+    answer: 0.45
+    tol: 0.001
+    explanation: "Selection rate = (TP + FP) / n = 45 / 100 = 0.45. It counts every approval, right or wrong."
+  - id: f11-measuring-fairness-04
+    type: mcq
+    prompt: "Which fairness criterion requires $P(\\hat{y} = 1 \\mid y = 1, A = a) = P(\\hat{y} = 1 \\mid y = 1, A = b)$?"
+    options:
+      - text: "Equal opportunity"
+        correct: true
+        why: "It asks for equal true positive rates: qualified people are approved at the same rate in each group."
+      - text: "Demographic parity"
+        why: "Demographic parity does not condition on y; it compares plain selection rates."
+      - text: "Calibration"
+        why: "Calibration conditions on the score and asks about y, the other way round."
+      - text: "Equalized odds"
+        why: "Equalized odds requires this and also equal false positive rates. The formula shown is only the first half."
+    explanation: "Equal opportunity equalises TPR; equalized odds equalises TPR and FPR; demographic parity equalises selection rates."
+  - id: f11-measuring-fairness-05
+    type: output
+    prompt: "What does this print? (Selection rates per group, then the demographic parity difference.)"
+    code: |
+      import numpy as np
+      group = np.array(["a", "a", "a", "a", "b", "b", "b", "b"])
+      pred = np.array([1, 1, 1, 0, 1, 0, 0, 0])
+      sa, sb = pred[group == "a"].mean(), pred[group == "b"].mean()
+      print(sa, sb, sa - sb)
+    answer: "0.75 0.25 0.5"
+    explanation: "Group a has 3 of 4 approved and group b 1 of 4, so the demographic parity difference is 0.5."
+  - id: f11-measuring-fairness-06
+    type: mcq
+    prompt: "Two groups have overall accuracy of 80% and 78%. What can you conclude about their true positive rates?"
+    options:
+      - text: "Nothing reliable: accuracy mixes both kinds of error and depends on base rates, so TPRs could differ a lot"
+        correct: true
+        why: "In the lesson's example, accuracies of 80% and 70% hid TPRs of 83% and 50%."
+      - text: "Their TPRs must be within 2 points of each other"
+        why: "Accuracy combines TPR and FPR weighted by the base rate, so similar accuracy allows very different TPRs."
+      - text: "The first group's TPR must be higher"
+        why: "Not necessarily; the second group could have higher TPR and more false positives."
+      - text: "TPR equals accuracy"
+        why: "TPR is computed only among actual positives; accuracy is over everyone."
+    explanation: "Compute the per-group rates themselves; overall accuracy cannot stand in for them."
+  - id: f11-measuring-fairness-07
+    type: mcq
+    prompt: "A scholarship programme trusts its outcome labels and wants every genuinely strong applicant to have the same chance of being selected, whatever their group. Which criterion fits best?"
+    options:
+      - text: "Equal opportunity (equal true positive rates)"
+        correct: true
+        why: "It is about qualified people having the same chance of the benefit."
+      - text: "Demographic parity"
+        why: "Demographic parity ignores who is qualified; it fits better when labels themselves are distrusted."
+      - text: "Equal false positive rates only"
+        why: "That is about unqualified people being selected, not the stated goal."
+      - text: "Overall accuracy"
+        why: "Accuracy is not a fairness criterion and hides group differences."
+    explanation: "Choose the criterion from the decision: which error harms whom? For a benefit with trusted labels, equal opportunity is natural."
+  - id: f11-measuring-fairness-08
+    type: multi
+    prompt: "Which statements about demographic parity are true? Select all that apply."
+    options:
+      - text: "It compares selection rates and ignores the true outcomes"
+        correct: true
+        why: "It only uses predictions and group, never y."
+      - text: "If base rates genuinely differ, achieving it usually means selecting people with different chances of success in each group"
+        correct: true
+        why: "Equal selection with unequal base rates forces different standards."
+      - text: "A model that satisfies it must also have equal true positive rates"
+        why: "Equal selection rates say nothing about how the selections split between qualified and unqualified people."
+      - text: "It can be checked without any labels"
+        correct: true
+        why: "Because it ignores y, you only need predictions and group membership."
+    explanation: "Demographic parity is about outcomes of the decision, not about errors. That makes it useful when labels are distrusted, and contentious when they are not."
+  - id: f11-measuring-fairness-09
+    type: mcq
+    prompt: "Group B has only 4 actual positives in your test set, and its TPR is 0.5. What is the most important caveat?"
+    options:
+      - text: "The estimate is very noisy: one person changing outcome moves it by 25 points, so report counts and an interval"
+        correct: true
+        why: "Small groups give unreliable rates. A bootstrap interval would be wide."
+      - text: "TPR cannot be computed with fewer than 10 positives"
+        why: "It can be computed; it just is not very precise."
+      - text: "A TPR of 0.5 is always acceptable"
+        why: "Whether 0.5 is acceptable depends on the decision and the other group's rate."
+      - text: "The group should be dropped from the audit"
+        why: "Dropping small groups hides exactly the people most likely to be poorly served. Collect more data instead."
+    explanation: "Report the counts behind every rate, and use intervals, before drawing conclusions about a gap."
+  - id: f11-measuring-fairness-10
+    type: numeric
+    prompt: "Group A has TPR 0.90 and FPR 0.10; group B has TPR 0.80 and FPR 0.25. Using the larger of the two gaps, what is the equalized odds gap?"
+    answer: 0.15
+    tol: 0.001
+    explanation: "The TPR gap is 0.10 and the FPR gap is 0.15; equalized odds needs both to be small, so the larger gap, 0.15, is reported."

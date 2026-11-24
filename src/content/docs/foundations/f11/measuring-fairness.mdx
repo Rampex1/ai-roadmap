@@ -1,0 +1,162 @@
+---
+title: "Measuring fairness: rates per group"
+module: f11
+order: 3
+estMinutes: 15
+objectives:
+  - "Build a confusion matrix per group and compute selection rate, true positive rate, false positive rate and precision from it"
+  - "Define demographic parity, equal opportunity and equalized odds, and compute the gap for each"
+  - "Choose which fairness criterion fits a given decision, and explain what each one ignores"
+goDeeper: attacking-discrimination-ml
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import cmImg from '@/assets/diagrams/f11-confusion-matrix.svg';
+
+"Is the model fair?" is too vague to answer. "Does the model approve qualified applicants from both
+groups at the same rate?" is a question you can answer with a few lines of numpy. This lesson turns
+fairness into numbers: a few rates computed **separately for each group**, and a few ways of comparing
+them.
+
+The running example is loan approval. Each applicant has an actual outcome $y$ (1 if they would repay,
+0 if they would default) and a prediction $\hat{y}$ (1 = approve, 0 = reject). The hat means "predicted".
+Every applicant also belongs to a group $A$, such as a gender or an age band.
+
+## The confusion matrix, per group
+
+For binary predictions, every person lands in one of four cells of a <Term id="confusion-matrix" />:
+
+<Figure src={cmImg} alt="A two by two confusion matrix: actual positive and predicted positive is a true positive, actual positive and predicted negative a false negative, actual negative and predicted positive a false positive, actual negative and predicted negative a true negative. TPR is computed along the actual positive row, FPR along the actual negative row, and precision down the predicted positive column." caption="The four cells and the rates built from them. Compute one matrix per group." />
+
+The rates are conditional probabilities, exactly as in [F5's conditional probability lesson](/foundations/f5/conditional-probability/),
+each computed inside one group:
+
+| Rate | Formula | Conditional probability | Loan meaning |
+|---|---|---|---|
+| **Selection rate** | $\frac{TP + FP}{n}$ | $P(\hat{y} = 1)$ | share of applicants approved |
+| **True positive rate** (TPR, recall) | $\frac{TP}{TP + FN}$ | $P(\hat{y} = 1 \mid y = 1)$ | share of good payers who get approved |
+| **False positive rate** (FPR) | $\frac{FP}{FP + TN}$ | $P(\hat{y} = 1 \mid y = 0)$ | share of defaulters who get approved |
+| **False negative rate** (FNR) | $\frac{FN}{TP + FN} = 1 - \text{TPR}$ | $P(\hat{y} = 0 \mid y = 1)$ | share of good payers wrongly rejected |
+| **Precision** (PPV) | $\frac{TP}{TP + FP}$ | $P(y = 1 \mid \hat{y} = 1)$ | share of approvals that repay |
+
+The TPR is the "sensitivity" from [Bayes' theorem](/foundations/f5/bayes-theorem/), and precision is the
+posterior that lesson warned about: it depends on the **base rate**, the share of actual positives in
+the group.
+
+### A worked example
+
+Ten applicants per group:
+
+```python
+import numpy as np
+
+# 1 = would repay / approved. Ten applicants per group.
+group  = np.array(["A"] * 10 + ["B"] * 10)
+y_true = np.array([1, 1, 1, 1, 1, 1, 0, 0, 0, 0,   1, 1, 1, 1, 0, 0, 0, 0, 0, 0])
+y_pred = np.array([1, 1, 1, 1, 1, 0, 1, 0, 0, 0,   1, 1, 0, 0, 1, 0, 0, 0, 0, 0])
+
+for g in ["A", "B"]:
+    t, p = y_true[group == g], y_pred[group == g]
+    tp = np.sum((t == 1) & (p == 1)); fn = np.sum((t == 1) & (p == 0))
+    fp = np.sum((t == 0) & (p == 1)); tn = np.sum((t == 0) & (p == 0))
+    print(g, "TP FN FP TN:", tp, fn, fp, tn,
+          "| selection", p.mean(), "TPR", round(tp / (tp + fn), 2), "FPR", round(fp / (fp + tn), 2))
+```
+
+```text title="Output"
+A TP FN FP TN: 5 1 1 3 | selection 0.6 TPR 0.83 FPR 0.25
+B TP FN FP TN: 2 2 1 5 | selection 0.3 TPR 0.5 FPR 0.17
+```
+
+Overall accuracy is 80% for A and 70% for B, which sounds close. But a good payer from group A is
+approved $5/6 \approx 83\%$ of the time, and a good payer from group B only $2/4 = 50\%$. That gap is
+invisible in accuracy and is exactly what applicants experience.
+
+## Three fairness criteria
+
+Each criterion says some rate should be (roughly) equal across groups. In probability notation, with
+$a$ and $b$ two groups:
+
+### Demographic parity (independence)
+
+<Term id="demographic-parity" /> asks for equal **selection rates**:
+
+$$
+P(\hat{y} = 1 \mid A = a) = P(\hat{y} = 1 \mid A = b)
+$$
+
+It ignores $y$ entirely. In the example the selection rates are 0.6 and 0.3, so the **demographic parity
+difference** is $0.6 - 0.3 = 0.3$ and the ratio is $0.3 / 0.6 = 0.5$. In US employment, a long-standing
+rule of thumb (the "four-fifths rule") treats a selection-rate ratio below 0.8 as a sign of possible
+adverse impact worth investigating; it is a screening heuristic, not a definition of fairness.
+
+**When it fits:** when you believe the outcome labels themselves are biased, or when the goal is
+proportional access (for example, who is shown a job advert). **What it ignores:** if base rates really
+differ, forcing equal selection usually means approving people with different chances of repaying.
+
+### Equal opportunity
+
+**Equal opportunity** asks for equal **true positive rates**: qualified people have the same chance of
+being approved, whatever their group.
+
+$$
+P(\hat{y} = 1 \mid y = 1, A = a) = P(\hat{y} = 1 \mid y = 1, A = b)
+$$
+
+In the example, TPRs are 0.83 and 0.50: a gap of 0.33.
+
+**When it fits:** when a positive decision is a benefit (a loan, a job, a scholarship) and you trust the
+labels. **What it ignores:** what happens to the negatives.
+
+### Equalized odds (separation)
+
+<Term id="equalized-odds" /> asks for equal TPR **and** equal FPR. It conditions on the true outcome, so
+the model's errors are spread evenly: the same miss rate and the same false-alarm rate in every group.
+In the example the FPRs are 0.25 and 0.17, so both gaps are non-zero. A common single number is the
+larger of the two gaps, here $\max(0.33, 0.08) = 0.33$.
+
+**When it fits:** when both kinds of error harm people, as in risk scores used in criminal justice or
+fraud flags. **What it ignores:** whether a given score means the same thing in each group, which is the
+next lesson's topic, calibration.
+
+:::note[Group fairness versus individual fairness]
+All three criteria are **group** fairness: they compare averages over groups. **Individual** fairness
+says similar people should be treated similarly. It is appealing but needs a definition of "similar",
+which is itself a value judgement. This module sticks to group metrics, which are what audits use in
+practice.
+:::
+
+## Reading the numbers carefully
+
+- **Small groups make noisy rates.** A TPR based on 4 positives (group B above) can swing by 25 points if
+  one person changes. In real audits, report the counts next to the rates, and use the
+  [bootstrap from F5](/foundations/f5/estimation-and-the-bootstrap/) to put an interval on each gap.
+- **Pick the criterion before you look.** With several metrics and several groups, some gap will look
+  large by chance. Decide which harm matters for the decision first.
+- **Fairness is about decisions, not just scores.** The same score with a different threshold gives
+  different rates. Every number in this lesson is for one threshold.
+- **Intersections matter.** Gender Shades found the largest errors for darker-skinned women, a group that
+  looks less extreme when you check gender alone or skin type alone. Check combinations when you have the
+  data.
+
+:::tip[Libraries exist, but compute it once by hand]
+Toolkits such as Fairlearn (with its `MetricFrame`) compute all of these per group. Writing them yourself
+once, as below, means you will know exactly what the library reports and where the edge cases are, such
+as a group with no positives.
+:::
+
+<CodeExercise id="f11-measuring-fairness-01" />
+
+<CodeExercise id="f11-measuring-fairness-02" />
+
+## Summary
+
+- Compute a confusion matrix per group. Selection rate, TPR, FPR and precision are conditional
+  probabilities within that group.
+- **Demographic parity**: equal selection rates. **Equal opportunity**: equal TPR. **Equalized odds**:
+  equal TPR and equal FPR.
+- Report gaps (differences) or ratios. In the example, the demographic parity difference is 0.3 and the
+  equal opportunity gap is 0.33, while accuracy differs by only 10 points.
+- Each criterion encodes a view of which errors matter; choose for the decision at hand, and report counts
+  because small groups give noisy rates.

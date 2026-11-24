@@ -1,0 +1,7 @@
+term: "k-anonymity"
+short: "A table is k-anonymous if every combination of quasi-identifier values it contains is shared by at least k rows."
+body: |
+  Compute k by grouping on the quasi-identifiers and taking the smallest group size. Generalising or
+  suppressing values raises k at the cost of detail. It does not protect a group whose sensitive values are
+  all the same (a homogeneity attack), nor against linking on columns not treated as quasi-identifiers.
+related: ["quasi-identifier", "differential-privacy"]

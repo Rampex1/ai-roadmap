@@ -1,0 +1,8 @@
+term: "Calibration"
+short: "A score is calibrated if, among all cases given score s, a fraction s turn out positive."
+body: |
+  A calibrated 0.7 means "70% of such cases are positive". Calibration within groups asks for this in every
+  group separately. Check it by binning scores and comparing each bin with its observed positive rate (a
+  reliability diagram). Calibration alone does not mean the score is useful, and with different base rates it
+  conflicts with equalized odds.
+related: ["equalized-odds", "demographic-parity"]

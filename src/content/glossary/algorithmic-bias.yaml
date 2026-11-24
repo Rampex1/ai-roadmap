@@ -1,0 +1,8 @@
+term: "Algorithmic bias"
+short: "A systematic difference in how an automated system treats or performs for different groups of people, usually learned from data."
+body: |
+  Models learn whatever patterns predict their labels, so bias usually enters through the data: historical
+  bias (past decisions were unfair), sampling bias (some groups are under-represented), label bias (the label
+  is a flawed stand-in for the real target) or measurement bias. Training on average loss lets the majority
+  dominate, and thresholds can amplify small differences. It is detected by computing metrics per group.
+related: ["proxy-variable", "demographic-parity", "feedback-loop"]

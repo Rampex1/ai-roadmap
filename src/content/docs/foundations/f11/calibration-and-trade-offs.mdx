@@ -1,0 +1,180 @@
+---
+title: "Calibration and the fairness trade-offs"
+module: f11
+order: 4
+estMinutes: 13
+objectives:
+  - "Check whether a score is calibrated within each group by binning scores and comparing them with observed outcome rates"
+  - "Show with a numeric example why calibration (or equal precision) and equalized odds cannot all hold when base rates differ"
+  - "Describe pre-, in- and post-processing mitigations, including per-group thresholds, and the trade-offs each brings"
+goDeeper: fairmlbook
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+The last lesson's criteria all looked at **decisions** ($\hat{y}$ = approve or reject). Most models
+actually output a **score**, such as "estimated 70% chance of repaying", and a threshold turns it into a
+decision. This lesson adds a criterion about scores, calibration, and then meets the most important
+result in the fairness literature: when groups have different base rates, you cannot have everything at
+once.
+
+## Calibration within groups
+
+A score is <Term id="calibration" text="calibrated" /> if, among everyone who gets score $s$, a fraction
+$s$ actually turn out positive:
+
+$$
+P(y = 1 \mid \text{score} = s) = s
+$$
+
+**Calibration within groups** asks for this separately in each group: a score of 0.7 should mean "70%
+chance" whether you are in group A or B. If it does not, a lender, judge or doctor reading the score is
+being misled about one group.
+
+To check it, bin the scores, then compare each bin's average score with the fraction of positives
+observed in it, per group. Here is a score that is calibrated for group A but **overstates** group B's
+chances (B's true probability is only 0.7 times the score):
+
+```python
+import numpy as np
+import pandas as pd
+
+rng = np.random.default_rng(2)
+n = 20000
+group = rng.choice(["A", "B"], size=n)
+score = rng.uniform(0, 1, size=n)
+# The true chance of repaying equals the score for A, but only 0.7 x score for B.
+p_true = np.where(group == "A", score, 0.7 * score)
+y = rng.random(n) < p_true
+
+df = pd.DataFrame({"group": group, "y": y,
+                   "bin": pd.cut(score, [0, 0.2, 0.4, 0.6, 0.8, 1.0])})
+table = df.groupby(["bin", "group"], observed=True)["y"].mean().unstack().round(2)
+print(table)
+```
+
+```text title="Output"
+group          A     B
+bin                   
+(0.0, 0.2]  0.10  0.07
+(0.2, 0.4]  0.30  0.21
+(0.4, 0.6]  0.50  0.36
+(0.6, 0.8]  0.70  0.47
+(0.8, 1.0]  0.89  0.63
+```
+
+For A, each bin's positive rate sits at the bin's midpoint (0.1, 0.3, 0.5, ...): calibrated. For B, the
+rates are about 30% lower: a B applicant scored 0.7 repays only about 47% of the time. Plotting bin
+midpoint against observed rate, one line per group, gives a **reliability diagram**; a calibrated group
+lies on the diagonal.
+
+:::note[Calibration is weaker than it sounds]
+A score can be perfectly calibrated and still useless: giving everyone in a group that group's base rate
+is calibrated. Calibration says the score is honest on average, not that it separates good payers from
+bad ones.
+:::
+
+## The impossibility result
+
+In 2016, ProPublica [analysed the COMPAS risk score](https://www.propublica.org/article/machine-bias-risk-assessments-in-criminal-sentencing),
+used in some US courts to estimate the chance that a defendant would reoffend. Using records from Broward
+County, Florida, it found that among defendants who did **not** reoffend, Black defendants had been
+labelled higher risk nearly twice as often as White defendants (44.9% versus 23.5%): unequal false
+positive rates. The company that made the tool replied that the score was equally **predictive** for
+both groups: a given risk level corresponded to similar reoffending rates. Later analyses found that both
+descriptions broadly fit the same data. How can that be?
+
+Researchers soon showed this was not a quirk of one tool ([Kleinberg, Mullainathan and Raghavan](https://arxiv.org/abs/1609.05807);
+[Chouldechova](https://arxiv.org/abs/1703.00056)). Roughly: **if base rates differ between groups and the
+predictor is not perfect, you cannot have equal precision (or calibration) and equal error rates at the
+same time.**
+
+### A worked example
+
+Two groups of 1,000 people. In group A, 500 would repay (base rate 0.5); in group B, 200 would (base rate
+0.2). Suppose the model has the **same TPR (0.8) and the same precision (0.8)** in both groups. Fill in
+the confusion matrices:
+
+- **A**: 500 positives, TPR 0.8, so $TP = 400$. Precision $400 / (400 + FP) = 0.8$ gives $FP = 100$.
+  There are 500 negatives, so $FPR = 100 / 500 = 0.20$.
+- **B**: 200 positives, so $TP = 160$. Precision 0.8 gives $FP = 40$. There are 800 negatives, so
+  $FPR = 40 / 800 = 0.05$.
+
+```python
+def rates(pos, neg, tp, fp):
+    """pos/neg: actual positives/negatives; tp/fp: true/false positives."""
+    return {"base rate": pos / (pos + neg), "selection": (tp + fp) / (pos + neg),
+            "TPR": tp / pos, "FPR": fp / neg, "PPV": tp / (tp + fp)}
+
+for name, r in [("A", rates(pos=500, neg=500, tp=400, fp=100)),
+                ("B", rates(pos=200, neg=800, tp=160, fp=40))]:
+    print(name, {k: round(v, 2) for k, v in r.items()})
+```
+
+```text title="Output"
+A {'base rate': 0.5, 'selection': 0.5, 'TPR': 0.8, 'FPR': 0.2, 'PPV': 0.8}
+B {'base rate': 0.2, 'selection': 0.2, 'TPR': 0.8, 'FPR': 0.05, 'PPV': 0.8}
+```
+
+Equal TPR and equal precision forced the FPRs apart (0.20 versus 0.05), so **equalized odds fails**. The
+selection rates (0.5 versus 0.2) differ too, so **demographic parity fails** as well.
+
+Try to fix the FPR instead. Keep B's TPR at 0.8 but raise its FPR to 0.20: then $FP = 0.20 \times 800 =
+160$, and B's precision becomes $160 / (160 + 160) = 0.5$. Now equalized odds holds, but an approval
+means an 80% chance of repaying in A and only 50% in B: **equal precision fails**. Whichever pair you fix,
+the third rate moves.
+
+### Why it must happen
+
+Write $p$ for a group's base rate. Counting the cells of the confusion matrix (try it: express $TP$ and
+$FP$ through $p$, TPR and FPR, then substitute into the precision) gives
+
+$$
+\text{FPR} = \frac{p}{1 - p} \cdot \frac{1 - \text{PPV}}{\text{PPV}} \cdot \text{TPR}
+$$
+
+where PPV is the precision. If two groups share the same PPV and the same TPR, their FPRs can only be
+equal if $\frac{p}{1-p}$ is equal, meaning the base rates are equal. For A, $\frac{0.5}{0.5} \cdot
+\frac{0.2}{0.8} \cdot 0.8 = 0.20$; for B, $\frac{0.2}{0.8} \cdot \frac{0.2}{0.8} \cdot 0.8 = 0.05$, as
+above. The escape routes are equal base rates, or a perfect classifier (PPV = TPR = 1 makes FPR = 0 in
+both groups), and neither is available in practice.
+
+:::caution[This is a choice, not a bug to be fixed]
+The impossibility result does not mean fairness is hopeless. It means **someone has to choose** which
+criterion matters for this decision, and that choice is a value judgement about which errors hurt whom.
+Make it explicitly, with the people affected in mind, and write it down.
+:::
+
+## Mitigation: three places to intervene
+
+| Stage | Idea | Example | Trade-off |
+|---|---|---|---|
+| **Pre-processing** | Fix the data | collect more data for small groups; reweight examples; relabel with a better target (the health-cost case) | the best fix when possible, but slow and needs domain work |
+| **In-processing** | Change training | add a fairness penalty or constraint to the loss (F6's optimisation, with an extra term) | needs control of training; usually costs some accuracy |
+| **Post-processing** | Change decisions | pick a **different threshold per group** to equalise TPR or selection rate | simple and works on any model, but uses group membership at decision time |
+
+Per-group thresholds are the easiest to understand. If group B's good payers get lower scores, lowering
+B's threshold approves more of them, raising B's TPR toward A's. You will do exactly this in the
+homework. The costs are real: the FPR for B rises too, precision for B falls, and overall accuracy usually
+drops a little. In some settings, treating applicants differently by group at decision time is also
+legally restricted, so this is a decision for the organisation and its lawyers, not just the engineer.
+
+:::tip[Explore it]
+Google's interactive essay "Attacking discrimination with smarter machine learning" (the Go deeper link
+of the last lesson) lets you drag per-group thresholds and watch these rates move. Ten minutes with it
+makes the trade-offs concrete.
+:::
+
+<CodeExercise id="f11-calibration-and-trade-offs-01" />
+
+## Summary
+
+- A score is calibrated within groups if a score of $s$ means a fraction $s$ of positives in every group.
+  Check it by binning scores and comparing observed rates per group.
+- With different base rates and an imperfect model, calibration (or equal precision) and equalized odds
+  cannot all hold, and demographic parity generally fails too. Worked example: equal TPR and precision of
+  0.8 forced FPRs of 0.20 and 0.05.
+- The COMPAS debate was this conflict: unequal false positive rates on one side, equal predictive value on
+  the other.
+- Mitigations act on the data, the training or the decisions; per-group thresholds are simple but trade
+  some precision and accuracy and may be legally restricted.

@@ -1,0 +1,68 @@
+id: f11-bias-in-data-01
+lesson: foundations/f11/bias-in-data
+title: A group-blind model still picks sides
+prompt: |
+  Write `blind_model(hist, new)`, a model that never looks at the `group` column:
+
+  1. From the history table `hist` (columns `area` and `hired`), learn the **hire rate per area**.
+  2. For each row of `new` (columns `group` and `area`), predict "hire" when its area's historical rate
+     is **at least 0.5**.
+  3. Return the **selection rate per group** of those predictions: a pandas Series indexed by group
+     (sorted, as `groupby` gives), holding the fraction of each group predicted "hire".
+
+  For the tables in the starter, north has a rate of 0.75 and south 0.25, so the result is
+  `A: 0.667, B: 0.333`, even though the model never saw a group.
+starter: |
+  import pandas as pd
+
+  hist = pd.DataFrame({
+      "area": ["north", "north", "north", "south", "south", "south", "north", "south"],
+      "hired": [1, 1, 0, 0, 0, 1, 1, 0],
+  })
+  new = pd.DataFrame({
+      "group": ["A", "A", "A", "B", "B", "B"],
+      "area": ["north", "north", "south", "south", "south", "north"],
+  })
+
+  def blind_model(hist, new):
+      rates = hist.groupby("area")["hired"].mean()
+      # TODO: predict hire for each row of new, then return the selection rate per group
+      return rates
+
+  print(blind_model(hist, new))
+solution: |
+  import pandas as pd
+
+  hist = pd.DataFrame({
+      "area": ["north", "north", "north", "south", "south", "south", "north", "south"],
+      "hired": [1, 1, 0, 0, 0, 1, 1, 0],
+  })
+  new = pd.DataFrame({
+      "group": ["A", "A", "A", "B", "B", "B"],
+      "area": ["north", "north", "south", "south", "south", "north"],
+  })
+
+  def blind_model(hist, new):
+      rates = hist.groupby("area")["hired"].mean()
+      pred = new["area"].map(rates) >= 0.5
+      return pred.groupby(new["group"]).mean()
+
+  print(blind_model(hist, new))
+tests: |
+  import pandas as pd
+  import numpy as np
+  _h = pd.DataFrame({"area": ["north", "north", "north", "south", "south", "south", "north", "south"], "hired": [1, 1, 0, 0, 0, 1, 1, 0]})
+  _n = pd.DataFrame({"group": ["A", "A", "A", "B", "B", "B"], "area": ["north", "north", "south", "south", "south", "north"]})
+  _r = blind_model(_h, _n)
+  assert isinstance(_r, pd.Series), f"Return a pandas Series of selection rates indexed by group, got {type(_r).__name__}"
+  assert list(_r.index) == ["A", "B"], f"The index should be the groups A and B, got {list(_r.index)}. Did you group the predictions by new['group']?"
+  np.testing.assert_allclose(_r.to_numpy(dtype=float), [2 / 3, 1 / 3], err_msg="For the starter tables the selection rates should be A: 0.667, B: 0.333")
+  _h2 = pd.DataFrame({"area": ["x", "x", "y", "y", "z", "z", "z"], "hired": [1, 0, 0, 0, 1, 1, 1]})
+  _n2 = pd.DataFrame({"group": ["p", "q", "q", "r", "p", "p", "q", "r"], "area": ["x", "y", "z", "x", "y", "z", "y", "y"]})
+  _r2 = blind_model(_h2, _n2)
+  assert list(_r2.index) == ["p", "q", "r"], f"Expected one entry per group p, q, r; got {list(_r2.index)}"
+  np.testing.assert_allclose(_r2.to_numpy(dtype=float), [2 / 3, 1 / 3, 1 / 2], err_msg="Area x has a rate of exactly 0.5, which counts as hire (at least 0.5). Expected p: 0.667, q: 0.333, r: 0.5")
+hints:
+  - "`new[\"area\"].map(rates)` looks up the area of each row in the Series of rates."
+  - "Compare with `>= 0.5` to get a boolean prediction per row; the mean of booleans is the fraction that are True."
+  - "Group the predictions by the group column: `pred.groupby(new[\"group\"]).mean()`."

@@ -1,0 +1,169 @@
+---
+title: "Bias in data and models"
+module: f11
+order: 2
+estMinutes: 12
+objectives:
+  - "Name and recognise historical, sampling, label and measurement bias in a dataset description"
+  - "Explain why deleting a sensitive column does not stop a model from using it, using the idea of a proxy"
+  - "Show with pandas how a group-blind model trained on biased decisions reproduces the bias"
+goDeeper: google-mlcc-fairness
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A model has no opinions. It finds whatever patterns in the training data best predict the labels. So
+when people say a model is "biased", they nearly always mean that the **data** carried a pattern we do
+not want repeated, and the model faithfully learned it. <Term id="algorithmic-bias" /> is mostly
+data bias plus an optimiser that does its job.
+
+This lesson names the usual sources, then builds a small example in pandas where a model that never sees
+group membership still treats the groups very differently.
+
+## Where bias enters
+
+Think of the path from the world to a model: something happens, someone records and labels it,
+a dataset is assembled, a model is fitted. Each step can tilt things.
+
+| Kind | What goes wrong | Example |
+|---|---|---|
+| **Historical bias** | The world itself, as recorded, reflects past unfairness. Even perfect sampling copies it. | Ten years of hiring decisions in a field that mostly hired men. |
+| **Sampling (representation) bias** | Some groups are under-represented, or the sample is not the population the model will serve. | Face datasets that are mostly lighter-skinned; a medical model trained at one hospital. |
+| **Label bias** | The label is a flawed stand-in for what you care about, and the flaw differs by group. | "Arrested" used as a label for "committed a crime"; "health costs" used for "health need". |
+| **Measurement bias** | Features are measured with different accuracy or meaning across groups. | A pulse oximeter or camera that reads less accurately on darker skin; a test score in a second language. |
+
+Two more ideas complete the picture:
+
+- **Selection effects from past decisions.** A lender only sees repayment outcomes for people it
+  approved. If a group was rarely approved, the data say little about how they would have repaid. This is
+  the feedback loop from the last lesson in another form.
+- **Aggregation.** One model for everyone can fit the majority well and the minority badly when the
+  relationship between features and label differs between groups. More data for the small group, or
+  checking per-group error, is the fix.
+
+:::note[Bias here is not the statistics word]
+In statistics (F5), an estimator is *unbiased* when it is right on average, and its bias is its average error. In this module "bias" means a systematic
+difference in how a system treats groups of people. Same word, different idea; context tells you which.
+:::
+
+## Proxies: why "just delete the column" fails
+
+The first idea most people have is **fairness through unawareness**: remove the sensitive attribute
+(gender, ethnicity, age) from the features. It rarely works, because other features carry the same
+information. A <Term id="proxy-variable" /> is a feature that is correlated with the sensitive attribute:
+postcode with ethnicity, first name or hobbies with gender, years of experience with age. Given enough
+features, a model can reconstruct group membership quite well without ever being shown it. That is what
+happened with the CV words in the last lesson.
+
+You can measure this directly: try to **predict the sensitive attribute from the other features**. If
+you can, so can your model.
+
+:::caution[Keep the sensitive column for auditing]
+Deleting the sensitive attribute also deletes your ability to *check* fairness, because you can no
+longer compute metrics per group. Many teams keep it, under access controls, for evaluation only, even
+when the model may not use it as an input. Whether you are allowed to collect and use it depends on the
+context and on law, which varies by country.
+:::
+
+## Watching a model learn bias
+
+Here is a synthetic hiring history. Skill has **the same distribution** in groups A and B. Where people
+live is strongly tied to group. And past decision makers held group B to a higher bar:
+
+```python
+import numpy as np
+import pandas as pd
+
+rng = np.random.default_rng(1)
+n = 4000
+group = rng.choice(["A", "B"], size=n)
+# Where people live is tied to group: a proxy.
+area = np.where(group == "A",
+                rng.choice(["north", "south"], size=n, p=[0.8, 0.2]),
+                rng.choice(["north", "south"], size=n, p=[0.2, 0.8]))
+skill = rng.normal(0, 1, size=n)                     # same distribution in both groups
+# Past decisions: group B needed a higher skill score to be hired.
+hired = skill > np.where(group == "A", 0.0, 0.8)
+
+hist = pd.DataFrame({"group": group, "area": area,
+                     "skill_band": pd.cut(skill, [-np.inf, 0, 0.8, np.inf], labels=["low", "mid", "high"]),
+                     "hired": hired})
+print(hist.groupby("group")["hired"].mean().round(2))
+```
+
+```text title="Output"
+group
+A    0.48
+B    0.20
+Name: hired, dtype: float64
+```
+
+Now "train" the simplest possible model that is **blind to group**: for each combination of area and
+skill band, predict "hire" if at least half of such people were hired in the past. This lookup table is
+exactly what a flexible classifier would learn from these two features, given enough data.
+
+```python
+table = hist.groupby(["area", "skill_band"], observed=True)["hired"].mean()
+print(table.round(2))
+rate = table.loc[list(zip(hist["area"], hist["skill_band"]))].to_numpy()
+hist["pred"] = rate >= 0.5
+
+mid = hist[hist["skill_band"] == "mid"]          # people with the same, middling skill
+print(mid.groupby("group")["pred"].mean().round(2))
+```
+
+```text title="Output"
+area   skill_band
+north  low           0.00
+       mid           0.81
+       high          1.00
+south  low           0.00
+       mid           0.17
+       high          1.00
+Name: hired, dtype: float64
+group
+A    0.82
+B    0.18
+Name: pred, dtype: float64
+```
+
+Read the table: in the mid band, northerners were usually hired and southerners usually were not,
+because most northerners are in group A. The model never saw the `group` column, yet among people with
+**the same skill band**, it recommends 82% of group A and 18% of group B. Area is doing the work of
+group. The model is accurate at reproducing history, and that is exactly the problem.
+
+:::tip[Accuracy against biased labels rewards bias]
+If the labels are past human decisions, a model that copies those decisions scores well. A fairer model
+might score *worse* on the same labels. Before trusting a high accuracy, ask what the labels measure.
+:::
+
+## How models absorb bias, in general
+
+The example used a lookup table, but every model you met in F7 to F10 does a version of the same
+thing. Training minimises average loss over the training data (F6). That has three consequences:
+
+1. **Patterns in the labels are learned, wanted or not.** Including those that run through proxies.
+2. **The majority dominates the average.** If 90% of examples come from one group, errors on the other
+   10% barely move the loss, so the model may fit them poorly. This is how sampling bias turns into
+   higher error for under-represented groups.
+3. **Models can amplify.** A classifier that thresholds a score can turn a modest difference in the data
+   into a large difference in decisions, as the 82% versus 18% above shows.
+
+What helps, roughly in order of how often it is the real fix:
+
+- **Better data**: collect more from under-represented groups, audit how labels were made, choose a target
+  that measures what you actually care about.
+- **Measure per group** before and after every change (next lesson).
+- **Mitigations** inside or after the model, such as reweighting examples or adjusting thresholds per
+  group, with their trade-offs (lesson 4).
+
+<CodeExercise id="f11-bias-in-data-01" />
+
+## Summary
+
+- Bias usually enters through data: historical bias, sampling bias, label bias and measurement bias, plus
+  selection effects from past decisions.
+- Removing a sensitive attribute does not stop a model using it, because proxies such as postcode carry the
+  same information. Keep the attribute (carefully) so you can audit.
+- A group-blind model trained on biased decisions reproduced them: same skill band, 82% versus 18%.
+- Training on average loss lets the majority dominate and can amplify small differences into large ones.

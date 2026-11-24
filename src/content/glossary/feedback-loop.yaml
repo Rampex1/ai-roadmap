@@ -1,0 +1,8 @@
+term: "Feedback loop"
+short: "When a model's own decisions determine which data are collected, so its future training data reflect its past predictions."
+body: |
+  Predictive policing is the classic case: patrols go where records show crime, incidents are recorded where
+  patrols go, and the records then confirm the original allocation, even if true rates are equal. Lending
+  (outcomes are only seen for approved applicants) and recommendations (feedback only on items shown) have the
+  same shape. Keeping some decisions independent of the model helps break the loop.
+related: ["algorithmic-bias", "distribution-shift"]
