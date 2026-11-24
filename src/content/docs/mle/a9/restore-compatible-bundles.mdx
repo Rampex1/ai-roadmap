@@ -1,0 +1,42 @@
+---
+title: Restore a compatible release bundle
+module: a9
+order: 4
+estMinutes: 8
+objectives:
+  - Choose a verified previous target
+  - Keep model and input contracts compatible during rollback
+goDeeper: github-actions-workflow-artifacts
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="restore-compatible-bundles" /> includes the model artifact, service image, preprocessing and configuration. Restoring only weights may leave a newer service expecting different input semantics. Rehearse routing traffic to the known bundle and run a smoke test after restoration.
+
+Keep approved historical releases with both sequence and feature contract. A recent release is preferable only if it is known good and supports the currently required feature schema. A data schema migration might require restoring both producers and consumers or using a compatibility window. If the release tracker finds no compatible target, use the defined manual fallback.
+
+This fixture ranks immutable release IDs by sequence and uses ID as a tie-break. It excludes the current deployment.
+
+## Worked example
+
+The current release is excluded; the approved compatible earlier release is selected.
+
+```python
+def rollback_target(history, current, schema):
+    eligible = [row for row in history if row[0] != current and row[2] == schema and row[3]]
+    best = max(eligible,key=lambda row:(row[1],row[0]),default=None)
+    return best[0] if best else None
+
+print(rollback_target([("old",8,"features-1",True),("new",9,"features-2",True)],"new","features-1"))
+```
+
+```text title="Output"
+old
+```
+
+Practice the restoration and verify client-visible version and functionality.
+
+## Try it
+
+<CodeExercise id="a9-restore-compatible-bundles-01" />

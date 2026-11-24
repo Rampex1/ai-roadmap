@@ -1,0 +1,42 @@
+---
+title: Gate deployment on evaluation and smoke tests
+module: a9
+order: 3
+estMinutes: 8
+objectives:
+  - Separate offline quality gates from serving health
+  - Block critical regressions even with aggregate gains
+goDeeper: github-actions-workflow-artifacts
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="evaluation-and-smoke-gate" /> can combine required jobs, artifact provenance, evaluation outcomes and a staging smoke test. Each provides different evidence. Evaluation checks behaviour on labelled cases. A smoke test checks basic startup and response contract. Readiness alone does not establish model quality.
+
+Define gate thresholds before comparing experiment results. A candidate might have the same global score but regress on an important slice. Preserve a critical-stop rule and report missing conditions explicitly. Promotion should refer to an evaluated digest and decision log.
+
+The fixture reports all failed gate conditions in a fixed order. A missing quality score fails the quality check, even if every other condition passes.
+
+## Worked example
+
+Overall quality passes, while smoke and critical checks block promotion.
+
+```python
+def gate_failures(ci, smoke, score, floor, critical):
+    return [name for name, failed in (
+        ("ci",not ci),("smoke",not smoke),("quality",score is None or score < floor),
+        ("critical",critical)) if failed]
+
+print(gate_failures(True, False, 0.93, 0.9, True))
+```
+
+```text title="Output"
+['smoke', 'critical']
+```
+
+Retain reasons and exact candidate identity for review.
+
+## Try it
+
+<CodeExercise id="a9-evaluation-and-smoke-gate-01" />

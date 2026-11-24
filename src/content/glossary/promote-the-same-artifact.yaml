@@ -1,0 +1,4 @@
+term: "Immutable artifact promotion"
+short: "Advancing the tested artifact by digest to another environment without rebuilding it."
+body: "The practice of building a release once and moving that exact artifact, identified by its content digest, from test to staging to production. Nothing is rebuilt from tags, so the deployed bytes are the ones the evidence describes."
+related: ["model-artifact-contract","dataset-manifest"]

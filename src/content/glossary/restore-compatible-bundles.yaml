@@ -1,0 +1,4 @@
+term: "Rollback bundle"
+short: "A known earlier combination of model, preprocessing and serving configuration that can be restored together."
+body: "A previously approved set of model, preprocessing, serving image and configuration that was released together. It is restored as one unit so that the model and its input contract stay consistent."
+related: ["model-artifact-contract","canary-release"]

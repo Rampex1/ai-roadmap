@@ -1,0 +1,6 @@
+title: GitHub Actions workflow artifacts
+url: https://docs.github.com/en/actions/concepts/workflows-and-actions/workflow-artifacts
+kind: tool
+free: true
+modules:
+  - a9

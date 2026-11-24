@@ -1,0 +1,4 @@
+term: "Release gate"
+short: "A predefined requirement that must pass before a deployment or rollout is advanced."
+body: "Verify rollback and fallback before granting the candidate more authority."
+related: ["canary-release","model-card"]

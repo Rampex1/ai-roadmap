@@ -1,0 +1,89 @@
+items:
+  - id: a9-promote-the-same-artifact-01
+    type: mcq
+    prompt: What should production promotion reuse?
+    explanation: This connects evidence to the exact bytes.
+    options:
+      - text: The same tested artifact digest
+        why: This connects evidence to the exact bytes.
+        correct: true
+      - text: A fresh build from floating dependencies
+        why: That may produce different bytes.
+      - text: Only a mutable tag name
+        why: A tag can be repointed.
+  - id: a9-promote-the-same-artifact-02
+    type: mcq
+    prompt: What does a digest check establish?
+    explanation: It verifies identity under the assumed trust boundary.
+    options:
+      - text: The observed bytes match the expected hash
+        why: It verifies identity under the assumed trust boundary.
+        correct: true
+      - text: Approval and provenance by itself
+        why: Those require independent evidence.
+      - text: That accuracy is high
+        why: Content identity does not measure quality.
+  - id: a9-promote-the-same-artifact-03
+    type: mcq
+    prompt: Where should a test report point?
+    explanation: Evidence must be linked to the approved bundle.
+    options:
+      - text: To the exact artifact it tested
+        why: Evidence must be linked to the approved bundle.
+        correct: true
+      - text: Only to the current branch name
+        why: Branches change.
+      - text: Only to a screenshot title
+        why: This may not locate the artifact.
+  - id: a9-promote-the-same-artifact-04
+    type: mcq
+    prompt: Why distinguish reports from bundles?
+    explanation: They play different roles in promotion.
+    options:
+      - text: Reports provide evidence and bundles are executed
+        why: They play different roles in promotion.
+        correct: true
+      - text: Reports should be served as model weights
+        why: Reports are not inference artifacts.
+      - text: Only bundles can have names
+        why: Both can be identified.
+  - id: a9-promote-the-same-artifact-05
+    type: multi
+    prompt: Which should be pinned?
+    explanation: It identifies the deployed model data. It identifies the tested execution environment.
+    options:
+      - text: Model artifact digest
+        why: It identifies the deployed model data.
+        correct: true
+      - text: Runtime image digest
+        why: It identifies the tested execution environment.
+        correct: true
+      - text: The latest filename with no digest
+        why: It can resolve to unknown bytes.
+  - id: a9-promote-the-same-artifact-06
+    type: cloze
+    prompt: A hash identifying exact content is a ______.
+    accept:
+      - digest
+      - checksum
+    explanation: It is computed from the bytes.
+  - id: a9-promote-the-same-artifact-07
+    type: order
+    prompt: Order a build-once release.
+    items:
+      - Build a candidate bundle
+      - Record its immutable digest
+      - Test that exact bundle
+      - Promote the same digest
+    explanation: Promotion uses the artifact assessed by tests.
+  - id: a9-promote-the-same-artifact-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def matches_digest(contents, expected):
+          from hashlib import sha256
+          return sha256(contents).hexdigest() == expected
+
+      print(matches_digest(b"x", "x"))
+    answer: "False"
+    explanation: A byte value and its SHA-256 hex digest are different.

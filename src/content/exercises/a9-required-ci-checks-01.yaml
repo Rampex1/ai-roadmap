@@ -1,0 +1,17 @@
+id: a9-required-ci-checks-01
+lesson: mle/a9/required-ci-checks
+title: Find unsatisfied CI checks
+prompt: Implement missing_checks(required, statuses). Return sorted unique required names that lack exact success. Missing, skipped and failed all remain unsatisfied.
+starter: |
+  def missing_checks(required, statuses):
+      raise NotImplementedError
+solution: |
+  def missing_checks(required, statuses):
+      return sorted(name for name in set(required) if statuses.get(name) != "success")
+tests: |
+  assert missing_checks(["unit","schema","unit"],{"unit":"success"}) == ["schema"]
+  assert missing_checks(["a","b"],{"a":"skipped","b":"failure"}) == ["a","b"]
+  assert missing_checks([],{"other":"failure"}) == []
+  assert missing_checks(["a","a"],{}) == ["a"]
+hints:
+  - Check required names, not only reported statuses.

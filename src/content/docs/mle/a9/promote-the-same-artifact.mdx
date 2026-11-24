@@ -1,0 +1,41 @@
+---
+title: Build once and promote the same bytes
+module: a9
+order: 2
+estMinutes: 8
+objectives:
+  - Verify content identity before promotion
+  - Distinguish evidence artifacts from deployable bundles
+goDeeper: github-actions-workflow-artifacts
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+<Term id="promote-the-same-artifact" /> keeps the deployable container, model and preprocessing bundle aligned with test evidence. Build once for the candidate revision, assign stable digests and test that bundle. Promote those same bytes to staging and production. Rebuilding from a mutable image tag after approval can change what is shipped.
+
+A workflow can publish reports and deployable artifacts as different outputs. A successful report should link to the tested digest. Check provenance and compatibility together. A digest identifies bytes and cannot establish that the source or approval is trusted.
+
+This fixture verifies raw artifact bytes with a trusted SHA-256 hex digest. It does not replace signing, approval or release access controls.
+
+## Worked example
+
+An unverified label is not a digest match.
+
+```python
+def matches_digest(contents, expected):
+    from hashlib import sha256
+    return sha256(contents).hexdigest() == expected
+
+print(matches_digest(b"model", "unverified"))
+```
+
+```text title="Output"
+False
+```
+
+Track the approved digest through every environment.
+
+## Try it
+
+<CodeExercise id="a9-promote-the-same-artifact-01" />

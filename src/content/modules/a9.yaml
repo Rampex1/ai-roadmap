@@ -4,5 +4,7 @@ title: "CI/CD"
 order: 9
 prereqs: ["a8"]
 objectives:
-  - "Explain the core ideas of cI/CD"
-  - "Apply cI/CD to a working ML project"
+  - Define fast pull-request checks and staged pipeline gates
+  - Preserve one immutable build across promotion steps
+  - Require quality and operational evidence to promote a candidate
+  - Roll back compatible model, code and feature bundles

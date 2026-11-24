@@ -1,0 +1,4 @@
+term: "Deployment gate"
+short: "A predefined set of requirements that must hold before a candidate is promoted."
+body: "A rule set fixed before evaluation that blocks promotion unless every condition holds: required checks, a quality floor on labelled data, no critical slice regression and a passing smoke test of the deployed path. Missing evidence counts as failure."
+related: ["release-gate","paired-slice-comparison"]

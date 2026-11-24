@@ -1,0 +1,21 @@
+id: a9-promote-the-same-artifact-01
+lesson: mle/a9/promote-the-same-artifact
+title: Check promoted artifact bytes
+prompt: Implement matches_digest(contents, expected) for bytes and a lowercase SHA-256 digest string. Return true only for exact hex digest equality.
+starter: |
+  def matches_digest(contents, expected):
+      raise NotImplementedError
+solution: |
+  def matches_digest(contents, expected):
+      from hashlib import sha256
+      return sha256(contents).hexdigest() == expected
+tests: |
+  from hashlib import sha256
+  assert matches_digest(b"one",sha256(b"one").hexdigest())
+  assert not matches_digest(b"two",sha256(b"one").hexdigest())
+  assert matches_digest(b"",sha256(b"").hexdigest())
+  assert not matches_digest(b"one","one")
+  assert not matches_digest(b"one", sha256(b"one").hexdigest()[:12])
+  assert not matches_digest(b"one", "")
+hints:
+  - Hash raw bytes rather than a display filename.

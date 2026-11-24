@@ -1,0 +1,20 @@
+id: a9-restore-compatible-bundles-01
+lesson: mle/a9/restore-compatible-bundles
+title: Select a verified rollback target
+prompt: Implement rollback_target(history, current, schema). Each row is (release ID, sequence, feature schema, approved). Return matching approved ID other than current, choosing maximum sequence then ID. Return None if unavailable.
+starter: |
+  def rollback_target(history, current, schema):
+      raise NotImplementedError
+solution: |
+  def rollback_target(history, current, schema):
+      eligible = [row for row in history if row[0] != current and row[2] == schema and row[3]]
+      best = max(eligible,key=lambda row:(row[1],row[0]),default=None)
+      return best[0] if best else None
+tests: |
+  history=[("a",1,"s",True),("b",2,"s",True),("c",3,"other",True),("d",4,"s",False)]
+  assert rollback_target(history,"b","s") == "a"
+  assert rollback_target(history,"current","s") == "b"
+  assert rollback_target(history,"current","none") is None
+  assert rollback_target([("a",2,"s",True),("b",2,"s",True)],"new","s") == "b"
+hints:
+  - Filter by schema and approval before sorting.

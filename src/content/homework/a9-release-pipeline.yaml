@@ -1,0 +1,22 @@
+id: a9-release-pipeline
+module: a9
+kind: homework
+title: Rehearse release decisions in an offline CI/CD fixture
+brief: |-
+  Evaluate required checks, verify artifact identity, apply a release gate and resolve a compatible rollback target. No credentials or CI runners are needed.
+
+  1. Check required job results.
+  2. Verify artifact digest.
+  3. Apply signed-off metric and smoke gates.
+  4. Find a compatible prior release.
+  5. Authorize promotion only for the tested bytes.
+
+  Draw the jobs and evidence handoffs. Name which failures should prevent deployment and who can decide to restore the previous bundle.
+notebook: /homework/a9-release-pipeline.ipynb
+rubric:
+  - Missing required results fail the check.
+  - Candidate and promoted bytes share an identity.
+  - Promotion needs quality and smoke evidence.
+  - Rollback selects a compatible bundle.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

@@ -1,0 +1,4 @@
+term: "Required CI check"
+short: "A named automated check whose successful completion is required before a change can pass a gate."
+body: "A check the repository names as mandatory, so a change cannot merge or advance until that check reports success. A check that is missing, cancelled or failed leaves the gate unmet."
+related: ["split-invariant-tests","endpoint-integration-fixtures"]

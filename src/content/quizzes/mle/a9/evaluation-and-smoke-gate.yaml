@@ -1,0 +1,89 @@
+items:
+  - id: a9-evaluation-and-smoke-gate-01
+    type: mcq
+    prompt: Does a passing smoke test establish model quality?
+    explanation: Labelled evaluation supplies different evidence.
+    options:
+      - text: No, its scope is basic serving behaviour
+        why: Labelled evaluation supplies different evidence.
+        correct: true
+      - text: Yes, readiness implies accuracy
+        why: A model can be ready but inaccurate.
+      - text: Only when the output is JSON
+        why: Encoding does not establish quality.
+  - id: a9-evaluation-and-smoke-gate-02
+    type: mcq
+    prompt: Does an absent score meet the floor?
+    explanation: The rule requires an observed passing score.
+    options:
+      - text: No, quality evidence is missing
+        why: The rule requires an observed passing score.
+        correct: true
+      - text: Yes, missing equals zero and always passes
+        why: Missing and zero differ.
+      - text: Only if CI passed
+        why: The checks are independent.
+  - id: a9-evaluation-and-smoke-gate-03
+    type: mcq
+    prompt: Why predefine a critical regression gate?
+    explanation: Critical cases need independent protection.
+    options:
+      - text: Aggregate metrics can hide a significant failure
+        why: Critical cases need independent protection.
+        correct: true
+      - text: It removes all trade-offs
+        why: Trade-offs can remain.
+      - text: It permits serving an untested artifact
+        why: Gates constrain promotion.
+  - id: a9-evaluation-and-smoke-gate-04
+    type: mcq
+    prompt: What should a decision log identify?
+    explanation: The decision should be reproducible.
+    options:
+      - text: Only the team display name
+        why: It does not identify the deployed candidate.
+      - text: Only successful metrics
+        why: Failures and missing evidence matter.
+      - text: The evaluated artifact and gate reasons
+        why: The decision should be reproducible.
+        correct: true
+  - id: a9-evaluation-and-smoke-gate-05
+    type: multi
+    prompt: Which can independently block a release?
+    explanation: It can reveal bad startup or contract behaviour. Aggregate gains do not cover it.
+    options:
+      - text: A failing staging smoke test
+        why: It can reveal bad startup or contract behaviour.
+        correct: true
+      - text: An important critical regression
+        why: Aggregate gains do not cover it.
+        correct: true
+      - text: A healthy candidate meeting every predefined gate
+        why: This is not a blocker in the fixture.
+  - id: a9-evaluation-and-smoke-gate-06
+    type: cloze
+    prompt: A basic deployed path check is a ______ test.
+    accept:
+      - smoke
+    explanation: It verifies core functionality after startup.
+  - id: a9-evaluation-and-smoke-gate-07
+    type: order
+    prompt: Order a gated deployment.
+    items:
+      - Fix criteria and artifact identity
+      - Run evaluation and staging smoke checks
+      - Collect all gate outcomes
+      - Record the promotion or hold decision
+    explanation: Promotion follows evidence collection.
+  - id: a9-evaluation-and-smoke-gate-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def gate_failures(ci, smoke, score, floor, critical):
+          return [name for name, failed in (
+              ("ci",not ci),("smoke",not smoke),("quality",score is None or score < floor),
+              ("critical",critical)) if failed]
+
+      print(gate_failures(True, True, None, 0.0, False))
+    answer: "['quality']"
+    explanation: A missing score fails even with a zero floor.

@@ -1,0 +1,20 @@
+id: a9-evaluation-and-smoke-gate-01
+lesson: mle/a9/evaluation-and-smoke-gate
+title: Collect all promotion blockers
+prompt: Implement gate_failures(ci, smoke, score, floor, critical). Include ci and smoke when the corresponding pass flag is false, quality for missing or below-floor scores, and critical for a critical regression. Preserve this order.
+starter: |
+  def gate_failures(ci, smoke, score, floor, critical):
+      raise NotImplementedError
+solution: |
+  def gate_failures(ci, smoke, score, floor, critical):
+      return [name for name, failed in (
+          ("ci",not ci),("smoke",not smoke),("quality",score is None or score < floor),
+          ("critical",critical)) if failed]
+tests: |
+  assert gate_failures(True,True,0.9,0.9,False) == []
+  assert gate_failures(False,False,None,0.9,True) == ["ci","smoke","quality","critical"]
+  assert gate_failures(True,True,0.89,0.9,False) == ["quality"]
+  assert gate_failures(True,True,None,0.0,False) == ["quality"]
+  assert gate_failures(True,True,0.0,0.0,False) == []
+hints:
+  - An equal quality score passes the floor.

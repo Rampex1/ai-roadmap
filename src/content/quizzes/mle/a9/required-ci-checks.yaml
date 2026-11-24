@@ -1,0 +1,87 @@
+items:
+  - id: a9-required-ci-checks-01
+    type: mcq
+    prompt: What should a skipped required job count as?
+    explanation: Its assertions did not run successfully.
+    options:
+      - text: Unsatisfied
+        why: Its assertions did not run successfully.
+        correct: true
+      - text: Success
+        why: Skipping supplies no success evidence.
+      - text: A model prediction
+        why: CI results are operational evidence.
+  - id: a9-required-ci-checks-02
+    type: mcq
+    prompt: What fits a fast pull-request job?
+    explanation: It gives quick repeatable feedback.
+    options:
+      - text: A deterministic contract fixture
+        why: It gives quick repeatable feedback.
+        correct: true
+      - text: Only the largest production retraining job
+        why: It can be too slow for routine changes.
+      - text: A manual production rollout
+        why: A gate can run without deployment.
+  - id: a9-required-ci-checks-03
+    type: mcq
+    prompt: Why name required jobs explicitly?
+    explanation: Absent jobs cannot be found by scanning failures alone.
+    options:
+      - text: It lets the gate detect a missing result
+        why: Absent jobs cannot be found by scanning failures alone.
+        correct: true
+      - text: It renames model classes automatically
+        why: Job names do not alter predictions.
+      - text: It makes job statuses unnecessary
+        why: Names and outcomes both matter.
+  - id: a9-required-ci-checks-04
+    type: mcq
+    prompt: What should diagnostics omit?
+    explanation: CI output may be retained or shared.
+    options:
+      - text: All failure categories
+        why: Categories are useful for triage.
+      - text: The checked software version
+        why: Version helps reproduce the failure.
+      - text: Unnecessary sensitive data
+        why: CI output may be retained or shared.
+        correct: true
+  - id: a9-required-ci-checks-05
+    type: multi
+    prompt: Which can be fast CI requirements?
+    explanation: They can use stable local fixtures. It can validate the composed path.
+    options:
+      - text: Unit and contract tests
+        why: They can use stable local fixtures.
+        correct: true
+      - text: A small serving smoke test
+        why: It can validate the composed path.
+        correct: true
+      - text: Signing off an unaudited production change automatically
+        why: That grants authority without evidence.
+  - id: a9-required-ci-checks-06
+    type: cloze
+    prompt: Continuous integration is commonly abbreviated ______.
+    accept:
+      - ci
+    explanation: CI checks integrated changes frequently.
+  - id: a9-required-ci-checks-07
+    type: order
+    prompt: Order a CI run.
+    items:
+      - Select required checks
+      - Run them on the proposed revision
+      - Capture pass or failure status
+      - Evaluate the gate
+    explanation: The gate consumes the named job results.
+  - id: a9-required-ci-checks-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def missing_checks(required, statuses):
+          return sorted(name for name in set(required) if statuses.get(name) != "success")
+
+      print(missing_checks(["a"], {"a":"success","b":"failure"}))
+    answer: "[]"
+    explanation: The unrelated failure is outside the declared requirements.

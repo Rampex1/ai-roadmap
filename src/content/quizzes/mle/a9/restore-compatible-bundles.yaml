@@ -1,0 +1,91 @@
+items:
+  - id: a9-restore-compatible-bundles-01
+    type: mcq
+    prompt: Why restore a bundle instead of only model weights?
+    explanation: Mixed versions may be incompatible.
+    options:
+      - text: Older weights automatically rewrite requests
+        why: They cannot change the client contract.
+      - text: Rollback should remove all test evidence
+        why: Diagnostics remain useful.
+      - text: The runtime and feature contract can depend on the model
+        why: Mixed versions may be incompatible.
+        correct: true
+  - id: a9-restore-compatible-bundles-02
+    type: mcq
+    prompt: What if no compatible target exists?
+    explanation: A mismatched deployment can compound the incident.
+    options:
+      - text: Use the defined manual fallback and investigate
+        why: A mismatched deployment can compound the incident.
+        correct: true
+      - text: Promote the newest incompatible release
+        why: Recency does not establish compatibility.
+      - text: Declare success without routing checks
+        why: The fallback is still unresolved.
+  - id: a9-restore-compatible-bundles-03
+    type: mcq
+    prompt: What does recent mean in the fixture?
+    explanation: Approval and schema checks come first.
+    options:
+      - text: Largest sequence among eligible bundles
+        why: Approval and schema checks come first.
+        correct: true
+      - text: Alphabetical ID before sequence
+        why: IDs only break ties.
+      - text: Current release by definition
+        why: The current release is excluded.
+  - id: a9-restore-compatible-bundles-04
+    type: mcq
+    prompt: Should post-rollback verification run?
+    explanation: Restoration can have its own failure modes.
+    options:
+      - text: No, the artifact was once approved
+        why: The current environment may differ.
+      - text: Only if the model has no version
+        why: Verification works best with identity.
+      - text: Yes, verify the restored runtime and public route
+        why: Restoration can have its own failure modes.
+        correct: true
+  - id: a9-restore-compatible-bundles-05
+    type: multi
+    prompt: Which should be restored together if compatible?
+    explanation: They control the execution path. They must agree on input meaning.
+    options:
+      - text: Serving image and configuration
+        why: They control the execution path.
+        correct: true
+      - text: Model and feature contract
+        why: They must agree on input meaning.
+        correct: true
+      - text: Only the latest model alias
+        why: An alias can point to changing content.
+  - id: a9-restore-compatible-bundles-06
+    type: cloze
+    prompt: Restoring an earlier verified deployment is a ______.
+    accept:
+      - rollback
+      - roll back
+      - roll-back
+    explanation: A rollback returns to a previous compatible state.
+  - id: a9-restore-compatible-bundles-07
+    type: order
+    prompt: Order an incident restoration.
+    items:
+      - Identify current failing version
+      - Find a compatible known target
+      - Switch traffic to the restored bundle
+      - Confirm version and health
+    explanation: Recovery needs verification after switching.
+  - id: a9-restore-compatible-bundles-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def rollback_target(history, current, schema):
+          eligible = [row for row in history if row[0] != current and row[2] == schema and row[3]]
+          best = max(eligible,key=lambda row:(row[1],row[0]),default=None)
+          return best[0] if best else None
+
+      print(rollback_target([("a",1,"s",False)], "b", "s"))
+    answer: None
+    explanation: An unapproved release does not qualify.

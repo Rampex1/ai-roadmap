@@ -1,0 +1,64 @@
+---
+title: Run deterministic checks in continuous integration
+module: a9
+order: 1
+estMinutes: 8
+objectives:
+  - Choose required jobs and failure semantics
+  - Keep expensive model runs separate from fast feedback
+goDeeper: github-actions-workflow-artifacts
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="required-ci-checks" /> can run unit tests, contract checks and a small artifact smoke test on each pull request. Keep the fixture deterministic and the feedback loop short. Run expensive training on a deliberate cadence or a separately triggered workflow. A fresh training run should not be a hidden dependency of a routine code check.
+
+Name required jobs explicitly. An absent, skipped or cancelled required job does not show that its assertions passed. Optional jobs may contribute diagnostics without gating a change. Persist enough output to diagnose failures, but omit credentials and raw sensitive data. As of late 2026, GitHub reports a job skipped by an `if:` condition as successful, so a required check can pass without running; gate on the job's own outputs or avoid conditional skips on required jobs.
+
+## Worked example
+
+One job was skipped and another never reported.
+
+```python
+def missing_checks(required, statuses):
+    return sorted(name for name in set(required) if statuses.get(name) != "success")
+
+print(missing_checks(["unit","parity","schema"], {"unit":"success","parity":"skipped"}))
+```
+
+```text title="Output"
+['parity', 'schema']
+```
+
+An evidence gate should distinguish success from a lack of evidence.
+
+## Try it
+
+<CodeExercise id="a9-required-ci-checks-01" />
+
+## Run offline tests on a pull request
+
+In a separate Python project, save this example under `.github/workflows/test.yml`.
+It exercises standard-library unit tests already placed under `tests/` and uses
+read-only repository permission. Add a named model-contract job when the project
+has stable prediction fixtures. Mark the intended jobs required in repository settings.
+
+```yaml
+name: Prediction checks
+on: [pull_request]
+permissions:
+  contents: read
+jobs:
+  python-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: python -m unittest discover -s tests -v
+```
+
+Run the same command locally on the candidate revision. Record the name of the checked
+artifact in later jobs that exercise converted or containerised models.
