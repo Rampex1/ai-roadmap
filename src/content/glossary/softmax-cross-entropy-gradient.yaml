@@ -1,0 +1,4 @@
+term: "Logit gradient"
+short: "The derivative of a loss with respect to the unnormalized scores passed into it."
+body: "∂L/∂z for loss L on logits z. For softmax cross-entropy it is softmax(z) − onehot(y), with components summing to zero, scaled by 1/N under a batch mean."
+related: ["log-probability","backpropagation"]

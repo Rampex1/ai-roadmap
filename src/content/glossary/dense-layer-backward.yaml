@@ -1,0 +1,4 @@
+term: "Vector-Jacobian product"
+short: "Multiplying an upstream row-gradient by a local Jacobian instead of forming the full Jacobian."
+body: "Given upstream gradient vᵀ = ∂L/∂y and Jacobian J = ∂y/∂x, the product vᵀJ = ∂L/∂x. Reverse-mode autodiff computes it directly, e.g. G Wᵀ for a dense layer, without forming J."
+related: ["jacobian","backpropagation"]

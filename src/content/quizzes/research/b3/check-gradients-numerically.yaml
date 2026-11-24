@@ -1,0 +1,100 @@
+items:
+  - id: b3-check-gradients-numerically-01
+    type: mcq
+    prompt: What is the denominator for symmetric perturbations?
+    explanation: The plus and minus coordinates are separated by 2h.
+    options:
+      - text: Twice the step
+        why: The plus and minus coordinates are separated by 2h.
+        correct: true
+      - text: One step
+        why: That would double the estimate.
+      - text: The vector length
+        why: Derivative scaling is based on the perturbation.
+  - id: b3-check-gradients-numerically-02
+    type: mcq
+    prompt: Why avoid an extremely tiny step?
+    explanation: Subtraction of nearly equal values can lose precision.
+    options:
+      - text: Rounding can erase the loss difference
+        why: Subtraction of nearly equal values can lose precision.
+        correct: true
+      - text: Small steps always increase truncation error
+        why: Truncation generally shrinks for smooth functions.
+      - text: The chain rule stops working
+        why: The analytic derivative is unaffected.
+  - id: b3-check-gradients-numerically-03
+    type: mcq
+    prompt: Why avoid checking exactly at a ReLU kink?
+    explanation: Symmetric differences and chosen subgradients may differ.
+    options:
+      - text: Finite differences cannot handle real numbers
+        why: They approximate derivatives numerically.
+      - text: ReLU outputs never have gradients
+        why: It is differentiable away from zero.
+      - text: There is no unique ordinary derivative
+        why: Symmetric differences and chosen subgradients may differ.
+        correct: true
+  - id: b3-check-gradients-numerically-04
+    type: mcq
+    prompt: What should stay fixed across perturbations?
+    explanation: Only the selected coordinate should change.
+    options:
+      - text: Only the length of the output printout
+        why: Formatting does not fix the objective.
+      - text: Data, model mode and randomness
+        why: Only the selected coordinate should change.
+        correct: true
+      - text: All parameters including the perturbed one
+        why: One coordinate must change.
+  - id: b3-check-gradients-numerically-05
+    type: multi
+    prompt: Which checks complement gradient comparisons?
+    explanation: A close norm can hide incorrect mapping. A single example can hide path-specific bugs.
+    options:
+      - text: Use several smooth inputs and coordinates
+        why: A single example can hide path-specific bugs.
+        correct: true
+      - text: Check each gradient shape
+        why: A close norm can hide incorrect mapping.
+        correct: true
+      - text: Change the loss definition for the numerical estimate
+        why: That compares distinct objectives.
+  - id: b3-check-gradients-numerically-06
+    type: cloze
+    prompt: Perturbing in both directions gives a ______ finite difference.
+    accept:
+      - centered
+      - centred
+      - central
+      - symmetric
+      - two-sided
+      - two sided
+    explanation: The perturbations are symmetric around the base point.
+  - id: b3-check-gradients-numerically-07
+    type: order
+    prompt: Order a derivative check that computes the analytic reference before estimating the numerical derivative.
+    items:
+      - Freeze a deterministic objective
+      - Compute the analytic derivative
+      - Estimate derivatives by symmetric perturbations
+      - Compare named coordinates using tolerances
+    explanation: Both calculations must use the same loss.
+  - id: b3-check-gradients-numerically-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def numerical_gradient(objective,values,step):
+          if not step > 0:
+              raise ValueError("step must be positive")
+          result = []
+          for i in range(len(values)):
+              plus,minus = list(values),list(values)
+              plus[i] += step
+              minus[i] -= step
+              result.append((objective(plus)-objective(minus))/(2*step))
+          return result
+
+      print([round(x, 6) for x in numerical_gradient(lambda v: sum(v), [2, 5], 0.0001)])
+    answer: "[1.0, 1.0]"
+    explanation: The derivative of the sum is one for each coordinate.

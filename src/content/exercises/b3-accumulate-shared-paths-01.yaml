@@ -1,0 +1,20 @@
+id: b3-accumulate-shared-paths-01
+lesson: research/b3/accumulate-shared-paths
+title: Backpropagate two paths into one node
+prompt: Implement shared_path(x,y) for z=x+y and loss=z*z+z. Return (loss,(derivative with respect to x, derivative with respect to y)).
+starter: |
+  def shared_path(x,y):
+      raise NotImplementedError
+solution: |
+  def shared_path(x,y):
+      z = x+y
+      loss = z*z+z
+      adjoint = 2*z+1
+      return loss,(adjoint,adjoint)
+tests: |
+  assert shared_path(1,2) == (12,(7,7))
+  assert shared_path(-1,1) == (0,(1,1))
+  assert shared_path(-3,1) == (2,(-3,-3))
+  assert shared_path(0,0) == (0,(1,1))
+hints:
+  - The direct z path contributes one even when the square derivative is zero.

@@ -1,0 +1,94 @@
+items:
+  - id: b3-dense-layer-backward-01
+    type: mcq
+    prompt: What is the shape of dW?
+    explanation: It matches the weight matrix.
+    options:
+      - text: D by K
+        why: It matches the weight matrix.
+        correct: true
+      - text: N by D
+        why: That is the input-gradient shape.
+      - text: N by K
+        why: That is the upstream shape.
+  - id: b3-dense-layer-backward-02
+    type: mcq
+    prompt: What is the formula for dX?
+    explanation: Multiplying G by Wᵀ returns an N-by-D matrix.
+    options:
+      - text: G W transposed
+        why: Multiplying G by Wᵀ returns an N-by-D matrix.
+        correct: true
+      - text: X transposed times G
+        why: That is dW.
+      - text: Sum G over rows only
+        why: That is db.
+  - id: b3-dense-layer-backward-03
+    type: mcq
+    prompt: Why sum bias gradients over examples?
+    explanation: All row contributions apply to the same bias.
+    options:
+      - text: Python rows are always all identical
+        why: The values can vary across rows.
+      - text: Bias has one value per training example
+        why: The fixture has one bias per output coordinate.
+      - text: One shared bias affects every row
+        why: All row contributions apply to the same bias.
+        correct: true
+  - id: b3-dense-layer-backward-04
+    type: mcq
+    prompt: Should dense backward divide by batch size automatically?
+    explanation: An extra division can change gradient magnitude.
+    options:
+      - text: No, the upstream gradient already encodes objective scaling
+        why: An extra division can change gradient magnitude.
+        correct: true
+      - text: Yes, regardless of loss reduction
+        why: That would be wrong for sum or already averaged gradients.
+      - text: Only for all zero gradients
+        why: Zero gradients do not determine scaling.
+  - id: b3-dense-layer-backward-05
+    type: multi
+    prompt: Which outputs preserve original parameter or input shapes?
+    explanation: Gradients have one entry per weight. Gradients have one entry per input coordinate.
+    options:
+      - text: dX matches X
+        why: Gradients have one entry per input coordinate.
+        correct: true
+      - text: dW matches W
+        why: Gradients have one entry per weight.
+        correct: true
+      - text: db has one row per input example
+        why: Broadcast bias is shared across rows.
+  - id: b3-dense-layer-backward-06
+    type: cloze
+    prompt: dW is X transposed times the ______ gradient G.
+    accept:
+      - upstream
+      - output
+    explanation: The chain rule combines X with ∂L/∂Z.
+  - id: b3-dense-layer-backward-07
+    type: order
+    prompt: Order the forward setup and then the dense layer derivative calculation.
+    items:
+      - Identify X, W and the biased output
+      - Receive upstream derivative G
+      - Apply input and parameter summation rules
+      - Return gradients with the matching shapes
+    explanation: The local products use both forward values and the upstream derivative.
+  - id: b3-dense-layer-backward-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def dense_backward(x,w,g):
+          n,d,k = len(x),len(w),len(w[0])
+          dx = [[sum(g[i][j]*w[t][j] for j in range(k)) for t in range(d)]
+                for i in range(n)]
+          dw = [[sum(x[i][t]*g[i][j] for i in range(n)) for j in range(k)]
+                for t in range(d)]
+          db = [sum(g[i][j] for i in range(n)) for j in range(k)]
+          return dx,dw,db
+
+      print(dense_backward([[2]], [[3]], [[4]])[1])
+    answer: "[[8]]"
+    explanation: The weight gradient is input two times upstream four.

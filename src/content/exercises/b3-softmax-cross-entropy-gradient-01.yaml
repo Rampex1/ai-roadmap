@@ -1,0 +1,34 @@
+id: b3-softmax-cross-entropy-gradient-01
+lesson: research/b3/softmax-cross-entropy-gradient
+title: Compute stable softmax loss and gradient
+prompt: Implement softmax_loss_gradient(logits,label) for finite logits and an integer class index. Reject an empty list or invalid target, including bool. Return (loss, gradient list) for one example.
+starter: |
+  def softmax_loss_gradient(logits,label):
+      raise NotImplementedError
+solution: |
+  def softmax_loss_gradient(logits,label):
+      from math import exp,log
+      if not logits or type(label) is not int or not 0 <= label < len(logits):
+          raise ValueError("invalid target or empty logits")
+      high = max(logits)
+      shifted = [value-high for value in logits]
+      masses = [exp(value) for value in shifted]
+      total = sum(masses)
+      return log(total)-shifted[label], [mass/total-(j==label) for j,mass in enumerate(masses)]
+tests: |
+  from math import log
+  loss,grad = softmax_loss_gradient([1000,1000],1)
+  assert abs(loss-log(2)) < 1e-12 and grad == [0.5,-0.5]
+  loss,grad = softmax_loss_gradient([0,-1000],1)
+  assert (loss,grad) == (1000,[1,-1])
+  loss,grad = softmax_loss_gradient([5],0)
+  assert (loss,grad) == (0,[0])
+  for scores,label in (([],0),([1],1),([1],True),([1,2],-1)):
+      try:
+          softmax_loss_gradient(scores,label)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError("reject invalid logits or target")
+hints:
+  - Subtract the largest score before exponentiation and subtract one from the target probability.

@@ -1,0 +1,48 @@
+---
+title: Derive a stable classifier gradient
+module: b3
+order: 3
+estMinutes: 8
+objectives:
+  - Compute a numerically stable cross-entropy from logits
+  - Use the softmax-minus-one-hot gradient
+goDeeper: pytorch-autograd-mechanics
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+For one categorical target y, cross-entropy on logits z is logsumexp(z) minus the target logit. Its <Term id="softmax-cross-entropy-gradient" /> is softmax(z) minus the one-hot target. Differentiating logsumexp yields the softmax probabilities, while the selected logit contributes a derivative of minus one only at y.
+
+Compute logsumexp by subtracting the largest logit first. For finite logits near 1,000, exponentiating raw values can overflow. With shifted values s = z−max(z), the loss equals ln(sum exp(s))−s[y], avoiding subtraction of two large nearly equal log quantities. The gradient components sum to zero because adding one common constant to every logit does not change the loss.
+
+This fixture returns one loss and one gradient vector. For a mean over N examples divide each example's gradient by N before sending it to the preceding layer.
+
+## Worked example
+
+Equal logits yield equal probabilities without overflow.
+
+```python
+def softmax_loss_gradient(logits,label):
+    from math import exp,log
+    if not logits or type(label) is not int or not 0 <= label < len(logits):
+        raise ValueError("invalid target or empty logits")
+    high = max(logits)
+    shifted = [value-high for value in logits]
+    masses = [exp(value) for value in shifted]
+    total = sum(masses)
+    return log(total)-shifted[label], [mass/total-(j==label) for j,mass in enumerate(masses)]
+
+loss, gradient = softmax_loss_gradient([1000,1000], 1)
+print(round(loss,3), gradient)
+```
+
+```text title="Output"
+0.693 [0.5, -0.5]
+```
+
+Keep score normalization and batch-loss reduction explicit.
+
+## Try it
+
+<CodeExercise id="b3-softmax-cross-entropy-gradient-01" />

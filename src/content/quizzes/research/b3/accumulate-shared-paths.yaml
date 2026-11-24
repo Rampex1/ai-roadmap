@@ -1,0 +1,91 @@
+items:
+  - id: b3-accumulate-shared-paths-01
+    type: mcq
+    prompt: Where does the reverse pass start for a scalar loss?
+    explanation: The derivative of loss with respect to itself is one.
+    options:
+      - text: With loss adjoint one
+        why: The derivative of loss with respect to itself is one.
+        correct: true
+      - text: With loss adjoint zero
+        why: That would produce zero contributions.
+      - text: At the first input with an arbitrary seed
+        why: The objective determines the backward seed.
+  - id: b3-accumulate-shared-paths-02
+    type: mcq
+    prompt: Why does z receive two terms?
+    explanation: Each consumer supplies a gradient contribution.
+    options:
+      - text: The square is differentiated twice
+        why: The direct edge is the second term.
+      - text: Every variable has exactly two derivatives
+        why: The graph determines the paths.
+      - text: It feeds the loss through two paths
+        why: Each consumer supplies a gradient contribution.
+        correct: true
+  - id: b3-accumulate-shared-paths-03
+    type: mcq
+    prompt: "For z = x + y and L = z² + z, what are ∂L/∂x and ∂L/∂y when z = 0?"
+    explanation: The direct path remains even though the square derivative is zero.
+    options:
+      - text: One
+        why: The direct path remains even though the square derivative is zero.
+        correct: true
+      - text: Zero
+        why: That drops the direct term.
+      - text: Two
+        why: Only one direct contribution reaches each input.
+  - id: b3-accumulate-shared-paths-04
+    type: mcq
+    prompt: Why reverse topological order?
+    explanation: A node should collect all dependent contributions.
+    options:
+      - text: Consumers contribute before their inputs are propagated
+        why: A node should collect all dependent contributions.
+        correct: true
+      - text: It reverses the loss sign
+        why: Order does not imply negation.
+      - text: It sorts numerical values
+        why: The ordering comes from graph edges.
+  - id: b3-accumulate-shared-paths-05
+    type: multi
+    prompt: Which operation keeps shared-node gradients correct?
+    explanation: Each path affects total loss. The chain rule multiplies edge derivatives.
+    options:
+      - text: Sum all downstream contributions
+        why: Each path affects total loss.
+        correct: true
+      - text: Apply the local derivative to each contribution
+        why: The chain rule multiplies edge derivatives.
+        correct: true
+      - text: Overwrite whichever adjoint arrived earlier
+        why: That loses a path.
+  - id: b3-accumulate-shared-paths-06
+    type: cloze
+    prompt: The reverse-mode derivative stored at a node is its ______.
+    accept:
+      - adjoint
+      - gradient
+    explanation: It is the derivative of the scalar loss with respect to the node.
+  - id: b3-accumulate-shared-paths-07
+    type: order
+    prompt: Order the shared-path computation.
+    items:
+      - Compute z and forward loss
+      - Seed the loss adjoint
+      - Combine the direct and square contributions at z
+      - Propagate to x and y
+    explanation: The complete z adjoint is passed through addition.
+  - id: b3-accumulate-shared-paths-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def shared_path(x,y):
+          z = x+y
+          loss = z*z+z
+          adjoint = 2*z+1
+          return loss,(adjoint,adjoint)
+
+      print(shared_path(-1, 0))
+    answer: (0, (-1, -1))
+    explanation: At z=-1 the loss is zero and 2z+1 is -1.

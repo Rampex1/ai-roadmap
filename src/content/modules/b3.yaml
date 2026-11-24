@@ -4,5 +4,7 @@ title: "Backprop by hand"
 order: 4
 prereqs: ["b2"]
 objectives:
-  - "Explain the core ideas of backprop by hand"
-  - "Derive or implement the key methods of backprop by hand"
+  - Accumulate gradient contributions when a graph node has several consumers
+  - Derive and implement dense-layer gradients for a batched loss
+  - Compute stable softmax cross-entropy and its logit gradient
+  - Verify a manual gradient with centered differences

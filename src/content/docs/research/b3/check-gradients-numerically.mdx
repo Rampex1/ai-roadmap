@@ -1,0 +1,48 @@
+---
+title: Check gradients with centered differences
+module: b3
+order: 4
+estMinutes: 8
+objectives:
+  - Compare an analytic derivative with plus/minus evaluations
+  - Explain truncation, rounding and nondifferentiable points
+goDeeper: pytorch-autograd-mechanics
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="check-gradients-numerically" /> estimates a partial derivative by changing one coordinate in both directions and dividing the loss difference by twice the step size. For a sufficiently smooth loss, its truncation error is quadratic in the step size. Too small a step can still lose accuracy when subtracting nearly equal floating-point values.
+
+Hold data and model mode fixed while checking. Disable stochastic transforms and use a small deterministic batch. Around a ReLU kink or another discontinuity in derivative, symmetric differences can disagree with a framework's chosen subgradient. Check smooth points from several regimes and inspect coordinates separately.
+
+The function below works on a plain vector and creates independent copies for each perturbation. It checks the same scalar objective as the analytical derivative and leaves the input unchanged.
+
+## Worked example
+
+The checked derivatives approach four and twenty-seven.
+
+```python
+def numerical_gradient(objective,values,step):
+    if not step > 0:
+        raise ValueError("step must be positive")
+    result = []
+    for i in range(len(values)):
+        plus,minus = list(values),list(values)
+        plus[i] += step
+        minus[i] -= step
+        result.append((objective(plus)-objective(minus))/(2*step))
+    return result
+
+print([round(value,6) for value in numerical_gradient(lambda v: v[0]**2+v[1]**3,[2,3],1e-4)])
+```
+
+```text title="Output"
+[4.0, 27.0]
+```
+
+Use finite differences as a diagnostic alongside explicit shape and sign checks.
+
+## Try it
+
+<CodeExercise id="b3-check-gradients-numerically-01" />

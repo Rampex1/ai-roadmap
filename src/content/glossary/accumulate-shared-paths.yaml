@@ -1,0 +1,4 @@
+term: "Adjoint accumulation"
+short: "Summing derivative contributions reaching a graph node from all downstream paths."
+body: "When a node feeds several later operations, its adjoint ∂L/∂v is the sum over consumers of each consumer's adjoint times the local derivative. Reverse-mode autodiff adds these contributions; overwriting keeps only one path."
+related: ["backpropagation","gradient"]

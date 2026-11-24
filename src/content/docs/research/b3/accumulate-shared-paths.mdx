@@ -1,0 +1,43 @@
+---
+title: Backpropagate through a shared scalar
+module: b3
+order: 1
+estMinutes: 8
+objectives:
+  - Apply the chain rule along paths in reverse
+  - Add contributions when an input is reused
+goDeeper: pytorch-autograd-mechanics
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Backpropagation evaluates a computation graph forward, then propagates derivatives backward. The adjoint of a node is the derivative of the final scalar loss with respect to that node. Each edge contributes the downstream adjoint multiplied by the local derivative. A reused node receives a sum of contributions, which is <Term id="accumulate-shared-paths" />.
+
+Let z = x+y, q = z² and L = q+z. Start with derivative one for L. The addition gives one to q and one directly to z. The square sends another 2z to z, so z receives 2z+1, and the input addition passes that same derivative to x and y. Overwriting the first contribution would give the wrong result.
+
+Process a general acyclic graph in reverse topological order, after all downstream contributions are available. The fixture returns the forward loss and both input gradients for this small graph.
+
+## Worked example
+
+At z=3, a square path contributes six and a direct path contributes one.
+
+```python
+def shared_path(x,y):
+    z = x+y
+    loss = z*z+z
+    adjoint = 2*z+1
+    return loss,(adjoint,adjoint)
+
+print(shared_path(1,2))
+```
+
+```text title="Output"
+(12, (7, 7))
+```
+
+Accumulate all incoming adjoints before propagating farther upstream.
+
+## Try it
+
+<CodeExercise id="b3-accumulate-shared-paths-01" />

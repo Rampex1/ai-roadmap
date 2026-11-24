@@ -1,0 +1,22 @@
+id: b3-manual-backprop-lab
+module: b3
+kind: homework
+title: Backpropagate through a network by hand
+brief: |-
+  Implement scalar and batched gradients without an autodiff library. Use a stable classifier loss and compare analytic and numerical derivatives.
+
+  1. Add two paths through a shared input.
+  2. Propagate gradients through a dense layer.
+  3. Calculate logit loss and derivatives.
+  4. Check an analytic gradient with numerical differences.
+  5. Check the backward pass of a two-layer network.
+
+  Annotate every tensor shape in the end-to-end exercise. Explain why finite differences can fail at ReLU kinks and why checking several coordinates is stronger than checking only a gradient norm.
+notebook: /homework/b3-manual-backprop-lab.ipynb
+rubric:
+  - Shared paths are added.
+  - Batched gradients have the declared shapes.
+  - Softmax and cross-entropy remain stable at large logits.
+  - Numerical and analytic derivatives agree away from nondifferentiable points.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

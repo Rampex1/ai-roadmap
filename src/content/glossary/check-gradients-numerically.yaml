@@ -1,0 +1,4 @@
+term: "Centered finite difference"
+short: "A derivative approximation obtained from symmetric perturbations around the input."
+body: "(f(x+h·eᵢ) − f(x−h·eᵢ)) / (2h) estimates ∂f/∂xᵢ with O(h²) truncation error for smooth f, versus O(h) for a forward difference. Very small h amplifies rounding error."
+related: ["gradient","backpropagation"]

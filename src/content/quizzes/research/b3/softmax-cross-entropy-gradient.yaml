@@ -1,0 +1,96 @@
+items:
+  - id: b3-softmax-cross-entropy-gradient-01
+    type: mcq
+    prompt: What is the single-example logit derivative?
+    explanation: The normalizer contributes the probabilities.
+    options:
+      - text: Softmax probabilities minus one-hot target
+        why: The normalizer contributes the probabilities.
+        correct: true
+      - text: Raw logits minus the target index
+        why: Logits are unnormalized and the index is positional.
+      - text: The probabilities times the target index
+        why: This does not differentiate cross-entropy.
+  - id: b3-softmax-cross-entropy-gradient-02
+    type: mcq
+    prompt: Why shift by the maximum logit?
+    explanation: The common shift cancels in normalization.
+    options:
+      - text: Largest exponential is one and normalized ratios stay the same
+        why: The common shift cancels in normalization.
+        correct: true
+      - text: It removes the target from the loss
+        why: The target remains in the shifted subtraction.
+      - text: It changes the predicted class intentionally
+        why: Relative order is unchanged.
+  - id: b3-softmax-cross-entropy-gradient-03
+    type: mcq
+    prompt: What does the gradient vector sum to?
+    explanation: Probabilities sum to one and one target element is subtracted.
+    options:
+      - text: Zero
+        why: Probabilities sum to one and one target element is subtracted.
+        correct: true
+      - text: One
+        why: The probability vector alone sums to one.
+      - text: The target index
+        why: The target contributes a one-hot vector, not its integer value.
+  - id: b3-softmax-cross-entropy-gradient-04
+    type: mcq
+    prompt: Where does the factor 1/N enter for batch mean loss?
+    explanation: The mean applies at the objective.
+    options:
+      - text: Do not scale at all
+        why: That would implement the sum objective.
+      - text: Scale again at every layer
+        why: That repeatedly changes the derivative.
+      - text: Scale each per-example logit gradient before propagating
+        why: The mean applies at the objective.
+        correct: true
+  - id: b3-softmax-cross-entropy-gradient-05
+    type: multi
+    prompt: Which test the stable formulation?
+    explanation: Naive exponentiation can overflow. Loss should still be finite in this fixture.
+    options:
+      - text: Very large equal logits
+        why: Naive exponentiation can overflow.
+        correct: true
+      - text: A large gap with the lower score as target
+        why: Loss should still be finite in this fixture.
+        correct: true
+      - text: A hard-coded loss of zero for every label
+        why: A constant loss never exercises overflow handling.
+  - id: b3-softmax-cross-entropy-gradient-06
+    type: cloze
+    prompt: The gradient subtracts the ______ target vector.
+    accept:
+      - one-hot
+      - one hot
+      - onehot
+    explanation: The indicator selects just one target logit.
+  - id: b3-softmax-cross-entropy-gradient-07
+    type: order
+    prompt: Order stable loss computation.
+    items:
+      - Validate target and shift the logits
+      - Exponentiate shifted scores
+      - Normalize to obtain probabilities
+      - Compute loss and subtract the target indicator for the derivative
+    explanation: The shifted normalizer supports both outputs.
+  - id: b3-softmax-cross-entropy-gradient-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def softmax_loss_gradient(logits,label):
+          from math import exp,log
+          if not logits or type(label) is not int or not 0 <= label < len(logits):
+              raise ValueError("invalid target or empty logits")
+          high = max(logits)
+          shifted = [value-high for value in logits]
+          masses = [exp(value) for value in shifted]
+          total = sum(masses)
+          return log(total)-shifted[label], [mass/total-(j==label) for j,mass in enumerate(masses)]
+
+      print(softmax_loss_gradient([10, 10], 0)[1])
+    answer: "[-0.5, 0.5]"
+    explanation: Each probability is one half and the first coordinate is the target.

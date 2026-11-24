@@ -1,0 +1,22 @@
+id: b3-dense-layer-backward-01
+lesson: research/b3/dense-layer-backward
+title: Backpropagate a batched dense layer
+prompt: Implement dense_backward(x,w,g) with rectangular compatible nonempty lists. Given upstream derivative g, return (dx,dw,db) with the same nested-list shapes as x, w and bias. Do not add an averaging factor.
+starter: |
+  def dense_backward(x,w,g):
+      raise NotImplementedError
+solution: |
+  def dense_backward(x,w,g):
+      n,d,k = len(x),len(w),len(w[0])
+      dx = [[sum(g[i][j]*w[t][j] for j in range(k)) for t in range(d)]
+            for i in range(n)]
+      dw = [[sum(x[i][t]*g[i][j] for i in range(n)) for j in range(k)]
+            for t in range(d)]
+      db = [sum(g[i][j] for i in range(n)) for j in range(k)]
+      return dx,dw,db
+tests: |
+  assert dense_backward([[2],[3]],[[4,5]],[[1,0],[0,1]]) == ([[4],[5]],[[2,3]],[1,1])
+  assert dense_backward([[1,2]],[[5],[7]],[[3]]) == ([[15,21]],[[3],[6]],[3])
+  assert dense_backward([[0],[1]],[[2]],[[1],[-1]]) == ([[2],[-2]],[[-1]],[0])
+hints:
+  - Summation over examples constructs the weight and bias gradients.

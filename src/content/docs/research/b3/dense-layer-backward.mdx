@@ -1,0 +1,46 @@
+---
+title: Derive batched dense gradients
+module: b3
+order: 2
+estMinutes: 8
+objectives:
+  - Identify gradients for input, weight and broadcast bias
+  - Propagate an upstream gradient without an extra batch average
+goDeeper: pytorch-autograd-mechanics
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Use rows for examples. X has shape N by D, W shape D by K and bias b shape K. The forward layer is Z = XW + b, broadcasting b over the N examples. Given upstream G = ∂L/∂Z of shape N by K, the backward outputs are dX = G Wᵀ, dW = Xᵀ G and db = sum of G over examples.
+
+To derive one entry, Z[n,k] depends on W[d,k] with local derivative X[n,d]. Sum that product with G[n,k] over n to obtain dW[d,k]. The same logic derives input and bias gradients. These <Term id="dense-layer-backward" /> computations avoid constructing all derivatives of all outputs explicitly.
+
+If the loss takes a batch mean, its derivative is already included in G. Do not divide by batch size again here. The fixture uses nested lists rather than matrix libraries so each summation axis is visible. Inputs are nonempty, rectangular and compatible.
+
+## Worked example
+
+Each example sends its gradient through a different output coordinate.
+
+```python
+def dense_backward(x,w,g):
+    n,d,k = len(x),len(w),len(w[0])
+    dx = [[sum(g[i][j]*w[t][j] for j in range(k)) for t in range(d)]
+          for i in range(n)]
+    dw = [[sum(x[i][t]*g[i][j] for i in range(n)) for j in range(k)]
+          for t in range(d)]
+    db = [sum(g[i][j] for i in range(n)) for j in range(k)]
+    return dx,dw,db
+
+print(dense_backward([[2],[3]], [[4,5]], [[1,0],[0,1]]))
+```
+
+```text title="Output"
+([[4], [5]], [[2, 3]], [1, 1])
+```
+
+Annotate matrix shapes and let the upstream loss define normalization.
+
+## Try it
+
+<CodeExercise id="b3-dense-layer-backward-01" />
