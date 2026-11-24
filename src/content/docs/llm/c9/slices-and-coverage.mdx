@@ -1,0 +1,46 @@
+---
+title: Measure slices and missing outputs
+module: c9
+order: 2
+estMinutes: 8
+objectives:
+  - Measure success with the number of attempted cases
+  - Keep critical cases visible in aggregate reporting
+goDeeper: openai-evaluation-best-practices
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+The overall score can hide weak behaviour on a small group. An <Term id="evaluation-slice" /> represents a relevant subset, such as holiday hours, eligibility questions or documents with conflicting revisions. Report each slice's rate with its numerator and denominator. A rate from five cases has much more uncertainty than a rate from five hundred.
+
+Count missing outputs explicitly. If two of ten requests fail and seven of the remaining eight are correct, success per attempt is seven tenths. Accuracy conditional on a completed request is seven eighths. Both can be useful, but the conditional number hides failures if reported alone.
+
+Avoid assuming slice counts sum to the total when cases can have multiple tags. The exercise uses exactly one tag per case. A real dashboard may compute one slice for language and another for prompt type, with overlap across these breakdowns.
+
+For a release gate, decide up front which critical slices must meet a threshold and how much data you need. Keep a case list or examples alongside aggregate rates so a regression can be investigated.
+
+## Worked example
+
+Missing hours output contributes to attempts and missing counts, but cannot count as passed.
+
+```python
+def slice_counts(rows):
+    totals = {}
+    for tag, result in rows:
+        passed, attempted, missing = totals.get(tag, (0, 0, 0))
+        totals[tag] = passed + (result is True), attempted + 1, missing + (result is None)
+    return totals
+
+print(slice_counts([("hours", True), ("hours", None), ("eligibility", False)]))
+```
+
+```text title="Output"
+{'hours': (1, 2, 1), 'eligibility': (0, 1, 0)}
+```
+
+Publish slice sizes and failure counts with rates so small, risky groups remain visible.
+
+## Try it
+
+<CodeExercise id="c9-slices-and-coverage-01" />

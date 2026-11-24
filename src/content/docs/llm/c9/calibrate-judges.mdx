@@ -1,0 +1,49 @@
+---
+title: Calibrate graders and set release gates
+module: c9
+order: 4
+estMinutes: 8
+objectives:
+  - Compare a judge to human reference decisions
+  - Recognize judge bias and review critical disagreements
+goDeeper: openai-evaluation-best-practices
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A model judge can speed up rubric scoring. Validate it against independently annotated answers before trusting its aggregate scores. For pairwise judgement, hide provider labels when possible and swap candidate order on an audit sample. Inspect whether verbosity or position changes the judgement without changing correctness.
+
+Use <Term id="judge-calibration" /> to detect errors that matter. A false pass means the judge accepted an answer that a human rejected. For factual support, false passes allow unsupported answers through a gate. False fails may hide real improvements and waste review time. Keep an independent audit set, and take disagreements back to the rubric when humans also disagree.
+
+The example counts binary decisions. It treats human labels as the reference for this audit, not as universal truth. Compare false passes and false fails per slice, review examples, then set release requirements. A release can require both no judge-verified failures on critical cases and a minimum success rate on held-out cases.
+
+Version the judge prompt, reference labels and model. When the judge changes, re-run calibration before comparing results to a historical gate.
+
+## Worked example
+
+Each example covers a different confusion cell.
+
+```python
+def judge_confusion(reference, judge):
+    if len(reference) != len(judge):
+        raise ValueError("labels must align")
+    counts = {"true_pass":0, "true_fail":0, "false_pass":0, "false_fail":0}
+    for human, automated in zip(reference, judge):
+        prefix = "true" if human == automated else "false"
+        label = "pass" if automated else "fail"
+        counts[prefix + "_" + label] += 1
+    return counts
+
+print(judge_confusion([True, False, True, False], [True, True, False, False]))
+```
+
+```text title="Output"
+{'true_pass': 1, 'true_fail': 1, 'false_pass': 1, 'false_fail': 1}
+```
+
+Inspect the costs of judge errors before letting the judge determine a release.
+
+## Try it
+
+<CodeExercise id="c9-calibrate-judges-01" />

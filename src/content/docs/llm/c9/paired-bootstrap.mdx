@@ -1,0 +1,49 @@
+---
+title: Compare variants with paired uncertainty
+module: c9
+order: 3
+estMinutes: 8
+objectives:
+  - Resample aligned case-level differences
+  - Explain limitations of a percentile bootstrap interval
+goDeeper: openai-evaluation-best-practices
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+When two versions answer the same questions, compare them on the same cases. For binary success, a case-level difference is +1 if only the new version succeeds, −1 if only the old version succeeds and 0 otherwise. The mean difference is the change in success rate on the observed cases.
+
+A <Term id="paired-bootstrap" /> samples case indices with replacement. Each draw keeps the before and after outcomes for one case together. Compute a mean for every resample and use the middle part of that distribution as a rough uncertainty interval. Resampling before and after independently destroys the pairing and can estimate the wrong uncertainty.
+
+The interval is conditional on the dataset and assumptions. Near-duplicate questions violate independence. When the dataset contains many versions of the same question, consider resampling at the question-family level. A small or unrepresentative set cannot establish deployment performance. A percentile interval is especially fragile for very small or degenerate samples.
+
+This fixture returns sorted bootstrap estimates for later quantile inspection. It uses a private random generator for reproducibility and checks that both input lists align in length.
+
+## Worked example
+
+A two-case sample can only yield −1, 0 or +1.
+
+```python
+def bootstrap_deltas(before, after, draws, seed):
+    from random import Random
+    if not before or len(before) != len(after) or draws <= 0:
+        raise ValueError("need aligned cases and positive draws")
+    differences = [new - old for old, new in zip(before, after)]
+    rng = Random(seed)
+    n = len(differences)
+    return sorted(sum(differences[rng.randrange(n)] for _ in range(n)) / n
+                  for _ in range(draws))
+
+print(bootstrap_deltas([0, 1], [1, 0], 5, 4))
+```
+
+```text title="Output"
+[0.0, 0.0, 0.0, 0.0, 1.0]
+```
+
+Use paired uncertainty alongside a practical effect threshold and targeted regression inspection.
+
+## Try it
+
+<CodeExercise id="c9-paired-bootstrap-01" />

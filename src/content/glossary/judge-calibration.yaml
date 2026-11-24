@@ -1,0 +1,8 @@
+term: "Judge calibration"
+short: "Measuring a grader against reference judgements and inspecting systematic discrepancies."
+body: |
+  An automated judge, such as an LLM grader, is itself a measurement instrument with errors. Calibration
+  compares its verdicts with trusted reference labels on the same cases and counts the disagreements: false
+  passes (judge accepts a bad output) and false fails (judge rejects a good one). The judge is only trusted for
+  decisions where those error rates are acceptable, and is recalibrated whenever its prompt or model changes.
+related: ["rubric","evaluation-slice"]

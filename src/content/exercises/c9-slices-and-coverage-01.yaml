@@ -1,0 +1,20 @@
+id: c9-slices-and-coverage-01
+lesson: llm/c9/slices-and-coverage
+title: Report per-slice counts
+prompt: Implement slice_counts(rows) for an iterable of (tag, result) pairs, where result is True, False or None. Return a mapping to (passed, attempted, missing) counts.
+starter: |
+  def slice_counts(rows):
+      raise NotImplementedError
+solution: |
+  def slice_counts(rows):
+      totals = {}
+      for tag, result in rows:
+          passed, attempted, missing = totals.get(tag, (0, 0, 0))
+          totals[tag] = passed + (result is True), attempted + 1, missing + (result is None)
+      return totals
+tests: |
+  assert slice_counts([("a", True),("a", None),("a", False),("b", True)]) == {"a":(1,3,1),"b":(1,1,0)}
+  assert slice_counts(iter([("a",None),("a",None)])) == {"a":(0,2,2)}
+  assert slice_counts([]) == {}
+hints:
+  - Increase attempted for every row, including missing results.

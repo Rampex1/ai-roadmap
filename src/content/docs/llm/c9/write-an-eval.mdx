@@ -1,0 +1,49 @@
+---
+title: Write a task-level evaluation
+module: c9
+order: 1
+estMinutes: 8
+objectives:
+  - Translate product expectations into inspectable labels
+  - Distinguish a correct action from a supported citation
+goDeeper: openai-evaluation-best-practices
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+An evaluation is a repeatable measurement of behaviour on a specified set of inputs. Start from the user outcome. A library policy assistant should answer when the supplied policy supports an answer, abstain when it does not, and avoid citing sources the retriever never sent.
+
+An effective <Term id="rubric" /> separates requirements. A response can correctly choose to answer and still cite an unavailable document. Record those outcomes independently so you can diagnose the failure. Citation membership is deterministic; whether the text supports the claim may require human judgement. Treat these scores as separate evidence.
+
+Build test cases from common requests, ambiguous cases, known failures and high-impact scenarios. Include a stable case ID, expected action, available evidence and any annotations needed to score the answer. Reserve holdout cases before tuning; an example examined while revising the prompt is development data.
+
+The fixture below knows only the action and allowed citation IDs. An answer needs at least one available citation. An abstention needs none. This function does not check semantic support.
+
+## Worked example
+
+The action is right and the citation does not belong to the available evidence.
+
+```python
+def score_reply(expected_action, observed_action, citations, available):
+    action_ok = observed_action == expected_action
+    if observed_action == "answer":
+        citation_ok = bool(citations) and set(citations) <= set(available)
+    elif observed_action == "abstain":
+        citation_ok = not citations
+    else:
+        citation_ok = False
+    return action_ok, citation_ok
+
+print(score_reply("answer", "answer", ["policy-4"], ["policy-2"]))
+```
+
+```text title="Output"
+(True, False)
+```
+
+Define a semantic support check separately where it matters.
+
+## Try it
+
+<CodeExercise id="c9-write-an-eval-01" />

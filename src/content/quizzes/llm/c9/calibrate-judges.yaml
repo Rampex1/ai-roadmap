@@ -1,0 +1,95 @@
+items:
+  - id: c9-calibrate-judges-01
+    type: mcq
+    prompt: What is a false pass?
+    explanation: Its positive decision disagrees with the reference.
+    options:
+      - text: The judge accepts an answer that the reference rejects
+        why: Its positive decision disagrees with the reference.
+        correct: true
+      - text: Both judge and reference accept it
+        why: That is a true pass.
+      - text: The judge rejects a correct answer
+        why: That is a false fail.
+  - id: c9-calibrate-judges-02
+    type: mcq
+    prompt: What can swapping candidate order reveal?
+    explanation: Only presentation order changed.
+    options:
+      - text: Guaranteed factual support
+        why: Ordering does not verify content.
+      - text: The number of API keys used
+        why: Credentials are unrelated.
+      - text: Position bias
+        why: Only presentation order changed.
+        correct: true
+  - id: c9-calibrate-judges-03
+    type: mcq
+    prompt: Why maintain a critical slice gate?
+    explanation: A separate gate requires explicit review.
+    options:
+      - text: It changes held-out questions into training examples
+        why: Gates evaluate behaviour without supplying labels to training.
+      - text: It guarantees every judge label is right
+        why: The grader still needs calibration.
+      - text: A small high-impact regression can hide in the aggregate
+        why: A separate gate requires explicit review.
+        correct: true
+  - id: c9-calibrate-judges-04
+    type: mcq
+    prompt: When should calibration be rechecked?
+    explanation: The grading function can behave differently.
+    options:
+      - text: When the judge or rubric changes
+        why: The grading function can behave differently.
+        correct: true
+      - text: Only after every prompt is deleted
+        why: Calibration should track versions.
+      - text: Never if the average stayed close once
+        why: Average agreement can hide new errors.
+  - id: c9-calibrate-judges-05
+    type: multi
+    prompt: Which help audit an automated judge?
+    explanation: They provide an external comparison. They expose systematic failure.
+    options:
+      - text: Only the judge score on its own prompt
+        why: That supplies no independent signal.
+      - text: Disagreements grouped by slice
+        why: They expose systematic failure.
+        correct: true
+      - text: Independent reference decisions
+        why: They provide an external comparison.
+        correct: true
+  - id: c9-calibrate-judges-06
+    type: cloze
+    prompt: A judge accepting an answer that the reference rejects is a false ______.
+    accept:
+      - pass
+      - positive
+    explanation: The judge made an incorrect positive decision.
+  - id: c9-calibrate-judges-07
+    type: order
+    prompt: Order a judge rollout.
+    items:
+      - Write the rubric
+      - Collect reference judgements
+      - Audit judge errors on the same cases
+      - Set and monitor release gates
+    explanation: Calibration informs which automated scores a gate can use.
+  - id: c9-calibrate-judges-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def judge_confusion(reference, judge):
+          if len(reference) != len(judge):
+              raise ValueError("labels must align")
+          counts = {"true_pass":0, "true_fail":0, "false_pass":0, "false_fail":0}
+          for human, automated in zip(reference, judge):
+              prefix = "true" if human == automated else "false"
+              label = "pass" if automated else "fail"
+              counts[prefix + "_" + label] += 1
+          return counts
+
+      print(judge_confusion([True, False], [False, False]))
+    answer: "{'true_pass': 0, 'true_fail': 1, 'false_pass': 0, 'false_fail': 1}"
+    explanation: The judge rejects both. One matches the reference and one is a false fail.

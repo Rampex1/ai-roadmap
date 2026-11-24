@@ -4,5 +4,7 @@ title: "Evals"
 order: 9
 prereqs: ["c8"]
 objectives:
-  - "Explain the core ideas of evals"
-  - "Build and evaluate an application using evals"
+  - Turn application requirements into a labelled evaluation dataset and rubric
+  - Report coverage and quality across important slices
+  - Compare variants on aligned cases and quantify paired sampling uncertainty
+  - Calibrate model graders against human labels and set explicit regression gates

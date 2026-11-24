@@ -1,0 +1,8 @@
+term: "Paired bootstrap"
+short: "Resampling whole matched cases to estimate uncertainty in a difference between two systems."
+body: |
+  Because both systems are scored on the same cases, the per-case differences are what vary. The paired
+  bootstrap draws cases with replacement, averages the new-minus-old difference in each resample, and reads an
+  interval from the spread of those averages. Pairing removes variation from case difficulty, so the interval
+  is narrower than comparing two independent scores. It assumes cases are independent.
+related: ["evaluation-slice","held-out-set"]

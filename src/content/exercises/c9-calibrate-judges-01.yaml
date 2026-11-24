@@ -1,0 +1,29 @@
+id: c9-calibrate-judges-01
+lesson: llm/c9/calibrate-judges
+title: Count judge disagreements
+prompt: Implement judge_confusion(reference, judge) for aligned lists of boolean pass labels. Return counts of true_pass, true_fail, false_pass and false_fail. Reject mismatched lengths.
+starter: |
+  def judge_confusion(reference, judge):
+      raise NotImplementedError
+solution: |
+  def judge_confusion(reference, judge):
+      if len(reference) != len(judge):
+          raise ValueError("labels must align")
+      counts = {"true_pass":0, "true_fail":0, "false_pass":0, "false_fail":0}
+      for human, automated in zip(reference, judge):
+          prefix = "true" if human == automated else "false"
+          label = "pass" if automated else "fail"
+          counts[prefix + "_" + label] += 1
+      return counts
+tests: |
+  assert judge_confusion([True,False,False,True],[True,True,False,False]) == {"true_pass":1,"true_fail":1,"false_pass":1,"false_fail":1}
+  assert judge_confusion([False,False],[True,True])["false_pass"] == 2
+  assert judge_confusion([],[]) == {"true_pass":0,"true_fail":0,"false_pass":0,"false_fail":0}, "Report all four counts, even when they are zero"
+  try:
+      judge_confusion([True],[])
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("Reject unaligned labels")
+hints:
+  - Name the pass/fail suffix using the automated judgement.

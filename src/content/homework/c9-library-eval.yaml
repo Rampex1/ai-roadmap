@@ -1,0 +1,22 @@
+id: c9-library-eval
+module: c9
+kind: homework
+title: Evaluate a library assistant regression
+brief: |-
+  Compare two offline versions of a library assistant. Use fixture evidence and expected decisions, then track aggregate accuracy, critical slices and evaluator agreement.
+
+  1. Score action and citation expectations.
+  2. Compute per-slice results with their denominators.
+  3. Bootstrap an aligned before-and-after comparison.
+  4. Audit disagreement between a judge and reference labels.
+  5. Compare two reply sets using shared cases.
+
+  Describe a regression gate for unsupported policy answers. Explain what evidence you would require before promoting a variant with a small aggregate gain and one critical regression.
+notebook: /homework/c9-library-eval.ipynb
+rubric:
+  - Invalid citations and wrong actions are separately observable.
+  - Slices include counts and clearly defined denominators.
+  - Bootstrap resampling preserves pairing.
+  - Judge errors are audited against independent labels.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

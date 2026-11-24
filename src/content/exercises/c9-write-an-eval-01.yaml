@@ -1,0 +1,26 @@
+id: c9-write-an-eval-01
+lesson: llm/c9/write-an-eval
+title: Score action and citation shape
+prompt: Implement score_reply(expected_action, observed_action, citations, available). Return (action_ok, citation_ok). Answers must cite at least one available ID and no unavailable IDs. Abstentions must have zero citations. Unknown observed actions fail citation checking.
+starter: |
+  def score_reply(expected_action, observed_action, citations, available):
+      raise NotImplementedError
+solution: |
+  def score_reply(expected_action, observed_action, citations, available):
+      action_ok = observed_action == expected_action
+      if observed_action == "answer":
+          citation_ok = bool(citations) and set(citations) <= set(available)
+      elif observed_action == "abstain":
+          citation_ok = not citations
+      else:
+          citation_ok = False
+      return action_ok, citation_ok
+tests: |
+  assert score_reply("answer","answer",["a","b"],["a","b","c"]) == (True,True)
+  assert score_reply("answer","answer",["a","z"],["a"]) == (True,False)
+  assert score_reply("answer","abstain",[],["a"]) == (False,True)
+  assert score_reply("abstain","abstain",["a"],["a"]) == (True,False)
+  assert score_reply("answer","answer",[],["a"]) == (True,False)
+  assert score_reply("answer","refuse",[],["a"]) == (False,False), "Unknown observed actions fail citation checking"
+hints:
+  - Check citation rules according to the observed action.

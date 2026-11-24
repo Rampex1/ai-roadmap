@@ -1,0 +1,95 @@
+items:
+  - id: c9-write-an-eval-01
+    type: mcq
+    prompt: What does the lesson's score_reply function certify?
+    explanation: These are its explicit checks.
+    options:
+      - text: Action agreement and citation membership rules
+        why: These are its explicit checks.
+        correct: true
+      - text: Factual support for every claim
+        why: That requires inspection of source text.
+      - text: The best retrieval algorithm
+        why: The function never ranks documents.
+  - id: c9-write-an-eval-02
+    type: mcq
+    prompt: Why include a stable case ID?
+    explanation: The ID lets you find the same case later.
+    options:
+      - text: To align and debug results across runs
+        why: The ID lets you find the same case later.
+        correct: true
+      - text: To encode the right answer in the prompt
+        why: Labels should stay out of inference inputs.
+      - text: To remove all ambiguity from judgement
+        why: Cases still need a rubric.
+  - id: c9-write-an-eval-03
+    type: mcq
+    prompt: Which case belongs in the holdout?
+    explanation: It preserves a distinct final check.
+    options:
+      - text: A known case used to revise each variant
+        why: That belongs to development.
+      - text: A demonstration copied from the prompt
+        why: The model saw it during the task.
+      - text: A new policy question not used to tune the prompt
+        why: It preserves a distinct final check.
+        correct: true
+  - id: c9-write-an-eval-04
+    type: mcq
+    prompt: What should a no-evidence expected abstention test measure?
+    explanation: A correct abstention is useful behaviour.
+    options:
+      - text: How confidently the system phrases an answer
+        why: Tone is not the behaviour this case labels; it checks whether the system declines.
+      - text: Whether the system declines appropriately
+        why: A correct abstention is useful behaviour.
+        correct: true
+      - text: How many citation IDs can be generated
+        why: Quantity is not success.
+  - id: c9-write-an-eval-05
+    type: multi
+    prompt: Which parts should a labelled task case capture?
+    explanation: It defines the intended behaviour. It supports citation and grounding checks.
+    options:
+      - text: Expected action
+        why: It defines the intended behaviour.
+        correct: true
+      - text: Available evidence
+        why: It supports citation and grounding checks.
+        correct: true
+      - text: A production secret used as a test key
+        why: Credentials do not belong in cases.
+  - id: c9-write-an-eval-06
+    type: cloze
+    prompt: A set of explicit scoring criteria is a ______.
+    accept:
+      - rubric
+      - scoring rubric
+    explanation: A rubric tells evaluators what to check.
+  - id: c9-write-an-eval-07
+    type: order
+    prompt: Order a small evaluation design.
+    items:
+      - Specify desired behaviour
+      - Label cases and evidence
+      - Collect outputs on the labelled, frozen cases
+      - Apply deterministic and judgement-based checks
+    explanation: Labels are fixed before outputs are seen, so they cannot be fitted to what the model produced.
+  - id: c9-write-an-eval-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def score_reply(expected_action, observed_action, citations, available):
+          action_ok = observed_action == expected_action
+          if observed_action == "answer":
+              citation_ok = bool(citations) and set(citations) <= set(available)
+          elif observed_action == "abstain":
+              citation_ok = not citations
+          else:
+              citation_ok = False
+          return action_ok, citation_ok
+
+      print(score_reply("abstain", "answer", ["a"], ["a"]))
+    answer: (False, True)
+    explanation: The action is wrong but the observed answer has an allowed citation.

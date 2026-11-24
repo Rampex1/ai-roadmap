@@ -1,0 +1,7 @@
+term: "Evaluation slice"
+short: "A subset of cases grouped by a meaningful property such as task type or impacted user group."
+body: |
+  A single aggregate score can hide a regression concentrated in a small group of cases. Slicing reports
+  results per group, each with its own denominator, so a drop on a rare but critical slice stays visible.
+  Small slices have wide uncertainty, so counts matter as much as rates.
+related: ["held-out-set","rubric"]

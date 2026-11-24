@@ -1,0 +1,8 @@
+term: "Rubric"
+short: "Explicit criteria used to judge whether an output satisfies a task."
+body: |
+  A rubric turns "is this output good?" into a list of named checks, each with a pass condition, so different
+  graders (people, code or an LLM judge) reach the same verdict on the same output. Some criteria are
+  mechanical, such as whether the cited IDs exist; others, such as whether a claim is supported by its source,
+  need judgement and should be written as separate criteria with examples of passing and failing outputs.
+related: ["held-out-set","citation-grounding"]

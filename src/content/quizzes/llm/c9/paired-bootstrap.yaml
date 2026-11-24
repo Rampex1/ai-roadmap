@@ -1,0 +1,94 @@
+items:
+  - id: c9-paired-bootstrap-01
+    type: mcq
+    prompt: What is sampled in a paired bootstrap?
+    explanation: Each case keeps its two outcomes together.
+    options:
+      - text: Before and after scores independently
+        why: That breaks case pairing.
+      - text: Whole aligned cases
+        why: Each case keeps its two outcomes together.
+        correct: true
+      - text: Only cases where the new model wins
+        why: That changes the estimand.
+  - id: c9-paired-bootstrap-02
+    type: mcq
+    prompt: Which paired outcomes contribute +1?
+    explanation: The difference is new minus old.
+    options:
+      - text: Old fails and new passes
+        why: The difference is new minus old.
+        correct: true
+      - text: Old passes and new fails
+        why: That contributes −1.
+      - text: Both versions pass
+        why: Their difference is zero.
+  - id: c9-paired-bootstrap-03
+    type: mcq
+    prompt: Why group near-duplicates when resampling?
+    explanation: Case-level independence may overstate effective sample size.
+    options:
+      - text: Their outcomes can be dependent
+        why: Case-level independence may overstate effective sample size.
+        correct: true
+      - text: Grouping forces a larger measured gain
+        why: The purpose is appropriate uncertainty.
+      - text: Duplicates always have different labels
+        why: That is not guaranteed.
+  - id: c9-paired-bootstrap-04
+    type: mcq
+    prompt: Both variants have the same correctness on every observed case. What must be true of their paired bootstrap deltas?
+    explanation: Each per-case difference is zero, so every resample has mean difference zero. A finite set of resamples may also yield all-zero means by chance even when the original differences vary.
+    options:
+      - text: The versions are identical on every future input
+        why: The dataset cannot prove that.
+      - text: Every resampled mean difference is zero
+        why: Each resample averages only zero-valued differences.
+        correct: true
+      - text: Every case is correct
+        why: Both can fail together.
+  - id: c9-paired-bootstrap-05
+    type: multi
+    prompt: What should accompany an interval?
+    explanation: They specify what uncertainty was estimated. Small gains may not justify a change.
+    options:
+      - text: A practical interpretation of the effect size
+        why: Small gains may not justify a change.
+        correct: true
+      - text: The dataset and unit of resampling
+        why: They specify what uncertainty was estimated.
+        correct: true
+      - text: A claim that the live population is guaranteed identical
+        why: The sample cannot guarantee deployment sameness.
+  - id: c9-paired-bootstrap-06
+    type: cloze
+    prompt: Sampling with replacement while keeping matched outcomes together is a paired ______.
+    accept:
+      - bootstrap
+    explanation: The matched case is the sampled unit.
+  - id: c9-paired-bootstrap-07
+    type: order
+    prompt: Order the paired bootstrap calculation when you resample a precomputed vector of per-case differences.
+    items:
+      - Align both variants by case
+      - Compute new-minus-old differences
+      - Sample case indices with replacement
+      - Summarize the distribution of mean differences
+    explanation: The differences preserve the alignment.
+  - id: c9-paired-bootstrap-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def bootstrap_deltas(before, after, draws, seed):
+          from random import Random
+          if not before or len(before) != len(after) or draws <= 0:
+              raise ValueError("need aligned cases and positive draws")
+          differences = [new - old for old, new in zip(before, after)]
+          rng = Random(seed)
+          n = len(differences)
+          return sorted(sum(differences[rng.randrange(n)] for _ in range(n)) / n
+                        for _ in range(draws))
+
+      print(bootstrap_deltas([1, 1], [0, 0], 3, 8))
+    answer: "[-1.0, -1.0, -1.0]"
+    explanation: Every case contributes −1, so all resample means equal −1.

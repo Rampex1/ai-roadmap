@@ -1,0 +1,92 @@
+items:
+  - id: c9-slices-and-coverage-01
+    type: mcq
+    prompt: Why report denominators?
+    explanation: Sample size matters for interpretation.
+    options:
+      - text: They reveal how much evidence supports a rate
+        why: Sample size matters for interpretation.
+        correct: true
+      - text: They increase model accuracy
+        why: Denominators only describe data.
+      - text: They remove the need for labels
+        why: Labels define success.
+  - id: c9-slices-and-coverage-02
+    type: mcq
+    prompt: What is success per attempt for 7 passes in 10 attempts with 2 missing?
+    explanation: All ten attempts count in the denominator.
+    options:
+      - text: "0.7"
+        why: All ten attempts count in the denominator.
+        correct: true
+      - text: "0.875"
+        why: That conditions on eight completed attempts.
+      - text: "1.0"
+        why: There were failures and missing outputs.
+  - id: c9-slices-and-coverage-03
+    type: mcq
+    prompt: Can two slices overlap in a real evaluation?
+    explanation: A case can meet several slice definitions.
+    options:
+      - text: Only when no results are missing
+        why: Overlap is independent of availability.
+      - text: No, all slice systems require disjoint groups
+        why: Only this fixture uses one tag.
+      - text: Yes, if a case has multiple relevant attributes
+        why: A case can meet several slice definitions.
+        correct: true
+  - id: c9-slices-and-coverage-04
+    type: mcq
+    prompt: What can a strong aggregate hide?
+    explanation: Large groups can dominate the aggregate.
+    options:
+      - text: Poor performance on a small critical slice
+        why: Large groups can dominate the aggregate.
+        correct: true
+      - text: The total number of input cases by definition
+        why: Total size can be reported.
+      - text: Perfect results in every slice
+        why: That would not be a weakness.
+  - id: c9-slices-and-coverage-05
+    type: multi
+    prompt: Which values help interpret a slice?
+    explanation: It defines the denominator. It exposes availability problems.
+    options:
+      - text: Number attempted
+        why: It defines the denominator.
+        correct: true
+      - text: Number missing
+        why: It exposes availability problems.
+        correct: true
+      - text: Only the rounded rate
+        why: The rate lacks its sample size.
+  - id: c9-slices-and-coverage-06
+    type: cloze
+    prompt: A subset of cases grouped by a shared attribute is a ______.
+    accept:
+      - slice
+      - evaluation slice
+    explanation: A slice exposes subgroup performance.
+  - id: c9-slices-and-coverage-07
+    type: order
+    prompt: Order a slice report whose scoring step uses predefined tags to select the rubric for each attempt.
+    items:
+      - Assign the predefined tags
+      - Score every attempt
+      - Aggregate counts by tag
+      - Display rates and denominators
+    explanation: The rates depend on the underlying counts.
+  - id: c9-slices-and-coverage-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def slice_counts(rows):
+          totals = {}
+          for tag, result in rows:
+              passed, attempted, missing = totals.get(tag, (0, 0, 0))
+              totals[tag] = passed + (result is True), attempted + 1, missing + (result is None)
+          return totals
+
+      print(slice_counts([("policy", False), ("policy", None)]))
+    answer: "{'policy': (0, 2, 1)}"
+    explanation: There are zero passes, two attempts and one missing result.
