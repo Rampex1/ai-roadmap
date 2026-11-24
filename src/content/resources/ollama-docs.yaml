@@ -1,0 +1,5 @@
+title: "Ollama documentation"
+url: https://docs.ollama.com/
+kind: tool
+free: true
+modules: [c1]

@@ -1,0 +1,85 @@
+id: c1-llm-as-a-function-01
+lesson: llm/c1/llm-as-a-function
+title: Render a chat template and parse the reply
+prompt: |
+  Implement the two pieces of ordinary code that sit on either side of the model, for a ChatML-style
+  template.
+
+  1. `render(messages, add_generation_prompt=True, default_system="You are a helpful assistant.")`
+     returns one string.
+     - Each message is a dict with `"role"` and `"content"`. Render it as
+       `<|im_start|>ROLE\nCONTENT<|im_end|>\n`, with the content unchanged. (Real code must not do this with untrusted text, as the lesson warns; here the content is trusted.)
+     - Allowed roles are `"system"`, `"user"`, `"assistant"` and `"tool"`. Any other role raises
+       `ValueError`. A `"system"` message anywhere except position 0 also raises `ValueError`.
+     - If the first message is not a system message and `default_system` is not `None`, render a system
+       message with `default_system` first.
+     - If `add_generation_prompt` is true, finish with `<|im_start|>assistant\n`.
+  2. `parse_reply(generated)` takes the text the model produced after the generation prompt and returns
+     the reply: everything before the first `<|im_end|>`, or the whole text if there is none (the
+     reply was cut off by a token limit).
+
+  Example: `render([{"role": "user", "content": "Hi"}], default_system=None)` returns
+  `'<|im_start|>user\nHi<|im_end|>\n<|im_start|>assistant\n'`.
+starter: |
+  def render(messages, add_generation_prompt=True, default_system="You are a helpful assistant."):
+      out = ""
+      for m in messages:
+          out += m["role"] + ": " + m["content"] + "\n"
+      return out
+
+  def parse_reply(generated):
+      return generated
+
+  print(repr(render([{"role": "user", "content": "Hi"}])))
+solution: |
+  ROLES = {"system", "user", "assistant", "tool"}
+
+  def render(messages, add_generation_prompt=True, default_system="You are a helpful assistant."):
+      msgs = list(messages)
+      for i, m in enumerate(msgs):
+          if m["role"] not in ROLES:
+              raise ValueError(f"unknown role {m['role']!r}")
+          if m["role"] == "system" and i != 0:
+              raise ValueError("a system message must come first")
+      if default_system is not None and (not msgs or msgs[0]["role"] != "system"):
+          msgs = [{"role": "system", "content": default_system}] + msgs
+      out = "".join(f"<|im_start|>{m['role']}\n{m['content']}<|im_end|>\n" for m in msgs)
+      if add_generation_prompt:
+          out += "<|im_start|>assistant\n"
+      return out
+
+  def parse_reply(generated):
+      return generated.split("<|im_end|>", 1)[0]
+
+  print(repr(render([{"role": "user", "content": "Hi"}])))
+tests: |
+  S, E = "<|im_start|>", "<|im_end|>"
+  got = render([{"role": "user", "content": "Hi"}], default_system=None)
+  assert got == S + "user\nHi" + E + "\n" + S + "assistant\n", f"with no default system prompt, expected one user turn plus the generation prompt, got {got!r}"
+  got = render([{"role": "system", "content": "You are terse."}, {"role": "user", "content": "Hi"}])
+  want = S + "system\nYou are terse." + E + "\n" + S + "user\nHi" + E + "\n" + S + "assistant\n"
+  assert got == want, f"system then user should match the Qwen output exactly, got {got!r}"
+  got = render([{"role": "user", "content": "Hi"}])
+  assert got.startswith(S + "system\nYou are a helpful assistant." + E + "\n"), "when the first message is not a system message, insert default_system first"
+  got = render([{"role": "user", "content": "Q"}, {"role": "assistant", "content": "A"}], add_generation_prompt=False, default_system="X")
+  assert got == S + "system\nX" + E + "\n" + S + "user\nQ" + E + "\n" + S + "assistant\nA" + E + "\n", f"add_generation_prompt=False must not add the open assistant turn, got {got!r}"
+  got = render([{"role": "user", "content": "  two\nlines  "}], default_system=None)
+  assert "  two\nlines  " + E in got, "keep the content exactly as given, including spaces and newlines"
+  got = render([{"role": "user", "content": "find x"}, {"role": "tool", "content": "x=3"}], default_system=None)
+  assert S + "tool\nx=3" + E in got, "tool messages are rendered like any other role"
+  assert render([], default_system=None) == S + "assistant\n", "no messages and no default system: only the generation prompt"
+  for bad in ([{"role": "bot", "content": "hi"}], [{"role": "user", "content": "a"}, {"role": "system", "content": "b"}]):
+      try:
+          render(bad)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError(f"render({bad}) should raise ValueError")
+  assert parse_reply("Hello there." + E + "\n") == "Hello there.", "cut the reply at the end-of-turn token"
+  assert parse_reply("One." + E + "Two." + E) == "One.", "cut at the FIRST end-of-turn token"
+  assert parse_reply("cut off by max tok") == "cut off by max tok", "with no end-of-turn token, return the whole text"
+  assert parse_reply(E) == "", "an immediate end-of-turn token means an empty reply"
+hints:
+  - "Check the roles first in a loop with enumerate, then build a new list with the default system message in front if needed."
+  - "Each message is the start marker, the role, a newline, the content, the end marker and a newline. An f-string builds it in one line."
+  - "str.split(sep, 1)[0] returns everything before the first separator, or the whole string if it is absent."

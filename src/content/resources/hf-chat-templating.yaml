@@ -1,0 +1,5 @@
+title: "Chat templates (Hugging Face Transformers docs)"
+url: https://huggingface.co/docs/transformers/chat_templating
+kind: tool
+free: true
+modules: [c1]

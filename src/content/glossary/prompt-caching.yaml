@@ -1,0 +1,7 @@
+term: "Prompt caching"
+short: "Reusing the stored KV cache of an identical prompt prefix across requests, which cuts time to first token and input cost."
+body: |
+  Only an exact prefix can be reused, so prompts should be ordered from the most stable content
+  (instructions, tools, fixed documents) to the least stable (the new message). Hosted APIs bill cached
+  input tokens at a discount; the rules differ between providers.
+related: ["kv-cache", "context-window", "token"]

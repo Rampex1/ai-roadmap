@@ -1,0 +1,7 @@
+term: "Special token"
+short: "A vocabulary entry reserved for structure rather than text, such as beginning-of-sequence, end-of-turn, role markers or padding."
+body: |
+  Special tokens are single ids that chat templates use to mark turns and that the generation loop uses
+  to stop. Untrusted user text should never be parsed into special tokens, or a user could forge a
+  system turn.
+related: ["chat-template", "token"]

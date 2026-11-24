@@ -4,5 +4,8 @@ title: "How LLMs work"
 order: 1
 prereqs: ["f10", "f2"]
 objectives:
-  - "Explain the core ideas of how LLMs work"
-  - "Build and evaluate an application using how LLMs work"
+  - "Trace a chat request from messages through the chat template, tokens, prefill and decoding to a reply, and render a chat template by hand"
+  - "Choose decoding settings (greedy, temperature, top-p, penalties, stop sequences, max tokens) and use logprobs to measure a completion's probability and perplexity"
+  - "Plan a token budget with a truncation strategy, and estimate a workload's cost, latency and KV-cache memory, including the effect of prompt caching"
+  - "Choose between API and open-weight models, and compute whether a quantised model fits in memory on an 8 GB Mac"
+  - "Explain why LLMs hallucinate and fail at arithmetic and recent facts, and match each failure to a mitigation: grounding, tools, voting or evals"

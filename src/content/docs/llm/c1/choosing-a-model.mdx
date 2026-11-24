@@ -1,0 +1,215 @@
+---
+title: "Choosing a model: families, sizes and quantisation"
+module: c1
+order: 4
+estMinutes: 19
+objectives:
+  - "Compare open-weight and API models on quality, cost, privacy, control and operations, and name the main families as of late 2026"
+  - "Compute a model's memory from its parameter count and bits per weight, add the KV cache, and decide what fits on an 8 GB Mac"
+  - "Explain how quantisation to 8 or 4 bits works, why group-wise scales help, and what it costs in quality"
+  - "Estimate decode speed from memory bandwidth, and explain why mixture-of-experts models need memory for all their parameters"
+goDeeper: ollama-docs
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+There is no best model, only a best model *for a task, a budget and a set of constraints*. This lesson
+gives you the vocabulary and the arithmetic to make that choice, and to know before downloading anything
+whether a model will run on your laptop.
+
+:::note[Dated content]
+Model names and rankings change every few months. The families below are as of late 2026; the reasoning
+and the arithmetic will outlast them.
+:::
+
+## Open-weight versus API models
+
+An <Term id="open-weight-model" /> publishes its weights for download: you run it on your own machine or
+server, with Ollama, llama.cpp, Hugging Face `transformers` or a serving engine such as vLLM. An **API
+model** stays on the provider's servers and you send requests over the network (C2 covers both in
+practice).
+
+| | API model | Open-weight model |
+|---|---|---|
+| Best available quality | Usually the frontier | Close behind, and often good enough |
+| Cost | Pay per token, nothing up front | Pay for hardware and power; no per-token price |
+| Privacy | Data leaves your machine; check the data policy | Data can stay on your hardware |
+| Control | Provider can change or retire the model | You pin the exact weights forever |
+| Customisation | Limited (some offer fine-tuning) | Full: fine-tune, quantise, inspect (C10) |
+| Operations | None | You run, scale and update it |
+
+"Open-weight" is not the same as open source: usually the weights are released but not the training
+data or full training code, and **licences vary**, from permissive (Apache 2.0) to custom licences with
+use restrictions. Read the licence before shipping a product.
+
+**Families, as of late 2026.** API models include OpenAI's GPT series, Anthropic's Claude and Google's
+Gemini. Widely used open-weight families include Meta's Llama, Alibaba's Qwen, Google's Gemma, Mistral,
+DeepSeek and OpenAI's gpt-oss. Most families come in a ladder of sizes, from under 1 billion parameters
+to hundreds of billions, and in several variants:
+
+- **Base**: pretrained only; continues text. For fine-tuning and research.
+- **Instruct** (or chat): post-trained to follow instructions and use the chat template. The default.
+- **Reasoning** (or "thinking"): trained to write out intermediate reasoning before answering; better at
+  maths, code and multi-step problems, slower and more output tokens per answer.
+
+**Dense versus mixture of experts.** In a dense model every parameter is used for every token. A
+**mixture-of-experts** (MoE) model has many parallel MLP "experts" per layer and a router that sends each
+token to only a few of them. Model names often show both numbers, for example "30B-A3B": 30 billion
+parameters in total, about 3 billion **active** per token. Compute and speed follow the *active* count;
+memory follows the *total*, because any expert may be needed for the next token.
+
+## Memory: parameters times bits
+
+The weights dominate memory, and the arithmetic is one line: parameters times bits per parameter,
+divided by 8 for bytes.
+
+$$
+\text{weight memory (bytes)} = N \times \frac{b}{8}
+$$
+
+where $N$ is the parameter count and $b$ the bits per parameter.
+
+```python
+def weight_gb(params, bits):
+    return params * bits / 8 / 1e9
+
+for name, n in [("0.5B", 0.5e9), ("3B", 3e9), ("8B", 8e9), ("70B", 70e9)]:
+    print(f"{name:>4}", "  ".join(f"{b:>2}-bit {weight_gb(n, b):6.2f} GB" for b in [32, 16, 8, 4]))
+```
+
+```text title="Output"
+0.5B 32-bit   2.00 GB  16-bit   1.00 GB   8-bit   0.50 GB   4-bit   0.25 GB
+  3B 32-bit  12.00 GB  16-bit   6.00 GB   8-bit   3.00 GB   4-bit   1.50 GB
+  8B 32-bit  32.00 GB  16-bit  16.00 GB   8-bit   8.00 GB   4-bit   4.00 GB
+ 70B 32-bit 280.00 GB  16-bit 140.00 GB   8-bit  70.00 GB   4-bit  35.00 GB
+```
+
+The number formats:
+
+- **fp32** (32 bits): what you trained with in F9. Too big for serving LLMs.
+- **fp16** and **bf16** (16 bits): the usual format for released weights. bf16 keeps fp32's range with
+  less precision, which makes it robust for training.
+- **int8** and **int4** (8 and 4 bits): <Term id="quantisation" text="quantised" /> weights, stored as
+  small integers plus scale factors. Real 4-bit formats store a scale for every small group of weights,
+  so they average a little more than 4 bits each; the popular GGUF "Q4_K_M" format used by llama.cpp and
+  Ollama is closer to 5 bits per weight.
+
+To that, add the [KV cache](/llm/c1/context-windows/) for your context length and some runtime overhead
+(activations, buffers, the server itself).
+
+## How quantisation works
+
+The simplest scheme, **absmax** quantisation, maps a block of weights onto integers. For $b$ bits the
+integers run from $-q$ to $q$ with $q = 2^{b-1} - 1$ (127 for int8, 7 for int4):
+
+$$
+s = \frac{\max_i |w_i|}{q}, \qquad \hat{w}_i = \operatorname{round}\!\left(\frac{w_i}{s}\right) \in \{-q, \dots, q\}, \qquad w_i \approx s\,\hat{w}_i
+$$
+
+Only the small integers $\hat{w}_i$ and the scale $s$ are stored. The catch is **outliers**: one large
+weight sets a large scale, and then every small weight in its block rounds to 0. Using a separate scale
+for each small group of weights (32 to 128 is typical) contains the damage:
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(0)
+w = rng.normal(0, 0.02, size=4096).astype(np.float32)   # one row of a weight matrix
+w[100] = 0.25                                             # one outlier weight
+
+def quantise(w, bits, group):
+    qmax = 2 ** (bits - 1) - 1                  # 127 for int8, 7 for int4
+    g = w.reshape(-1, group)
+    scale = np.abs(g).max(axis=1, keepdims=True) / qmax   # one scale per group
+    q = np.clip(np.round(g / scale), -qmax, qmax)          # small integers
+    return (q * scale).reshape(w.shape)                    # dequantised weights
+
+for bits, group in [(8, 4096), (4, 4096), (4, 32)]:
+    err = np.abs(quantise(w, bits, group) - w).mean()
+    print(f"int{bits}, group {group:>4}: mean abs error {err:.5f}")
+```
+
+```text title="Output"
+int8, group 4096: mean abs error 0.00049
+int4, group 4096: mean abs error 0.00901
+int4, group   32: mean abs error 0.00165
+```
+
+With one scale for the whole row, int4's error (0.009) is close to the typical weight size (0.02): most
+weights became 0. With a scale per group of 32 the error falls more than fivefold. Production methods
+(GPTQ, AWQ, the GGUF "k-quants") add further tricks, such as choosing which weights to protect using
+sample data, but group-wise scales are the core idea.
+
+What it costs in quality, as a rule of thumb to verify on your own task:
+
+- **8-bit** is usually close to indistinguishable from 16-bit.
+- **4-bit** usually costs a little quality and is the standard way to run models locally; small models
+  tend to suffer more than large ones.
+- **Below 4 bits** quality falls off faster. A larger model at 4 bits often beats a smaller model at
+  16 bits for the same memory.
+
+## What fits on an 8 GB Mac
+
+Apple-silicon Macs have **unified memory**: the CPU and GPU share the same 8 GB, and so do macOS, your
+browser and your editor. macOS also lets the GPU use only part of the total. In practice a model plus its
+KV cache should stay within about 4 to 5 GB.
+
+| Model size | 4-bit weights | Verdict on 8 GB |
+|---|---|---|
+| 0.5B to 1.5B | 0.3 to 1 GB | Easy; fast; limited quality |
+| 3B to 4B | about 2 to 2.5 GB | Comfortable; the sweet spot for this course |
+| 7B to 8B | about 4.5 to 5 GB | Possible with a short context and other apps closed; may swap |
+| 13B and up | 8 GB or more | Does not fit |
+
+Context matters too: the [KV-cache formula](/llm/c1/context-windows/) gives about 0.9 GB for 8,192 tokens
+of a 3B Llama-style model (28 layers, 8 KV heads of size 128, 16-bit). That is why local servers start
+with small windows.
+
+### Speed: memory bandwidth, not arithmetic
+
+During decode, generating each token requires reading essentially **all** the (active) weights from
+memory once. For a single user, the machine is usually waiting on memory, not on arithmetic, so a useful
+upper bound is
+
+$$
+\text{tokens per second} \lesssim \frac{\text{memory bandwidth (bytes/s)}}{\text{bytes of weights read per token}}
+$$
+
+Base M-series chips have memory bandwidth of roughly 70 to 120 GB/s. A 3B model at 4 bits (about 2 GB)
+is therefore capped at roughly 35 to 60 tokens per second, and real throughput is lower. Halving the bits
+roughly doubles the ceiling, which is a second reason to quantise. An MoE model reads only its active
+experts per token, so it decodes like a small model while needing the memory of a large one. The optional homework benchmark measures tokens per second on your own machine.
+
+## A checklist for choosing
+
+1. **Define the task and build a small eval set first** (even 20 examples; C9 does this properly).
+2. **Prove it can be done** with a strong API model.
+3. **Then go cheaper**: smaller models, open-weight models, quantised models, measured on the same
+   eval. Keep the smallest that passes.
+4. **Check the constraints**: latency (TTFT and tokens per second), cost per request at your volume,
+   context length, privacy and data residency, licence, and features you need (tool calling,
+   structured output, images).
+5. **Pin a version** and re-run the eval when you change it.
+
+The Track C capstone does exactly this comparison: a retrieval-augmented agent on a general model
+versus a small model fine-tuned with LoRA (C10), judged by an eval suite.
+
+## Try it
+
+Write the memory calculator you will use every time you consider a local model.
+
+<CodeExercise id="c1-choosing-a-model-01" />
+
+## Summary
+
+- API models offer the frontier with no operations; open-weight models offer privacy, control, pinning
+  and fine-tuning at the cost of running them. Licences vary.
+- Families come in size ladders and base, instruct and reasoning variants; MoE models compute with their
+  active parameters but need memory for all of them.
+- Weight memory is parameters × bits ÷ 8; add the KV cache and runtime overhead. 16-bit is the release
+  format; 8-bit is nearly lossless; 4-bit is the local standard.
+- Quantisation stores small integers plus per-group scales; group-wise scales contain the damage from
+  outlier weights.
+- On an 8 GB Mac, 3B to 4B models at 4 bits are comfortable and 7B to 8B is the ceiling. Decode speed is
+  bounded by memory bandwidth divided by model bytes.
+- Choose with an eval: prove feasibility with a strong model, then keep the cheapest model that passes.

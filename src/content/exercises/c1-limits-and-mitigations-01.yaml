@@ -1,0 +1,72 @@
+id: c1-limits-and-mitigations-01
+lesson: llm/c1/limits-and-mitigations
+title: Self-consistency voting with abstention
+prompt: |
+  You sampled the same question several times and extracted a final answer from each sample. Write
+  `vote(answers, min_agreement=0.5)` that returns a tuple `(answer, agreement)`.
+
+  - Normalise each answer before counting: convert to a string, strip surrounding whitespace, make it
+    lower case, remove every comma, and remove one trailing full stop if present. So `" 1,407,567."` and
+    `"1407567"` count as the same answer.
+  - Samples whose answer is `None` (the answer could not be parsed) count towards the total but can never
+    win.
+  - `agreement` is the count of the most common normalised answer divided by the **total** number of
+    samples, including the `None` ones.
+  - Return `(that normalised answer, agreement)`, unless the agreement is below `min_agreement`, or two
+    or more answers tie for the top count, or every answer is `None`: then return `(None, agreement)`,
+    which means abstain. (When every answer is `None`, the agreement is 0.)
+  - An empty list raises `ValueError`.
+
+  Example: `vote(["1407567", "1,407,567", "129007", None])` returns `("1407567", 0.5)`.
+starter: |
+  def vote(answers, min_agreement=0.5):
+      return answers[0], 1.0
+solution: |
+  from collections import Counter
+
+  def normalise(a):
+      s = str(a).strip().lower().replace(",", "")
+      return s[:-1] if s.endswith(".") else s
+
+  def vote(answers, min_agreement=0.5):
+      if not answers:
+          raise ValueError("no answers to vote on")
+      counts = Counter(normalise(a) for a in answers if a is not None)
+      if not counts:
+          return None, 0.0
+      top = counts.most_common()
+      answer, n = top[0]
+      agreement = n / len(answers)
+      if agreement < min_agreement or (len(top) > 1 and top[1][1] == n):
+          return None, agreement
+      return answer, agreement
+tests: |
+  import math
+  ans, agr = vote(["1407567", "1,407,567", "129007", None])
+  assert ans == "1407567" and math.isclose(agr, 0.5), f"expected ('1407567', 0.5), got {(ans, agr)}"
+  ans, agr = vote([" Paris.", "paris", "PARIS", "Lyon", "Paris"])
+  assert ans == "paris" and math.isclose(agr, 0.8), f"normalise case, spaces and the trailing full stop: expected ('paris', 0.8), got {(ans, agr)}"
+  ans, agr = vote(["a", "b", "c", "a", "d"])
+  assert ans is None and math.isclose(agr, 0.4), f"2 of 5 agree, below 0.5: abstain with (None, 0.4), got {(ans, agr)}"
+  ans, agr = vote(["a", "b", "c", "a", "d"], min_agreement=0.4)
+  assert ans == "a" and math.isclose(agr, 0.4), "an agreement exactly equal to min_agreement is enough"
+  ans, agr = vote(["yes", "no", "yes", "no"], min_agreement=0.1)
+  assert ans is None and math.isclose(agr, 0.5), f"a tie for the top answer means abstain, got {(ans, agr)}"
+  ans, agr = vote([None, None, "42"], min_agreement=0.3)
+  assert ans == "42" and math.isclose(agr, 1 / 3), f"None answers count in the total: 1 of 3, got {(ans, agr)}"
+  ans, agr = vote([None, None])
+  assert ans is None and agr == 0, f"all None: abstain with agreement 0, got {(ans, agr)}"
+  ans, agr = vote([42, "42", "42.0"])
+  assert ans == "42" and math.isclose(agr, 2 / 3), f"convert to str first; '42.0' differs from '42': expected ('42', 2/3), got {(ans, agr)}"
+  ans, agr = vote(["3.."])
+  assert ans == "3." and math.isclose(agr, 1.0), "remove only ONE trailing full stop"
+  try:
+      vote([])
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("vote([]) should raise ValueError")
+hints:
+  - "collections.Counter counts the normalised answers; most_common() lists them from most to least common."
+  - "Divide the top count by len(answers), which includes the None samples."
+  - "There is a tie when a second entry exists with the same count as the first."

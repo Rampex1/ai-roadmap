@@ -1,0 +1,52 @@
+id: c1-context-windows-02
+lesson: llm/c1/context-windows
+title: Estimate the cost and latency of a workload
+prompt: |
+  Write two functions to size an LLM feature before building it.
+
+  1. `request_latency(in_tokens, out_tokens, prefill_tps, decode_tps, cached_tokens=0)` returns a tuple
+     `(ttft, total)` in seconds:
+     - only the **uncached** input tokens need prefill: `ttft = (in_tokens - cached_tokens) / prefill_tps`;
+     - `total = ttft + out_tokens / decode_tps`.
+  2. `workload_cost(requests, in_tokens, out_tokens, price_in, price_out, cached_tokens=0, cache_price=None)`
+     returns the total cost in dollars for `requests` identical requests. Prices are **per million
+     tokens**. Of each request's `in_tokens`, `cached_tokens` are billed at `cache_price` and the rest at
+     `price_in`. If `cache_price` is `None`, every input token is billed at `price_in`.
+
+  Example: 1,000 requests of 2,000 input and 500 output tokens at 3 and 15 dollars per million cost
+  1,000 × (6,000 + 7,500) / 1,000,000 = 13.5 dollars.
+starter: |
+  def request_latency(in_tokens, out_tokens, prefill_tps, decode_tps, cached_tokens=0):
+      return 0.0, out_tokens / decode_tps
+
+  def workload_cost(requests, in_tokens, out_tokens, price_in, price_out, cached_tokens=0, cache_price=None):
+      return requests * (in_tokens * price_in + out_tokens * price_out)
+solution: |
+  def request_latency(in_tokens, out_tokens, prefill_tps, decode_tps, cached_tokens=0):
+      ttft = (in_tokens - cached_tokens) / prefill_tps
+      return ttft, ttft + out_tokens / decode_tps
+
+  def workload_cost(requests, in_tokens, out_tokens, price_in, price_out, cached_tokens=0, cache_price=None):
+      if cache_price is None:
+          inp = in_tokens * price_in
+      else:
+          inp = cached_tokens * cache_price + (in_tokens - cached_tokens) * price_in
+      return requests * (inp + out_tokens * price_out) / 1_000_000
+tests: |
+  import math
+  ttft, total = request_latency(20_000, 200, 2_000, 50)
+  assert math.isclose(ttft, 10.0) and math.isclose(total, 14.0), f"20,000 input tokens at 2,000/s take 10 s to first token, plus 200 at 50/s: expected (10.0, 14.0), got {(ttft, total)}"
+  ttft, total = request_latency(500, 2_000, 2_000, 50)
+  assert math.isclose(ttft, 0.25) and math.isclose(total, 40.25), f"expected (0.25, 40.25), got {(ttft, total)}"
+  ttft, total = request_latency(20_000, 200, 2_000, 50, cached_tokens=18_000)
+  assert math.isclose(ttft, 1.0) and math.isclose(total, 5.0), f"only the 2,000 uncached tokens need prefill: expected (1.0, 5.0), got {(ttft, total)}"
+  assert math.isclose(workload_cost(1_000, 2_000, 500, 3.0, 15.0), 13.5, rel_tol=1e-9), f"expected 13.5 dollars, got {workload_cost(1_000, 2_000, 500, 3.0, 15.0)}: prices are per million tokens"
+  assert math.isclose(workload_cost(1, 1_000_000, 0, 0.5, 99.0), 0.5, rel_tol=1e-9), "one million input tokens at 0.5 per million cost 0.5"
+  got = workload_cost(10_000, 8_300, 250, 3.0, 15.0, cached_tokens=8_000, cache_price=0.3)
+  assert math.isclose(got, 70.5, rel_tol=1e-9), f"8,000 cached tokens at 0.3 and 300 fresh at 3 per million, plus output: expected 70.5, got {got}"
+  got = workload_cost(10_000, 8_300, 250, 3.0, 15.0, cached_tokens=8_000)
+  assert math.isclose(got, 286.5, rel_tol=1e-9), f"with cache_price None every input token is billed at price_in: expected 286.5, got {got}"
+  assert math.isclose(workload_cost(0, 100, 100, 3.0, 15.0), 0.0), "zero requests cost nothing"
+hints:
+  - "Subtract the cached tokens from the input before dividing by the prefill rate."
+  - "Bill cached and uncached input tokens separately, add the output, multiply by the number of requests and divide by 1_000_000."

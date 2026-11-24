@@ -1,0 +1,348 @@
+---
+title: "Decoding in practice: sampling settings, stops and logprobs"
+module: c1
+order: 2
+estMinutes: 20
+objectives:
+  - "Apply temperature, top-k, top-p and repetition penalties to a logit vector, in the order a sampler uses them"
+  - "Choose decoding settings for a task and explain why the same request can still return different outputs"
+  - "Use max tokens, stop sequences and the finish reason to control and detect where generation ends"
+  - "Turn token logprobs into probabilities, a sequence probability and a perplexity, and say what they can and cannot tell you"
+goDeeper: nucleus-sampling-paper
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+[Lesson 1](/llm/c1/llm-as-a-function/) split generation into a model that produces logits and a loop
+that picks tokens. This lesson is about the loop: the **decoder** or **sampler**. Its settings are the
+knobs every LLM API exposes, and choosing them well is part of the job.
+
+You met [temperature and top-k in F10](/foundations/f10/language-models/). Here we add the rest of the
+toolbox, put the pieces in order and look at what real models do with them.
+
+## The sampler as a pipeline
+
+At each step the sampler receives one logit vector $\mathbf{z}$ (one score per vocabulary token) and
+transforms it in stages before drawing a token. A typical order, used by Hugging Face `transformers`:
+
+1. **Penalties** adjust the logits of tokens that already appeared.
+2. **Temperature** divides the logits by $T$.
+3. **Top-k** keeps the $k$ highest logits.
+4. **Top-p** keeps the smallest set of tokens whose probabilities reach $p$.
+5. **Softmax and draw** one token with a random generator, or take the arg max (greedy).
+
+Libraries differ in the details (llama.cpp, used by Ollama, lets you reorder its samplers), but every
+stage is a few lines of NumPy. A toy six-token vocabulary to work with:
+
+```python
+import numpy as np
+
+def softmax(z):
+    e = np.exp(z - z.max())
+    return e / e.sum()
+
+vocab = ["Paris", "Lyon", "the", "France", "a", "banana"]
+logits = np.array([4.0, 2.5, 2.0, 1.5, 1.0, -2.0])
+print(np.round(softmax(logits), 3))
+```
+
+```text title="Output"
+[0.67  0.149 0.091 0.055 0.033 0.002]
+```
+
+## Greedy decoding
+
+<Term id="greedy-decoding" /> always takes the arg max: "Paris" here, every time. It is deterministic in
+principle, fast and a good default for tasks with one right answer: extraction, classification,
+short factual answers, code completions you will test anyway.
+
+Its weakness shows on open-ended text. The single most likely continuation of a long passage is often
+bland and, worse, **repetitive**: once a phrase has appeared, repeating it becomes likely, which makes it
+appear again. Holtzman and colleagues called this *neural text degeneration* in the paper behind top-p
+sampling. Greedy output from a small model can loop ("I like bread. I like bread. I like...") until the
+token limit.
+
+## Top-p (nucleus) sampling
+
+Top-k keeps a fixed number of tokens whatever the distribution looks like. <Term id="nucleus-sampling" />
+(top-p) adapts: sort the tokens by probability and keep the smallest prefix whose total probability is at
+least $p$, then renormalise.
+
+```python
+def top_p_filter(logits, p):
+    order = np.argsort(-logits)                     # most likely first
+    probs = softmax(logits)[order]
+    cum = np.cumsum(probs)
+    n_keep = np.searchsorted(cum, p) + 1            # smallest prefix with total >= p
+    out = np.full_like(logits, -np.inf)
+    out[order[:n_keep]] = logits[order[:n_keep]]
+    return out
+
+for p in [0.5, 0.8, 0.95]:
+    kept = softmax(top_p_filter(logits, p))
+    print(p, [vocab[i] for i in np.nonzero(kept)[0]], np.round(kept[kept > 0], 3))
+```
+
+```text title="Output"
+0.5 ['Paris'] [1.]
+0.8 ['Paris', 'Lyon'] [0.818 0.182]
+0.95 ['Paris', 'Lyon', 'the', 'France'] [0.694 0.155 0.094 0.057]
+```
+
+With $p = 0.8$, "Paris" alone has 0.67, not enough; adding "Lyon" reaches 0.819, so those two are kept
+and renormalised. "banana" (0.002) is never chosen at any of these settings. The adaptive part matters:
+
+```python
+flat = np.array([1.0, 0.9, 0.9, 0.8, 0.8, 0.7])     # the model is unsure
+peaked = np.array([6.0, 1.0, 0.5, 0.0, 0.0, -1.0])  # the model is confident
+for name, z in [("flat", flat), ("peaked", peaked)]:
+    print(name, "top-p 0.9 keeps", int(np.isfinite(top_p_filter(z, 0.9)).sum()), "tokens")
+```
+
+```text title="Output"
+flat top-p 0.9 keeps 6 tokens
+peaked top-p 0.9 keeps 1 tokens
+```
+
+When the model is confident, top-p behaves like greedy; when many continuations are reasonable, it
+allows variety. It can remove the **long tail**: the thousands of individually unlikely
+tokens that, together, carry real probability. Sampling from the full distribution picks one of them
+surprisingly often, and one bad token derails everything after it.
+
+You can see this on a real model. These are replies from `Qwen2.5-0.5B-Instruct` (a small open model,
+run on a laptop CPU) to "Write a one-sentence slogan for a bakery that only sells bread", with three
+seeds at each setting:
+
+```text title="Real outputs"
+greedy (run twice)      "Fresh, delicious bread, every day, from our bakery."  (identical both times)
+T = 0.7, top-p = 0.95   "Fresh, delicious bread from our bakery."
+                        "Freshly baked, sweetly delivered - every loaf from our bakery."
+                        "Fresh Breads, Everyday Bread"
+T = 1.5, no top-p       "BAAAHT leather planes like chocolate ships/" - intended as superlatively Aw ...
+                        Open your offering bag and buy the basics - fiacks, roll-ups, and beyond皋
+                        "不妨哦—ỏi>[ Bread Lovers‏ yüzeyine/debossﺍfinished doğ의 buz harفو כל簰"].
+```
+
+At temperature 1.5 the tail is fattened *and* nothing trims it, so tokens from other languages and
+scripts get drawn, and the text never recovers. The homework compares these decoding strategies on a synthetic vocabulary and includes an optional local model comparison.
+
+## Repetition, frequency and presence penalties
+
+Penalties push the model away from tokens it has already produced. Two common definitions:
+
+- **Repetition penalty** $\theta > 1$ (from the CTRL paper, used by Hugging Face and Ollama's
+  `repeat_penalty`): for every token already in the context, divide its logit by $\theta$ if positive,
+  multiply by $\theta$ if negative. Both make the token less likely.
+- **Frequency and presence penalties** (OpenAI-style APIs, also in Ollama): subtract
+  $\alpha_\text{freq} \times \text{count}$ and $\alpha_\text{pres} \times [\text{count} > 0]$ from the
+  logit. Frequency grows with each repeat; presence is a flat charge for having appeared at all.
+
+```python
+def repetition_penalty(logits, seen_ids, theta):
+    out = logits.copy()
+    for i in set(seen_ids):
+        out[i] = out[i] / theta if out[i] > 0 else out[i] * theta
+    return out
+
+def freq_presence_penalty(logits, seen_ids, freq, presence):
+    counts = np.bincount(seen_ids, minlength=len(logits))
+    return logits - freq * counts - presence * (counts > 0)
+
+seen = [2, 2, 2, 0]          # "the" three times, "Paris" once
+print(repetition_penalty(logits, seen, 1.3))
+print(freq_presence_penalty(logits, seen, 0.5, 0.5))
+```
+
+```text title="Output"
+[ 3.07692308  2.5         1.53846154  1.5         1.          -2.        ]
+[ 3.   2.5  0.   1.5  1.  -2. ]
+```
+
+Use penalties gently: shipped defaults for the repetition penalty are typically between 1.0 and about
+1.2. They cannot
+tell a bad repeat from a necessary one: code, JSON and lists *must* repeat brackets, keys and variable
+names, and a strong penalty breaks them.
+
+:::caution[Defaults you did not choose]
+Models and servers ship default decoding settings. `Qwen2.5-0.5B-Instruct`'s generation config, for
+example, sets temperature 0.7, top-p 0.8, top-k 20 and a repetition penalty of 1.1, and Hugging Face
+applies the penalty even when you ask for greedy decoding unless you override it. When results surprise
+you, print the effective settings before blaming the model.
+:::
+
+## Seeds, and why outputs are still not repeatable
+
+Sampling uses a pseudo-random generator, so fixing the seed fixes the draws, exactly as in F10:
+
+```python
+rng = np.random.default_rng(42)
+probs = softmax(logits / 0.8)
+print([vocab[rng.choice(6, p=probs)] for _ in range(8)])
+rng = np.random.default_rng(42)
+print([vocab[rng.choice(6, p=probs)] for _ in range(8)])
+```
+
+```text title="Output"
+['Lyon', 'Paris', 'Lyon', 'Paris', 'Paris', 'France', 'Paris', 'Lyon']
+['Lyon', 'Paris', 'Lyon', 'Paris', 'Paris', 'France', 'Paris', 'Lyon']
+```
+
+On your own machine, with the same model files, library versions and settings, a seed (or greedy
+decoding) usually does reproduce outputs. With a hosted API, even temperature 0 and a `seed` parameter
+are documented as **best effort**. The reasons:
+
+- **Floating-point addition is not associative.** The order in which numbers are summed changes the last
+  bits of the result:
+
+  ```python
+  print((0.1 + 0.2) + 0.3, 0.1 + (0.2 + 0.3))
+  x = np.random.default_rng(0).normal(size=100_000).astype(np.float32)
+  print(x.sum(), x[::-1].sum(), np.sort(x).sum())
+  ```
+
+  ```text title="Output"
+  0.6000000000000001 0.6
+  -90.825134 -90.82507 -90.82422
+  ```
+
+  GPU kernels choose their summation order based on the shapes involved, and a server batches your
+  request with other people's, so the batch, and with it the order, changes from call to call.
+- **Near ties flip.** If two tokens' logits differ by less than that noise, the arg max can flip. One
+  different token early on changes the whole context for every later token, so small differences
+  snowball into a different answer.
+- **The model behind a name changes.** Providers update models, quantisation and serving software;
+  pin a dated model version where the API allows it.
+
+The engineering consequence: **never assume a single output is "the" output**. Test prompts on several
+runs and many inputs (C9 builds this into an eval suite), and design downstream code to tolerate
+variation, for example by parsing structured output rather than matching exact strings.
+
+## Where generation ends: max tokens and stop sequences
+
+Every request has two ways to stop besides the model's end-of-turn token:
+
+- **Max tokens** (`max_tokens`, `max_new_tokens`, Ollama's `num_predict`) caps the reply length. It
+  protects cost and latency, but the reply is simply cut off mid-sentence or mid-JSON.
+- **Stop sequences**: strings that end generation when they appear, and are not included in the
+  output. They are useful with base models and few-shot prompts, for example stopping at
+  `"\nQuestion:"` so the model does not invent the next question.
+
+The API reports which one fired as the **finish reason**: `stop` for an end-of-turn token or stop
+sequence, `length` for the cap. A sketch of the logic:
+
+```python
+def apply_stop(text, stops):
+    cut = min((text.find(s) for s in stops if s in text), default=-1)
+    return (text[:cut], "stop") if cut >= 0 else (text, None)  # no stop sequence: EOS or the cap decides
+
+print(apply_stop("Answer: 42\nQuestion: what next?", ["\nQuestion:"]))
+print(apply_stop("Answer: 42 and more", ["\nQuestion:"]))
+```
+
+```text title="Output"
+('Answer: 42', 'stop')
+('Answer: 42 and more', None)
+```
+
+:::tip[Always check the finish reason]
+A reply that ended with `length` is truncated. If your code parses JSON or extracts an answer, treat
+`length` as an error: retry with a bigger limit or a shorter prompt, rather than parsing half an object.
+Reasoning models spend output tokens on hidden reasoning before the visible answer, so a limit that is
+plenty for the answer can still cut them off.
+:::
+
+## Logprobs: probabilities of generated tokens
+
+Many APIs and local servers (for example OpenAI-style `logprobs` and `top_logprobs`, and Ollama's
+`logprobs` option, as of late 2026; not every provider offers them) can return, for each generated token,
+its <Term id="log-probability" /> $\ell_t = \ln p_t$ and optionally the top alternatives. Logprobs are
+nonpositive numbers; $\ell = 0$ means probability 1. Check whether the server reports probabilities
+before or after sampling transforms such as temperature and top-p.
+
+For a fixed prompt, you can compute the following under the distribution used to report the logprobs:
+
+$$
+\ln P(\text{completion tokens} \mid \text{prompt}) = \sum_{t} \ell_t, \qquad
+\text{perplexity} = \exp\!\Big(-\frac{1}{n}\sum_{t=1}^{n} \ell_t\Big)
+$$
+
+where $n$ is the number of generated tokens. Here is a real greedy answer from `Qwen2.5-0.5B-Instruct`
+to "Who wrote the 2019 novel The Glass Orchard? Answer in one sentence." There is no such novel; the
+model answered anyway:
+
+```python
+tokens = ["The", " Glass", " Orchard", " was", " written", " by", " the", " British",
+          " author", " J", "h", "ump", "a", " Lah", "iri"]
+logprobs = np.array([-0.238, -0.1324, -0.0004, -0.6332, -0.0339, -0.0036, -2.9257,
+                     -1.8571, -0.1596, -3.3268, -0.3116, -0.0398, -0.0026, -0.0196, -0.0045])
+print("total log-prob", round(logprobs.sum(), 3), " probability", f"{np.exp(logprobs.sum()):.2e}")
+print("mean", round(logprobs.mean(), 3), " perplexity", round(np.exp(-logprobs.mean()), 3))
+for t, lp in zip(tokens, logprobs):
+    if lp < -1:
+        print(f"{t!r:>10} p = {np.exp(lp):.3f}")
+```
+
+```text title="Output"
+total log-prob -9.689  probability 6.20e-05
+mean -0.646  perplexity 1.908
+    ' the' p = 0.054
+' British' p = 0.156
+      ' J' p = 0.036
+```
+
+The answer names a real author who did not write this book. The logprobs show *where* the model was
+guessing: it gave the first letter of the author's name only 3.6% probability, then spelled out the rest
+with near certainty, because once "J" is chosen, "humpa Lahiri" is the obvious continuation. Greedy
+decoding hides that doubt; logprobs reveal it.
+
+What engineers use logprobs for:
+
+- **Flagging low-confidence spans**, especially names, numbers and dates, for verification or review.
+- **Classification without parsing**: ask a yes/no question and compare the logprobs of the "Yes" and
+  "No" tokens, which gives a graded score instead of a single word.
+- **Scoring fixed candidates**: compare the total logprob the model assigns to each of several answers.
+
+And their limits: a high probability is not truth, because models can be confidently wrong about
+facts they half-learned. Sequence probabilities shrink with length, so only compare like with like. And
+some servers report logprobs
+*after* temperature and top-p are applied, which can show truncated tokens as probability 0. Check which
+one you are getting.
+
+## Choosing settings
+
+| Task | Starting point |
+|---|---|
+| Extraction, classification, short factual answers, tool arguments | Greedy or temperature 0 to 0.2 |
+| Chat and explanation | Temperature about 0.7, top-p about 0.9 to 0.95 |
+| Brainstorming, varied drafts | Temperature about 0.9 to 1.0 with top-p; never a high temperature without top-p or top-k |
+| Several candidates to pick from or vote on | Moderate temperature, $n$ samples, then select ([lesson 5](/llm/c1/limits-and-mitigations/)) |
+
+These are starting points to evaluate, not rules. Model providers sometimes recommend specific settings
+for a model, and reasoning models may fix or ignore some of them.
+
+## Try it
+
+Implement top-p sampling with temperature and a seeded generator; the tests compare your draws with a
+reference.
+
+<CodeExercise id="c1-decoding-01" />
+
+Then turn a completion's logprobs into the numbers above, and use them to pick the most probable of
+several candidate answers.
+
+<CodeExercise id="c1-decoding-02" />
+
+## Summary
+
+- The sampler transforms each logit vector in stages: penalties, temperature, top-k, top-p, then a draw
+  (or the arg max for greedy decoding).
+- Greedy suits tasks with one right answer but can loop on open text; top-p keeps the smallest set of
+  tokens covering probability $p$, adapting to the model's confidence and cutting the long tail.
+- Repetition penalties divide or multiply repeated tokens' logits; frequency and presence penalties
+  subtract from them. Use them gently, and know your server's defaults.
+- Seeds make local sampling repeatable, but batching, floating-point order and model updates make hosted
+  outputs only "best effort" reproducible. Design and test for variation.
+- Max tokens and stop sequences end generation; check the finish reason and treat `length` as
+  truncation.
+- Logprobs give per-token probabilities, sequence probability and perplexity; they locate guesses but do
+  not certify truth.

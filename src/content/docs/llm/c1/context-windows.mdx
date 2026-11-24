@@ -1,0 +1,230 @@
+---
+title: "Context windows: budgets, truncation, cost and latency"
+module: c1
+order: 3
+estMinutes: 19
+objectives:
+  - "Plan a token budget for a request: window size, reserved output, template overhead and the content that must always fit"
+  - "Choose and implement a truncation strategy that keeps the system prompt and the latest user message"
+  - "Estimate a workload's cost and latency from its input and output token counts, and the memory its KV cache needs"
+  - "Explain 'lost in the middle' and prompt caching, and how each changes the way you order a prompt"
+goDeeper: lost-in-the-middle
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+The <Term id="context-window" /> is the most important number on a model's spec sheet after its quality.
+[F10](/foundations/f10/llms-in-practice/) introduced it: prompt and reply together must fit, and old
+messages must be dropped or summarised. This lesson turns that into engineering: how to count, what to
+cut, what it costs, how long it takes, and how to order a prompt so the model actually uses it.
+
+## The budget equation
+
+For every request:
+
+$$
+\underbrace{\text{system} + \text{history} + \text{documents} + \text{tool results} + \text{template overhead}}_{\text{prompt tokens}}
+\;+\; \text{max output tokens} \;\le\; \text{window}
+$$
+
+Three rules follow.
+
+- **Reserve the output first.** If the window is 32,768 tokens (`Qwen2.5-0.5B-Instruct`) and you allow
+  replies of up to 1,024 tokens, the prompt may use at most 31,744. Servers reject a request whose prompt
+  plus `max_tokens` exceeds the window, or silently cut the reply short; local servers may instead
+  truncate the *prompt*, quietly dropping its beginning (in Ollama the window is the `num_ctx` setting,
+  often much smaller than the model's maximum by default; check yours).
+- **Count with the model's tokeniser.** "About 4 characters per token" is fine for planning English
+  prose. It is wrong by a factor of two or more for code, numbers, JSON and many other languages, and
+  different model families split the same text differently. For a real limit, count with the model's
+  own tokeniser (the Hugging Face tokeniser, OpenAI's `tiktoken` library, or the provider's token-counting
+  endpoint).
+- **Count the template too.** [Lesson 1](/llm/c1/llm-as-a-function/) found 5 tokens of ChatML overhead per
+  message plus 3 for the generation prompt. Tool definitions sent with a request (C6) are also rendered
+  into the prompt and can run to thousands of tokens.
+
+## Truncation strategies
+
+When the content does not fit, something has to go. The options, roughly from simplest to best:
+
+1. **Drop the oldest turns.** Keep the system prompt and the most recent messages; drop from the
+   oldest end. Simple and predictable, and the model forgets the start of the conversation.
+2. **Drop whole turns, never half a message.** Cutting a message mid-way confuses the model, and
+   starting the history with an orphaned assistant reply (its question dropped) reads like nonsense.
+   Drop in units that make sense.
+3. **Summarise old history.** Replace the dropped turns with a short summary written by a (cheap) LLM
+   call, kept near the top. It costs an extra call and loses detail, but keeps the gist.
+4. **Truncate long documents in the middle.** For a single long input (a log file, a contract), the
+   beginning and end often carry the most structure (headers, conclusions, the latest errors):
+
+   ```python
+   def truncate_middle(tokens, budget, marker="[...]"):
+       """Keep the start and the end of a long token list, dropping the middle."""
+       if len(tokens) <= budget:
+           return tokens
+       if budget <= 0:
+           return []
+       head = (budget - 1) // 2               # one slot goes to the marker
+       tail = budget - 1 - head
+       return tokens[:head] + [marker] + tokens[len(tokens) - tail:]
+
+   doc = [f"t{i}" for i in range(20)]
+   print(truncate_middle(doc, 9))
+   ```
+
+   ```text title="Output"
+   ['t0', 't1', 't2', 't3', '[...]', 't16', 't17', 't18', 't19']
+   ```
+
+5. **Retrieve instead of stuffing.** Store the documents (or the old conversation) outside the prompt and
+   put in only the few passages relevant to the current question. This is retrieval-augmented
+   generation, the subject of C4 and C5, and is usually the right answer once content runs to more
+   than a few thousand tokens.
+
+Whatever you choose, two things must **always** survive: the system prompt (your instructions and
+safety rules) and the latest user message (the thing you are answering). If those alone do not fit, fail
+loudly instead of sending something meaningless. The first exercise implements this policy.
+
+## Fitting is not using: lost in the middle
+
+A large window is a ceiling, not a promise. In 2023, Liu and colleagues gave models a question plus 20
+documents, one of which held the answer, and moved that document from first to last. Accuracy was
+highest when the answer was at the **start** or the **end** of the context and dropped noticeably when
+it was in the **middle**, a U-shaped curve; for one model, mid-context accuracy fell below its score with
+*no* documents at all. They called it "lost in the middle".
+
+Models released since have improved on such tests, but as of late 2026 the practical lessons still hold:
+
+- Put instructions at the start (system prompt) and restate the key ask **right before** the generation
+  prompt, after long material.
+- Put the most relevant documents first or last, not buried among many.
+- Prefer a short, relevant context to a long one: irrelevant text is a distraction, not free padding.
+  Retrieval (C5) and evaluation (C9) let you measure this for your own task.
+
+## Cost and latency are proportional to tokens
+
+**Cost.** F10 gave the formula: input tokens times the input price plus output tokens times the (several
+times higher) output price, both per million. In a multi-turn chat the whole history is re-sent each
+turn. For similarly sized turns with no truncation, input tokens per request grow roughly linearly, and
+the total across the conversation grows roughly quadratically. Every token you trim from a prompt saves
+money on every request that uses it.
+
+**Latency.** [Lesson 1](/llm/c1/llm-as-a-function/) split generation into prefill and decode. A first
+model of latency:
+
+$$
+\text{TTFT} \approx \frac{n_\text{in}}{r_\text{prefill}}, \qquad
+\text{total} \approx \text{TTFT} + \frac{n_\text{out}}{r_\text{decode}}
+$$
+
+where $n_\text{in}$ and $n_\text{out}$ are the input and output token counts and $r$ are throughputs in
+tokens per second. Prefill is parallel and fast; decode is sequential and slow. With illustrative rates
+of 2,000 and 50 tokens per second:
+
+```python
+def latency(in_tokens, out_tokens, prefill_tps, decode_tps):
+    ttft = in_tokens / prefill_tps
+    return ttft, ttft + out_tokens / decode_tps
+
+for n_in, n_out in [(500, 200), (20_000, 200), (500, 2_000)]:
+    ttft, total = latency(n_in, n_out, prefill_tps=2_000, decode_tps=50)
+    print(f"in {n_in:>6}, out {n_out:>5}: first token {ttft:5.2f} s, total {total:5.1f} s")
+```
+
+```text title="Output"
+in    500, out   200: first token  0.25 s, total   4.2 s
+in  20000, out   200: first token 10.00 s, total  14.0 s
+in    500, out  2000: first token  0.25 s, total  40.2 s
+```
+
+In these examples, the longer input adds 9.75 seconds to prefill, while the longer output adds 36
+seconds to decode. Either phase can dominate, depending on token counts and throughput. Ask for short answers, structured fields instead of prose, and stream the reply so users see
+the first tokens immediately. Real systems add network time, queueing and slower decoding for long
+contexts, so measure your own numbers; the second exercise turns this model into a workload estimate.
+
+**Memory.** On your own hardware the window also costs memory. The KV cache stores a key and a value
+vector for every layer and every token:
+
+$$
+\text{KV bytes} = 2 \times \text{layers} \times \text{KV heads} \times \text{head size} \times \text{bytes per number} \times \text{tokens}
+$$
+
+```python
+def kv_cache_gb(tokens, layers, kv_heads, head_dim, bytes_per=2):
+    return 2 * layers * kv_heads * head_dim * bytes_per * tokens / 1e9   # 2 = keys and values
+
+print(round(kv_cache_gb(32_768, layers=24, kv_heads=2, head_dim=64), 2))    # Qwen2.5-0.5B, full window
+print(round(kv_cache_gb(131_072, layers=32, kv_heads=8, head_dim=128), 2))  # an 8B Llama-style model
+```
+
+```text title="Output"
+0.4
+17.18
+```
+
+A full 128k-token window for an 8B model needs about 17 GB of KV cache in 16-bit numbers, more than the
+weights themselves. (Modern models share each key and value head across several query heads, which is
+why "KV heads" is smaller than the number of attention heads; without that sharing it would be several
+times worse.) This is why local servers default to small windows, and why
+[lesson 4](/llm/c1/choosing-a-model/) adds the KV cache to the weights when asking what fits on a laptop.
+
+## Prompt caching
+
+Many requests share a long, identical **prefix**: the same system prompt, tool definitions and reference
+documents, followed by a short, changing question. The KV cache for that prefix is the same every time,
+so servers can keep it and skip its prefill on the next request. This is <Term id="prompt-caching" />.
+
+- **It only works for an exact prefix.** One changed token early on (a timestamp, a user's name in the
+  system prompt) invalidates everything after it. Order prompts from most stable to least stable:
+  instructions, tools, fixed documents, conversation history, then the new message.
+- **It cuts latency and cost.** Cached prefixes skip prefill, so time to first token drops. Hosted APIs
+  bill cached input tokens at a discount; as of late 2026 cached reads commonly cost somewhere between a
+  tenth and a half of the normal input price, some providers charge extra to write the cache, and
+  caches expire after minutes of inactivity. Check your provider's current rules.
+
+A workload that sends an 8,000-token fixed prefix plus 300 fresh tokens 10,000 times a day, with 250
+output tokens, at illustrative prices of 3 and 15 dollars per million and cached reads at 0.3:
+
+```python
+def daily_cost(requests, prefix, fresh, out, price_in, price_out, cache_read=None):
+    if cache_read is None:                      # no caching: the prefix is billed in full
+        inp = (prefix + fresh) * price_in
+    else:
+        inp = prefix * cache_read + fresh * price_in
+    return requests * (inp + out * price_out) / 1e6
+
+args = dict(requests=10_000, prefix=8_000, fresh=300, out=250, price_in=3.0, price_out=15.0)
+print(f"${daily_cost(**args):,.0f} without caching, ${daily_cost(**args, cache_read=0.3):,.0f} with cached reads at 0.3")
+```
+
+```text title="Output"
+$286 without caching, $70 with cached reads at 0.3
+```
+
+A fourfold saving from ordering the prompt sensibly. C3 (prompt and context engineering) and C11
+(LLMOps) return to caching in production.
+
+## Try it
+
+Implement a history-fitting policy that reserves output tokens, counts template overhead, always keeps
+the system prompt and the latest user message, and never starts the history with an orphaned assistant
+reply.
+
+<CodeExercise id="c1-context-windows-01" />
+
+Then estimate the cost and latency of a workload, with and without a cached prefix.
+
+<CodeExercise id="c1-context-windows-02" />
+
+## Summary
+
+- Prompt tokens (including template overhead and tool definitions) plus reserved output tokens must fit
+  in the window; count with the model's own tokeniser.
+- Truncate in sensible units: drop the oldest whole turns, summarise, cut long documents in the middle,
+  or retrieve only what is relevant. Always keep the system prompt and the latest user message.
+- Models use the start and end of a long context better than the middle; put instructions and key
+  material at the edges, and prefer short relevant context.
+- Cost is linear in input and output tokens; time to first token grows with input, and each output token is much
+  slower than an input token, so long replies usually dominate total latency. The KV cache grows with every token and can outweigh the model's weights.
+- Prompt caching reuses an identical prefix's KV cache to cut latency and cost; order prompts from most
+  to least stable.
