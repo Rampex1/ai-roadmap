@@ -1,0 +1,122 @@
+items:
+  - id: a1-metrics-and-baselines-01
+    type: numeric
+    prompt: "A bank estimates that a missed fraud costs £90 and a false alarm £10. For calibrated probabilities, what is the cost-minimising threshold $t^* = c_{FP} / (c_{FP} + c_{FN})$?"
+    answer: 0.1
+    tol: 0.001
+    explanation: "$t^* = 10 / (10 + 90) = 0.1$. Flag any payment with more than a 10% chance of being fraud: far below the default 0.5, because misses are nine times as expensive as false alarms."
+  - id: a1-metrics-and-baselines-02
+    type: mcq
+    prompt: "A bank's fraud team can review exactly 300 alerts a day; alerts beyond that are not looked at. Which offline metric best matches this decision?"
+    options:
+      - text: "Recall at a threshold of 0.5"
+        why: "The operating point is set by capacity, not by a fixed 0.5 threshold."
+      - text: "Precision among the 300 highest-scoring transactions each day"
+        correct: true
+        why: "Precision@k measures what reviewers actually see: how many of their 300 cases are real fraud."
+      - text: "ROC AUC"
+        why: "AUC averages over all thresholds, but only the top 300 a day matter."
+      - text: "Accuracy over all transactions"
+        why: "With rare fraud, accuracy is dominated by the legitimate majority and ignores the capacity limit."
+    explanation: "Choose the offline metric from how predictions are used. A fixed review capacity calls for precision (or recall) in the top $k$."
+  - id: a1-metrics-and-baselines-03
+    type: mcq
+    prompt: "A new fraud model raises offline ROC AUC from 0.86 to 0.90, but after launch the monthly fraud losses do not change. Which explanation fits best?"
+    options:
+      - text: "Fraud losses cannot be influenced by models"
+        why: "They clearly can; the rule in the lesson already reduces costs."
+      - text: "The model must be overfitting the test set"
+        why: "Possible, but the more general lesson is that AUC gains need not translate to the business metric."
+      - text: "The offline metric did not reflect the deployed decision, for example the threshold or reviewer capacity"
+        correct: true
+        why: "AUC summarises all thresholds; losses depend on the one operating point and how alerts are acted on."
+      - text: "AUC is computed incorrectly whenever classes are imbalanced"
+        why: "AUC is well defined under imbalance; the issue is whether it reflects the decision being made."
+    explanation: "Offline metrics are proxies whose job is to predict the online result. Report the metric at the operating point that will actually be deployed."
+  - id: a1-metrics-and-baselines-04
+    type: numeric
+    prompt: "At some threshold a model produces 120 false positives and 8 false negatives on a validation month. With $c_{FP} = £5$ and $c_{FN} = £150$, what is the total cost in pounds?"
+    answer: 1800
+    tol: 0.5
+    explanation: "$5 \\times 120 + 150 \\times 8 = 600 + 1{,}200 = £1{,}800$."
+  - id: a1-metrics-and-baselines-05
+    type: multi
+    prompt: "A fraud model's target metric is fraud losses per £1,000 transacted. Which of these are guardrail metrics for it? Select all that apply."
+    options:
+      - text: "p99 latency of the fraud check"
+        correct: true
+        why: "A slow check harms every payment even if it catches fraud well."
+      - text: "The share of legitimate payments that get blocked"
+        correct: true
+        why: "Blocking everything would cut losses; this guardrail catches that harm to good customers."
+      - text: "Customer complaint rate"
+        correct: true
+        why: "Captures harms that the target metric cannot see."
+      - text: "Fraud losses per £1,000 transacted"
+        why: "That is the target metric itself, not a guardrail."
+    explanation: "Guardrails are metrics that must not get worse while you optimise the target. They catch the obvious ways to game it (Goodhart's law)."
+  - id: a1-metrics-and-baselines-06
+    type: mcq
+    prompt: "Why should the success threshold (for example \"20% lower cost than the current rule\") be agreed before any model is trained?"
+    options:
+      - text: "So that the test set can be used to tune the threshold"
+        why: "Tuning on the test set is exactly what you should avoid."
+      - text: "Because the threshold changes the model's training loss"
+        why: "The success criterion is a decision rule for the project, not part of the loss."
+      - text: "So the bar is not quietly moved to wherever the model happens to land"
+        correct: true
+        why: "Deciding afterwards invites rationalising any result as a success."
+      - text: "Because it is required to compute ROC AUC"
+        why: "AUC needs no success threshold."
+    explanation: "A success criterion fixed in advance, with guardrails and a stated dataset, keeps the evaluation honest."
+  - id: a1-metrics-and-baselines-07
+    type: numeric
+    prompt: "2% of insurance claims are fraudulent. If investigators reviewed 200 claims picked completely at random, how many frauds would they expect to find?"
+    answer: 4
+    tol: 0.01
+    explanation: "A random selection has expected precision equal to the base rate: $200 \\times 0.02 = 4$. Any model must beat this random baseline at the same $k$."
+  - id: a1-metrics-and-baselines-08
+    type: mcq
+    prompt: "On held-out data, \"flag nothing\" costs £27,000, the current rule £22,220, and a logistic regression at a cost-based threshold £16,615. Which comparison best answers \"is the model worth launching\"?"
+    options:
+      - text: "Rule versus flag nothing"
+        why: "That shows the rule is useful, not whether the model is."
+      - text: "Model versus the current rule: it saves £5,605, about 25%"
+        correct: true
+        why: "The heuristic in use is the real competitor; compare this gain with the success threshold and the cost of running the model."
+      - text: "Model versus flag nothing: it saves £10,385"
+        why: "True, but nobody is proposing to flag nothing: the rule is already running."
+      - text: "Model at the cost-based threshold versus the same model at 0.5"
+        why: "That compares thresholds, not whether the model improves on current practice."
+    explanation: "Use trivial baselines to sanity-check, but judge launch decisions against the current heuristic or process."
+  - id: a1-metrics-and-baselines-09
+    type: mcq
+    prompt: "Your fraud model was trained with heavy class weights, so its predicted probabilities are far too high. You know $c_{FP}$ and $c_{FN}$. How should you choose the threshold?"
+    options:
+      - text: "Use $t^* = c_{FP} / (c_{FP} + c_{FN})$ anyway"
+        why: "That formula assumes calibrated probabilities; with inflated scores it flags far too much."
+      - text: "Scan candidate thresholds on the test set and pick the cheapest"
+        why: "Choosing on the test set makes the reported test cost optimistic."
+      - text: "Use 0.5, since that is the default"
+        why: "0.5 ignores the costs entirely."
+      - text: "Scan candidate thresholds on validation data and pick the one with the lowest total cost"
+        correct: true
+        why: "This works for any score, calibrated or not, and uses data the test set never sees."
+    explanation: "The closed-form threshold needs calibration. Otherwise choose empirically on validation or out-of-fold predictions, then evaluate once on test."
+  - id: a1-metrics-and-baselines-10
+    type: output
+    prompt: "With $c_{FP} = 5$ and $c_{FN} = 150$, this flags a case when the expected cost of flagging is smaller. What does it print?"
+    code: |
+      c_fp, c_fn = 5, 150
+      for p in [0.02, 0.05, 0.5]:
+          print(p, "flag" if c_fp * (1 - p) < c_fn * p else "pass")
+    answer: |
+      0.02 pass
+      0.05 flag
+      0.5 flag
+    explanation: "At $p = 0.02$: $5 \\times 0.98 = 4.9$ is not below $150 \\times 0.02 = 3$, so pass. At 0.05: $4.75 < 7.5$, flag. The break-even is $5/155 \\approx 0.032$."
+  - id: a1-metrics-and-baselines-11
+    type: cloze
+    prompt: "\"When a measure becomes a target, it ceases to be a good measure\" is known as ____'s law."
+    accept: [ "Goodhart", "Goodharts", "Goodhart's", "Goodhart’s" ]
+    explanation: "Goodhart's law. Pair every target metric with guardrails so that gaming it shows up."

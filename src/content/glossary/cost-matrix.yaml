@@ -1,0 +1,7 @@
+term: "Cost matrix"
+short: "A table giving the cost of each combination of true class and predicted class."
+body: |
+  For a binary classifier it holds the cost of a false positive $c_{FP}$ and a false negative $c_{FN}$ (correct
+  predictions usually cost nothing). The total cost at a threshold is $c_{FP} \cdot FP + c_{FN} \cdot FN$. For
+  calibrated probabilities the cheapest rule is to predict positive when $p > c_{FP} / (c_{FP} + c_{FN})$.
+related: ["confusion-matrix", "calibration"]

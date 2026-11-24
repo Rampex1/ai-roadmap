@@ -1,0 +1,124 @@
+items:
+  - id: a1-when-to-use-ml-01
+    type: mcq
+    prompt: "A payroll company asks you to train a model that computes each employee's income tax deduction from their pay slip. What do you recommend?"
+    options:
+      - text: "Train a gradient-boosted model on last year's pay slips and deductions"
+        why: "It would reproduce the rules approximately, and any error is a wrong payslip. Approximating known logic adds risk for no gain."
+      - text: "Collect more data first, then decide which model to use"
+        why: "More data does not change the nature of the problem: there is no fuzzy pattern to learn."
+      - text: "Implement the published tax rules directly as code, with tests"
+        correct: true
+        why: "The logic is known exactly and must be exact. Code is cheaper, correct by construction and easy to update when the rules change."
+      - text: "Use ML but send every prediction to an accountant for review"
+        why: "Review catches errors but makes the model pointless: the accountant could apply the rules directly."
+    explanation: "ML fits fuzzy patterns that tolerate some error. Tax rules are fully specified and require exact answers, which is the classic case for ordinary code."
+  - id: a1-when-to-use-ml-02
+    type: multi
+    prompt: "A bank wants to reduce fraud losses on card payments. Which facts are good signs that ML is a fitting tool? Select all that apply."
+    options:
+      - text: "There are millions of card payments every day"
+        correct: true
+        why: "Scale means even small per-decision improvements add up to a lot of value."
+      - text: "Every single wrong decision must be impossible, with no human review"
+        why: "This is a warning sign: every model makes mistakes, so zero tolerance with no fallback argues against ML."
+      - text: "Fraudsters change their tactics every few months"
+        correct: true
+        why: "Hand-written rules decay as patterns shift; a model retrained on fresh data can keep up (with monitoring)."
+      - text: "Confirmed fraud disputes are recorded and linked to the original payments"
+        correct: true
+        why: "These are labels. Without them supervised learning would not be possible."
+    explanation: "Frequent decisions, fuzzy and shifting patterns, available labels and tolerance for some error all point towards ML. A demand for zero errors with nothing to catch them points away."
+  - id: a1-when-to-use-ml-03
+    type: numeric
+    prompt: "An insurer processes $N = 50{,}000$ claims a month; 4% are fraudulent. A model is expected to reach recall 0.5 and precision 0.25. Each fraud caught saves £400; each false alarm costs £20 in investigation. Using $TP = N b r$, $FP = TP(1-p)/p$ and value $= v_{TP} \\cdot TP - c_{FP} \\cdot FP$, what is the expected monthly value in pounds?"
+    answer: 340000
+    tol: 1
+    explanation: "$TP = 50{,}000 \\times 0.04 \\times 0.5 = 1{,}000$; $FP = 1{,}000 \\times 0.75 / 0.25 = 3{,}000$; value $= 400{,}000 - 60{,}000 = £340{,}000$."
+  - id: a1-when-to-use-ml-04
+    type: mcq
+    prompt: "A new online marketplace launches next month with no transaction history. The founders want an ML fraud model from day one. What is the most sensible first step?"
+    options:
+      - text: "Buy a public fraud dataset from another industry and train on it"
+        why: "Data from a different product and population is unlikely to represent this marketplace's fraud; it can be a starting point for ideas, not a reliable model."
+      - text: "Delay the launch until enough fraud has been observed to train a model"
+        why: "Fraud cannot be observed until the product runs, so this never ends. Rules let the product launch safely."
+      - text: "Launch with simple rules, log every transaction and decision, and label a sample"
+        correct: true
+        why: "Rules protect the launch, and logging plus labelling builds the dataset the first model will need."
+      - text: "Use an unsupervised anomaly detector as the only defence and skip labelling"
+        why: "Anomaly scores can help, but without labels you cannot measure whether they catch fraud, and they cannot improve."
+    explanation: "With no data, start with rules and design the product to collect inputs and labels. Zinkevich's Rule #1: don't be afraid to launch without ML."
+  - id: a1-when-to-use-ml-05
+    type: mcq
+    prompt: "A rule catches 19% of fraud at precision 0.22. A prototype model reaches 21% recall at precision 0.24 offline, but needs a new real-time feature service whose yearly cost is larger than the extra fraud it would stop. What should the team do?"
+    options:
+      - text: "Drop the rule as well, since neither approach is good"
+        why: "The rule is cheap and catches real fraud; removing it would raise losses."
+      - text: "Ship the model, because ML systems always improve over time"
+        why: "Nothing guarantees improvement; without a value case, the cost is certain and the gain is not."
+      - text: "Ship the model, because it beats the rule on both precision and recall"
+        why: "Beating the baseline is necessary but not sufficient: the gain must pay for building and running the system."
+      - text: "Keep the rule for now, and look for cheaper features or bigger gains before building"
+        correct: true
+        why: "The incremental value over the rule does not cover the cost, so the model is not worth building in this form."
+    explanation: "Decisions to build depend on the incremental value over the current rule, after subtracting the full cost of the ML system."
+  - id: a1-when-to-use-ml-06
+    type: numeric
+    prompt: "A system is expected to find 600 true positives a month at a precision of 0.4. How many false positives a month does that imply?"
+    answer: 900
+    tol: 0.5
+    explanation: "From $p = TP/(TP+FP)$: $FP = TP(1-p)/p = 600 \\times 0.6 / 0.4 = 900$."
+  - id: a1-when-to-use-ml-07
+    type: mcq
+    prompt: "A customer-support tool drafts replies to emails. In testing, 30% of drafts need substantial changes. When is this error rate most likely to be acceptable?"
+    options:
+      - text: "Never: 30% errors is too high for any product"
+        why: "Whether an error rate is acceptable depends on what happens to the errors, not on the number alone."
+      - text: "When the drafts are sent to customers automatically, to save agent time"
+        why: "Then 30% of customers receive poor replies with nothing to catch them: the same model becomes unacceptable."
+      - text: "Only after the error rate is brought below 1%"
+        why: "That bar is needed for fully automatic sending, not for suggestions a person edits."
+      - text: "When an agent reviews and edits each draft before it is sent"
+        correct: true
+        why: "A human in the loop catches the errors; the model only needs to save time on average."
+    explanation: "Human in the loop is a design choice that lowers the reliability bar. The more autonomy the system has, the more reliable it must be."
+  - id: a1-when-to-use-ml-08
+    type: multi
+    prompt: "A retailer wants to predict which deliveries will arrive late. Which of these are questions about data availability that you should answer before committing to ML? Select all that apply."
+    options:
+      - text: "Is the actual delivery time recorded for past orders, and how soon after delivery?"
+        correct: true
+        why: "That is the label and its delay."
+      - text: "Do last year's orders look like the orders we will see after the new courier contract?"
+        correct: true
+        why: "Representativeness: data from a different situation may not transfer."
+      - text: "Are we allowed to use customers' addresses and order history for this purpose?"
+        correct: true
+        why: "Permission and privacy can rule out data that exists."
+      - text: "Which deep learning framework should we use?"
+        why: "A tooling choice that comes much later, and may not be needed at all."
+    explanation: "Data availability covers inputs, labels (and their delay), representativeness and permission to use the data."
+  - id: a1-when-to-use-ml-09
+    type: output
+    prompt: "What does this back-of-envelope calculation print?"
+    code: |
+      tp = 1000 * 0.1 * 0.6
+      fp = tp * (1 - 0.5) / 0.5
+      print(round(100 * tp - 30 * fp))
+    answer: "4200"
+    explanation: "$TP = 60$, and at precision 0.5 there is one false positive per true positive, so $FP = 60$. Value $= 100 \\times 60 - 30 \\times 60 = 4{,}200$."
+  - id: a1-when-to-use-ml-10
+    type: mcq
+    prompt: "A fraud analyst's rule, \"amount over £200 from a new device\", works reasonably well. You are now building the first ML model. What should happen to the rule?"
+    options:
+      - text: "Keep it as a baseline to beat, and offer it to the model as a feature"
+        correct: true
+        why: "The rule's metrics set the bar, and its logic often makes a strong input feature. It is also the natural fallback."
+      - text: "Delete it, so the model learns everything from raw data"
+        why: "That throws away domain knowledge and the baseline you need to judge the model."
+      - text: "Replace it with a more complex rule before starting on ML"
+        why: "Possibly useful, but it does not answer how the existing rule relates to the model."
+      - text: "Run the rule and the model separately and flag only cases both agree on"
+        why: "That can only lower recall below the weaker of the two, and is not how to migrate from heuristics."
+    explanation: "Rules are the first baseline, a source of features and a fallback when the model is unavailable."

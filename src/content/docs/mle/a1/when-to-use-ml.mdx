@@ -1,0 +1,203 @@
+---
+title: "When to use machine learning, and when not to"
+module: a1
+order: 1
+estMinutes: 18
+objectives:
+  - "Decide whether a problem needs ML by checking for a learnable pattern, data, scale and tolerance for mistakes"
+  - "Build and measure a rule-based baseline before reaching for a model"
+  - "Estimate the value of a prediction system from its precision, recall and the cost of each kind of mistake"
+goDeeper: fsdl-2022-when-to-use-ml
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Foundations taught you how to *build* models. Track A is about building **ML systems that do a job in
+the real world**: they get data, make predictions, drive decisions, and keep working for months while
+the world changes. The capstone at the end of the track is a classifier served by FastAPI in a Docker
+container, with tests, continuous integration, experiment tracking and a drift report.
+
+Most ML projects that fail don't fail because the model was weak. They fail because the team solved the
+wrong problem, measured the wrong thing, or built ML where a simple rule would have done. This module is
+about the work that comes *before* modelling: **problem framing**. It starts with the most basic question.
+
+## Is ML the right tool?
+
+Martin Zinkevich's widely read *Rules of Machine Learning* (Google) opens with Rule #1: "Don't be afraid
+to launch a product without machine learning." A rule written by a domain expert, a lookup table or a SQL
+query is cheaper to build, easier to explain and easier to fix. ML earns its place only when it beats
+those options by enough to pay for itself.
+
+Ask these questions, roughly in this order:
+
+1. **Is there a pattern, and is it too complex for rules?** Spam, fraud, image content and demand
+   forecasting depend on many weak signals that interact. Computing tax owed or checking that a password
+   is long enough does not: the logic is known exactly, so write the logic.
+2. **Is there data that shows the pattern?** You need examples, and for supervised learning you need
+   <Term id="label" text="labels" />. If you have neither, can you collect them (logs, human review,
+   the product's own feedback)?
+3. **Can you tolerate mistakes?** Every model is sometimes wrong. What does a wrong answer cost, and can
+   a human or a fallback catch it?
+4. **Is there enough scale?** A model that saves 30 seconds per decision is worthless for 10 decisions
+   a month and valuable for 10 million.
+5. **Does the pattern change?** If fraudsters adapt every month, hand-written rules decay quickly, and a
+   model that is retrained on fresh data can keep up. This cuts both ways: a changing world also means
+   you must monitor and retrain.
+
+A useful summary: ML is a good fit when the task is **repeated often, depends on fuzzy patterns, has
+data, and tolerates some error**. Remove any one of those and look hard at the alternatives.
+
+### When ML is the wrong tool
+
+- **Exact answers are required and the rules are known.** Payroll, tax, unit conversion, access
+  control. A model that is right 99.9% of the time is a bug generator here.
+- **No data and no way to get it.** A brand-new product with no history and no labelling budget. Start
+  with rules, log everything, and revisit once data exist.
+- **Errors are catastrophic and nothing catches them.** If a wrong output can cause serious harm with no
+  human review and no fallback, either redesign the system so mistakes are caught, or don't automate.
+- **A simple rule already does almost as well.** The rest of this lesson shows how to check.
+
+:::note[Human in the loop is a design choice]
+"Can we tolerate mistakes?" depends on the design. A model that *suggests* a reply for an agent to edit
+can be wrong often; a model that *sends* the reply cannot. Full Stack Deep Learning (2022) frames this as
+a spectrum from tools that assist people to fully autonomous systems: the more autonomy, the higher the
+reliability bar.
+:::
+
+## Rules first: measure the heuristic like a model
+
+Suppose a card issuer wants to reduce fraud losses. Before any modelling, an analyst proposes a rule:
+"flag a transaction over £200 if it comes from a new device or a foreign merchant". Treat the rule
+exactly like a model: run it on historical data and compute its <Term id="precision" /> and
+<Term id="recall" />.
+
+The data below are synthetic, generated so that fraud is rare and more likely for large amounts, new
+devices and foreign merchants:
+
+```python
+import numpy as np
+import pandas as pd
+
+rng = np.random.default_rng(0)
+n = 20_000
+df = pd.DataFrame({
+    "amount": rng.lognormal(mean=4, sigma=1, size=n).round(2),
+    "new_device": rng.random(n) < 0.1,
+    "foreign": rng.random(n) < 0.05,
+})
+# Fraud is rare, and more likely for large amounts, new devices and foreign merchants.
+logit = -7.5 + 0.7 * np.log(df["amount"]) + 2.0 * df["new_device"] + 1.5 * df["foreign"]
+df["fraud"] = rng.random(n) < 1 / (1 + np.exp(-logit))
+print(f"fraud rate: {df['fraud'].mean():.3%}")
+
+flag = (df["amount"] > 200) & (df["new_device"] | df["foreign"])
+tp = (flag & df["fraud"]).sum()
+print(f"rule flags {flag.mean():.2%} of transactions")
+print(f"precision {tp / flag.sum():.3f}  recall {tp / df['fraud'].sum():.3f}")
+```
+
+```text title="Output"
+fraud rate: 1.805%
+rule flags 1.52% of transactions
+precision 0.224  recall 0.188
+```
+
+The rule flags 1.5% of transactions; about one flag in five is real fraud, and it catches about 19% of
+all fraud. That is now the **number to beat**. A model that cannot clearly improve on it, after you
+count the cost of building and running the model, should not ship. Rules are also a fine *first
+launch*: they get the product, the logging and the review process working, which a later model needs
+anyway.
+
+:::tip[Rules become features]
+A good heuristic often makes a good feature. "Amount over £200 from a new device" can be a column the
+model sees. Zinkevich's guide recommends exactly this kind of migration from heuristics to a learned
+model, instead of throwing the domain knowledge away.
+:::
+
+## The cost of being wrong
+
+Precision and recall describe *how often* a system is wrong. A business needs *how much* it costs. For
+a system that flags cases, each true positive brings some value $v_{TP}$ (fraud stopped) and each false
+positive has a cost $c_{FP}$ (a customer's card is blocked and someone has to call them). Over a month:
+
+$$
+\text{value} = v_{TP} \cdot TP - c_{FP} \cdot FP
+$$
+
+where $TP$ and $FP$ are the monthly counts of true and false positives. You rarely know these counts in
+advance, but you can estimate them from the volume $N$, the base rate $b$ (the share of cases that are
+positive), and the recall $r$ and precision $p$ you expect:
+
+$$
+TP = N \cdot b \cdot r, \qquad FP = TP \cdot \frac{1 - p}{p}
+$$
+
+The second formula comes from $p = TP / (TP + FP)$, rearranged.
+
+**Worked example.** The issuer sees $N = 1{,}000{,}000$ transactions a month with base rate
+$b = 0.018$, so 18,000 are fraud. Stopping a fraud saves £150 on average; a false alarm costs £5.
+
+- **The rule** ($r = 0.188$, $p = 0.224$): $TP = 3{,}384$, $FP \approx 11{,}723$,
+  value $\approx 3{,}384 \cdot 150 - 11{,}723 \cdot 5 \approx$ £449,000 a month.
+- **A hoped-for model** ($r = 0.5$, $p = 0.3$): $TP = 9{,}000$, $FP = 21{,}000$,
+  value $= 1{,}350{,}000 - 105{,}000 =$ £1,245,000 a month.
+
+The *incremental* value of ML is the difference, about £796,000 a month, before subtracting the cost of
+engineers, compute, labelling and monitoring. Here the case is easy. With 10,000 transactions a month
+the same arithmetic gives about £8,000, which may not pay for one engineer: same model, same metrics,
+different decision. Back-of-envelope numbers like these are the first thing to put in front of a
+stakeholder.
+
+:::caution[Errors are not symmetric, and not only about money]
+False positives and false negatives almost never cost the same. They can also fall on different people:
+a missed fraud costs the bank, a false alarm costs the customer time and embarrassment. When a mistake
+falls on a person (a rejected loan, a flagged benefits claim), the fairness questions from
+[F11](/foundations/f11/why-responsible-ai/) belong in this estimate too, not as an afterthought.
+:::
+
+## Data availability
+
+The second question, "is there data?", has several parts:
+
+- **Inputs.** Are the signals you need recorded, at the moment you would need them, at enough volume?
+- **Labels.** Where does the ground truth come from? Sometimes it arrives for free (did the customer
+  click, did they repay), sometimes late (a chargeback weeks after a transaction), sometimes only from
+  paid human review. Lesson 2 covers this in detail.
+- **Representativeness.** Do the historical data look like the cases the system will see? A fraud
+  dataset from before a new payment method launched says little about that method.
+- **Permission.** Are you allowed to use the data for this purpose? Privacy, consent and contracts can
+  rule out data that exists ([F11 privacy](/foundations/f11/privacy/)).
+
+If the answer to "labels?" is "not yet", that is not always a dead end. Launching a rule, logging its
+decisions and having reviewers label a sample builds the dataset the first model will need. Products
+that collect labels as a side effect of being used (a user correcting a suggestion, a reviewer
+confirming a flag) can improve with use; this is sometimes called a **data flywheel**.
+
+## A one-minute checklist
+
+| Question | Good sign for ML | Warning sign |
+|---|---|---|
+| Pattern | many weak, interacting signals | logic known exactly |
+| Data | logged inputs and labels, or a way to get them | no history, no labelling plan |
+| Mistakes | cheap, or caught by a human or fallback | catastrophic and uncaught |
+| Scale | many decisions per day | a handful per month |
+| Change | the world shifts; retraining helps | stable, fully specified |
+| Alternatives | rules measured and clearly beaten | nobody has tried a rule |
+
+## Try it
+
+The first exercise turns the fraud rule into a reusable evaluation. The second estimates the value of a
+prediction system from its metrics and costs, as in the worked example.
+
+<CodeExercise id="a1-when-to-use-ml-01" />
+
+<CodeExercise id="a1-when-to-use-ml-02" />
+
+## Summary
+
+- ML fits tasks that are repeated often, depend on fuzzy patterns, have data and tolerate some error.
+- Exact, fully specified logic, missing data, or catastrophic uncaught errors are reasons not to use ML.
+- Write the obvious rule first and measure it like a model; it becomes the baseline, and often a feature.
+- Convert precision and recall into money (or time, or harm) with the volume, base rate and the cost of
+  each error type. The decision to build depends on the *incremental* value over the rule.
+- Check that inputs, labels and permission to use them exist before committing to a model.

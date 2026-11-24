@@ -1,0 +1,132 @@
+items:
+  - id: a1-framing-the-problem-01
+    type: order
+    prompt: "A subscription business wants ML to help with cancellations. Put the framing steps in the order the lesson recommends working through them."
+    items:
+      - "Business objective: reduce revenue lost to cancellations"
+      - "Decision: which customers get a retention call each week"
+      - "Prediction: the probability each customer cancels within 30 days"
+      - "Label: the account was closed within 30 days of the prediction date"
+    explanation: "Work backwards from what should change: the objective, the decision that moves it, the prediction that improves the decision, and the recorded fact that tells you whether the prediction was right."
+  - id: a1-framing-the-problem-02
+    type: mcq
+    prompt: "A streaming service plans to give a discount to the customers a churn model scores highest. What is the main gap between this prediction and the decision?"
+    options:
+      - text: "Discounts should be given at random instead"
+        why: "Random assignment is useful for an experiment that measures uplift, but it is not a targeting strategy in itself."
+      - text: "The label window should be 1 day instead of 30"
+        why: "A shorter window does not fix the mismatch, and leaves too little time to act."
+      - text: "The model predicts who will cancel, not whose decision the discount will change"
+        correct: true
+        why: "Some high scorers will leave anyway and some would stay anyway; the discount is wasted on both. Uplift modelling targets the effect directly."
+      - text: "Churn models cannot be trained on streaming data"
+        why: "Nothing prevents it; the issue is what the model predicts, not whether it can be trained."
+    explanation: "Write out the decision chain and check that the prediction is what the decision needs. Here the decision needs the effect of the offer, while the model predicts cancellation: a proxy worth naming."
+  - id: a1-framing-the-problem-03
+    type: mcq
+    prompt: "A team builds a churn table with one row per customer per week and splits rows at random into train and test. Test AUC is 0.93; in production it is 0.71. What is the most likely framing mistake?"
+    options:
+      - text: "The same customers appear in both train and test, so the test set is not independent"
+        correct: true
+        why: "Neighbouring weeks of one customer are nearly identical; splitting by customer or by time avoids this leakage."
+      - text: "The test set is too small"
+        why: "Small test sets make scores noisy in both directions, not systematically optimistic like this."
+      - text: "The model is underfitting"
+        why: "Underfitting would show up as a poor test score too, not a gap between test and production."
+      - text: "AUC is the wrong metric for churn"
+        why: "The metric choice matters, but it does not explain why the same metric collapses in production."
+    explanation: "The unit of prediction decides what counts as independent. Repeated units must not be split across train and test; split by customer or, for forecasting, by time."
+  - id: a1-framing-the-problem-04
+    type: mcq
+    prompt: "For a churn model with snapshots taken two months ago, an engineer computes \"number of support tickets in the last 30 days\" by running today's query. Why is this a problem?"
+    options:
+      - text: "The feature uses tickets from after the prediction time, which leaks the future"
+        correct: true
+        why: "The last 30 days relative to today are in the future relative to the snapshot, and may include \"please cancel\" tickets."
+      - text: "Counting features should be scaled first"
+        why: "Scaling does not remove information that should not be there."
+      - text: "Support tickets are not predictive of churn"
+        why: "They often are; the problem is when they were counted."
+      - text: "30 days is too short a window for a feature"
+        why: "Window length is a modelling choice; the bug is the reference date."
+    explanation: "Features may only use information available before the prediction time. Computing them relative to today instead of the snapshot date is a common source of leakage."
+  - id: a1-framing-the-problem-05
+    type: numeric
+    prompt: "A churn label means \"no activity in the 60 days after the prediction date\". Your data run up to and including day 400. What is the latest prediction day whose label window has fully passed?"
+    answer: 340
+    tol: 0
+    explanation: "The window for a prediction on day $t$ is $(t, t+60]$. It has fully passed when $t + 60 \\le 400$, so $t \\le 340$."
+  - id: a1-framing-the-problem-06
+    type: multi
+    prompt: "Which of these labels typically arrive weeks or more after the prediction? Select all that apply."
+    options:
+      - text: "Whether a customer cancels within 30 days"
+        correct: true
+        why: "By definition the label is unknown until the 30 days have passed."
+      - text: "Whether a user clicks a search result"
+        why: "Clicks arrive within seconds or minutes."
+      - text: "Whether a loan is repaid"
+        correct: true
+        why: "Defaults happen months or years after the loan is issued."
+      - text: "Whether a card payment was fraudulent, from customer disputes"
+        correct: true
+        why: "Disputes can take weeks or months to arrive."
+    explanation: "Label delay ranges from seconds (clicks) to years (loan default). Long delays make training data stale and slow down monitoring and experiments."
+  - id: a1-framing-the-problem-07
+    type: mcq
+    prompt: "A lender trains a default model only on loans issued in the last three months, using \"has defaulted so far\" as the label. What goes wrong?"
+    options:
+      - text: "Nothing: recent data is always the most relevant"
+        why: "Recent inputs are relevant, but their labels have not matured."
+      - text: "The model will overfit because three months is too much data"
+        why: "The volume is not the issue."
+      - text: "Most eventual defaults have not happened yet, so many future defaulters are labelled as good"
+        correct: true
+        why: "Label delay: the labels are incomplete, so the model learns that risky loans look safe and evaluation understates the default rate."
+      - text: "Loans should be the unit of prediction, not borrowers"
+        why: "Here they already are; the problem is label maturity."
+    explanation: "Only use rows whose labels have matured: older than the label window, or than a high percentile of the delay distribution."
+  - id: a1-framing-the-problem-08
+    type: cloze
+    prompt: "The time between making a prediction and being able to know its true label is called label ____."
+    accept: [ "delay", "label delay", "lag", "latency" ]
+    explanation: "Label delay. It limits how fresh training data can be and how quickly you can measure model quality."
+  - id: a1-framing-the-problem-09
+    type: mcq
+    prompt: "A health system predicts each patient's health-care costs next year and offers extra care to those with the highest predictions. Which framing problem does F11 warn about here?"
+    options:
+      - text: "The unit of prediction should be the hospital, not the patient"
+        why: "The decision is about individual patients, so patient is the right unit."
+      - text: "Costs have too long a label delay to be useful"
+        why: "A year is long, but the main problem is what the label measures."
+      - text: "Costs are a proxy for need, and groups with less access to care have lower costs at the same level of need"
+        correct: true
+        why: "This is the Obermeyer et al. (2019) finding: the target, not the model fit, caused the disparity."
+      - text: "Costs should be predicted with a classifier instead of a regressor"
+        why: "The task type does not fix a target that measures the wrong thing."
+    explanation: "Always ask whether the label you can record is the thing you care about, and for whom the two differ."
+  - id: a1-framing-the-problem-10
+    type: mcq
+    prompt: "An online shop wants to choose which 10 products to show each visitor on its home page. Which framing fits best?"
+    options:
+      - text: "Regression: predict each visitor's total spend"
+        why: "Total spend does not say which products to show."
+      - text: "Clustering visitors into segments, with no labels"
+        why: "Could be a starting point, but click and purchase labels exist, so a supervised ranking is more direct."
+      - text: "Binary classification per visitor: will they buy anything today?"
+        why: "Wrong unit: the decision is about visitor-product pairs, not visitors."
+      - text: "Ranking: score each visitor-product pair, show the top 10, and evaluate the top of the list"
+        correct: true
+        why: "The unit is user x item, and the decision uses only the top of the ranked list."
+    explanation: "Pick the framing whose output plugs directly into the decision. Here the decision is a top-10 list per visitor."
+  - id: a1-framing-the-problem-11
+    type: output
+    prompt: "Customers are labelled as churned if they have no login in the window (snapshot, snapshot + 30 days]. What does this print?"
+    code: |
+      from datetime import date, timedelta
+      snapshot = date(2026, 3, 1)
+      logins = {"a": [date(2026, 3, 31)], "b": [date(2026, 3, 1)], "c": [date(2026, 4, 1)]}
+      end = snapshot + timedelta(days=30)
+      print(sorted(c for c, ds in logins.items() if not any(snapshot < d <= end for d in ds)))
+    answer: "['b', 'c']"
+    explanation: "The window is 2 March to 31 March inclusive. a logs in on 31 March (inside). b only on 1 March, the snapshot itself, which is excluded. c only on 1 April, after the window."

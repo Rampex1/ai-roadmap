@@ -1,0 +1,7 @@
+term: "A/B test"
+short: "An online experiment that randomly splits traffic between two versions of a system and compares their metrics."
+body: |
+  Random assignment makes the groups comparable, so a difference in the outcome metric can be attributed to the
+  change rather than to who happened to see it. In ML systems an A/B test is the usual way to check that an
+  offline improvement also improves online product metrics without hurting guardrails.
+related: ["proxy-metric", "p-value"]

@@ -1,0 +1,56 @@
+id: a1-metrics-and-baselines-01
+lesson: mle/a1/metrics-and-baselines
+title: Expected cost of a threshold
+prompt: |
+  Write `total_cost(y, p, t, c_fp, c_fn)`. Flag every case with predicted probability `p >= t`, then
+  return
+
+  $$c_{FP} \cdot FP + c_{FN} \cdot FN$$
+
+  `y` holds the true labels as 0/1 or booleans, `p` the predicted probabilities (numpy arrays).
+
+  For the example data below, `total_cost(y, p, 0.5, 5, 150)` is `305` (2 missed frauds and 1 false
+  alarm) and `total_cost(y, p, 0.1, 5, 150)` is `20` (0 missed, 4 false alarms).
+starter: |
+  import numpy as np
+
+  y = np.array([1, 0, 0, 1, 0, 1, 0, 0, 0, 0])
+  p = np.array([0.9, 0.6, 0.2, 0.3, 0.1, 0.15, 0.05, 0.02, 0.4, 0.01])
+
+  def total_cost(y, p, t, c_fp, c_fn):
+      return 0
+
+  print(total_cost(y, p, 0.5, 5, 150), total_cost(y, p, 0.1, 5, 150))
+solution: |
+  import numpy as np
+
+  y = np.array([1, 0, 0, 1, 0, 1, 0, 0, 0, 0])
+  p = np.array([0.9, 0.6, 0.2, 0.3, 0.1, 0.15, 0.05, 0.02, 0.4, 0.01])
+
+  def total_cost(y, p, t, c_fp, c_fn):
+      y = np.asarray(y).astype(bool)
+      flags = np.asarray(p) >= t
+      fp = np.sum(flags & ~y)
+      fn = np.sum(~flags & y)
+      return c_fp * fp + c_fn * fn
+
+  print(total_cost(y, p, 0.5, 5, 150), total_cost(y, p, 0.1, 5, 150))
+tests: |
+  import numpy as np
+  assert total_cost(y, p, 0.5, 5, 150) == 305, f"At t=0.5 expect 2 FN and 1 FP, cost 305, got {total_cost(y, p, 0.5, 5, 150)}"
+  assert total_cost(y, p, 0.1, 5, 150) == 20, f"At t=0.1 expect 0 FN and 4 FP (0.6, 0.2, 0.1, 0.4), cost 20, got {total_cost(y, p, 0.1, 5, 150)}"
+  assert total_cost(y, p, 0.3, 5, 150) == 160, f"Flag p >= t, so a case with p exactly equal to t is flagged: at t=0.3 expect 1 FN and 2 FP, cost 160, got {total_cost(y, p, 0.3, 5, 150)}"
+  assert total_cost(y, p, 2.0, 1, 10) == 30, "A threshold above every probability flags nothing: cost is c_fn times the number of positives"
+  assert total_cost(y, p, 0.0, 1, 10) == 7, "A threshold of 0 flags everything: cost is c_fp times the number of negatives"
+  _rng = np.random.default_rng(0)
+  _y = _rng.random(300) < 0.1
+  _p = np.clip(_y * 0.3 + _rng.random(300) * 0.7, 0, 1)
+  for _t, _a, _b in [(0.2, 2, 50), (0.5, 7, 40), (0.65, 1, 1)]:
+      _f = _p >= _t
+      _want = _a * np.sum(_f & ~_y) + _b * np.sum(~_f & _y)
+      assert total_cost(_y, _p, _t, _a, _b) == _want, f"Random data, t={_t}, c_fp={_a}, c_fn={_b}: expected {_want}, got {total_cost(_y, _p, _t, _a, _b)}"
+  assert total_cost(_y.astype(int), _p, 0.5, 7, 40) == total_cost(_y, _p, 0.5, 7, 40), "y may be given as 0/1 integers: convert it to booleans first"
+hints:
+  - "flags = p >= t gives a boolean array."
+  - "Convert y with np.asarray(y).astype(bool) so that ~y means not fraud."
+  - "fp = np.sum(flags & ~y) and fn = np.sum(~flags & y)."

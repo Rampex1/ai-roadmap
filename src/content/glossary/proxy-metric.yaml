@@ -1,0 +1,7 @@
+term: "Proxy metric"
+short: "A metric you can measure easily that stands in for the outcome you really care about."
+body: |
+  Offline metrics such as precision or expected cost on held-out data are proxies for online results, which are
+  themselves proxies for business objectives. A proxy is useful only while it moves with the true goal; optimising
+  it hard can break that link (Goodhart's law), so pair it with guardrail metrics.
+related: ["a-b-test", "proxy-variable"]
