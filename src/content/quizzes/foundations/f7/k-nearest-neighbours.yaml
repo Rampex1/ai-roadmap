@@ -1,0 +1,122 @@
+items:
+  - id: f7-k-nearest-neighbours-01
+    type: mcq
+    prompt: "What is the training accuracy of a 1-nearest-neighbour classifier, assuming no two identical training points have different labels?"
+    options:
+      - text: "100%"
+        correct: true
+        why: "Each training point is its own nearest neighbour, so it predicts its own label."
+      - text: "About the same as its validation accuracy"
+        why: "k = 1 is the extreme overfitting case, with a large gap between the two."
+      - text: "50%"
+        why: "Nothing makes it chance level on the training data."
+    explanation: "A perfect training score here says nothing about new data, a reminder to always validate."
+  - id: f7-k-nearest-neighbours-02
+    type: mcq
+    prompt: "What happens as $k$ grows towards the number of training points?"
+    options:
+      - text: "Bias rises: predictions approach the overall majority class"
+        correct: true
+        why: "Averaging over almost everyone washes out local structure."
+      - text: "Variance rises"
+        why: "Larger neighbourhoods make predictions more stable, lowering variance."
+      - text: "The model overfits more"
+        why: "Small k overfits; large k underfits."
+    explanation: "k is a bias–variance dial: small k is jagged and high-variance, large k is smooth and high-bias."
+  - id: f7-k-nearest-neighbours-03
+    type: mcq
+    prompt: "Why does unscaled k-NN do badly when one feature is in thousands and another in hundredths?"
+    options:
+      - text: "The distance is dominated by the large-scale feature, so the small-scale one is effectively ignored"
+        correct: true
+        why: "Squared differences of thousands swamp squared differences of hundredths."
+      - text: "k-NN cannot handle decimals"
+        why: "It can; the issue is how distances weight features."
+      - text: "The large values overflow"
+        why: "Thousands are tiny for floating point numbers."
+    explanation: "Standardise features inside a pipeline before any distance-based model."
+  - id: f7-k-nearest-neighbours-04
+    type: numeric
+    prompt: "With $k = 5$, a new point's nearest neighbours have labels 1, 0, 1, 1, 0. Which class does k-NN predict?"
+    answer: 1
+    tol: 0
+    explanation: "Three votes for class 1 against two for class 0."
+  - id: f7-k-nearest-neighbours-05
+    type: numeric
+    prompt: "A k-NN **regressor** with $k = 3$ finds neighbours with targets 2, 4 and 9. What does it predict?"
+    answer: 5
+    tol: 0.001
+    explanation: "For regression, k-NN averages the neighbours' targets: (2 + 4 + 9) / 3 = 5."
+  - id: f7-k-nearest-neighbours-06
+    type: mcq
+    prompt: "What is the curse of dimensionality, as it affects k-NN?"
+    options:
+      - text: "In many dimensions all points are roughly equally far apart, so the nearest neighbours are hardly more similar than random points"
+        correct: true
+        why: "The lesson's simulation: with 1,000 features the nearest point was 90% as far as the farthest."
+      - text: "Distances cannot be computed in more than three dimensions"
+        why: "The Euclidean distance works in any number of dimensions."
+      - text: "More features always make k-NN more accurate"
+        why: "Irrelevant features add noise to every distance and usually hurt."
+    explanation: "Reduce dimensions or select features before using k-NN on wide data."
+  - id: f7-k-nearest-neighbours-07
+    type: mcq
+    prompt: "How do the costs of `fit` and `predict` compare for k-NN?"
+    options:
+      - text: "fit is cheap (it stores the data); predict is expensive (it compares with the training points)"
+        correct: true
+        why: "All the work happens at prediction time."
+      - text: "fit is expensive and predict is cheap, as for logistic regression"
+        why: "That describes models that learn weights, not k-NN."
+      - text: "Both are expensive"
+        why: "fit only stores the training set, plus an index to speed up searches."
+    explanation: "k-NN is fast to train and slow to use, the reverse of most models."
+  - id: f7-k-nearest-neighbours-08
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      X_train = np.array([[0.0, 0.0], [3.0, 4.0], [1.0, 1.0]])
+      x_new = np.array([0.0, 0.0])
+      print(np.argsort(np.linalg.norm(X_train - x_new, axis=1)))
+    answer: "[0 2 1]"
+    explanation: "The distances are 0, 5 and about 1.41, so from nearest to farthest the indices are 0, 2, 1."
+  - id: f7-k-nearest-neighbours-09
+    type: mcq
+    prompt: "You start a new tabular classification project. What should come first after splitting off a test set?"
+    options:
+      - text: "A cross-validated baseline such as DummyClassifier, then a regularised logistic regression in a pipeline"
+        correct: true
+        why: "The baseline sets the bar; a simple model shows how much signal there is."
+      - text: "The most complex model available, tuned on the test set"
+        why: "Start simple, and never tune on the test set."
+      - text: "Plotting the test set to choose features"
+        why: "Looking at the test set to make choices leaks it into the model."
+    explanation: "Baseline, simple model, then more complex models compared with the same CV folds."
+  - id: f7-k-nearest-neighbours-10
+    type: order
+    prompt: "Put the lesson's workflow for a tabular project in order."
+    items:
+      - "Split off a test set"
+      - "Score a dummy baseline with cross-validation"
+      - "Fit a simple regularised model in a pipeline"
+      - "Compare model families with the same CV folds and metric"
+      - "Choose the decision threshold on cross-validated predictions"
+      - "Evaluate the final model once on the test set"
+    explanation: "Every choice uses training data and cross-validation; the test set is touched only at the end."
+  - id: f7-k-nearest-neighbours-11
+    type: multi
+    prompt: "Which are genuine weaknesses of k-NN?"
+    options:
+      - text: "Predictions are slow on large training sets"
+        correct: true
+        why: "Each prediction compares with many training points."
+      - text: "It degrades in high dimensions"
+        correct: true
+        why: "Distances lose meaning as the number of features grows."
+      - text: "Irrelevant features hurt it"
+        correct: true
+        why: "They add noise to every distance, and k-NN cannot learn to ignore them."
+      - text: "It can only draw straight-line decision boundaries"
+        why: "Its boundaries can be any shape; that is one of its strengths."
+    explanation: "k-NN is flexible but slow at prediction time and sensitive to scaling, irrelevant features and dimension."

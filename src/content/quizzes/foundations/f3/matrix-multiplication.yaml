@@ -7,12 +7,12 @@ items:
       - text: AB is 3 x 2; BA is not defined
         correct: true
         why: Outer sizes for AB; mismatched inner sizes for BA.
+      - text: AB is 2 x 3; BA is not defined
+        why: The result has A's rows (3) and B's columns (2).
       - text: AB is 5 x 5; BA is 3 x 2
         why: The outer sizes, not the inner ones, give the shape.
       - text: AB is 3 x 2; BA is 2 x 3
         why: BA would need B's 2 columns to match A's 3 rows.
-      - text: AB is 2 x 3; BA is not defined
-        why: The result has A's rows (3) and B's columns (2).
   - id: f3-matrix-multiplication-02
     type: output
     prompt: "What does this print?"
@@ -56,10 +56,10 @@ items:
       - text: AI = A
         correct: true
         why: The identity is the do-nothing map.
-      - text: AB = BA
-        why: This fails for most pairs, for example a rotation and a stretch.
       - text: (AB) transposed equals A transposed times B transposed
         why: The order reverses, giving B transposed times A transposed.
+      - text: AB = BA
+        why: This fails for most pairs, for example a rotation and a stretch.
   - id: f3-matrix-multiplication-06
     type: output
     prompt: "What does this print?"
@@ -86,13 +86,13 @@ items:
     prompt: "A batch `X` of shape (64, 10) goes through a layer with weight `W` of shape (3, 10) and bias `b` of shape (3,). Which line computes all 64 outputs?"
     explanation: "Examples are rows, so you need $(64 \\times 10)(10 \\times 3) = 64 \\times 3$, which is `X @ W.T`, with `b` broadcast onto every row."
     options:
-      - text: X @ W.T + b
-        correct: true
-        why: Shapes (64, 10) and (10, 3) give (64, 3).
       - text: W @ X + b
         why: (3, 10) times (64, 10) has mismatched inner sizes.
       - text: X @ W + b
         why: (64, 10) times (3, 10) has mismatched inner sizes.
+      - text: X @ W.T + b
+        correct: true
+        why: Shapes (64, 10) and (10, 3) give (64, 3).
       - text: X * W + b
         why: Element-wise multiplication of (64, 10) by (3, 10) does not broadcast and is not a layer.
   - id: f3-matrix-multiplication-09
@@ -109,10 +109,10 @@ items:
     prompt: "A network applies $W_1$ then $W_2$ with **no** activation function in between. What is true?"
     explanation: "$W_2(W_1\\mathbf{x}) = (W_2W_1)\\mathbf{x}$, so the two layers equal one linear layer with matrix $W_2 W_1$."
     options:
+      - text: It can represent more functions than a single layer
+        why: Without a nonlinearity, it is still one linear map.
       - text: It is equivalent to a single linear layer with matrix W2 W1
         correct: true
         why: Composition of linear maps is one matrix product.
-      - text: It can represent more functions than a single layer
-        why: Without a nonlinearity, it is still one linear map.
       - text: It is equivalent to a single layer with matrix W1 W2
         why: W1 acts first, so it sits on the right, next to x.

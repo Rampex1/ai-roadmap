@@ -3,20 +3,22 @@ items:
     type: mcq
     prompt: "Among all applicants in group B who received a score of about 0.7, 47% repaid. What does this say about the score?"
     options:
+      - text: "Calibration can only be judged for the whole population, not per group"
+        why: "Calibration within groups is checked exactly like this, separately for each group."
+      - text: "It is calibrated, because 47% is close enough to 50%"
+        why: "Calibration compares with the score itself, 0.7, not with 50%."
       - text: "It is not calibrated for group B: it overstates B's chance of repaying"
         correct: true
         why: "Calibrated means a score of 0.7 corresponds to about 70% positives. 47% is far lower."
-      - text: "It is calibrated, because 47% is close enough to 50%"
-        why: "Calibration compares with the score itself, 0.7, not with 50%."
       - text: "It understates B's chance of repaying"
         why: "The observed rate is below the score, so the score is too high, not too low."
-      - text: "Calibration can only be judged for the whole population, not per group"
-        why: "Calibration within groups is checked exactly like this, separately for each group."
     explanation: "Bin the scores and compare each bin's score with its observed positive rate, per group."
   - id: f11-calibration-and-trade-offs-02
     type: mcq
     prompt: "A model gives every applicant in group A a score of 0.6 and every applicant in group B a score of 0.3, which are exactly the groups' repayment rates. Which is true?"
     options:
+      - text: "It is the best possible model"
+        why: "It has no ability to separate individuals, so it is close to the worst useful model."
       - text: "It is calibrated within groups but useless for telling good payers from bad within a group"
         correct: true
         why: "Each score matches its group's observed rate, yet everyone in a group gets the same score."
@@ -24,8 +26,6 @@ items:
         why: "Calibration only asks that a score of s means a fraction s of positives, which holds here."
       - text: "It satisfies equalized odds"
         why: "Any threshold between 0.3 and 0.6 approves all of A and none of B (TPR and FPR of 1 versus 0); only thresholds that approve or reject everyone equalise them."
-      - text: "It is the best possible model"
-        why: "It has no ability to separate individuals, so it is close to the worst useful model."
     explanation: "Calibration says a score is honest on average. It does not say the score separates positives from negatives."
   - id: f11-calibration-and-trade-offs-03
     type: numeric
@@ -49,39 +49,39 @@ items:
       - text: "The groups have the same base rate"
         correct: true
         why: "With equal p, the identity gives equal FPR from equal PPV and TPR."
-      - text: "The classifier is perfect"
-        correct: true
-        why: "PPV = TPR = 1 and FPR = 0 in every group, whatever the base rates."
       - text: "The groups are the same size"
         why: "Group size does not appear in the identity; the base rate does."
       - text: "The model was trained with gradient descent"
         why: "The result is about counting cells of the confusion matrix and holds for any model."
+      - text: "The classifier is perfect"
+        correct: true
+        why: "PPV = TPR = 1 and FPR = 0 in every group, whatever the base rates."
     explanation: "The impossibility result's escape routes are equal base rates or perfect prediction, and neither is usually available."
   - id: f11-calibration-and-trade-offs-06
     type: mcq
     prompt: "What was the core of the 2016 COMPAS debate?"
     options:
-      - text: "ProPublica showed unequal false positive rates between Black and White defendants, while the maker showed the score had similar predictive value for both; both can hold when base rates differ"
-        correct: true
-        why: "This is the impossibility result in a real case: two reasonable criteria that cannot both hold."
       - text: "The tool used race as an input feature"
         why: "The debate was about error rates and predictive value, not about a race input."
       - text: "The score was found to be random"
         why: "Neither side claimed that; the disagreement was about which kind of fairness mattered."
       - text: "Both sides agreed the tool was fair by every definition"
         why: "The two sides reached opposite conclusions by using different criteria."
+      - text: "ProPublica showed unequal false positive rates between Black and White defendants, while the maker showed the score had similar predictive value for both; both can hold when base rates differ"
+        correct: true
+        why: "This is the impossibility result in a real case: two reasonable criteria that cannot both hold."
     explanation: "Among defendants who did not reoffend, ProPublica reported that 44.9% of Black and 23.5% of White defendants had been labelled higher risk."
   - id: f11-calibration-and-trade-offs-07
     type: mcq
     prompt: "A team lowers the decision threshold for group B, whose good payers tend to get lower scores, to equalise TPR with group A. What else will usually happen for group B?"
     options:
+      - text: "Nothing else changes"
+        why: "Every rate computed from the decisions can move when the threshold moves."
+      - text: "Its false positive rate falls"
+        why: "Approving more people can only add false positives, not remove them."
       - text: "Its false positive rate rises and its precision falls"
         correct: true
         why: "A lower threshold approves more of everyone in B, including people who would default."
-      - text: "Its false positive rate falls"
-        why: "Approving more people can only add false positives, not remove them."
-      - text: "Nothing else changes"
-        why: "Every rate computed from the decisions can move when the threshold moves."
       - text: "The model must be retrained"
         why: "Threshold changes are post-processing and need no retraining, which is their appeal."
     explanation: "Per-group thresholds trade one rate against others; expect some loss of precision and overall accuracy."
@@ -89,27 +89,27 @@ items:
     type: mcq
     prompt: "Reweighting training examples so an under-represented group counts more in the loss is which kind of mitigation?"
     options:
-      - text: "Pre-processing"
-        correct: true
-        why: "It changes the data (or its weights) before the model is fitted."
-      - text: "Post-processing"
-        why: "Post-processing changes decisions after the model is trained, for example thresholds."
       - text: "In-processing"
         why: "In-processing adds a constraint or penalty inside the training objective. Reweighting is usually classed as pre-processing because it acts on the data."
       - text: "Not a mitigation at all"
         why: "It is a standard and often effective mitigation."
+      - text: "Post-processing"
+        why: "Post-processing changes decisions after the model is trained, for example thresholds."
+      - text: "Pre-processing"
+        correct: true
+        why: "It changes the data (or its weights) before the model is fitted."
     explanation: "Pre-processing fixes data, in-processing changes training, post-processing changes decisions."
   - id: f11-calibration-and-trade-offs-09
     type: mcq
     prompt: "What does the impossibility result imply for practitioners?"
     options:
+      - text: "Use demographic parity, which avoids the result"
+        why: "Demographic parity also generally fails alongside the others when base rates differ."
+      - text: "Collect more data until all criteria hold"
+        why: "More data does not change the base rates, which drive the conflict."
       - text: "Someone must choose which fairness criterion matters for this decision, and that choice should be explicit and documented"
         correct: true
         why: "The result turns fairness into a choice between criteria, which is a value judgement about which errors matter."
       - text: "Fairness is impossible, so it can be ignored"
         why: "It means you cannot have every criterion at once, not that none can be met."
-      - text: "Use demographic parity, which avoids the result"
-        why: "Demographic parity also generally fails alongside the others when base rates differ."
-      - text: "Collect more data until all criteria hold"
-        why: "More data does not change the base rates, which drive the conflict."
     explanation: "Make the trade-off deliberately, with the people affected in mind."

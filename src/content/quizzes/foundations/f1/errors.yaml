@@ -42,16 +42,16 @@ items:
     prompt: "Which of these are good practice with try/except?"
     explanation: "Catch specific exceptions around the smallest piece of code that can fail for a reason you understand."
     options:
-      - text: Catch a specific exception type, such as except ValueError
-        correct: true
-        why: Specific types handle the expected problem without hiding unrelated bugs.
       - text: Keep the try block as small as possible
         correct: true
         why: A small block makes it clear which line you expect to fail.
-      - text: Wrap the whole program in try with a bare except so it never crashes
-        why: That hides every bug, including typos, and leaves you with wrong results and no clue why.
       - text: Use try/except to silence an error you do not understand yet
         why: Understand the error first. Silencing it usually turns a crash into a silent wrong answer.
+      - text: Wrap the whole program in try with a bare except so it never crashes
+        why: That hides every bug, including typos, and leaves you with wrong results and no clue why.
+      - text: Catch a specific exception type, such as except ValueError
+        correct: true
+        why: Specific types handle the expected problem without hiding unrelated bugs.
   - id: f1-errors-05
     type: output
     prompt: "What does this print?"
@@ -74,13 +74,13 @@ items:
     prompt: "Which line raises a TypeError?"
     explanation: "Adding a string and an int is an operation on incompatible types."
     options:
+      - text: 'total = {"a": 1}["b"]'
+        why: That is a KeyError, because the key b is missing.
+      - text: 'total = int("10") + 10'
+        why: int("10") is 10, and 10 + 10 is 20. No error.
       - text: 'total = "Score: " + 10'
         correct: true
         why: str + int is not defined, so this is a TypeError.
-      - text: 'total = int("10") + 10'
-        why: int("10") is 10, and 10 + 10 is 20. No error.
-      - text: 'total = {"a": 1}["b"]'
-        why: That is a KeyError, because the key b is missing.
   - id: f1-errors-07
     type: order
     prompt: "Put these debugging steps in a sensible order."
@@ -94,7 +94,7 @@ items:
     type: cloze
     prompt: "To signal bad input from your own function, write the keyword ____ followed by an exception, such as `ValueError(\"message\")`."
     explanation: "`raise` creates and throws an exception."
-    accept: ["raise"]
+    accept: [ "raise" ]
   - id: f1-errors-09
     type: mcq
     prompt: "A traceback shows `main.py, line 12, in <module>` above `main.py, line 3, in mean`, then `ZeroDivisionError`. What does this tell you?"
@@ -103,7 +103,7 @@ items:
       - text: The division failed on line 3 inside mean, which was called from line 12
         correct: true
         why: Frames go from the outermost call at the top to the failing line at the bottom.
-      - text: The division failed on line 12, which then called mean
-        why: The failing line is in the bottom frame, not the top one.
       - text: There were two separate errors, one on each line
         why: A traceback describes one exception and the chain of calls leading to it.
+      - text: The division failed on line 12, which then called mean
+        why: The failing line is in the bottom frame, not the top one.

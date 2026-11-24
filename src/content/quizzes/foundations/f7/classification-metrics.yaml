@@ -1,0 +1,119 @@
+items:
+  - id: f7-classification-metrics-01
+    type: numeric
+    prompt: "A screening model on 1,000 people gives TP = 30, FN = 10, FP = 20, TN = 940. What is its **precision**?"
+    answer: 0.6
+    tol: 0.001
+    explanation: "Precision = TP / (TP + FP) = 30 / 50 = 0.6: of the 50 people flagged, 30 really are positive."
+  - id: f7-classification-metrics-02
+    type: numeric
+    prompt: "Same model: TP = 30, FN = 10, FP = 20, TN = 940. What is its **recall**?"
+    answer: 0.75
+    tol: 0.001
+    explanation: "Recall = TP / (TP + FN) = 30 / 40 = 0.75: it catches three quarters of the actual positives."
+  - id: f7-classification-metrics-03
+    type: numeric
+    prompt: "Same model: precision 0.6, recall 0.75. What is its F1 score? (Three decimal places.)"
+    answer: 0.667
+    tol: 0.002
+    explanation: "F1 = 2PR / (P + R) = 2 × 0.6 × 0.75 / 1.35 = 0.9 / 1.35 ≈ 0.667."
+  - id: f7-classification-metrics-04
+    type: numeric
+    prompt: "Same model: TP = 30, FN = 10, FP = 20, TN = 940. What is its **accuracy**?"
+    answer: 0.97
+    tol: 0.001
+    explanation: "(30 + 940) / 1000 = 0.97. Note that flagging nobody would score 0.96, so accuracy says little here."
+  - id: f7-classification-metrics-05
+    type: mcq
+    prompt: "You lower a classifier's decision threshold from 0.5 to 0.2. What usually happens?"
+    options:
+      - text: "Recall rises and precision falls"
+        correct: true
+        why: "More cases are flagged, catching more positives but also more negatives."
+      - text: "Precision rises and recall falls"
+        why: "That is what raising the threshold does."
+      - text: "Both rise"
+        why: "Moving the threshold trades one against the other; it cannot improve the ranking itself."
+      - text: "The ROC AUC changes"
+        why: "AUC is computed over all thresholds, so it does not depend on which one you pick."
+    explanation: "The threshold slides along the precision–recall trade-off without changing the model."
+  - id: f7-classification-metrics-06
+    type: mcq
+    prompt: "A model's ROC AUC is 0.85. What does that mean?"
+    options:
+      - text: "A randomly chosen positive gets a higher score than a randomly chosen negative 85% of the time"
+        correct: true
+        why: "AUC is exactly that ranking probability, with ties counted as half."
+      - text: "It classifies 85% of examples correctly"
+        why: "That would be accuracy at some threshold, which AUC does not measure."
+      - text: "Its precision is 0.85 at the best threshold"
+        why: "AUC summarises TPR against FPR over all thresholds, not precision at one."
+    explanation: "AUC measures ranking quality: 0.5 is random guessing and 1.0 is a perfect ranking."
+  - id: f7-classification-metrics-07
+    type: mcq
+    prompt: "For a first-stage cancer screening test, where every flagged case gets a cheap follow-up exam, which metric matters most?"
+    options:
+      - text: "Recall"
+        correct: true
+        why: "A missed cancer is far costlier than an unnecessary follow-up, so catching positives comes first."
+      - text: "Precision"
+        why: "False alarms only cost a follow-up exam here, so they matter less than misses."
+      - text: "Accuracy"
+        why: "With rare positives, accuracy is dominated by the many negatives and hides misses."
+    explanation: "When misses are expensive and false alarms cheap, optimise recall, then keep precision acceptable."
+  - id: f7-classification-metrics-08
+    type: output
+    prompt: "What does this print?"
+    code: |
+      from sklearn.metrics import confusion_matrix
+      print(confusion_matrix([0, 1, 1, 0, 1], [0, 1, 0, 1, 1]))
+    answer: |
+      [[1 1]
+       [1 2]]
+    explanation: "Rows are actual, columns predicted, class 0 first: TN = 1, FP = 1 (top row); FN = 1, TP = 2 (bottom row)."
+  - id: f7-classification-metrics-09
+    type: mcq
+    prompt: "On which data should you choose the decision threshold?"
+    options:
+      - text: "A validation set or cross-validated predictions on the training set"
+        correct: true
+        why: "The threshold is a hyperparameter, so it is chosen on held-out data that is not the test set."
+      - text: "The test set, since it is the most honest"
+        why: "Choosing on the test set makes the test score optimistic."
+      - text: "The training set predictions from the final fitted model"
+        why: "In-sample probabilities are overconfident, so a threshold tuned on them is miscalibrated."
+    explanation: "Pick the threshold like any hyperparameter, then apply it to the test set once."
+  - id: f7-classification-metrics-10
+    type: multi
+    prompt: "Positives are 2% of your data. Which practices make sense?"
+    options:
+      - text: "Split with stratify=y"
+        correct: true
+        why: "Keeps the rare class equally represented in every split."
+      - text: "Report precision, recall or average precision rather than only accuracy"
+        correct: true
+        why: "Accuracy is 98% for a model that never predicts the positive class."
+      - text: "Try class_weight=\"balanced\" or move the threshold"
+        correct: true
+        why: "Both trade precision for recall on the rare class."
+      - text: "Tune the threshold until the test-set F1 is as high as possible"
+        why: "That uses the test set for a choice and inflates its score."
+    explanation: "Stratify, use metrics that focus on the rare class, and set the trade-off deliberately on validation data."
+  - id: f7-classification-metrics-11
+    type: numeric
+    prompt: "In a dataset where 2% of cases are positive, what accuracy does a model that always predicts \"negative\" achieve?"
+    answer: 0.98
+    tol: 0.001
+    explanation: "It is right on all 98% negatives and wrong on all 2% positives: 0.98 accuracy, with recall 0."
+  - id: f7-classification-metrics-12
+    type: mcq
+    prompt: "What average precision does a random-guessing model score, when 11% of examples are positive?"
+    options:
+      - text: "About 0.11, the share of positives"
+        correct: true
+        why: "A random ranking has precision equal to the base rate at every recall level."
+      - text: "About 0.5, as for ROC AUC"
+        why: "0.5 is the random baseline for ROC AUC, not for average precision."
+      - text: "0"
+        why: "Random guessing still finds positives at the base rate."
+    explanation: "Always compare average precision with the base rate, not with 0.5."

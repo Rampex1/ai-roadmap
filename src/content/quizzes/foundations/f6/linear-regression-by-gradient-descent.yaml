@@ -4,15 +4,15 @@ items:
     prompt: "For $L(\\mathbf{w}) = \\frac{1}{n}\\lVert X\\mathbf{w} - \\mathbf{y}\\rVert^2$, which expression is $\\nabla L$?"
     explanation: "Each partial derivative is (2/n) Σᵢ Xᵢⱼ rᵢ, which is entry j of (2/n) Xᵀr with r = Xw - y."
     options:
-      - text: "(2/n) Xᵀ(Xw - y)"
-        correct: true
-        why: One entry per weight, built from the residuals.
       - text: "(2/n) X(Xw - y)"
         why: The shapes do not match; X is n × (d+1) and the residual has length n.
       - text: "(2/n)(Xw - y)"
         why: That has one entry per example, not one per weight.
       - text: "(1/n) XᵀX"
         why: That is (half) the curvature matrix, not the gradient.
+      - text: "(2/n) Xᵀ(Xw - y)"
+        correct: true
+        why: One entry per weight, built from the residuals.
   - id: f6-linear-regression-by-gradient-descent-02
     type: cloze
     prompt: "$X$ has shape $(1000, 6)$ including the bias column. What is the shape of $X^\\top(X\\mathbf{w} - \\mathbf{y})$? Write it as a NumPy shape such as (5,)."
@@ -35,13 +35,13 @@ items:
     prompt: "Setting $\\nabla L = \\mathbf{0}$ for linear regression gives which equation?"
     explanation: "(2/n) Xᵀ(Xw - y) = 0 is equivalent to XᵀXw = Xᵀy, the normal equations from F3."
     options:
-      - text: "XᵀX w = Xᵀy, the normal equations"
-        correct: true
-        why: The exact least-squares solution is where the gradient vanishes.
       - text: "Xw = 0"
         why: That would predict zero for everything.
       - text: "w = Xᵀy"
         why: That skips the XᵀX factor and is wrong unless XᵀX is the identity.
+      - text: "XᵀX w = Xᵀy, the normal equations"
+        correct: true
+        why: The exact least-squares solution is where the gradient vanishes.
       - text: "XXᵀ = I"
         why: This involves no weights at all.
   - id: f6-linear-regression-by-gradient-descent-05
@@ -55,29 +55,29 @@ items:
     prompt: "When is gradient descent a better choice than a closed-form least-squares solver? Select all that apply."
     explanation: "Gradient descent shines when there is no closed form, when the data do not fit in memory for lstsq, or when the number of features is huge. For small linear problems the exact solver is simpler and has nothing to tune."
     options:
-      - text: When the model has no closed-form solution, such as a neural network
-        correct: true
-        why: Then iterative optimisation is the only option.
-      - text: When the dataset is too large to hold in memory
-        correct: true
-        why: Mini-batches can stream through the data, whereas lstsq needs all of X at once (although XᵀX and Xᵀy can be accumulated in chunks).
+      - text: When there are 3 features and 500 examples
+        why: np.linalg.lstsq solves that exactly and instantly, with nothing to tune.
       - text: When there are millions of features
         correct: true
         why: The d³ cost of the exact solve becomes prohibitive.
-      - text: When there are 3 features and 500 examples
-        why: np.linalg.lstsq solves that exactly and instantly, with nothing to tune.
+      - text: When the dataset is too large to hold in memory
+        correct: true
+        why: Mini-batches can stream through the data, whereas lstsq needs all of X at once (although XᵀX and Xᵀy can be accumulated in chunks).
+      - text: When the model has no closed-form solution, such as a neural network
+        correct: true
+        why: Then iterative optimisation is the only option.
   - id: f6-linear-regression-by-gradient-descent-07
     type: mcq
     prompt: "Gradient descent and `np.linalg.lstsq` give the same weights to 13 decimals, but the weights differ from the ones used to generate the data by about 0.4. What explains the gap?"
     explanation: "The optimiser found the best fit to this noisy sample. Noise in the data means the best fit differs from the true generating weights: that is estimation error, a statistics issue, not an optimisation failure."
     options:
+      - text: The learning rate was too large
+        why: A too-large learning rate causes divergence, not a converged but slightly different answer.
       - text: Noise in the data; the best fit to this sample is not exactly the true weights
         correct: true
         why: Both methods found the true minimum of this dataset's loss.
       - text: Gradient descent stopped too early
         why: It matches the exact solver to 13 decimals, so it fully converged.
-      - text: The learning rate was too large
-        why: A too-large learning rate causes divergence, not a converged but slightly different answer.
       - text: lstsq is inaccurate
         why: lstsq is accurate to floating-point precision here.
   - id: f6-linear-regression-by-gradient-descent-08
@@ -85,15 +85,15 @@ items:
     prompt: "In the mini-batch loop the gradient uses `2 / len(idx)` rather than `2 / B`. Why?"
     explanation: "The last batch can be shorter than B. Dividing by its actual size keeps the gradient an average, so the last step is not artificially small."
     options:
-      - text: The last batch may be smaller than B, and the gradient should average over the examples actually in it
-        correct: true
-        why: Dividing by B would shrink the last step.
+      - text: It makes the step size grow over time
+        why: It keeps every batch gradient on the same scale.
       - text: len(idx) is faster to compute than B
         why: Both are trivial to compute; the point is correctness.
       - text: B changes every epoch
         why: The batch size is fixed; only the last batch is shorter.
-      - text: It makes the step size grow over time
-        why: It keeps every batch gradient on the same scale.
+      - text: The last batch may be smaller than B, and the gradient should average over the examples actually in it
+        correct: true
+        why: Dividing by B would shrink the last step.
   - id: f6-linear-regression-by-gradient-descent-09
     type: order
     prompt: "Put the steps of fitting a linear regression by gradient descent in order."

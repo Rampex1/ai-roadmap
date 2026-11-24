@@ -19,31 +19,31 @@ items:
     prompt: "A notebook works for you, but a classmate who runs it top to bottom gets `NameError: name 'data' is not defined`. What is the most likely cause?"
     explanation: "Your kernel still remembers a variable from a cell you ran earlier and later deleted or edited. Restarting the kernel and running all cells from the top would have revealed it."
     options:
+      - text: NameError means a library is not installed
+        why: A missing library raises ModuleNotFoundError; NameError means a variable or function name doesn't exist.
       - text: Your kernel remembered a variable from a cell that has since been deleted or changed
         correct: true
         why: The kernel keeps what you ran, even if the code that created it is no longer in the notebook.
-      - text: Your classmate has a different screen size
-        why: Display size has no effect on which variables exist.
       - text: Notebooks can only be run on the computer that created them
         why: .ipynb files are portable; they run anywhere with the needed libraries.
-      - text: NameError means a library is not installed
-        why: A missing library raises ModuleNotFoundError; NameError means a variable or function name doesn't exist.
+      - text: Your classmate has a different screen size
+        why: Display size has no effect on which variables exist.
   - id: f0-notebooks-03
     type: multi
     prompt: "Which statements about the free tier of Google Colab are true?"
     explanation: "Colab is free but its resources are not guaranteed: GPU access varies, sessions end after at most about 12 hours (sooner if idle), and files on the runtime vanish when it is recycled. Notebooks themselves live in Google Drive."
     options:
-      - text: GPU access is not guaranteed and can vary with demand and your usage
-        correct: true
-        why: Colab's FAQ says free resources are not guaranteed and not unlimited.
-      - text: Files you upload to the runtime are lost when the runtime is recycled
-        correct: true
-        why: The virtual machine is deleted; save important files to Drive.
       - text: Notebooks you create are saved in your Google Drive
         correct: true
         why: New notebooks go to the Colab Notebooks folder in Drive.
+      - text: GPU access is not guaranteed and can vary with demand and your usage
+        correct: true
+        why: Colab's FAQ says free resources are not guaranteed and not unlimited.
       - text: A session can run for as long as you like if you keep the tab open
         why: Free sessions have a maximum lifetime of about 12 hours.
+      - text: Files you upload to the runtime are lost when the runtime is recycled
+        correct: true
+        why: The virtual machine is deleted; save important files to Drive.
   - id: f0-notebooks-04
     type: mcq
     prompt: "You start JupyterLab with `uv run --with jupyter jupyter lab`, then close the Terminal window. What happens?"
@@ -52,15 +52,15 @@ items:
       - text: Jupyter stops, and the notebook in the browser can no longer run code
         correct: true
         why: The browser page is only a window onto the server running in the terminal.
-      - text: Nothing; Jupyter keeps running in the browser on its own
-        why: The browser doesn't run Python here; the server process does.
       - text: Jupyter moves to Google Colab
         why: Local Jupyter and Colab are unrelated services.
+      - text: Nothing; Jupyter keeps running in the browser on its own
+        why: The browser doesn't run Python here; the server process does.
   - id: f0-notebooks-05
     type: cloze
     prompt: "In Jupyter and Colab, the keyboard shortcut that runs the current cell and moves to the next one is ____ + Enter."
     explanation: "Shift + Enter runs the cell and advances. It works in both JupyterLab and Colab."
-    accept: ["Shift", "shift key", "⇧"]
+    accept: [ "Shift", "shift key", "⇧" ]
   - id: f0-notebooks-06
     type: mcq
     prompt: "In a Colab cell you type `!nvidia-smi`. What does the `!` do?"
@@ -69,10 +69,10 @@ items:
       - text: It runs the line as a shell command instead of Python
         correct: true
         why: That is the notebook convention for shell commands.
-      - text: It makes the line run on the GPU
-        why: The ! has nothing to do with where code runs; nvidia-smi only reports on the GPU.
       - text: It means "not", so the line is skipped
         why: In Python, not-equal is !=, but a leading ! in a notebook cell means shell command.
+      - text: It makes the line run on the GPU
+        why: The ! has nothing to do with where code runs; nvidia-smi only reports on the GPU.
       - text: It marks the cell as important so Colab keeps it after a restart
         why: There is no such feature; the notebook is saved in Drive anyway.
   - id: f0-notebooks-07
@@ -102,11 +102,11 @@ items:
     prompt: "Which job is better suited to JupyterLab on your 8 GB Mac than to Colab?"
     explanation: "Small, private, offline work suits your own machine. GPU training and big models suit Colab."
     options:
+      - text: Training a neural network on thousands of images
+        why: That needs a GPU; use Colab.
       - text: Exploring a small spreadsheet of your own private data, offline on a train
         correct: true
         why: Local Jupyter works without internet and your data never leaves your computer.
-      - text: Training a neural network on thousands of images
-        why: That needs a GPU; use Colab.
       - text: Running a notebook from your phone's browser
         why: Your local Jupyter isn't reachable from your phone; Colab works from any browser.
   - id: f0-notebooks-10
@@ -114,14 +114,14 @@ items:
     prompt: "Which are good habits when working in notebooks?"
     explanation: "Restart-and-run-all checks a notebook really works; putting installs at the top makes setup repeatable; saving results to Drive protects them on Colab. Running cells in random order is how hidden-state bugs start."
     options:
-      - text: Restart the kernel and run all cells before sharing a notebook
-        correct: true
-        why: It proves the notebook works from a clean start.
+      - text: Run cells in whatever order is convenient and never restart
+        why: This builds up hidden state that others can't reproduce.
       - text: Put any %pip install cells at the top of the notebook
         correct: true
         why: On Colab installs last only for the current runtime, so they must rerun first each time.
+      - text: Restart the kernel and run all cells before sharing a notebook
+        correct: true
+        why: It proves the notebook works from a clean start.
       - text: Save important outputs on Colab to Google Drive
         correct: true
         why: Files on the runtime disappear when it is recycled.
-      - text: Run cells in whatever order is convenient and never restart
-        why: This builds up hidden state that others can't reproduce.

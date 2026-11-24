@@ -4,15 +4,15 @@ items:
     prompt: "You want to see how the distribution of house prices looks: where most prices lie and whether there are extreme values. Which chart fits best?"
     explanation: "A histogram shows how one numeric variable is distributed by counting values in bins."
     options:
+      - text: A line chart of price
+        why: A line implies an ordered x such as time; prices in table order have no meaningful order.
+      - text: A scatter plot of price against price
+        why: That is a straight diagonal line and tells you nothing.
+      - text: A bar chart with one bar per house
+        why: Hundreds of bars are unreadable and do not summarise the distribution.
       - text: A histogram of price
         correct: true
         why: It counts how many prices fall in each range, showing the shape, centre and outliers.
-      - text: A line chart of price
-        why: A line implies an ordered x such as time; prices in table order have no meaningful order.
-      - text: A bar chart with one bar per house
-        why: Hundreds of bars are unreadable and do not summarise the distribution.
-      - text: A scatter plot of price against price
-        why: That is a straight diagonal line and tells you nothing.
   - id: f2-matplotlib-02
     type: mcq
     prompt: "Which chart best shows whether larger houses tend to cost more, using one point per house?"
@@ -21,10 +21,10 @@ items:
       - text: A scatter plot of price against area
         correct: true
         why: Each dot is a house, and the overall slope shows the relationship.
-      - text: A histogram of area
-        why: That shows one variable only, not how it relates to price.
       - text: A bar chart of the mean price
         why: One number hides the relationship entirely.
+      - text: A histogram of area
+        why: That shows one variable only, not how it relates to price.
   - id: f2-matplotlib-03
     type: output
     prompt: "What does this print?"
@@ -50,29 +50,29 @@ items:
     prompt: "A slide shows two bars for accuracies 0.88 and 0.90. The y-axis runs from 0.87 to 0.91, and the second bar looks three times as tall as the first. What is wrong?"
     explanation: "Bars encode value by length, so a truncated axis exaggerates differences. Bar charts should start at zero."
     options:
+      - text: Accuracy should be plotted as a histogram
+        why: Comparing two categories on one number is a bar chart's job; the problem is the axis.
       - text: The truncated y-axis exaggerates a 2-point difference; a bar chart should start at 0
         correct: true
         why: Bar length is read as size, so cutting the axis distorts the comparison.
       - text: Nothing; zooming in is always fine
         why: Zooming is fine for line and scatter plots, which encode by position, but not for bars.
-      - text: Accuracy should be plotted as a histogram
-        why: Comparing two categories on one number is a bar chart's job; the problem is the axis.
   - id: f2-matplotlib-06
     type: multi
     prompt: "Which of these should every plot you hand in have?"
     explanation: "Readers need labels with units to check a plot, a title to know what it shows, and a legend to tell several series apart."
     options:
-      - text: Axis labels that include units
-        correct: true
-        why: Without units, "price" could mean pounds or thousands of pounds.
-      - text: A legend whenever more than one series is drawn
-        correct: true
-        why: Otherwise readers cannot tell which line is which.
+      - text: A y-axis on a log scale
+        why: Log scales suit data spanning orders of magnitude; most plots should be linear.
       - text: A title
         correct: true
         why: It says what question the plot answers.
-      - text: A y-axis on a log scale
-        why: Log scales suit data spanning orders of magnitude; most plots should be linear.
+      - text: A legend whenever more than one series is drawn
+        correct: true
+        why: Otherwise readers cannot tell which line is which.
+      - text: Axis labels that include units
+        correct: true
+        why: Without units, "price" could mean pounds or thousands of pounds.
   - id: f2-matplotlib-07
     type: output
     prompt: "What does this print?"
@@ -88,25 +88,25 @@ items:
     prompt: "A scatter plot shows that towns with more ice-cream sales have more drownings. What is the most defensible conclusion?"
     explanation: "Correlation does not show causation. Here a third factor, hot weather, plausibly drives both."
     options:
-      - text: The two are associated, possibly because both rise in hot weather
-        correct: true
-        why: A shared cause explains the pattern without either causing the other.
       - text: Ice cream causes drowning
         why: A scatter plot cannot show causation, and a common cause is much more plausible.
       - text: The plot must be wrong, because the variables are unrelated
         why: The association can be real even though it is not causal.
+      - text: The two are associated, possibly because both rise in hot weather
+        correct: true
+        why: A shared cause explains the pattern without either causing the other.
   - id: f2-matplotlib-09
     type: mcq
     prompt: "A histogram of 1000 values drawn with `bins=500` looks spiky and jagged. What is the most likely reason?"
     explanation: "With 500 bins for 1000 values, most bins hold only a handful of values, so random noise dominates the shape."
     options:
+      - text: Histograms always look jagged
+        why: With a sensible bin count the shape is usually smooth enough to read.
+      - text: The data must contain errors
+        why: The jaggedness comes from the bin count, not the data.
       - text: Too many bins, so each bin holds only a few values and the shape is mostly noise
         correct: true
         why: About 2 values per bin on average; try 20 to 50 bins.
-      - text: The data must contain errors
-        why: The jaggedness comes from the bin count, not the data.
-      - text: Histograms always look jagged
-        why: With a sensible bin count the shape is usually smooth enough to read.
   - id: f2-matplotlib-10
     type: cloze
     prompt: "To draw on the bottom-left axes of `fig, axes = plt.subplots(2, 2)`, you index `axes[__, __]`. Type the two indices separated by a comma."

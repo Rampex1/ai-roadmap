@@ -1,0 +1,119 @@
+items:
+  - id: f7-preprocessing-and-pipelines-01
+    type: mcq
+    prompt: "On which rows should a `StandardScaler` be fitted?"
+    options:
+      - text: "The training rows only; the same mean and std are then applied to validation and test rows"
+        correct: true
+        why: "Statistics from held-out rows must not influence training."
+      - text: "All rows, so the scaling is as accurate as possible"
+        why: "That lets the test rows influence training, a form of leakage."
+      - text: "Training and test rows separately, each with its own mean and std"
+        why: "The model learned its weights on the training scale; a different scale for test rows breaks it."
+    explanation: "fit on train, transform everything. A pipeline does this automatically."
+  - id: f7-preprocessing-and-pipelines-02
+    type: numeric
+    prompt: "A scaler learned mean 50 and standard deviation 10 from the training set. What does it map a test value of 75 to?"
+    answer: 2.5
+    tol: 0.001
+    explanation: "(75 − 50) / 10 = 2.5. Test values may fall outside the training range; that is fine."
+  - id: f7-preprocessing-and-pipelines-03
+    type: mcq
+    prompt: "Why not encode the cities Hull, Leeds and York as 0, 1 and 2 for a linear model?"
+    options:
+      - text: "It invents an order and spacing, as if York were twice Leeds"
+        correct: true
+        why: "A linear model multiplies the code by one weight, so it assumes equal steps between cities."
+      - text: "Linear models cannot take integer inputs"
+        why: "They can; the problem is the meaning of the numbers."
+      - text: "It uses too many columns"
+        why: "Integer codes use one column; one-hot uses more, and that is the better choice here."
+    explanation: "Use one-hot encoding for unordered categories; keep ordinal codes for genuinely ordered ones."
+  - id: f7-preprocessing-and-pipelines-04
+    type: multi
+    prompt: "Which models need standardised features to work well?"
+    options:
+      - text: "k-nearest neighbours"
+        correct: true
+        why: "Distances are dominated by large-scale features."
+      - text: "Ridge regression"
+        correct: true
+        why: "The penalty depends on the scale of each weight."
+      - text: "Logistic regression with its default L2 penalty"
+        correct: true
+        why: "It is penalised, and its solver also converges faster on scaled data."
+      - text: "A decision tree"
+        why: "Trees compare one feature with a threshold at a time, so rescaling does not change their splits."
+    explanation: "Distance-based, penalised and gradient-trained models need scaling; trees do not."
+  - id: f7-preprocessing-and-pipelines-05
+    type: mcq
+    prompt: "Which feature is a case of **target leakage** in a model that predicts, at signup, whether a customer will cancel within a year?"
+    options:
+      - text: "The date the customer's account was closed"
+        correct: true
+        why: "It only exists after the outcome, so it will not be available at prediction time."
+      - text: "The customer's age at signup"
+        why: "Known at signup, so it is a legitimate feature."
+      - text: "The plan the customer chose at signup"
+        why: "Known at the moment of prediction."
+    explanation: "Ask of every column: would I know this when I need the prediction?"
+  - id: f7-preprocessing-and-pipelines-06
+    type: mcq
+    prompt: "Selecting the 20 best of 5,000 pure-noise features on all rows, then cross-validating, gave 85% accuracy on random labels. Why?"
+    options:
+      - text: "The selection used the validation rows' labels, so features that matched them by chance were kept"
+        correct: true
+        why: "The validation folds influenced the choice of features, so they were not really held out."
+      - text: "Logistic regression is very accurate on noise"
+        why: "Inside a pipeline the same model scored about 50%, chance level."
+      - text: "Cross-validation always overestimates by about 35 points"
+        why: "Done correctly it gave an honest 48%."
+    explanation: "Put feature selection, and every other learned step, inside the pipeline that is cross-validated."
+  - id: f7-preprocessing-and-pipelines-07
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      from sklearn.preprocessing import OneHotEncoder
+      enc = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
+      enc.fit(np.array([["b"], ["a"], ["b"]]))
+      print(enc.transform(np.array([["b"], ["c"]])))
+    answer: |
+      [[0. 1.]
+       [0. 0.]]
+    explanation: "The categories learned are sorted, a then b. \"b\" gets a 1 in the second column; the unseen \"c\" gets all zeros."
+  - id: f7-preprocessing-and-pipelines-08
+    type: numeric
+    prompt: "A ColumnTransformer scales 2 numeric columns and one-hot encodes a column with 3 categories and another with 5. How many columns come out?"
+    answer: 10
+    tol: 0
+    explanation: "2 scaled columns + 3 + 5 one-hot columns = 10."
+  - id: f7-preprocessing-and-pipelines-09
+    type: cloze
+    prompt: "The scikit-learn transformer that fills missing values with a statistic such as the median is called ____ ."
+    accept: ["SimpleImputer", "simple imputer", "SimpleImputer()"]
+    explanation: "`SimpleImputer(strategy=\"median\")` for numbers, `strategy=\"most_frequent\"` for categories."
+  - id: f7-preprocessing-and-pipelines-10
+    type: mcq
+    prompt: "Why impute a skewed numeric column such as income with the median rather than the mean?"
+    options:
+      - text: "A few very large values pull the mean up, but barely move the median"
+        correct: true
+        why: "The median is robust to outliers."
+      - text: "The mean cannot be computed when values are missing"
+        why: "The imputer computes it from the non-missing values."
+      - text: "The median is always smaller than the mean"
+        why: "Only for right-skewed data; robustness is the real reason."
+    explanation: "Median imputation gives a typical value even when the distribution has a long tail."
+  - id: f7-preprocessing-and-pipelines-11
+    type: mcq
+    prompt: "What is the main benefit of putting the scaler, encoder and model in one Pipeline and passing it to cross_val_score?"
+    options:
+      - text: "The preprocessing is refitted on each training fold, so no validation rows leak into it"
+        correct: true
+        why: "That is what makes the cross-validation honest."
+      - text: "The model trains faster"
+        why: "It does the same work; the gain is correctness and convenience."
+      - text: "Pipelines automatically choose the best hyperparameters"
+        why: "That is GridSearchCV's job, which works with pipelines."
+    explanation: "Pipelines prevent preprocessing leakage and let one object turn raw data into predictions."

@@ -23,13 +23,13 @@ items:
     prompt: "What does `-2 ** 2` evaluate to?"
     explanation: "`**` binds more tightly than the unary minus, so it means `-(2 ** 2)`."
     options:
+      - text: An error
+        why: It is valid Python; it just may not mean what you expect.
+      - text: "4"
+        why: That would be (-2) ** 2. Without parentheses the minus is applied last.
       - text: "-4"
         correct: true
         why: The power is applied first, then the minus sign, giving -(4).
-      - text: "4"
-        why: That would be (-2) ** 2. Without parentheses the minus is applied last.
-      - text: An error
-        why: It is valid Python; it just may not mean what you expect.
   - id: f1-numbers-05
     type: mcq
     prompt: "`print(0.1 + 0.2 == 0.3)` prints `False`. Why?"
@@ -47,16 +47,16 @@ items:
     prompt: "Which are safe ways to check whether a float `x` equals 0.3?"
     explanation: "Compare with a tolerance: either by hand with `abs` or with `math.isclose`."
     options:
-      - text: "abs(x - 0.3) < 1e-9"
-        correct: true
-        why: This checks that x is within a tiny distance of 0.3.
+      - text: "x == 0.3"
+        why: Exact equality fails when tiny rounding errors are present.
       - text: "math.isclose(x, 0.3)"
         correct: true
         why: math.isclose applies a sensible relative tolerance for you.
-      - text: "x == 0.3"
-        why: Exact equality fails when tiny rounding errors are present.
       - text: "int(x) == 0"
         why: int() chops toward zero, so this is true for any x strictly between -1 and 1. It checks almost nothing.
+      - text: "abs(x - 0.3) < 1e-9"
+        correct: true
+        why: This checks that x is within a tiny distance of 0.3.
   - id: f1-numbers-07
     type: numeric
     prompt: "A dataset has 1003 images and you process them in batches of 32. How many *full* batches are there? (Use `//`.)"
@@ -73,7 +73,7 @@ items:
     type: cloze
     prompt: "In scientific notation, `1e-3` written as an ordinary decimal is ____ ."
     explanation: "`1e-3` means 1 times 10 to the power -3, which is 0.001."
-    accept: ["0.001", ".001"]
+    accept: [ "0.001", ".001" ]
   - id: f1-numbers-10
     type: order
     prompt: "Order these expressions from smallest to largest value."

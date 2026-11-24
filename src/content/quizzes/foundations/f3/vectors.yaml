@@ -21,30 +21,30 @@ items:
     prompt: "Geometrically, what does the vector $\\mathbf{a} - \\mathbf{b}$ represent?"
     explanation: "$\\mathbf{b} + (\\mathbf{a} - \\mathbf{b}) = \\mathbf{a}$, so $\\mathbf{a} - \\mathbf{b}$ is the step that takes you from the tip of $\\mathbf{b}$ to the tip of $\\mathbf{a}$."
     options:
+      - text: The arrow from the origin to the midpoint of a and b
+        why: The midpoint is (a + b) / 2, a different combination.
+      - text: The arrow from the tip of a to the tip of b
+        why: That is b - a, which points the opposite way.
+      - text: Nothing; vectors can only be subtracted if they are equal
+        why: Any two vectors of the same dimension can be subtracted.
       - text: The arrow from the tip of b to the tip of a
         correct: true
         why: Adding it to b lands on a.
-      - text: The arrow from the tip of a to the tip of b
-        why: That is b - a, which points the opposite way.
-      - text: The arrow from the origin to the midpoint of a and b
-        why: The midpoint is (a + b) / 2, a different combination.
-      - text: Nothing; vectors can only be subtracted if they are equal
-        why: Any two vectors of the same dimension can be subtracted.
   - id: f3-vectors-04
     type: multi
     prompt: "Which of these change the **direction** of a nonzero vector $\\mathbf{v}$ (not just its length)? Treat a reversed arrow as a change of direction."
     explanation: "Multiplying by a positive number keeps the direction; a negative number reverses it. Adding a vector that is not parallel to $\\mathbf{v}$ turns it."
     options:
-      - text: Multiplying by 3
-        why: A positive scalar only stretches the arrow.
-      - text: Multiplying by -1
-        correct: true
-        why: A negative scalar flips the arrow to point the opposite way.
       - text: Multiplying by 0.1
         why: A positive scalar only shrinks the arrow.
       - text: Adding a vector that is not parallel to v
         correct: true
         why: Tip to tail with a vector in another direction turns the result.
+      - text: Multiplying by 3
+        why: A positive scalar only stretches the arrow.
+      - text: Multiplying by -1
+        correct: true
+        why: A negative scalar flips the arrow to point the opposite way.
   - id: f3-vectors-05
     type: numeric
     prompt: "A dataset has 500 rows and 12 columns (features). Each row is a vector in $\\mathbb{R}^n$. What is $n$?"
@@ -68,10 +68,10 @@ items:
       - text: A linear combination of w and g with coefficients 1 and minus eta
         correct: true
         why: Scale each vector, then add.
-      - text: A dot product of w and g
-        why: A dot product gives a single number; this update gives a vector.
       - text: Concatenating w and g into a longer vector
         why: That would double the dimension; the update keeps it the same.
+      - text: A dot product of w and g
+        why: A dot product gives a single number; this update gives a vector.
   - id: f3-vectors-08
     type: output
     prompt: "What does this print?"
@@ -85,7 +85,7 @@ items:
   - id: f3-vectors-09
     type: cloze
     prompt: "Any 2-D vector $(x, y)$ can be written as $x\\,\\mathbf{e}_1 + y\\,\\mathbf{e}_2$. An expression that scales vectors and adds them up like this is called a linear ____ ."
-    accept: ["combination"]
+    accept: [ "combination" ]
     explanation: "A linear combination is $c_1\\mathbf{v}_1 + \\dots + c_k\\mathbf{v}_k$."
   - id: f3-vectors-10
     type: mcq

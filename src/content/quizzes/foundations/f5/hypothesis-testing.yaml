@@ -4,30 +4,30 @@ items:
     prompt: "An A/B test gives $p = 0.03$. Which statement is correct?"
     explanation: "A p-value is the probability of data at least this extreme assuming the null hypothesis is true. It is not the probability that the null hypothesis is true."
     options:
+      - text: There is a 3% chance that there is no difference
+        why: That is P(H0 | data), which needs a prior; reading p this way flips the conditional.
+      - text: The new version is 3% better
+        why: The p-value is not an effect size.
+      - text: There is a 97% chance the new version is better
+        why: The p-value does not give the probability of any hypothesis.
       - text: If there were truly no difference, a difference at least this large would appear about 3% of the time
         correct: true
         why: This is the definition, P(data this extreme | H0).
-      - text: There is a 3% chance that there is no difference
-        why: That is P(H0 | data), which needs a prior; reading p this way flips the conditional.
-      - text: There is a 97% chance the new version is better
-        why: The p-value does not give the probability of any hypothesis.
-      - text: The new version is 3% better
-        why: The p-value is not an effect size.
   - id: f5-hypothesis-testing-02
     type: multi
     prompt: "Which of these are **valid** conclusions or practices around p-values? Select all."
     explanation: "Report effect sizes with intervals, pre-register the main comparison, and remember that large p-values do not prove the absence of an effect."
     options:
+      - text: Running 30 analyses and reporting only the one with p below 0.05
+        why: That is p-hacking; with 30 tests a false positive is likely.
+      - text: "Concluding there is no effect because p = 0.4"
+        why: A large p-value means the data are consistent with no effect, not that the effect is zero; the study may be too small.
       - text: Reporting the size of the difference with a confidence interval alongside the p-value
         correct: true
         why: The effect size says whether the difference matters; the CI says how precisely it is known.
       - text: Deciding the main comparison before looking at the data
         correct: true
         why: This guards against p-hacking.
-      - text: "Concluding there is no effect because p = 0.4"
-        why: A large p-value means the data are consistent with no effect, not that the effect is zero; the study may be too small.
-      - text: Running 30 analyses and reporting only the one with p below 0.05
-        why: That is p-hacking; with 30 tests a false positive is likely.
   - id: f5-hypothesis-testing-03
     type: order
     prompt: "Put the steps of a permutation test for an A/B experiment in order."
@@ -43,15 +43,15 @@ items:
     prompt: "Why is shuffling the group labels a valid way to simulate the null hypothesis in a randomised A/B test?"
     explanation: "Under H0 the page has no effect, so each visitor's outcome would be the same whichever group they were in; the labels are interchangeable, and shuffling them produces the differences chance alone would create."
     options:
+      - text: Shuffling makes the groups larger
+        why: The group sizes stay the same.
+      - text: Shuffling makes the data normally distributed
+        why: The permutation test needs no normality assumption at all.
       - text: If the change has no effect, each outcome would be the same in either group, so the labels are interchangeable
         correct: true
         why: Random assignment plus no effect makes the labels exchangeable.
-      - text: Shuffling makes the groups larger
-        why: The group sizes stay the same.
       - text: Shuffling removes outliers
         why: Every value stays in the pool.
-      - text: Shuffling makes the data normally distributed
-        why: The permutation test needs no normality assumption at all.
   - id: f5-hypothesis-testing-05
     type: numeric
     prompt: "You run 10 independent tests where the null hypothesis is true in every case, each at the 0.05 level. What is the probability of **at least one** false positive? Give a decimal."
@@ -91,7 +91,7 @@ items:
   - id: f5-hypothesis-testing-09
     type: cloze
     prompt: "The default, \"nothing is going on\" explanation that a test assumes in order to compute a p-value is called the ________ hypothesis."
-    accept: ["null"]
+    accept: [ "null" ]
     explanation: "The null hypothesis H0, for example \"the coin is fair\" or \"the page makes no difference\"."
   - id: f5-hypothesis-testing-10
     type: mcq
@@ -101,9 +101,9 @@ items:
       - text: Repeat both with several random seeds and test the difference, for example with a permutation test on per-example results
         correct: true
         why: This measures how big chance differences are.
-      - text: Accept B, because any improvement counts
-        why: The gap may be pure noise.
       - text: Tune B on the test set until the gap is larger
         why: That leaks the test set and is a form of p-hacking.
       - text: Report the larger number to more decimal places
         why: More digits do not reduce noise.
+      - text: Accept B, because any improvement counts
+        why: The gap may be pure noise.

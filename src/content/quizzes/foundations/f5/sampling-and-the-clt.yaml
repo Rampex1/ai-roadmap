@@ -10,6 +10,8 @@ items:
     prompt: "You want to cut the standard error of a sample mean in half. How much more data do you need?"
     explanation: "SE = σ / √n, so halving it needs √n to double, which means four times as much data."
     options:
+      - text: It depends on the shape of the distribution
+        why: σ / √n holds for any distribution with finite variance.
       - text: Four times as much
         correct: true
         why: Doubling √n requires multiplying n by 4.
@@ -17,20 +19,18 @@ items:
         why: Twice the data only shrinks the error by a factor of √2 ≈ 1.41.
       - text: Half as much
         why: Less data makes the error larger.
-      - text: It depends on the shape of the distribution
-        why: σ / √n holds for any distribution with finite variance.
   - id: f5-sampling-and-the-clt-03
     type: mcq
     prompt: "A fair coin has landed tails 8 times in a row. What is the probability of heads on the next flip?"
     explanation: "Flips are independent; the coin has no memory. The law of large numbers works by dilution, not compensation. Expecting heads to be due is the gambler's fallacy."
     options:
+      - text: Less than 0.5, because the coin is on a tails streak
+        why: For a fair coin, past flips do not change the next one.
       - text: "0.5"
         correct: true
         why: Each flip is independent of the previous ones.
       - text: More than 0.5, because heads is due
         why: That is the gambler's fallacy.
-      - text: Less than 0.5, because the coin is on a tails streak
-        why: For a fair coin, past flips do not change the next one.
       - text: It cannot be computed
         why: For a fair coin it is 0.5.
   - id: f5-sampling-and-the-clt-04
@@ -41,13 +41,13 @@ items:
       - text: The distribution of the sample mean is approximately normal for large n
         correct: true
         why: This is the theorem.
-      - text: The sample mean is centred on the true mean μ, with spread σ/√n
-        correct: true
-        why: The normal it approaches is N(μ, σ²/n).
       - text: With a large sample, the individual data values become normally distributed
         why: The data keep their own shape; only averages become normal.
       - text: It works even when the variance is infinite
         why: The CLT needs finite variance; heavy-tailed cases like the Cauchy distribution break it.
+      - text: The sample mean is centred on the true mean μ, with spread σ/√n
+        correct: true
+        why: The normal it approaches is N(μ, σ²/n).
   - id: f5-sampling-and-the-clt-05
     type: output
     prompt: "What does this print?"
@@ -68,25 +68,25 @@ items:
     prompt: "Why is the sample mean $\\bar{X}$ called a random variable?"
     explanation: "Its value depends on which sample was drawn; a different random sample gives a different mean, so it has a distribution of its own."
     options:
+      - text: Because the true mean μ is random
+        why: μ is a fixed, unknown number.
       - text: Because a different random sample would give a different value
         correct: true
         why: The randomness of the sample carries over to its mean.
-      - text: Because it is computed with random numbers
-        why: It is computed by averaging; the randomness comes from the sampling.
       - text: Because it never equals the true mean
         why: It can equal μ; the point is that it varies from sample to sample.
-      - text: Because the true mean μ is random
-        why: μ is a fixed, unknown number.
+      - text: Because it is computed with random numbers
+        why: It is computed by averaging; the randomness comes from the sampling.
   - id: f5-sampling-and-the-clt-08
     type: mcq
     prompt: "Minibatch gradient noise has a standard error proportional to $1/\\sqrt{B}$ for batch size $B$. Going from $B = 32$ to $B = 512$ reduces the noise by what factor?"
     explanation: "512 / 32 = 16 times the data, and √16 = 4, so the noise falls by a factor of 4."
     options:
+      - text: "16"
+        why: That is the ratio of batch sizes, not of their square roots.
       - text: "4"
         correct: true
         why: The noise scales with 1 / √B, and √16 = 4.
-      - text: "16"
-        why: That is the ratio of batch sizes, not of their square roots.
       - text: "2"
         why: That would need only four times the batch size.
       - text: "8"
@@ -94,19 +94,19 @@ items:
   - id: f5-sampling-and-the-clt-09
     type: cloze
     prompt: "The standard deviation of an estimate, such as $\\sigma/\\sqrt{n}$ for a sample mean, is called its standard ________."
-    accept: ["error"]
+    accept: [ "error" ]
     explanation: "The standard error measures how much an estimate would vary from sample to sample."
   - id: f5-sampling-and-the-clt-10
     type: mcq
     prompt: "By the CLT, roughly what fraction of sample means land within 1.96 standard errors of the true mean $\\mu$ (for large $n$)?"
     explanation: "The sample mean is approximately normal, and 95% of a normal lies within 1.96 standard deviations of its mean."
     options:
+      - text: 100%
+        why: Some 5% fall outside.
       - text: About 95%
         correct: true
         why: ±1.96 standard deviations covers 95% of a normal.
-      - text: About 68%
-        why: That is within 1 standard error.
       - text: About 50%
         why: Half lie on each side of μ, but far more than half lie within 1.96 SE.
-      - text: 100%
-        why: Some 5% fall outside.
+      - text: About 68%
+        why: That is within 1 standard error.

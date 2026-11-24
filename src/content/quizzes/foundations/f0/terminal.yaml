@@ -12,6 +12,8 @@ items:
     prompt: "You are in /Users/ada/ai-course. Which of these paths does NOT point to /Users/ada/ai-course/log.txt?"
     explanation: "`/ai-course/log.txt` starts with `/`, so it is absolute and means a folder ai-course at the very top of the disk, not inside your home folder."
     options:
+      - text: "./log.txt"
+        why: . means the current folder, so this is the same file.
       - text: "/ai-course/log.txt"
         correct: true
         why: A leading / makes the path start at the top of the disk, not at your home folder.
@@ -19,8 +21,6 @@ items:
         why: A relative path starts from the working directory, /Users/ada/ai-course, so this is the file.
       - text: "~/ai-course/log.txt"
         why: ~ is /Users/ada, so this expands to the same file.
-      - text: "./log.txt"
-        why: . means the current folder, so this is the same file.
   - id: f0-terminal-03
     type: output
     prompt: "In an empty folder, you run these commands. What does the last one print?"
@@ -36,13 +36,13 @@ items:
     prompt: "You run `rm notes.txt` by mistake. What happened to the file?"
     explanation: "`rm` deletes immediately and permanently. It does not use the Trash, which is why you check `pwd` and `ls` before deleting."
     options:
-      - text: It is permanently deleted; it is not in the Trash
-        correct: true
-        why: rm unlinks the file directly; there is no undo in the shell.
       - text: It was moved to the Trash and can be restored from Finder
         why: Only deleting in Finder uses the Trash; rm bypasses it.
       - text: Nothing happens until you confirm with y
         why: Plain rm does not ask for confirmation (rm -i does).
+      - text: It is permanently deleted; it is not in the Trash
+        correct: true
+        why: rm unlinks the file directly; there is no undo in the shell.
       - text: It is hidden by adding a dot to its name
         why: That is how hidden files are named, but rm deletes rather than hides.
   - id: f0-terminal-05
@@ -50,16 +50,16 @@ items:
     prompt: "A command has been running for minutes and the prompt has not come back. Which of these are true?"
     explanation: "Ctrl + C interrupts the running command and returns the prompt. Closing the window also stops it, but more bluntly. The prompt only returns when the command finishes or is stopped."
     options:
+      - text: Pressing Tab stops it
+        why: Tab completes names when you are typing at the prompt; it does not stop programs.
+      - text: Pressing Cmd + C stops it
+        why: Cmd + C copies selected text on a Mac. The interrupt key is Ctrl + C.
       - text: Pressing Ctrl + C asks the command to stop and gives you the prompt back
         correct: true
         why: Ctrl + C sends an interrupt signal; most programs stop when they receive it.
       - text: The shell won't run a new command until it finishes
         correct: true
         why: The shell runs one foreground command at a time and shows the prompt when it ends.
-      - text: Pressing Cmd + C stops it
-        why: Cmd + C copies selected text on a Mac. The interrupt key is Ctrl + C.
-      - text: Pressing Tab stops it
-        why: Tab completes names when you are typing at the prompt; it does not stop programs.
   - id: f0-terminal-06
     type: order
     prompt: "Put these commands in order to create a folder called project in your home folder, go into it, create an empty file called todo.txt, and check that it is there."
@@ -73,7 +73,7 @@ items:
     type: cloze
     prompt: "The command that prints the absolute path of the folder you are currently in is ____."
     explanation: "`pwd` stands for print working directory."
-    accept: ["pwd"]
+    accept: [ "pwd" ]
   - id: f0-terminal-08
     type: mcq
     prompt: "You type `cd My Projects` and get an error. Why?"
@@ -82,10 +82,10 @@ items:
       - text: The space splits the name into two arguments; you need quotes around it
         correct: true
         why: Quoting makes the shell treat My Projects as a single argument.
-      - text: Folder names can't contain capital letters
-        why: macOS allows capital letters in names; the problem is the space.
       - text: cd only works with absolute paths
         why: cd accepts relative paths such as Documents or ../Desktop.
+      - text: Folder names can't contain capital letters
+        why: macOS allows capital letters in names; the problem is the space.
       - text: You must type ls before cd
         why: ls only lists files; cd doesn't depend on it.
   - id: f0-terminal-09
@@ -93,18 +93,20 @@ items:
     prompt: "A tutorial shows the line `$ ls -la`. What should you type?"
     explanation: "The `$` (or `%` in zsh) is the prompt the shell prints, shown to mark a command line. You type only `ls -la`."
     options:
+      - text: "ls"
+        why: That drops the -la options, so you would miss hidden files and the long format.
+      - text: "$ ls -la"
+        why: Typing the $ makes the shell look for a command named $, which fails.
       - text: "ls -la"
         correct: true
         why: The $ is the tutorial's prompt marker, not part of the command.
-      - text: "$ ls -la"
-        why: Typing the $ makes the shell look for a command named $, which fails.
-      - text: "ls"
-        why: That drops the -la options, so you would miss hidden files and the long format.
   - id: f0-terminal-10
     type: multi
     prompt: "Which commands would take you to your home folder, from anywhere?"
     explanation: "`cd ~`, a plain `cd`, and the absolute path all go home. `cd ..` goes up only one level from wherever you are."
     options:
+      - text: "cd .."
+        why: This moves up one level from the current folder, which is home only if you happened to be one level below it.
       - text: "cd ~"
         correct: true
         why: ~ always means your home folder.
@@ -114,5 +116,3 @@ items:
       - text: "cd /Users/ada (if your user name is ada)"
         correct: true
         why: The absolute path to your home folder works from anywhere.
-      - text: "cd .."
-        why: This moves up one level from the current folder, which is home only if you happened to be one level below it.

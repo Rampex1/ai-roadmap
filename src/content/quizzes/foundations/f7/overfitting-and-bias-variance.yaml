@@ -1,0 +1,120 @@
+items:
+  - id: f7-overfitting-and-bias-variance-01
+    type: mcq
+    prompt: "A model has training MSE 0.03 and validation MSE 0.90. What is the most likely diagnosis?"
+    options:
+      - text: "Overfitting: high variance"
+        correct: true
+        why: "A large gap between low training error and high validation error is the signature of overfitting."
+      - text: "Underfitting: high bias"
+        why: "An underfitting model has high error on the training data too."
+      - text: "The model is about right"
+        why: "Validation error 30 times the training error means it has fitted noise."
+    explanation: "Low training error with much higher validation error means the model memorised its training data."
+  - id: f7-overfitting-and-bias-variance-02
+    type: mcq
+    prompt: "A straight line fitted to clearly curved data has training MSE 0.50 and validation MSE 0.55. What is the diagnosis?"
+    options:
+      - text: "Underfitting: high bias"
+        correct: true
+        why: "Both errors are high and close together: the model is too simple for the pattern."
+      - text: "Overfitting: high variance"
+        why: "Overfitting shows low training error and a large gap; here there is no gap."
+      - text: "Data leakage"
+        why: "Leakage makes scores look too good, not uniformly bad."
+    explanation: "High error on both sets with a small gap points to bias. A more flexible model or better features would help."
+  - id: f7-overfitting-and-bias-variance-03
+    type: multi
+    prompt: "A model overfits. Which changes are likely to help?"
+    options:
+      - text: "Collect more training data"
+        correct: true
+        why: "More data pins down a flexible model and reduces variance."
+      - text: "Add a regularisation penalty"
+        correct: true
+        why: "A penalty limits how wildly the weights can fit noise."
+      - text: "Use a simpler model, such as a lower polynomial degree"
+        correct: true
+        why: "Less flexibility means less variance."
+      - text: "Add higher-degree polynomial features"
+        why: "That adds flexibility and makes overfitting worse."
+    explanation: "Overfitting is a variance problem: more data, a penalty or a simpler model all reduce variance."
+  - id: f7-overfitting-and-bias-variance-04
+    type: mcq
+    prompt: "You tried 40 hyperparameter settings and picked the one with the best validation score. Why report a separate test score?"
+    options:
+      - text: "The best of 40 validation scores is optimistic, because the winner was partly lucky on those rows"
+        correct: true
+        why: "Choosing by validation score fits the validation set a little; the untouched test set does not have that bias."
+      - text: "The validation set is always smaller than the test set"
+        why: "Their sizes are a choice; the issue is that the validation set was used for selection."
+      - text: "The test set is used to fit the final model"
+        why: "The test set is never used for fitting or choosing, only for the final estimate."
+    explanation: "Any data used to make choices becomes optimistic. The test set stays untouched until the end."
+  - id: f7-overfitting-and-bias-variance-05
+    type: numeric
+    prompt: "At some input, a model has bias² = 0.02 and variance = 0.05, and the noise variance is 0.09. What is the expected squared error there?"
+    answer: 0.16
+    tol: 0.001
+    explanation: "Expected squared error = bias² + variance + noise = 0.02 + 0.05 + 0.09 = 0.16."
+  - id: f7-overfitting-and-bias-variance-06
+    type: mcq
+    prompt: "As you raise the polynomial degree from 1 to 15 on a fixed training set, what happens to the **training** error?"
+    options:
+      - text: "It never goes up, because each higher degree can reproduce every lower-degree fit"
+        correct: true
+        why: "The models are nested, so the best fit can only stay the same or improve on the training points."
+      - text: "It is U-shaped, like the validation error"
+        why: "Only the validation error turns back up; the training error keeps falling."
+      - text: "It goes up, because complex models are harder to fit"
+        why: "Least squares finds the exact minimum, and a bigger model has a minimum at least as low."
+    explanation: "That is why training error cannot be used to choose model complexity."
+  - id: f7-overfitting-and-bias-variance-07
+    type: order
+    prompt: "Order these fits of the lesson's sine data from **highest bias** to **highest variance**."
+    items:
+      - "Degree 1 polynomial"
+      - "Degree 3 polynomial"
+      - "Degree 9 polynomial"
+      - "Degree 15 polynomial"
+    explanation: "Increasing the degree adds flexibility, which lowers bias and raises variance."
+  - id: f7-overfitting-and-bias-variance-08
+    type: mcq
+    prompt: "You want to forecast next month's sales from five years of monthly data. How should you split off a test set?"
+    options:
+      - text: "Use the most recent months as the test set and train on everything before"
+        correct: true
+        why: "This mirrors how the model will be used: trained on the past, predicting the future."
+      - text: "A random 20% of months, with a fixed random_state"
+        why: "Random months let the model learn from months that come after the ones it is tested on."
+      - text: "The first year, since it is the oldest"
+        why: "Testing on the past while training on the future reverses the real situation."
+    explanation: "With time-ordered data, test on the future. A random split leaks information from later months."
+  - id: f7-overfitting-and-bias-variance-09
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      from sklearn.model_selection import train_test_split
+      X = np.zeros((50, 3))
+      a, b = train_test_split(X, test_size=0.2, random_state=0)
+      print(len(a), len(b))
+    answer: "40 10"
+    explanation: "With one array, train_test_split returns (train, test). 20% of 50 rows is 10 for the test set; 40 remain for training."
+  - id: f7-overfitting-and-bias-variance-10
+    type: cloze
+    prompt: "In expected squared error = bias² + variance + ____, the last term is the floor that no model can beat."
+    accept: ["noise", "irreducible error", "noise variance", "σ²", "sigma^2", "sigma squared", "irreducible noise"]
+    explanation: "The noise variance σ²: randomness in y that no function of the features can predict."
+  - id: f7-overfitting-and-bias-variance-11
+    type: mcq
+    prompt: "Collecting ten times more training data mostly reduces which part of the error?"
+    options:
+      - text: "Variance"
+        correct: true
+        why: "With more data, fits on different training sets agree more closely."
+      - text: "Bias"
+        why: "A straight line still cannot bend however much data you give it."
+      - text: "Noise"
+        why: "Noise is a property of the data-generating process, not of the training set size."
+    explanation: "More data cures variance, not bias. If a model underfits, more data will not help."

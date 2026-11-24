@@ -4,15 +4,15 @@ items:
     prompt: "In training a model $\\hat{y} = w x + b$ by minimising $L(w, b)$, which of these are the **parameters**?"
     explanation: "Parameters are what the optimiser is free to change. The data are fixed during training, and the learning rate is a hyperparameter you choose."
     options:
-      - text: w and b
-        correct: true
-        why: The optimiser adjusts w and b to lower the loss.
+      - text: The loss value L
+        why: The loss is the quantity being minimised, not something we set.
       - text: The inputs x and targets y
         why: The data are held fixed while we search for good parameters.
       - text: The learning rate
         why: That is a hyperparameter, chosen by you rather than learned by the optimiser.
-      - text: The loss value L
-        why: The loss is the quantity being minimised, not something we set.
+      - text: w and b
+        correct: true
+        why: The optimiser adjusts w and b to lower the loss.
   - id: f6-what-is-optimisation-02
     type: numeric
     prompt: "For $L(w) = (w - 3)^2 + 1$, what is $\\arg\\min_w L(w)$?"
@@ -30,11 +30,11 @@ items:
     prompt: "You want the parameters that **maximise** a function $g(\\boldsymbol{\\theta})$, but your library only minimises. What do you minimise?"
     explanation: "The highest point of g is the lowest point of -g, so argmax g = argmin (-g)."
     options:
+      - text: "1 - g(θ) squared"
+        why: Squaring changes where the optimum is whenever g can be negative.
       - text: "-g(θ)"
         correct: true
         why: Flipping the sign turns peaks into valleys at the same place.
-      - text: "1 - g(θ) squared"
-        why: Squaring changes where the optimum is whenever g can be negative.
       - text: "g(θ) itself, then take the last value"
         why: Minimising g finds its lowest point, the opposite of what you want.
       - text: "The gradient of g"
@@ -50,30 +50,30 @@ items:
     prompt: "At a point $\\boldsymbol{\\theta}$, the gradient $\\nabla L(\\boldsymbol{\\theta}) = \\mathbf{0}$. Which could $\\boldsymbol{\\theta}$ be? Select all that apply."
     explanation: "Any stationary point has zero gradient: minima, maxima and saddle points alike. A zero gradient alone does not prove a minimum."
     options:
-      - text: A global minimum
-        correct: true
-        why: The tangent is flat at the lowest point.
-      - text: A local minimum that is not global
-        correct: true
-        why: Every local minimum has a flat tangent too.
       - text: A local maximum
         correct: true
         why: The top of a hill is also flat.
       - text: A saddle point
         correct: true
         why: For example x² - y² at the origin, a minimum along x and a maximum along y.
+      - text: A local minimum that is not global
+        correct: true
+        why: Every local minimum has a flat tangent too.
+      - text: A global minimum
+        correct: true
+        why: The tangent is flat at the lowest point.
   - id: f6-what-is-optimisation-07
     type: mcq
     prompt: "Why is convexity such a useful property for an optimisation problem?"
     explanation: "For a convex function every local minimum is a global minimum, so any valley that a descent method settles into is the best one."
     options:
+      - text: Any learning rate works
+        why: Gradient descent can still diverge on a convex function if the step is too large.
       - text: Every local minimum is also a global minimum
         correct: true
         why: There are no bad valleys to get stuck in.
       - text: The gradient is never zero
         why: A convex function such as x² has zero gradient at its minimum.
-      - text: Any learning rate works
-        why: Gradient descent can still diverge on a convex function if the step is too large.
       - text: The minimum is always at the origin
         why: (x - 3)² is convex with its minimum at 3.
   - id: f6-what-is-optimisation-08
@@ -81,19 +81,19 @@ items:
     prompt: "Which of these functions of one variable are convex? Select all that apply."
     explanation: "x², eˣ and |x| curve upwards everywhere (or are straight pieces), so every chord lies above the graph. x³ curves downwards for x < 0, and sin x alternates."
     options:
-      - text: "x²"
-        correct: true
-        why: Its second derivative is 2, never negative.
+      - text: "x³"
+        why: For x < 0 the second derivative 6x is negative, so chords dip below the graph there.
+      - text: "sin x"
+        why: It has many hills and valleys; chords across a hill lie below it.
       - text: "eˣ"
         correct: true
         why: Its second derivative eˣ is always positive.
       - text: "|x|"
         correct: true
         why: Two straight pieces meeting in a V; every chord lies on or above it.
-      - text: "x³"
-        why: For x < 0 the second derivative 6x is negative, so chords dip below the graph there.
-      - text: "sin x"
-        why: It has many hills and valleys; chords across a hill lie below it.
+      - text: "x²"
+        correct: true
+        why: Its second derivative is 2, never negative.
   - id: f6-what-is-optimisation-09
     type: output
     prompt: "What does this print?"
@@ -110,12 +110,12 @@ items:
     prompt: "Which loss is **not** convex in its parameters?"
     explanation: "Linear regression with MSE and logistic regression with cross-entropy are convex. A neural network with a hidden layer has a non-convex loss with many local minima and saddles."
     options:
+      - text: The cross-entropy loss of logistic regression
+        why: That one is convex too, which F7 relies on.
+      - text: "L(w) = (w - 3)²"
+        why: A shifted parabola is convex.
       - text: The MSE loss of a neural network with one hidden layer
         correct: true
         why: Hidden layers make the loss surface non-convex.
       - text: The MSE loss of linear regression
         why: It is a bowl in the weights.
-      - text: The cross-entropy loss of logistic regression
-        why: That one is convex too, which F7 relies on.
-      - text: "L(w) = (w - 3)²"
-        why: A shifted parabola is convex.

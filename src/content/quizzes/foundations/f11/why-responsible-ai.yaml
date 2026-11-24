@@ -3,43 +3,43 @@ items:
     type: mcq
     prompt: "According to Reuters, why did Amazon's experimental CV-rating tool learn to penalise CVs that mentioned \"women's\"?"
     options:
-      - text: "It was trained to imitate about ten years of past CVs and hiring outcomes, which came mostly from men"
-        correct: true
-        why: "The model learned patterns that predicted past outcomes, and the past was skewed. Nobody programmed a preference."
+      - text: "Women's CVs were longer on average, and the model preferred short CVs"
+        why: "This was not the reported mechanism. The model learned from a male-dominated history of applications."
       - text: "An engineer added a rule that scored women lower"
         why: "There was no such rule. The pattern was learned from data, which is what makes this kind of bias easy to miss."
       - text: "The tool was shown each applicant's gender as an input feature"
         why: "Words in the CV acted as proxies. Even after the obvious terms were neutralised, the team could not be sure other proxies were not used."
-      - text: "Women's CVs were longer on average, and the model preferred short CVs"
-        why: "This was not the reported mechanism. The model learned from a male-dominated history of applications."
+      - text: "It was trained to imitate about ten years of past CVs and hiring outcomes, which came mostly from men"
+        correct: true
+        why: "The model learned patterns that predicted past outcomes, and the past was skewed. Nobody programmed a preference."
     explanation: "A model asked to imitate historical decisions copies whatever skew those decisions contain, through any feature that correlates with group."
   - id: f11-why-responsible-ai-02
     type: mcq
     prompt: "The Gender Shades study found error rates of up to 34.7% for darker-skinned women but at most 0.8% for lighter-skinned men. What does this mainly illustrate?"
     options:
+      - text: "Gender classification is always about 65% accurate"
+        why: "Error rates ranged from under 1% to about 35% depending on the group, which is the whole point."
       - text: "A single overall accuracy number can hide much worse performance for particular groups"
         correct: true
         why: "Benchmarks dominated by lighter-skinned faces gave high headline accuracy while one group fared far worse. Disaggregating revealed it."
-      - text: "Face analysis cannot work for darker skin"
-        why: "NIST later found that algorithms varied widely and some had much smaller differences. The gap depends on the system and its data."
       - text: "The systems were deliberately designed to treat groups differently"
         why: "Nothing suggests intent. Unrepresentative training and test data are enough to produce the gap."
-      - text: "Gender classification is always about 65% accurate"
-        why: "Error rates ranged from under 1% to about 35% depending on the group, which is the whole point."
+      - text: "Face analysis cannot work for darker skin"
+        why: "NIST later found that algorithms varied widely and some had much smaller differences. The gap depends on the system and its data."
     explanation: "Measuring per group, and at intersections such as skin type and gender together, exposes failures that averages conceal."
   - id: f11-why-responsible-ai-03
     type: mcq
     prompt: "In the health algorithm studied by Obermeyer and colleagues, where did the racial bias mainly come from?"
     options:
+      - text: "The training data contained no Black patients"
+        why: "Black patients were in the data; the bias came from what was being predicted for everyone."
       - text: "The algorithm predicted health-care costs as a stand-in for health needs, and less was spent on equally sick Black patients"
         correct: true
         why: "The target was the problem. Costs reflected unequal access to care, so equal scores meant different levels of sickness."
-      - text: "The algorithm had race as an input feature with a negative weight"
-        why: "The paper traced the bias to the choice of label (costs), not to a race input."
       - text: "The model had too few parameters"
         why: "Predicting costs well does not help if costs are the wrong target. Model size was not the issue."
-      - text: "The training data contained no Black patients"
-        why: "Black patients were in the data; the bias came from what was being predicted for everyone."
+      - text: "The algorithm had race as an input feature with a negative weight"
+        why: "The paper traced the bias to the choice of label (costs), not to a race input."
     explanation: "Choosing what to predict is a fairness decision. The authors estimated that fixing the disparity would raise the share of Black patients selected for extra help from 17.7% to 46.5%."
   - id: f11-why-responsible-ai-04
     type: output
@@ -56,6 +56,8 @@ items:
     type: multi
     prompt: "Which of these situations contain a feedback loop, where the model's decisions shape its own future training data? Select all that apply."
     options:
+      - text: "A weather model is retrained on temperatures measured by independent thermometers"
+        why: "The forecast does not change what the thermometers measure, so there is no loop."
       - text: "A lender retrains on repayment outcomes, which it only observes for applicants it approved"
         correct: true
         why: "Rejected applicants never generate repayment data, so past rejections shape what the next model can learn."
@@ -65,18 +67,16 @@ items:
       - text: "Police patrols are sent where past records show the most incidents, and new records come from patrols"
         correct: true
         why: "This is the classic predictive policing loop studied by Lum and Isaac and by Ensign and colleagues."
-      - text: "A weather model is retrained on temperatures measured by independent thermometers"
-        why: "The forecast does not change what the thermometers measure, so there is no loop."
     explanation: "Whenever a model controls what gets observed, its future data are filtered by its past predictions."
   - id: f11-why-responsible-ai-06
     type: mcq
     prompt: "A speech recogniser makes three times as many errors for speakers with one regional accent as for others. Which kind of harm is this?"
     options:
+      - text: "An allocation harm"
+        why: "Allocation harms decide who gets something, such as a loan or interview. Here the issue is how well the system works for someone."
       - text: "A quality-of-service harm"
         correct: true
         why: "The product simply works worse for one group, without directly allocating a resource."
-      - text: "An allocation harm"
-        why: "Allocation harms decide who gets something, such as a loan or interview. Here the issue is how well the system works for someone."
       - text: "A privacy harm"
         why: "No personal data is being exposed; the system is just less accurate for some people."
       - text: "Not a harm, because the overall accuracy may still be high"
@@ -99,19 +99,19 @@ items:
   - id: f11-why-responsible-ai-08
     type: cloze
     prompt: "Reporting a metric separately for each group, instead of one overall number, is called ____ the metric (one word, starting with dis)."
-    accept: ["disaggregating", "disaggregate", "disaggregated"]
+    accept: [ "disaggregating", "disaggregate", "disaggregated" ]
     explanation: "Disaggregation is the first habit of responsible ML: averages hide the people a system fails."
   - id: f11-why-responsible-ai-09
     type: mcq
     prompt: "A team says: \"Our model is 95% accurate, so it is fair.\" What is the best response?"
     options:
+      - text: "They should report precision instead, because it is always fairer"
+        why: "Any single overall metric hides group differences. The fix is to break metrics down by group."
+      - text: "Fairness only matters if accuracy is below 90%"
+        why: "Fairness and accuracy are different questions; a highly accurate model can be very unfair."
       - text: "Accuracy says nothing about how errors are spread across groups; check the rates per group"
         correct: true
         why: "95% overall can coexist with a much higher error rate for a small group."
       - text: "95% is high enough that any group differences must be tiny"
         why: "If a group is 5% of the data, the model could be wrong for nearly all of them and still be 95% accurate."
-      - text: "Fairness only matters if accuracy is below 90%"
-        why: "Fairness and accuracy are different questions; a highly accurate model can be very unfair."
-      - text: "They should report precision instead, because it is always fairer"
-        why: "Any single overall metric hides group differences. The fix is to break metrics down by group."
     explanation: "Overall accuracy averages over everyone. Fairness is about whether some groups bear more of the errors."

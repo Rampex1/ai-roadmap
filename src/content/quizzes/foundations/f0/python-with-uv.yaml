@@ -4,15 +4,15 @@ items:
     prompt: "Project A needs version 1 of a library and project B needs version 2. What lets both work on the same laptop?"
     explanation: "Each project gets its own virtual environment (.venv) with its own copy of its libraries, so upgrading one project's library can't break the other."
     options:
+      - text: Restarting the Terminal between projects
+        why: Restarting the shell doesn't change which libraries are installed.
+      - text: Using a newer version of Python
+        why: The Python version doesn't solve a clash between two library versions.
       - text: Giving each project its own virtual environment
         correct: true
         why: Each .venv holds its own versions, so the projects never share, or fight over, a library.
       - text: Installing both versions into the Mac's built-in Python
         why: One Python environment can hold only one version of a library at a time, and Apple's Python is best left alone.
-      - text: Using a newer version of Python
-        why: The Python version doesn't solve a clash between two library versions.
-      - text: Restarting the Terminal between projects
-        why: Restarting the shell doesn't change which libraries are installed.
   - id: f0-python-with-uv-02
     type: order
     prompt: "Put these steps in order to go from nothing to running a NumPy script in a new project."
@@ -27,9 +27,6 @@ items:
     prompt: "You run `uv add numpy` in a project. Which of these happen?"
     explanation: "uv add installs the library into the project's .venv (creating it if needed), lists it in pyproject.toml, and records exact versions in uv.lock. It does not touch the Mac's built-in Python."
     options:
-      - text: numpy is listed as a dependency in pyproject.toml
-        correct: true
-        why: That is how the project remembers what it needs.
       - text: The exact installed versions are recorded in uv.lock
         correct: true
         why: The lockfile makes the environment reproducible.
@@ -38,20 +35,23 @@ items:
         why: Libraries go into the project's own virtual environment.
       - text: numpy becomes available to every Python on the computer
         why: The point of a virtual environment is that it doesn't; only this project sees it.
+      - text: numpy is listed as a dependency in pyproject.toml
+        correct: true
+        why: That is how the project remembers what it needs.
   - id: f0-python-with-uv-04
     type: mcq
     prompt: "After installing uv, typing `uv --version` gives `zsh: command not found: uv`. What is the most likely fix?"
     explanation: "The installer added uv's folder to the shell's search path, but a running shell only reads that setting when it starts. Opening a new window (or running the command the installer printed) fixes it."
     options:
+      - text: Type sudo uv --version
+        why: sudo runs a command as administrator; it doesn't help the shell find a program, and you should avoid it unless you know why you need it.
       - text: Open a new Terminal window so the shell reloads its search path
         correct: true
         why: The search path is read at shell startup, so the old window doesn't know about uv yet.
-      - text: Reinstall macOS
-        why: Far too drastic; this is a routine path issue.
-      - text: Type sudo uv --version
-        why: sudo runs a command as administrator; it doesn't help the shell find a program, and you should avoid it unless you know why you need it.
       - text: Install Python first
         why: uv doesn't need Python to run; it installs Python for you.
+      - text: Reinstall macOS
+        why: Far too drastic; this is a routine path issue.
   - id: f0-python-with-uv-05
     type: output
     prompt: "In the course project (with NumPy added), you run `uv run stats.py`. stats.py contains the code below. What does it print?"
@@ -66,20 +66,20 @@ items:
     prompt: "Your project's environment seems broken: imports fail in strange ways. What is the safest fix?"
     explanation: ".venv is disposable. Deleting it and running uv sync rebuilds it exactly from pyproject.toml and uv.lock."
     options:
+      - text: Delete pyproject.toml and uv.lock
+        why: Those files are the record of what the project needs; deleting them loses information.
       - text: Delete the .venv folder and run uv sync
         correct: true
         why: The environment is rebuilt from the project's recorded dependencies, so nothing is lost.
-      - text: Delete pyproject.toml and uv.lock
-        why: Those files are the record of what the project needs; deleting them loses information.
-      - text: Edit the files inside .venv by hand
-        why: uv manages .venv; hand edits are fragile and get overwritten.
       - text: Install the libraries into Apple's python3 instead
         why: That mixes environments and is exactly what we are avoiding.
+      - text: Edit the files inside .venv by hand
+        why: uv manages .venv; hand edits are fragile and get overwritten.
   - id: f0-python-with-uv-07
     type: cloze
     prompt: "The command that runs a script using the project's own Python and libraries is `uv ____ stats.py`."
     explanation: "`uv run` syncs the environment if needed, then runs the script inside it."
-    accept: ["run"]
+    accept: [ "run" ]
   - id: f0-python-with-uv-08
     type: mcq
     prompt: "Which file should you share with a friend so they get exactly the same library versions as you?"
@@ -88,10 +88,10 @@ items:
       - text: uv.lock (along with pyproject.toml)
         correct: true
         why: The lockfile pins every exact version; uv sync recreates the environment from it.
-      - text: The .venv folder
-        why: .venv is large, specific to your machine, and can be rebuilt; share the recipe, not the result.
       - text: stats.py
         why: The script uses the libraries but doesn't say which versions to install.
+      - text: The .venv folder
+        why: .venv is large, specific to your machine, and can be rebuilt; share the recipe, not the result.
       - text: Nothing; library versions are always the same everywhere
         why: Libraries release new versions often, which is why the lockfile exists.
   - id: f0-python-with-uv-09
@@ -99,13 +99,13 @@ items:
     prompt: "In the terminal you see the prompt `>>>`. What is going on?"
     explanation: "`>>>` is the Python REPL's prompt. You are typing Python, not shell commands; leave with exit() or Ctrl + D."
     options:
-      - text: You are inside an interactive Python session, typing Python code
-        correct: true
-        why: The REPL shows >>> while it waits for Python input.
       - text: zsh is waiting for a shell command
         why: zsh's prompt ends with %, not >>>.
       - text: The terminal has crashed
         why: Nothing is wrong; it is waiting for your input.
+      - text: You are inside an interactive Python session, typing Python code
+        correct: true
+        why: The REPL shows >>> while it waits for Python input.
   - id: f0-python-with-uv-10
     type: numeric
     prompt: "You have 4 projects, each with its own virtual environment. Each installs NumPy and matplotlib, about 60 MB in total per environment. Roughly how many MB is that across all environments, if nothing is shared?"

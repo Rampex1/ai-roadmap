@@ -13,15 +13,15 @@ items:
     prompt: "House prices in a city are strongly right-skewed (a few mansions). Which summary best describes a **typical** house price?"
     explanation: "The median is robust to the few extreme values, so it reflects a typical house; the mean is pulled up by the mansions."
     options:
+      - text: The standard deviation
+        why: That measures spread, not a typical value.
+      - text: The mean
+        why: A few very high prices drag the mean above what most houses cost.
       - text: The median
         correct: true
         why: Half the houses cost less and half more, regardless of how expensive the mansions are.
-      - text: The mean
-        why: A few very high prices drag the mean above what most houses cost.
       - text: The maximum
         why: The maximum describes the most extreme house, not a typical one.
-      - text: The standard deviation
-        why: That measures spread, not a typical value.
   - id: f5-estimation-and-the-bootstrap-03
     type: mcq
     prompt: "Why does the sample variance divide by $n - 1$ instead of $n$?"
@@ -47,15 +47,15 @@ items:
     prompt: "A study reports a 95% confidence interval of (12, 18) for a mean. Which interpretation is correct?"
     explanation: "The 95% is the long-run success rate of the method: about 95% of intervals built this way contain the true mean. The true mean is fixed; this interval either contains it or not."
     options:
+      - text: 95% of the data values lie between 12 and 18
+        why: A CI is about the mean, not about individual values; the data usually spread much wider.
+      - text: The true mean is certainly between 12 and 18
+        why: About 5% of such intervals miss.
+      - text: If the study were repeated, the new sample mean would be between 12 and 18 with probability 0.95
+        why: The new mean varies around the true mean, not around this interval; that probability is generally lower.
       - text: The method that produced it captures the true mean in about 95% of repeated studies
         correct: true
         why: Confidence describes the procedure over many repetitions.
-      - text: 95% of the data values lie between 12 and 18
-        why: A CI is about the mean, not about individual values; the data usually spread much wider.
-      - text: If the study were repeated, the new sample mean would be between 12 and 18 with probability 0.95
-        why: The new mean varies around the true mean, not around this interval; that probability is generally lower.
-      - text: The true mean is certainly between 12 and 18
-        why: About 5% of such intervals miss.
   - id: f5-estimation-and-the-bootstrap-06
     type: order
     prompt: "Put the steps of a percentile bootstrap confidence interval in order."
@@ -70,15 +70,15 @@ items:
     prompt: "In the bootstrap, why do resamples have to be drawn **with replacement**?"
     explanation: "Without replacement, a resample of size n is just the original data reordered, so every statistic would come out identical and show no variability."
     options:
+      - text: It makes the resamples larger than the data
+        why: Resamples have the same size as the data.
       - text: Without replacement, every resample of size n is the original data shuffled, so the statistic would never vary
         correct: true
         why: Replacement lets some points repeat and others drop out, imitating a new sample.
-      - text: Drawing with replacement is faster
-        why: Speed is not the reason; it is about producing variation.
       - text: It removes outliers from the data
         why: Outliers can appear zero, one or several times in a resample.
-      - text: It makes the resamples larger than the data
-        why: Resamples have the same size as the data.
+      - text: Drawing with replacement is faster
+        why: Speed is not the reason; it is about producing variation.
   - id: f5-estimation-and-the-bootstrap-08
     type: multi
     prompt: "In which situations is a plain bootstrap (resampling individual rows) likely to give **misleading** intervals? Select all."
@@ -90,11 +90,11 @@ items:
       - text: Ten images per patient for 50 patients, resampled image by image
         correct: true
         why: Images from the same patient are not independent; resample patients instead.
+      - text: The median of 2,000 independent survey answers
+        why: Large, independent samples and a smooth statistic are where the bootstrap works well.
       - text: The maximum of a sample
         correct: true
         why: A resample can never exceed the sample maximum, so intervals for extremes are poor.
-      - text: The median of 2,000 independent survey answers
-        why: Large, independent samples and a smooth statistic are where the bootstrap works well.
   - id: f5-estimation-and-the-bootstrap-09
     type: output
     prompt: "What does this print?"
@@ -108,5 +108,5 @@ items:
   - id: f5-estimation-and-the-bootstrap-10
     type: cloze
     prompt: "In NumPy, `x.std(________=1)` divides by $n - 1$ instead of $n$."
-    accept: ["ddof"]
+    accept: [ "ddof" ]
     explanation: "ddof stands for delta degrees of freedom: the divisor is n - ddof."

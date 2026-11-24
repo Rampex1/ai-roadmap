@@ -16,12 +16,12 @@ items:
     prompt: "Which of these are part of every lesson in this course?"
     explanation: "Every lesson has objectives and an end-of-lesson quiz. Homework notebooks belong to modules, not individual lessons."
     options:
-      - text: Learning objectives
-        correct: true
-        why: Each lesson starts with 2–4 objectives.
       - text: A quiz at the end
         correct: true
         why: Retrieval practice closes every lesson.
+      - text: Learning objectives
+        correct: true
+        why: Each lesson starts with 2–4 objectives.
       - text: A homework notebook
         why: Homework is set once per module, not per lesson.
   - id: f0-welcome-03
@@ -51,7 +51,7 @@ items:
     type: cloze
     prompt: "Gradient descent steps against the ____ of the loss."
     explanation: "The gradient points uphill; stepping against it lowers the loss."
-    accept: ["gradient"]
+    accept: [ "gradient" ]
     regex: "^(the )?gradient$"
   - id: f0-welcome-07
     type: mcq
@@ -61,10 +61,10 @@ items:
       - text: In your web browser, with nothing to install
         correct: true
         why: The site ships a Python that runs inside the browser page.
-      - text: On a Google server, so you need an account
-        why: That describes Colab, which is used for some homework, not lesson exercises.
       - text: In the Terminal, after installing Python
         why: Local Python is set up later in this module and used for homework, not lesson exercises.
+      - text: On a Google server, so you need an account
+        why: That describes Colab, which is used for some homework, not lesson exercises.
   - id: f0-welcome-08
     type: numeric
     prompt: "What is the mean of 10, 20, 30 and 40?"
@@ -76,12 +76,12 @@ items:
     prompt: "In $\\bar{x} = \\frac{1}{n}\\sum_{i=1}^{n} x_i$, what does the symbol $\\sum_{i=1}^{n} x_i$ mean?"
     explanation: "$\\sum$ (capital sigma) means add up. $\\sum_{i=1}^{n} x_i = x_1 + x_2 + \\dots + x_n$."
     options:
+      - text: Take the largest number
+        why: The largest value is written $\max$, not $\sum$.
+      - text: Multiply all the numbers together
+        why: A product uses capital pi, $\prod$, not sigma.
       - text: Add up all the numbers from the first to the n-th
         correct: true
         why: Sigma with i running from 1 to n means the sum $x_1 + x_2 + \dots + x_n$.
-      - text: Multiply all the numbers together
-        why: A product uses capital pi, $\prod$, not sigma.
       - text: Count how many numbers there are
         why: That count is $n$ itself; sigma adds the values.
-      - text: Take the largest number
-        why: The largest value is written $\max$, not $\sum$.

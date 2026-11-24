@@ -31,15 +31,15 @@ items:
     prompt: "What is the shape of `np.array([[1, 2, 3], [4, 5, 6]])`?"
     explanation: "The outer list holds 2 rows and each row has 3 numbers, so the shape is (rows, columns) = (2, 3)."
     options:
+      - text: "(3, 2)"
+        why: That would be three rows of two. Shape lists rows first.
       - text: "(2, 3)"
         correct: true
         why: Two inner lists become two rows, each with three columns.
-      - text: "(3, 2)"
-        why: That would be three rows of two. Shape lists rows first.
-      - text: "(6,)"
-        why: That is the shape of a flat 1D array of six numbers; this one is 2D.
       - text: "6"
         why: 6 is the size (total number of elements), not the shape. Shape is always a tuple.
+      - text: "(6,)"
+        why: That is the shape of a flat 1D array of six numbers; this one is 2D.
   - id: f2-numpy-arrays-05
     type: output
     prompt: "What does this print?"
@@ -67,16 +67,16 @@ items:
     prompt: "Why is `arr * 2` on a large NumPy array much faster than `[x * 2 for x in lst]` on a list of the same numbers?"
     explanation: "The array stores raw numbers of a single type side by side, and the loop runs in compiled code without per-element Python bookkeeping."
     options:
-      - text: The loop over elements runs in compiled code instead of the Python interpreter
-        correct: true
-        why: NumPy's inner loops are written in C, so each element costs a few machine instructions.
+      - text: NumPy uses the GPU automatically
+        why: NumPy runs on the CPU. Libraries such as PyTorch are what move work to a GPU.
+      - text: NumPy skips some of the elements to save time
+        why: Every element is computed; the speed comes from how, not from doing less.
       - text: All elements share one dtype, so NumPy does not check each value's type
         correct: true
         why: A list can hold anything, so Python must check every item; an array cannot.
-      - text: NumPy skips some of the elements to save time
-        why: Every element is computed; the speed comes from how, not from doing less.
-      - text: NumPy uses the GPU automatically
-        why: NumPy runs on the CPU. Libraries such as PyTorch are what move work to a GPU.
+      - text: The loop over elements runs in compiled code instead of the Python interpreter
+        correct: true
+        why: NumPy's inner loops are written in C, so each element costs a few machine instructions.
   - id: f2-numpy-arrays-09
     type: output
     prompt: "What does this print?"
@@ -88,7 +88,7 @@ items:
   - id: f2-numpy-arrays-10
     type: cloze
     prompt: "Replacing an explicit Python loop with whole-array operations such as `a * b` is called ____ ."
-    accept: ["vectorisation", "vectorization", "vectorising", "vectorizing"]
+    accept: [ "vectorisation", "vectorization", "vectorising", "vectorizing" ]
     explanation: "Vectorisation lets NumPy run the loop in compiled code, which is both faster and shorter."
   - id: f2-numpy-arrays-11
     type: mcq
@@ -98,7 +98,7 @@ items:
       - text: It raises an error, because every element became a string
         correct: true
         why: The array gets a string dtype like <U21, and you cannot add 1 to text.
-      - text: It gives [6, "x", 8]
-        why: Arrays have one dtype; they cannot hold numbers and strings side by side like a list can.
       - text: It silently drops the "x" and returns [6 8]
         why: NumPy never drops elements; it converts them all to a common type.
+      - text: It gives [6, "x", 8]
+        why: Arrays have one dtype; they cannot hold numbers and strings side by side like a list can.

@@ -13,12 +13,12 @@ items:
       - text: If p were 0.7, this exact sequence of flips would have probability about 0.0022
         correct: true
         why: The likelihood is P(data | p), read as a function of p.
-      - text: There is a 0.22% chance that p equals 0.7
-        why: The likelihood is not a probability distribution over p.
       - text: The coin will land heads 0.22% of the time
         why: That confuses the likelihood with p itself.
       - text: The estimate 0.7 has an error of 0.0022
         why: The likelihood value says nothing directly about the error.
+      - text: There is a 0.22% chance that p equals 0.7
+        why: The likelihood is not a probability distribution over p.
   - id: f5-maximum-likelihood-03
     type: multi
     prompt: "Why do we minimise the negative log-likelihood instead of maximising the likelihood directly? Select all that apply."
@@ -27,14 +27,14 @@ items:
       - text: The product of many probabilities underflows to 0, while the sum of their logs does not
         correct: true
         why: Thousands of factors below 1 fall below the smallest float.
-      - text: The log is increasing, so the best parameter is the same
-        correct: true
-        why: Maximising ln L and maximising L give the same answer.
+      - text: The log changes which parameter is best, giving a better estimate
+        why: The maximiser is unchanged; the log only makes the computation easier.
       - text: Optimisers are written to minimise, so we flip the sign
         correct: true
         why: Gradient descent minimises a loss.
-      - text: The log changes which parameter is best, giving a better estimate
-        why: The maximiser is unchanged; the log only makes the computation easier.
+      - text: The log is increasing, so the best parameter is the same
+        correct: true
+        why: Maximising ln L and maximising L give the same answer.
   - id: f5-maximum-likelihood-04
     type: output
     prompt: "What does this print?"
@@ -55,10 +55,10 @@ items:
         why: The Gaussian log-density contains exactly the squared error.
       - text: The targets are 0 or 1
         why: That leads to binary cross-entropy.
-      - text: The noise is uniformly distributed
-        why: A uniform noise model does not give squared error.
       - text: There is no noise at all
         why: With no noise the likelihood would not be defined this way; MSE assumes Gaussian noise.
+      - text: The noise is uniformly distributed
+        why: A uniform noise model does not give squared error.
   - id: f5-maximum-likelihood-06
     type: numeric
     prompt: "A binary classifier predicts $P(y = 1) = 0.8$ for an example whose true label is $y = 0$. What is the binary cross-entropy for this example (natural log)?"
@@ -82,12 +82,12 @@ items:
       - text: The sample mean
         correct: true
         why: Setting the derivative of the sum of squares to zero gives the average.
-      - text: The sample median
-        why: The median minimises the sum of absolute deviations, which corresponds to Laplace noise.
       - text: The midpoint between the minimum and the maximum
         why: That is not what squared error picks.
       - text: The most common value
         why: For continuous data there may be no repeated value; this is not the MLE.
+      - text: The sample median
+        why: The median minimises the sum of absolute deviations, which corresponds to Laplace noise.
   - id: f5-maximum-likelihood-09
     type: output
     prompt: "What does this print? (It multiplies 2,000 probabilities of 0.5.)"
@@ -100,5 +100,5 @@ items:
   - id: f5-maximum-likelihood-10
     type: cloze
     prompt: "Training a classifier with binary cross-entropy is the same as minimising the average negative ________ of the labels."
-    accept: ["log-likelihood", "log likelihood", "loglikelihood"]
+    accept: [ "log-likelihood", "log likelihood", "loglikelihood" ]
     explanation: "Binary cross-entropy is the average negative log-likelihood of Bernoulli labels."

@@ -1,0 +1,118 @@
+items:
+  - id: f9-overfitting-and-regularisation-01
+    type: mcq
+    prompt: "Training loss keeps falling while validation loss has been rising for many epochs. What is happening?"
+    explanation: "This gap is the signature of overfitting: the model is fitting noise in the training data and getting worse on new data."
+    options:
+      - text: The model is overfitting the training data
+        correct: true
+        why: It keeps improving on data it has seen while getting worse on data it has not.
+      - text: The learning rate is too small
+        why: A small learning rate makes both losses fall slowly; it does not make validation loss rise.
+      - text: The model is too small to fit the data
+        why: That is underfitting, where the training loss itself stays high.
+      - text: The validation set is being used to compute gradients
+        why: If it were, validation loss would fall too.
+  - id: f9-overfitting-and-regularisation-02
+    type: mcq
+    prompt: "Why choose the L2 strength $\\lambda$ using a validation set rather than the test set?"
+    explanation: "Any choice made by looking at a set tunes the model to it. The test set must stay untouched so its score is an honest estimate for new data."
+    options:
+      - text: Tuning on the test set would make its score an over-optimistic estimate of performance on new data
+        correct: true
+        why: The test set has to stay unseen until the final measurement.
+      - text: The test set is too small to compute a loss
+        why: Its size is not the issue; any choice made with it biases it.
+      - text: The validation set always gives a lower loss
+        why: Not necessarily; the point is keeping the test set unused.
+      - text: L2 only works on validation data
+        why: L2 is part of the training loss; λ is merely chosen with the validation set.
+  - id: f9-overfitting-and-regularisation-03
+    type: numeric
+    prompt: "With weight decay, each step first multiplies the weights by $(1 - \\eta\\lambda)$. For learning rate $\\eta = 0.1$ and $\\lambda = 0.01$, what is that factor?"
+    answer: 0.999
+    tol: 0.00001
+    explanation: "1 − ηλ = 1 − 0.1 × 0.01 = 1 − 0.001 = 0.999."
+  - id: f9-overfitting-and-regularisation-04
+    type: mcq
+    prompt: "The loss is $L_\\text{data} + \\frac{\\lambda}{2}\\lVert W\\rVert^2$. What does the penalty add to the gradient $dW$?"
+    explanation: "The derivative of (λ/2) Σ W² with respect to each entry is λW, so the gradient becomes dW + λW."
+    options:
+      - text: "λ W"
+        correct: true
+        why: Each entry contributes (λ/2)·2W = λW.
+      - text: "λ / 2"
+        why: The penalty depends on W, so its gradient does too.
+      - text: "λ ‖W‖²"
+        why: That is twice the penalty itself, not its gradient.
+      - text: "Nothing; penalties do not change gradients"
+        why: Anything added to the loss changes its gradient.
+  - id: f9-overfitting-and-regularisation-05
+    type: numeric
+    prompt: "With inverted dropout at $p = 0.2$, a surviving hidden unit had activation 3.0 before dropout. What value is passed on during training?"
+    answer: 3.75
+    tol: 0.0001
+    explanation: "Survivors are divided by 1 − p = 0.8: 3.0 / 0.8 = 3.75."
+  - id: f9-overfitting-and-regularisation-06
+    type: mcq
+    prompt: "What should dropout do when the model is evaluated on validation or test data?"
+    explanation: "Dropout is switched off at evaluation. Because inverted dropout already rescaled the survivors during training, no rescaling is needed now."
+    options:
+      - text: Be switched off, with no rescaling, because inverted dropout already rescaled during training
+        correct: true
+        why: Expected activations match between training and evaluation.
+      - text: Keep dropping units with the same probability
+        why: That would make predictions random and worse.
+      - text: Multiply every activation by 1 − p
+        why: That is needed only for the older, non-inverted form of dropout.
+      - text: Drop the same units as on the last training step
+        why: Evaluation uses the whole network.
+  - id: f9-overfitting-and-regularisation-07
+    type: output
+    prompt: "With the lesson's rule (strict improvements only, stop `patience` epochs after the best), what does this print?"
+    code: |
+      losses = [0.8, 0.6, 0.65, 0.55, 0.57, 0.58, 0.56, 0.50]
+      best, best_epoch, patience = losses[0], 0, 3
+      for epoch, loss in enumerate(losses):
+          if loss < best:
+              best, best_epoch = loss, epoch
+          elif epoch - best_epoch >= patience:
+              print(best_epoch, epoch)
+              break
+    answer: "3 6"
+    explanation: "The best is 0.55 at index 3; indices 4, 5 and 6 do not improve on it, so it stops at 6 and never sees 0.50."
+  - id: f9-overfitting-and-regularisation-08
+    type: multi
+    prompt: "Which of these reduce overfitting? Select all that apply."
+    explanation: "More data, L2, dropout, early stopping and a smaller model all reduce overfitting. Training longer with no other change usually makes it worse."
+    options:
+      - text: Collecting more training data
+        correct: true
+        why: Often the most effective fix of all.
+      - text: Adding an L2 penalty on the weights
+        correct: true
+        why: It discourages the large weights behind sharp, over-confident boundaries.
+      - text: Stopping training when validation loss stops improving
+        correct: true
+        why: That is early stopping.
+      - text: Training for many more epochs without other changes
+        why: That gives the model more time to memorise the training set.
+  - id: f9-overfitting-and-regularisation-09
+    type: mcq
+    prompt: "In the lesson, the unregularised and L2 models both reached about 88 to 90% validation accuracy, but validation losses of 1.03 and 0.33. What does the difference in loss tell you?"
+    explanation: "Accuracy only counts right and wrong. The higher loss means the unregularised model's wrong answers are made with high confidence, which cross-entropy punishes heavily."
+    options:
+      - text: The unregularised model makes its mistakes with much higher confidence
+        correct: true
+        why: Cross-entropy grows quickly when the true class gets a tiny probability.
+      - text: The loss numbers must be wrong, since accuracy is similar
+        why: Loss and accuracy measure different things and can disagree.
+      - text: The L2 model is less accurate on the training set, so it is worse
+        why: Training performance is not the goal; the L2 model generalises better.
+      - text: The unregularised model would be better on the test set
+        why: Its higher validation loss suggests the opposite.
+  - id: f9-overfitting-and-regularisation-10
+    type: cloze
+    prompt: "In early stopping, the number of epochs you wait without improvement before stopping is called the ______."
+    accept: ["patience"]
+    explanation: "Patience lets training continue through short noisy bumps in the validation loss."

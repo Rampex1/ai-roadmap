@@ -13,74 +13,74 @@ items:
     prompt: "You edited model.py and run `git commit -m \"Tune model\"` without running git add first. What happens?"
     explanation: "Commit saves only what is staged. With nothing staged, git reports that there is nothing to commit (and lists model.py as not staged). The edit stays in your working folder."
     options:
+      - text: The change to model.py is committed automatically
+        why: Only staged changes are committed (git commit -a is a shortcut that stages modified tracked files, but plain commit does not).
       - text: Nothing is committed, because the change was never staged
         correct: true
         why: git commit only records what git add put in the staging area.
-      - text: The change to model.py is committed automatically
-        why: Only staged changes are committed (git commit -a is a shortcut that stages modified tracked files, but plain commit does not).
-      - text: Your edits to model.py are deleted
-        why: Committing never deletes working-folder changes.
       - text: Git stages and commits every file in the folder
         why: Git never stages anything you didn't ask it to.
+      - text: Your edits to model.py are deleted
+        why: Committing never deletes working-folder changes.
   - id: f0-git-basics-03
     type: multi
     prompt: "Which of these belong in a project's .gitignore?"
     explanation: "Ignore what is rebuildable (.venv), secret (.env with API keys), large (datasets, model checkpoints) or clutter (.DS_Store). Your code and pyproject.toml are exactly what the repository is for."
     options:
+      - text: A 2 GB folder of training images
+        correct: true
+        why: Git handles large data files badly; store them elsewhere.
+      - text: Your Python scripts
+        why: Your code is the main thing version control is for.
+      - text: pyproject.toml
+        why: It records the project's dependencies and must be committed so others can rebuild the environment.
       - text: The .venv folder
         correct: true
         why: It is large and can be rebuilt from pyproject.toml and uv.lock.
       - text: A .env file holding your API key
         correct: true
         why: Secrets must never be committed; pushed secrets should be treated as leaked.
-      - text: A 2 GB folder of training images
-        correct: true
-        why: Git handles large data files badly; store them elsewhere.
-      - text: pyproject.toml
-        why: It records the project's dependencies and must be committed so others can rebuild the environment.
-      - text: Your Python scripts
-        why: Your code is the main thing version control is for.
   - id: f0-git-basics-04
     type: mcq
     prompt: "In a fresh repository you make three commits, with messages \"Add data\", \"Add plot\" and \"Fix typo\", in that order. Which message appears on the first line of `git log --oneline`?"
     explanation: "git log lists commits newest first, so the most recent commit, \"Fix typo\", comes first."
     options:
+      - text: Add plot
+        why: That commit is in the middle of the history.
       - text: Fix typo
         correct: true
         why: It is the newest commit, and git log starts with the newest.
       - text: Add data
         why: That is the oldest commit, so it appears last.
-      - text: Add plot
-        why: That commit is in the middle of the history.
   - id: f0-git-basics-05
     type: mcq
     prompt: "What is the main reason git has a separate staging step (git add) before committing?"
     explanation: "Staging lets you choose exactly which changes go into each commit, so one commit can tell one coherent story even if you edited several things."
     options:
+      - text: So git can upload the files to GitHub
+        why: Uploading is git push; staging is purely local.
+      - text: Because git can only track one file at a time
+        why: You can stage and commit many files at once.
       - text: So you can choose which changes go into each commit
         correct: true
         why: You can split unrelated edits into separate, meaningful commits.
-      - text: So git can upload the files to GitHub
-        why: Uploading is git push; staging is purely local.
       - text: To make a backup copy of every file
         why: Staging records chosen changes for the next commit; it isn't a general backup.
-      - text: Because git can only track one file at a time
-        why: You can stage and commit many files at once.
   - id: f0-git-basics-06
     type: cloze
     prompt: "The command you should run most often, which shows which files are untracked, modified or staged, is git ____."
     explanation: "git status describes the state of each area and usually suggests the next command."
-    accept: ["status", "git status"]
+    accept: [ "status", "git status" ]
   - id: f0-git-basics-07
     type: mcq
     prompt: "You accidentally committed and pushed a file containing an API key to a public GitHub repository, then deleted it in a new commit. Is the key safe?"
     explanation: "No. The key is still in the earlier commit in the history, and public repositories are scanned by bots within minutes. Revoke the key with the provider and create a new one."
     options:
+      - text: Yes, deleting the file removes it from GitHub
+        why: Git keeps every past commit, including the one with the key.
       - text: No; it is still in the history, so revoke it and create a new key
         correct: true
         why: Deleting a file only affects later commits; the old commit still contains it.
-      - text: Yes, deleting the file removes it from GitHub
-        why: Git keeps every past commit, including the one with the key.
       - text: Yes, as long as the repository has few visitors
         why: Automated scanners look for leaked keys in public repositories constantly.
   - id: f0-git-basics-08
@@ -88,14 +88,14 @@ items:
     prompt: "Which statements about git and GitHub are true?"
     explanation: "Git is a tool that runs on your computer and keeps history in the .git folder; GitHub is a website that hosts copies (remotes). git push sends commits to a remote. Deleting .git deletes the history."
     options:
-      - text: Git works on your computer even without an internet connection
-        correct: true
-        why: init, add, commit, log and diff are all local.
       - text: git push sends your commits to a remote such as GitHub
         correct: true
         why: Push uploads commits to the remote you configured.
       - text: GitHub and git are the same thing
         why: Git is the version control tool; GitHub is one website that hosts git repositories.
+      - text: Git works on your computer even without an internet connection
+        correct: true
+        why: init, add, commit, log and diff are all local.
       - text: Deleting the .git folder is a safe way to tidy up a project
         why: The .git folder holds the entire history; deleting it loses all of it.
   - id: f0-git-basics-09
@@ -103,13 +103,13 @@ items:
     prompt: "Which commit message is most useful to someone reading the history in six months?"
     explanation: "A good message says what changed and, briefly, why. Vague messages make the history useless for finding when something changed."
     options:
-      - text: Normalise pixel values to 0–1 so training converges
-        correct: true
-        why: It says what changed and why, in a few words.
       - text: stuff
         why: Says nothing about what changed.
       - text: Update
         why: Every commit is an update; this gives no information.
+      - text: Normalise pixel values to 0–1 so training converges
+        correct: true
+        why: It says what changed and why, in a few words.
       - text: asdfgh
         why: Meaningless to any reader, including you.
   - id: f0-git-basics-10
@@ -120,9 +120,9 @@ items:
       - text: "git restore notes.md"
         correct: true
         why: It replaces the working copy with the version from the last commit.
+      - text: "git push"
+        why: push uploads commits; it would not touch your uncommitted change.
       - text: "git init"
         why: That creates a repository; it doesn't undo changes.
       - text: "git log"
         why: log only shows history; it changes nothing.
-      - text: "git push"
-        why: push uploads commits; it would not touch your uncommitted change.

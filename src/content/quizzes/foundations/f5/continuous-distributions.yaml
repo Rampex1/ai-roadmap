@@ -4,11 +4,11 @@ items:
     prompt: "$X$ is a continuous random variable with density $p$, and $p(2) = 1.4$. What does this tell you?"
     explanation: "A density value is not a probability; it can exceed 1. For a continuous variable P(X = 2) is 0, and probabilities come from areas."
     options:
+      - text: P(X = 2) = 1.4
+        why: Probabilities cannot exceed 1, and single points have probability 0.
       - text: The density is high near 2, so values near 2 are relatively likely; P(X = 2) itself is 0
         correct: true
         why: Density measures probability per unit length; single points have zero probability.
-      - text: P(X = 2) = 1.4
-        why: Probabilities cannot exceed 1, and single points have probability 0.
       - text: The density is invalid because it exceeds 1
         why: Densities can exceed 1 as long as the total area is 1.
       - text: P(X < 2) = 1.4
@@ -36,15 +36,15 @@ items:
     prompt: "By the 68-95-99.7 rule, roughly what fraction of a normal distribution lies **more than 2** standard deviations **above** the mean?"
     explanation: "95% lies within 2 standard deviations, leaving 5% outside, split equally between the two tails: about 2.5% above."
     options:
+      - text: About 16%
+        why: That is the fraction above +1σ.
+      - text: About 5%
+        why: That is both tails together.
+      - text: About 0.15%
+        why: That is the fraction above +3σ.
       - text: About 2.5%
         correct: true
         why: Half of the 5% outside ±2σ.
-      - text: About 5%
-        why: That is both tails together.
-      - text: About 16%
-        why: That is the fraction above +1σ.
-      - text: About 0.15%
-        why: That is the fraction above +3σ.
   - id: f5-continuous-distributions-06
     type: output
     prompt: "What does this print?"
@@ -61,28 +61,28 @@ items:
       - text: stats.norm.cdf(0, loc=1, scale=2)
         correct: true
         why: The standard deviation is the square root of 4.
-      - text: stats.norm.cdf(0, loc=1, scale=4)
-        why: scale is the standard deviation, not the variance.
       - text: stats.norm.pdf(0, loc=1, scale=2)
         why: The pdf gives a density value, not an area.
       - text: stats.norm.cdf(1, loc=0, scale=2)
         why: This swaps the value and the mean; it gives P(X < 1) for a normal centred at 0.
+      - text: stats.norm.cdf(0, loc=1, scale=4)
+        why: scale is the standard deviation, not the variance.
   - id: f5-continuous-distributions-08
     type: multi
     prompt: "Which statements about a probability density $p(x)$ are true? Select all."
     explanation: "A density is non-negative with total area 1; areas give probabilities and the CDF is the area to the left."
     options:
+      - text: F(b) - F(a) gives P(a < X ≤ b), where F is the CDF
+        correct: true
+        why: The CDF accumulates area from the left.
+      - text: p(x) must be at most 1 everywhere
+        why: Narrow densities can be much taller than 1.
       - text: The total area under p is 1
         correct: true
         why: Some value always occurs.
       - text: P(a < X < b) is the area under p between a and b
         correct: true
         why: Probabilities of intervals are areas.
-      - text: F(b) - F(a) gives P(a < X ≤ b), where F is the CDF
-        correct: true
-        why: The CDF accumulates area from the left.
-      - text: p(x) must be at most 1 everywhere
-        why: Narrow densities can be much taller than 1.
   - id: f5-continuous-distributions-09
     type: mcq
     prompt: "Why do ML pipelines usually compute the mean and standard deviation for standardising on the **training** set only?"
@@ -91,14 +91,14 @@ items:
       - text: Using the test data would leak information about it into the model and make the evaluation optimistic
         correct: true
         why: The test set must stay unseen, including its summary statistics.
+      - text: It makes the test features have mean exactly 0
+        why: Test features standardised with training statistics will have mean close to, but not exactly, 0.
       - text: The test set has a different mean by definition
         why: It should come from the same distribution; the issue is leakage, not a guaranteed difference.
       - text: Standardising the test set is impossible
         why: You do standardise it, with the training mean and standard deviation.
-      - text: It makes the test features have mean exactly 0
-        why: Test features standardised with training statistics will have mean close to, but not exactly, 0.
   - id: f5-continuous-distributions-10
     type: cloze
     prompt: "`stats.norm.____(0.975)` returns about 1.96, the value with 97.5% of the standard normal's area to its left."
-    accept: ["ppf"]
+    accept: [ "ppf" ]
     explanation: "ppf, the percent point function, is the inverse of the CDF."

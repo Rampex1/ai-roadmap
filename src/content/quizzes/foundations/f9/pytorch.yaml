@@ -1,0 +1,113 @@
+items:
+  - id: f9-pytorch-01
+    type: order
+    prompt: "Put the four lines inside a standard PyTorch training loop (for one mini-batch) in order."
+    explanation: "Compute the loss, clear old gradients, backpropagate, then let the optimiser update the parameters. zero_grad may also come first, but it must come before backward."
+    items:
+      - "loss = loss_fn(model(xb), yb)"
+      - "opt.zero_grad()"
+      - "loss.backward()"
+      - "opt.step()"
+  - id: f9-pytorch-02
+    type: mcq
+    prompt: "What goes wrong if a training loop never calls `opt.zero_grad()`?"
+    explanation: "PyTorch accumulates gradients in .grad. Without zeroing, each backward adds to the sum of all previous gradients, so the updates are wrong."
+    options:
+      - text: Each backward adds to the gradients from all previous steps, so the updates are wrong
+        correct: true
+        why: Gradients accumulate, just like the += in the Value engine.
+      - text: PyTorch raises an error on the second step
+        why: No error is raised; the bug is silent.
+      - text: Nothing; backward() overwrites .grad
+        why: backward() adds to .grad.
+      - text: The parameters stop updating
+        why: They keep updating, with the wrong gradient.
+  - id: f9-pytorch-03
+    type: mcq
+    prompt: "What shape is the `weight` tensor of `nn.Linear(784, 128)`?"
+    explanation: "nn.Linear stores its weight as (out_features, in_features) and computes x @ weight.T + bias."
+    options:
+      - text: "(128, 784)"
+        correct: true
+        why: Out features first, then in features.
+      - text: "(784, 128)"
+        why: That is this course's NumPy convention, not PyTorch's storage.
+      - text: "(128,)"
+        why: That is the bias shape.
+      - text: "(784,)"
+        why: A layer with 128 outputs needs 128 weight vectors of length 784.
+  - id: f9-pytorch-04
+    type: numeric
+    prompt: "How many parameters does `nn.Sequential(nn.Linear(784, 256), nn.ReLU(), nn.Linear(256, 128), nn.ReLU(), nn.Linear(128, 10))` have?"
+    answer: 235146
+    tol: 0
+    explanation: "785 × 256 + 257 × 128 + 129 × 10 = 200,960 + 32,896 + 1,290 = 235,146. ReLU has no parameters."
+  - id: f9-pytorch-05
+    type: mcq
+    prompt: "Your model ends in `nn.Linear(128, 10)` and you train it with `nn.CrossEntropyLoss()`. Should you add a softmax layer at the end of the model?"
+    explanation: "nn.CrossEntropyLoss expects raw logits and applies a stable log-softmax internally. Adding a softmax would apply it twice and hurt training."
+    options:
+      - text: No; CrossEntropyLoss takes logits and applies log-softmax itself
+        correct: true
+        why: It fuses log-softmax and the negative log-likelihood stably.
+      - text: Yes; the loss needs probabilities
+        why: Feeding it probabilities would apply softmax twice.
+      - text: Yes, but only on the GPU
+        why: The device does not change what the loss expects.
+      - text: "No; instead add a ReLU so the outputs are positive"
+        why: Logits must be free to be negative.
+  - id: f9-pytorch-06
+    type: multi
+    prompt: "Which statements about tensors are true? Select all that apply."
+    explanation: "PyTorch defaults to float32 for decimals, class labels for CrossEntropyLoss are int64, from_numpy keeps NumPy's float64, and all tensors in an operation must be on the same device."
+    options:
+      - text: "torch.tensor([1.5, 2.0]) has dtype float32"
+        correct: true
+        why: float32 is PyTorch's default floating type.
+      - text: "torch.from_numpy on a NumPy float64 array gives a float64 tensor"
+        correct: true
+        why: It shares memory with the array and keeps its dtype.
+      - text: An operation can mix a CPU tensor and a CUDA tensor
+        why: All inputs must be on the same device; move them with .to(device).
+      - text: Class labels for nn.CrossEntropyLoss are integer (int64) tensors
+        correct: true
+        why: They are class indices, not one-hot rows.
+  - id: f9-pytorch-07
+    type: mcq
+    prompt: "What does `with torch.no_grad():` do around an evaluation pass?"
+    explanation: "It stops autograd from recording operations, saving memory and time when no backward pass is needed."
+    options:
+      - text: It stops autograd from recording the graph, since no gradients are needed
+        correct: true
+        why: Predictions need no backward pass.
+      - text: It switches dropout off
+        why: That is model.eval().
+      - text: It sets all gradients to zero
+        why: That is opt.zero_grad().
+      - text: It freezes the weights permanently
+        why: It only affects operations inside the block.
+  - id: f9-pytorch-08
+    type: mcq
+    prompt: "What do `model.train()` and `model.eval()` do?"
+    explanation: "They switch layers such as dropout (and batch normalisation) between their training and evaluation behaviour. They do not run any training or evaluation."
+    options:
+      - text: They switch layers like dropout between training and evaluation behaviour
+        correct: true
+        why: For example nn.Dropout drops units only in training mode.
+      - text: model.train() runs one epoch of training
+        why: It only sets a mode; the loop does the training.
+      - text: model.eval() computes the test accuracy
+        why: You compute accuracy yourself, usually under torch.no_grad().
+      - text: They move the model between CPU and GPU
+        why: That is .to(device).
+  - id: f9-pytorch-09
+    type: numeric
+    prompt: "A `DataLoader` with `batch_size=64` serves a dataset of 1,000 examples. How many batches are there per epoch?"
+    answer: 16
+    tol: 0
+    explanation: "1000 / 64 = 15.6, so 15 full batches plus one final batch of 40 examples: 16 in total."
+  - id: f9-pytorch-10
+    type: cloze
+    prompt: "In PyTorch, setting `requires_grad=______` on a tensor makes autograd record operations on it."
+    accept: ["True"]
+    explanation: "requires_grad=True. Parameters of nn layers have it set automatically."

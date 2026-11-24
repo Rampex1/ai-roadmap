@@ -7,12 +7,12 @@ items:
       - text: "θ ← θ - η ∇L(θ)"
         correct: true
         why: Moving against the gradient goes downhill.
-      - text: "θ ← θ + η ∇L(θ)"
-        why: That climbs uphill, which maximises the loss.
       - text: "θ ← θ - η L(θ)"
         why: The loss value is a single number with no direction; the gradient is needed.
       - text: "θ ← ∇L(θ) / η"
         why: That throws away the current position altogether.
+      - text: "θ ← θ + η ∇L(θ)"
+        why: That climbs uphill, which maximises the loss.
   - id: f6-gradient-descent-02
     type: numeric
     prompt: "On $f(x) = x^2$, gradient descent starts at $x_0 = 2$ with $\\eta = 0.25$. What is $x_1$?"
@@ -40,6 +40,8 @@ items:
     prompt: "On $f(x) = x^2$, which learning rate makes gradient descent **oscillate around the minimum but still converge**?"
     explanation: "The factor is r = 1 - 2η. Oscillating and converging means -1 < r < 0, so 0.5 < η < 1."
     options:
+      - text: "1.2"
+        why: r = -1.4, so the oscillation grows and it diverges.
       - text: "0.8"
         correct: true
         why: r = -0.6, so the sign flips each step while the size shrinks.
@@ -47,18 +49,16 @@ items:
         why: r = 0.4 is positive, so it approaches 0 without crossing it.
       - text: "0.5"
         why: r = 0, so it lands on the minimum in one step with no oscillation.
-      - text: "1.2"
-        why: r = -1.4, so the oscillation grows and it diverges.
   - id: f6-gradient-descent-06
     type: mcq
     prompt: "Training loss goes 2.1, 1.7, 3.9, 25.0, 840.2, inf, nan. What is the most likely cause?"
     explanation: "Loss that grows faster and faster then overflows is the signature of divergence from a learning rate that is too large."
     options:
+      - text: The learning rate is too small
+        why: A tiny learning rate makes progress slow, not explosive.
       - text: The learning rate is too large
         correct: true
         why: Each step overshoots further than the last, so the loss explodes.
-      - text: The learning rate is too small
-        why: A tiny learning rate makes progress slow, not explosive.
       - text: The model reached a local minimum
         why: At a minimum the loss stops changing; it does not blow up.
       - text: There are too few training steps
@@ -68,11 +68,11 @@ items:
     prompt: "For $f(x, y) = x^2 + 100y^2$, which direction limits how large the learning rate can be?"
     explanation: "The y direction has curvature 200 versus 2 for x. Stability needs η < 2/200 = 0.01, far below the 2/2 = 1 that x alone would allow."
     options:
+      - text: The x direction, because it is flatter
+        why: The flat direction makes progress slow but tolerates large steps.
       - text: The y direction, because it is far more curved
         correct: true
         why: The steepest curvature sets the stability limit, here η < 0.01.
-      - text: The x direction, because it is flatter
-        why: The flat direction makes progress slow but tolerates large steps.
       - text: Neither; any learning rate below 1 converges
         why: With η = 0.5 the y factor is 1 - 100 = -99, which diverges.
       - text: Both equally, since the gradient has two entries
@@ -82,33 +82,33 @@ items:
     prompt: "Which are reasonable stopping rules for gradient descent? Select all that apply."
     explanation: "Common rules are a step budget, a small gradient norm and a loss that has stopped improving. The loss reaching exactly zero rarely happens, so that rule may never trigger."
     options:
-      - text: Stop after a fixed number of steps
-        correct: true
-        why: A budget is always needed as a safety net.
       - text: Stop when the norm of the gradient falls below a small tolerance
         correct: true
         why: The gradient is zero at a minimum, so a tiny gradient means you are close to a stationary point.
+      - text: Stop when the loss is exactly zero
+        why: Most losses never reach zero, for example when the data are noisy, so this may never trigger.
       - text: Stop when the loss has improved by less than a tiny amount for a while
         correct: true
         why: Further steps are no longer buying anything.
-      - text: Stop when the loss is exactly zero
-        why: Most losses never reach zero, for example when the data are noisy, so this may never trigger.
+      - text: Stop after a fixed number of steps
+        correct: true
+        why: A budget is always needed as a safety net.
   - id: f6-gradient-descent-09
     type: mcq
     prompt: "Gradient descent on $f(x) = x^4 - 3x^2 + x$ from $x_0 = 2$ ends at the local minimum near $x = 1.13$, not the global one near $-1.30$. Why?"
     explanation: "Gradient descent follows the local slope. From x = 2 the downhill path leads into the right-hand valley, and the hill at x ≈ 0.17 separates it from the deeper one."
     options:
+      - text: Gradient descent always finds the minimum closest to zero
+        why: It finds whichever minimum its starting point drains into.
+      - text: The function is convex
+        why: A convex function has only one valley; this one has two.
+      - text: The learning rate was too large
+        why: A too-large rate would cause oscillation or divergence, not neat convergence to a minimum.
       - text: It only follows the local slope, and the right-hand valley is downhill from the start
         correct: true
         why: The update rule never looks beyond the current point.
-      - text: The learning rate was too large
-        why: A too-large rate would cause oscillation or divergence, not neat convergence to a minimum.
-      - text: The function is convex
-        why: A convex function has only one valley; this one has two.
-      - text: Gradient descent always finds the minimum closest to zero
-        why: It finds whichever minimum its starting point drains into.
   - id: f6-gradient-descent-10
     type: cloze
     prompt: "The ratio of the largest to the smallest curvature of a loss, which predicts how badly gradient descent zigzags, is called the ______ number."
-    accept: ["condition"]
+    accept: [ "condition" ]
     explanation: "The condition number. A large value means a long, thin valley, where one learning rate is too big for the steep direction and too small for the flat one."

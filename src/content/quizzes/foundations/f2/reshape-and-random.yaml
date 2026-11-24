@@ -22,13 +22,13 @@ items:
     prompt: "What happens with `np.arange(10).reshape(3, -1)`?"
     explanation: "reshape must keep the number of elements. 10 is not divisible by 3, so no column count works and NumPy raises a ValueError."
     options:
-      - text: It raises a ValueError
-        correct: true
-        why: 10 elements cannot be split into 3 equal rows.
       - text: It gives shape (3, 3) and drops the last element
         why: reshape never drops data; it only rearranges it.
       - text: It gives shape (3, 4) and pads with zeros
         why: reshape never invents data either.
+      - text: It raises a ValueError
+        correct: true
+        why: 10 elements cannot be split into 3 equal rows.
   - id: f2-reshape-and-random-04
     type: output
     prompt: "What does this print?"
@@ -46,11 +46,11 @@ items:
     prompt: "`X1` and `X2` both have shape (100, 5): the same 100 examples, with 5 different features each. How do you join them into one (100, 10) table?"
     explanation: "Adding features means adding columns, which is concatenation along axis 1."
     options:
+      - text: "np.concatenate([X1, X2], axis=0)"
+        why: That stacks the rows, giving (200, 5), which means more examples, not more features.
       - text: "np.concatenate([X1, X2], axis=1)"
         correct: true
         why: Joining along the column axis gives 100 rows of 10 features.
-      - text: "np.concatenate([X1, X2], axis=0)"
-        why: That stacks the rows, giving (200, 5), which means more examples, not more features.
       - text: "np.stack([X1, X2])"
         why: stack creates a new axis, giving (2, 100, 5).
   - id: f2-reshape-and-random-06
@@ -67,16 +67,16 @@ items:
     prompt: "Which statements about `rng = np.random.default_rng(42)` are true?"
     explanation: "A seeded generator gives the same sequence every run, each call advances it, and integers excludes the high value."
     options:
-      - text: Rerunning the whole script gives the same random numbers
-        correct: true
-        why: The seed fixes the starting state, so the sequence is reproducible.
       - text: "rng.integers(1, 7, size=10) can produce the value 6 but never 7"
         correct: true
         why: The high value is excluded, so this simulates a die.
-      - text: Calling rng.random(3) twice in a row gives the same three numbers both times
-        why: Each call moves the generator forward, so the second call gives new numbers.
       - text: The seed 42 makes the numbers less random than other seeds
         why: Any seed gives an equally good sequence; 42 is just a popular choice.
+      - text: Rerunning the whole script gives the same random numbers
+        correct: true
+        why: The seed fixes the starting state, so the sequence is reproducible.
+      - text: Calling rng.random(3) twice in a row gives the same three numbers both times
+        why: Each call moves the generator forward, so the second call gives new numbers.
   - id: f2-reshape-and-random-08
     type: mcq
     prompt: "You want to shuffle a dataset before splitting it. Why do you permute the row positions once and index both `X` and `y` with them, rather than shuffling `X` and `y` separately?"
@@ -85,10 +85,10 @@ items:
       - text: Separate shuffles would break the pairing between each example and its label
         correct: true
         why: Using the same positions for both keeps row i of X with label i of y.
-      - text: Shuffling twice is too slow
-        why: Speed is not the issue; correctness is.
       - text: NumPy cannot shuffle a 2D array
         why: It can, but that does not keep X and y aligned.
+      - text: Shuffling twice is too slow
+        why: Speed is not the issue; correctness is.
   - id: f2-reshape-and-random-09
     type: numeric
     prompt: "`x = rng.normal(loc=50, scale=5, size=100_000)`. Roughly what value should `x.std()` be close to?"
@@ -98,5 +98,5 @@ items:
   - id: f2-reshape-and-random-10
     type: cloze
     prompt: "The number you pass to `np.random.default_rng(...)` so that the same random numbers come out every run is called the ____ ."
-    accept: ["seed", "random seed"]
+    accept: [ "seed", "random seed" ]
     explanation: "A fixed seed makes random results reproducible."

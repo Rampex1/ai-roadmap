@@ -4,11 +4,11 @@ items:
     prompt: "Which formula is the central difference approximation to $f'(x)$?"
     explanation: "The central difference samples one step on each side and divides by the total distance, 2h."
     options:
+      - text: (f(x + h) - f(x)) / h
+        why: That is the forward difference.
       - text: (f(x + h) - f(x - h)) / (2h)
         correct: true
         why: Symmetric samples, divided by the distance between them.
-      - text: (f(x + h) - f(x)) / h
-        why: That is the forward difference.
       - text: (f(x + h) - f(x - h)) / h
         why: The two samples are 2h apart, so dividing by h doubles the answer.
       - text: (f(x + h) + f(x - h)) / (2h)
@@ -30,15 +30,15 @@ items:
     prompt: "For a smooth function, how does the error of the central difference change when $h$ is made 10 times smaller (while $h$ is still large enough that rounding does not matter)?"
     explanation: "The central difference's truncation error is roughly proportional to h², so 10 times smaller h gives about 100 times smaller error."
     options:
+      - text: About 10 times smaller
+        why: That is the behaviour of the forward difference.
+      - text: About 10 times larger
+        why: Error grows only once h is so small that rounding dominates.
+      - text: It does not change
+        why: Shrinking h does reduce the truncation error.
       - text: About 100 times smaller
         correct: true
         why: The error is roughly proportional to h squared.
-      - text: About 10 times smaller
-        why: That is the behaviour of the forward difference.
-      - text: It does not change
-        why: Shrinking h does reduce the truncation error.
-      - text: About 10 times larger
-        why: Error grows only once h is so small that rounding dominates.
   - id: f4-numerical-derivatives-05
     type: mcq
     prompt: "Why does a step like $h = 10^{-13}$ give a *worse* numerical derivative than $h = 10^{-5}$?"
@@ -47,12 +47,12 @@ items:
       - text: Subtracting two nearly equal floats leaves mostly rounding error, which dividing by a tiny h amplifies
         correct: true
         why: This is rounding (cancellation) error taking over from truncation error.
-      - text: The limit definition only works for h larger than 1e-10
-        why: Mathematically smaller h is always better; the problem is floating-point arithmetic.
-      - text: NumPy refuses to compute with numbers that small
-        why: NumPy computes happily; the result is just inaccurate.
       - text: Smaller h always gives a smaller error
         why: The table in the lesson shows the error growing again for very small h.
+      - text: NumPy refuses to compute with numbers that small
+        why: NumPy computes happily; the result is just inaccurate.
+      - text: The limit definition only works for h larger than 1e-10
+        why: Mathematically smaller h is always better; the problem is floating-point arithmetic.
   - id: f4-numerical-derivatives-06
     type: output
     prompt: "What does this print?"
@@ -69,15 +69,15 @@ items:
     prompt: "You derived a gradient by hand and want to check it numerically. Which plan is best?"
     explanation: "Check at several random points with a central difference and a relative error. A single point, especially a special one like x = 0 or x = 1, can hide bugs."
     options:
+      - text: Compare at x = 1 only
+        why: A missing factor of x, for example, is invisible at x = 1.
+      - text: Skip the check if the training loss goes down
+        why: Slightly wrong gradients can still reduce the loss, just badly.
+      - text: Compare with a forward difference using h = 1e-15
+        why: That h is far too small; rounding error would swamp the result.
       - text: Compare with a central difference at several random points, using relative error
         correct: true
         why: Several points catch bugs that vanish at special values.
-      - text: Compare at x = 1 only
-        why: A missing factor of x, for example, is invisible at x = 1.
-      - text: Compare with a forward difference using h = 1e-15
-        why: That h is far too small; rounding error would swamp the result.
-      - text: Skip the check if the training loss goes down
-        why: Slightly wrong gradients can still reduce the loss, just badly.
   - id: f4-numerical-derivatives-08
     type: output
     prompt: "What does this print?"
@@ -105,5 +105,5 @@ items:
   - id: f4-numerical-derivatives-10
     type: cloze
     prompt: "Approximating a derivative from function values at nearby points is called a finite ____ approximation."
-    accept: ["difference", "differences"]
+    accept: [ "difference", "differences" ]
     explanation: "Finite differences: forward, backward and central."

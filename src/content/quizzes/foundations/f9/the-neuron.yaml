@@ -1,0 +1,110 @@
+items:
+  - id: f9-the-neuron-01
+    type: mcq
+    prompt: "What does a single neuron compute from an input vector $\\mathbf{x}$?"
+    explanation: "A neuron forms the weighted sum plus bias z = w·x + b, then applies a fixed activation function: a = g(z)."
+    options:
+      - text: "g(w · x + b): a weighted sum plus a bias, passed through an activation function"
+        correct: true
+        why: Those are the two steps of every neuron.
+      - text: "w · x + b, with nothing applied afterwards"
+        why: That is only the pre-activation z; without the activation g it is a purely linear function.
+      - text: "g(x), applied separately to each input"
+        why: The inputs are combined with weights first; the activation acts on that single sum.
+      - text: "The average of the inputs"
+        why: The weights let each input count differently, and the bias shifts the result.
+  - id: f9-the-neuron-02
+    type: numeric
+    prompt: "A neuron has weights $\\mathbf{w} = (2, -1)$ and bias $b = 0.5$. For the input $\\mathbf{x} = (1, 3)$, what is the pre-activation $z$?"
+    answer: -0.5
+    tol: 0.0001
+    explanation: "z = 2·1 + (−1)·3 + 0.5 = 2 − 3 + 0.5 = −0.5."
+  - id: f9-the-neuron-03
+    type: numeric
+    prompt: "How many parameters (weights plus bias) does a single neuron with 784 inputs have?"
+    answer: 785
+    tol: 0
+    explanation: "One weight per input plus one bias: 784 + 1 = 785."
+  - id: f9-the-neuron-04
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      X = np.ones((5, 3))
+      w = np.array([1.0, 2.0, 3.0])
+      print((X @ w + 1).shape)
+    answer: "(5,)"
+    explanation: "(5, 3) @ (3,) gives one number per row, shape (5,). Adding the scalar bias keeps the shape."
+  - id: f9-the-neuron-05
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      X = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]])
+      w = np.array([2.0, -1.0])
+      print(X @ w + 0.5)
+    answer: "[ 2.5 -0.5  1.5]"
+    explanation: "Row by row: 2 + 0.5 = 2.5, −1 + 0.5 = −0.5, 2 − 1 + 0.5 = 1.5."
+  - id: f9-the-neuron-06
+    type: mcq
+    prompt: "A sigmoid neuron predicts class 1 when its output is above 0.5. In terms of the pre-activation, when does that happen?"
+    explanation: "σ(z) > 0.5 exactly when z > 0, so the decision boundary is w·x + b = 0."
+    options:
+      - text: "When z = w · x + b is greater than 0"
+        correct: true
+        why: The sigmoid equals 0.5 at z = 0 and is increasing.
+      - text: "When z is greater than 0.5"
+        why: The threshold 0.5 applies to σ(z), not to z; σ(0.5) is about 0.62.
+      - text: "When every weight is positive"
+        why: The sign of the weights alone does not decide it; the inputs and bias matter too.
+      - text: "When z is between 0 and 1"
+        why: Any positive z gives σ(z) above 0.5, however large.
+  - id: f9-the-neuron-07
+    type: mcq
+    prompt: "What shape is the decision boundary of a single sigmoid neuron with two inputs?"
+    explanation: "The boundary is the set where w₁x₁ + w₂x₂ + b = 0, which is a straight line. The sigmoid cannot bend it."
+    options:
+      - text: A straight line
+        correct: true
+        why: The equation w₁x₁ + w₂x₂ + b = 0 is linear in x.
+      - text: An S-shaped curve, because the sigmoid is S-shaped
+        why: The S shape is in the output as a function of z, not in the boundary in input space.
+      - text: A circle around the bias
+        why: The bias only shifts the line; it cannot make it curve.
+      - text: Any curve, if the weights are large enough
+        why: Larger weights make the transition sharper, but the boundary stays a line.
+  - id: f9-the-neuron-08
+    type: multi
+    prompt: "Which statements about a single sigmoid neuron are true? Select all that apply."
+    explanation: "A sigmoid neuron is logistic regression; its output lies between 0 and 1 and can be read as a probability. Its weights are learned, and it can only separate classes with a line or hyperplane."
+    options:
+      - text: It is the same model as logistic regression
+        correct: true
+        why: Both compute σ(w·x + b) and read it as P(y = 1 | x).
+      - text: Its output always lies strictly between 0 and 1
+        correct: true
+        why: The sigmoid never reaches 0 or 1 exactly, although it can round to them.
+      - text: It can represent AND and OR of two binary inputs
+        correct: true
+        why: Both are linearly separable; weights (10, 10) with bias −15 or −5 do it.
+      - text: It can separate any two classes if trained long enough
+        why: Its boundary is always a straight line, so classes that need a curved boundary are out of reach.
+  - id: f9-the-neuron-09
+    type: mcq
+    prompt: "Training a sigmoid neuron with binary cross-entropy, the gradient of the loss with respect to $z$ for one example is $p - y$. If $p = 0.9$ and the label is $y = 0$, what does a gradient descent step do to $z$ for this example?"
+    explanation: "The gradient is 0.9 − 0 = 0.9 > 0, so a step against it lowers z, which lowers p towards the label 0."
+    options:
+      - text: It pushes z down, lowering the predicted probability
+        correct: true
+        why: The gradient is positive, so moving against it decreases z and p.
+      - text: It pushes z up, raising the predicted probability
+        why: That would make the wrong prediction even more confident.
+      - text: It leaves z unchanged because the prediction is already confident
+        why: A confident wrong prediction has a large gradient, not a zero one.
+      - text: It sets z to exactly 0
+        why: A step moves z by an amount proportional to the learning rate, not to a fixed value.
+  - id: f9-the-neuron-10
+    type: cloze
+    prompt: "Weights and biases are learned by training and are called parameters. Settings you choose yourself, such as the learning rate, are called ______."
+    accept: ["hyperparameters", "hyperparameter", "hyper-parameters"]
+    explanation: "Hyperparameters are chosen before or around training; parameters are what training adjusts."

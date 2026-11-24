@@ -4,15 +4,15 @@ items:
     prompt: "Why can a mini-batch be used to estimate the gradient of the full training loss?"
     explanation: "The loss is an average of per-example losses, so its gradient is an average of per-example gradients, and an average over a random sample estimates it without bias."
     options:
-      - text: The full gradient is an average of per-example gradients, and a random sample's average estimates it
-        correct: true
-        why: The gradient of a mean is the mean of the gradients, and sample means estimate population means.
       - text: Every example has the same gradient, so one is enough
         why: Per-example gradients differ a lot; one example can even point the wrong way.
       - text: The loss only depends on the first few examples
         why: Every example contributes to the average.
       - text: The gradient does not depend on the data
         why: It depends on the data through every per-example loss.
+      - text: The full gradient is an average of per-example gradients, and a random sample's average estimates it
+        correct: true
+        why: The gradient of a mean is the mean of the gradients, and sample means estimate population means.
   - id: f6-stochastic-gradient-descent-02
     type: numeric
     prompt: "A training set has 1,000 examples and the batch size is 64. How many update steps are in one epoch (the last batch may be smaller)?"
@@ -30,15 +30,15 @@ items:
     prompt: "What does it mean that the mini-batch gradient is **unbiased**?"
     explanation: "Unbiased means correct on average: the expected value over random batches equals the full gradient. Each individual batch still has error."
     options:
+      - text: Every batch gives exactly the full gradient
+        why: Individual batches are noisy; only their average is exact.
       - text: Averaged over many random batches, it equals the full gradient
         correct: true
         why: Its errors cancel on average, though any single batch is off.
-      - text: Every batch gives exactly the full gradient
-        why: Individual batches are noisy; only their average is exact.
-      - text: It always points downhill
-        why: A noisy batch gradient can point uphill for the full loss.
       - text: It has no noise when the batch size is 2 or more
         why: The noise shrinks with batch size but only vanishes at the full batch.
+      - text: It always points downhill
+        why: A noisy batch gradient can point uphill for the full loss.
   - id: f6-stochastic-gradient-descent-05
     type: order
     prompt: "Put the steps of one epoch of mini-batch SGD in order."
@@ -56,27 +56,27 @@ items:
       - text: jittering in a small region around the minimum
         correct: true
         why: The noisy batch gradients keep nudging the parameters even at the minimum.
-      - text: exactly at the minimum, like full-batch gradient descent
-        why: Exact convergence needs the noise to die down, for example by decaying the learning rate.
       - text: diverging to infinity
         why: Noise alone does not cause divergence if the learning rate is stable.
       - text: stuck at the starting point
         why: The parameters move every step.
+      - text: exactly at the minimum, like full-batch gradient descent
+        why: Exact convergence needs the noise to die down, for example by decaying the learning rate.
   - id: f6-stochastic-gradient-descent-07
     type: multi
     prompt: "Which help mini-batch SGD settle closer to the minimum at the end of training? Select all that apply."
     explanation: "Smaller steps or less noisy gradients reduce the jitter. Reshuffling or a different seed changes which noise you get, not how much."
     options:
-      - text: Decaying the learning rate over time
-        correct: true
-        why: Smaller steps mean smaller random kicks.
       - text: Using a larger batch size
         correct: true
         why: Larger batches give less noisy gradients.
-      - text: Changing the random seed
-        why: A new seed gives different noise of the same size.
+      - text: Decaying the learning rate over time
+        correct: true
+        why: Smaller steps mean smaller random kicks.
       - text: Not shuffling between epochs
         why: That removes randomness in the order but each batch is still a noisy subset.
+      - text: Changing the random seed
+        why: A new seed gives different noise of the same size.
   - id: f6-stochastic-gradient-descent-08
     type: output
     prompt: "What does this print?"
@@ -92,17 +92,17 @@ items:
     prompt: "Why shuffle with a seeded generator such as `np.random.default_rng(42)`?"
     explanation: "A seed makes the random shuffles reproducible, so the same run can be repeated exactly for debugging and comparison."
     options:
+      - text: Without a seed the batches would contain repeated examples
+        why: rng.permutation never repeats indices, seeded or not.
       - text: So the exact same sequence of batches, and so the same training run, can be reproduced
         correct: true
         why: The same seed gives the same permutations.
-      - text: Seeded shuffles produce better batches than unseeded ones
-        why: The quality of the randomness is the same; only reproducibility changes.
-      - text: Without a seed the batches would contain repeated examples
-        why: rng.permutation never repeats indices, seeded or not.
       - text: The seed sets the batch size
         why: The batch size is a separate choice.
+      - text: Seeded shuffles produce better batches than unseeded ones
+        why: The quality of the randomness is the same; only reproducibility changes.
   - id: f6-stochastic-gradient-descent-10
     type: cloze
     prompt: "One complete pass through the whole training set is called an ______."
-    accept: ["epoch"]
+    accept: [ "epoch" ]
     explanation: "An epoch. With n examples and batch size B it contains ⌈n / B⌉ update steps."

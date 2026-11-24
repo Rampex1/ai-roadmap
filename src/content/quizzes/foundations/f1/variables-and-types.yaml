@@ -36,13 +36,13 @@ items:
     prompt: "What is the type of `3.0`?"
     explanation: "The decimal point makes it a float, even though its value is a whole number."
     options:
+      - text: str
+        why: It has no quotes, so it is a number, not text.
+      - text: int
+        why: Its value is whole, but the decimal point makes it a float.
       - text: float
         correct: true
         why: Any number written with a decimal point is a float.
-      - text: int
-        why: Its value is whole, but the decimal point makes it a float.
-      - text: str
-        why: It has no quotes, so it is a number, not text.
   - id: f1-variables-and-types-05
     type: output
     prompt: "What does this print?"
@@ -58,16 +58,16 @@ items:
     prompt: "Which of these lines raise an error?"
     explanation: "Joining a str and an int with `+` is a TypeError, and `int(\"ten\")` is a ValueError because the text holds no digits. The other two lines are fine."
     options:
-      - text: "print(\"Total: \" + 7)"
-        correct: true
-        why: "A str plus an int is a TypeError. Use str(7) first."
-      - text: "int(\"ten\")"
-        correct: true
-        why: 'int() can only convert text that contains a whole number, such as "10".'
       - text: "float(\"2.5\") + 1"
         why: 'float("2.5") is 2.5, and 2.5 + 1 is 3.5. No error.'
       - text: "print(\"Total:\", 7)"
         why: Commas pass separate arguments to print, so no conversion is needed.
+      - text: "int(\"ten\")"
+        correct: true
+        why: 'int() can only convert text that contains a whole number, such as "10".'
+      - text: "print(\"Total: \" + 7)"
+        correct: true
+        why: "A str plus an int is a TypeError. Use str(7) first."
   - id: f1-variables-and-types-07
     type: output
     prompt: "What does this print?"
@@ -86,18 +86,18 @@ items:
       - text: learning_rate
         correct: true
         why: Letters and an underscore, in snake_case style.
+      - text: 2x
+        why: A name cannot start with a digit.
       - text: x2
         correct: true
         why: Digits are allowed as long as they are not first.
-      - text: 2x
-        why: A name cannot start with a digit.
       - text: learning-rate
         why: The hyphen is read as a minus sign, so this means learning minus rate.
   - id: f1-variables-and-types-09
     type: cloze
     prompt: "The built-in function ____ tells you what kind of value something is."
     explanation: "`type(42)` gives `<class 'int'>`."
-    accept: ["type", "type()"]
+    accept: [ "type", "type()" ]
   - id: f1-variables-and-types-10
     type: order
     prompt: "Put the steps Python takes to run `total = price * qty` in order."

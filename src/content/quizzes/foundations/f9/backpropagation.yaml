@@ -1,0 +1,112 @@
+items:
+  - id: f9-backpropagation-01
+    type: mcq
+    prompt: "What does backpropagation compute?"
+    explanation: "Backpropagation is an efficient way to compute the gradient of the loss with respect to every parameter. Gradient descent (or another optimiser) then uses that gradient to update the parameters."
+    options:
+      - text: The gradient of the loss with respect to every parameter, in one backward pass
+        correct: true
+        why: It applies the chain rule from the output back to every weight and bias.
+      - text: The updated weights after one training step
+        why: Updating is the optimiser's job; backpropagation only supplies the gradient.
+      - text: The network's predictions
+        why: That is the forward pass.
+      - text: A numerical estimate of the gradient using small nudges
+        why: That is finite differences; backpropagation is exact up to rounding.
+  - id: f9-backpropagation-02
+    type: numeric
+    prompt: "In $u = a \\cdot b$ with $a = 3$, $b = -2$, the gradient arriving from above is $\\partial L/\\partial u = 5$. What is $\\partial L/\\partial a$?"
+    answer: -10
+    tol: 0.0001
+    explanation: "The multiply rule: each input gets the upstream gradient times the other input, so ∂L/∂a = 5 × b = 5 × (−2) = −10."
+  - id: f9-backpropagation-03
+    type: numeric
+    prompt: "A value $x$ is used twice: $L = f(x) + g(x)$, with $\\partial f/\\partial x = 2$ and $\\partial g/\\partial x = 7$ at the current point. What is $\\partial L/\\partial x$?"
+    answer: 9
+    tol: 0.0001
+    explanation: "When a value branches, the gradients from its uses are added: 2 + 7 = 9."
+  - id: f9-backpropagation-04
+    type: numeric
+    prompt: "In the network $h = \\tanh z$, suppose $h = 0.5$ and $\\partial L/\\partial h = 4$. What is $\\partial L/\\partial z$?"
+    answer: 3
+    tol: 0.0001
+    explanation: "∂L/∂z = ∂L/∂h × (1 − h²) = 4 × (1 − 0.25) = 3."
+  - id: f9-backpropagation-05
+    type: mcq
+    prompt: "For a layer $Z = AW + \\mathbf{b}$ with $A$ of shape (n, d), $W$ (d, m) and upstream gradient $dZ$ of shape (n, m), which expression gives $dW$?"
+    explanation: "dW must have W's shape (d, m). Only Aᵀ dZ, (d, n) @ (n, m), produces that."
+    options:
+      - text: "A.T @ dZ"
+        correct: true
+        why: (d, n) @ (n, m) gives (d, m), the shape of W.
+      - text: "dZ @ A.T"
+        why: (n, m) @ (d, n) does not even multiply unless m = d.
+      - text: "dZ @ W.T"
+        why: That is dA, the gradient passed on to the previous layer.
+      - text: "dZ.sum(axis=0)"
+        why: That is the bias gradient db.
+  - id: f9-backpropagation-06
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      dZ = np.array([[1.0, -2.0],
+                     [0.5,  3.0],
+                     [2.0,  1.0]])
+      print(dZ.sum(axis=0))
+    answer: "[3.5 2. ]"
+    explanation: "The bias gradient sums dZ over the examples (rows): 1 + 0.5 + 2 = 3.5 and −2 + 3 + 1 = 2."
+  - id: f9-backpropagation-07
+    type: mcq
+    prompt: "Why must the forward pass store its intermediate values (such as each layer's activations) during training?"
+    explanation: "The local derivatives in the backward pass depend on forward values: dW = Aᵀ dZ needs A, and tanh′ needs H. Storing them is the memory cost of backpropagation."
+    options:
+      - text: The backward pass needs them to compute local derivatives, such as A in Aᵀ dZ
+        correct: true
+        why: Without them you would have to recompute the forward pass.
+      - text: So the loss can be printed
+        why: Only the final loss is needed for printing.
+      - text: Because NumPy cannot free arrays
+        why: NumPy frees arrays fine; the values are kept on purpose.
+      - text: To compute the finite-difference check
+        why: A gradient check re-runs the forward pass; it does not use the stored values.
+  - id: f9-backpropagation-08
+    type: multi
+    prompt: "A gradient check on your backward pass gives relative errors of 0.33 for W1 and about 1e-10 for everything else. Which conclusions are reasonable? Select all that apply."
+    explanation: "A large error in one parameter's gradient points to a bug in the backward steps that lead to it; the others look correct. Training may still lower the loss with a wrong gradient, so the check matters."
+    options:
+      - text: There is probably a bug in the backward steps between the output and W1
+        correct: true
+        why: The other gradients agree, so the shared early steps are fine.
+      - text: The gradients of W2, b2 and b1 are very likely correct
+        correct: true
+        why: Errors near 1e-10 are what correct gradients give.
+      - text: A relative error of 0.33 is normal rounding error
+        why: Rounding gives errors around 1e-7 or smaller, not a third.
+      - text: If training still lowers the loss, the bug does not matter
+        why: A wrong gradient can still point roughly downhill while training badly or slowly.
+  - id: f9-backpropagation-09
+    type: order
+    prompt: "Put these steps of computing gradients for a two-layer network (tanh hidden layer, softmax cross-entropy) in order."
+    explanation: "Forward first, then backward from the loss: dZ2, the second layer's gradients, dH, dZ1 through tanh, then the first layer's gradients."
+    items:
+      - "Forward pass: compute Z1, H, Z2 and the loss, keeping them"
+      - "dZ2 = (softmax(Z2) - one-hot labels) / n"
+      - "dW2 = H.T @ dZ2 and db2 = dZ2.sum(axis=0)"
+      - "dH = dZ2 @ W2.T"
+      - "dZ1 = dH * (1 - H ** 2)"
+      - "dW1 = X.T @ dZ1 and db1 = dZ1.sum(axis=0)"
+  - id: f9-backpropagation-10
+    type: mcq
+    prompt: "In $\\hat y = w_2 h + b_2$, why is $\\partial L/\\partial b_2$ equal to $\\partial L/\\partial \\hat y$?"
+    explanation: "b₂ enters through an addition, whose local derivative is 1, so the gradient is copied unchanged."
+    options:
+      - text: The bias is added, and addition passes the gradient through unchanged
+        correct: true
+        why: The local derivative ∂ŷ/∂b₂ is 1.
+      - text: Because b₂ is small
+        why: The size of b₂ does not enter its gradient here.
+      - text: Because biases never affect the loss
+        why: They do affect it; their gradient is just the upstream gradient.
+      - text: It is only approximately equal
+        why: It is exactly equal.

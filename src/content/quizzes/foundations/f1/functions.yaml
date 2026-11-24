@@ -17,13 +17,13 @@ items:
     prompt: "A function computes an average that other code needs to use. Should it print the average or return it?"
     explanation: "Returning hands the value back to the caller, who can then store it, print it, or compute with it. Printing only shows it."
     options:
+      - text: It makes no difference
+        why: Printing gives the caller None, which breaks any further calculation.
+      - text: Print it, because print also makes the value available to the program
+        why: print only writes text to the screen; the function still returns None.
       - text: Return it, so the caller can use the value
         correct: true
         why: The caller can still print a returned value, but cannot use a printed one.
-      - text: Print it, because print also makes the value available to the program
-        why: print only writes text to the screen; the function still returns None.
-      - text: It makes no difference
-        why: Printing gives the caller None, which breaks any further calculation.
   - id: f1-functions-03
     type: output
     prompt: "What does this print?"
@@ -56,10 +56,10 @@ items:
       - text: count is a local variable that exists only inside the function
         correct: true
         why: Return the value and store it, as in count = my_function().
-      - text: The function was never called
-        why: Even after a call, local variables are not visible outside the function.
       - text: count is a reserved word in Python
         why: count is an ordinary name; it is just not defined in the outer scope.
+      - text: The function was never called
+        why: Even after a call, local variables are not visible outside the function.
   - id: f1-functions-06
     type: multi
     prompt: "Which statements about functions are true?"
@@ -93,7 +93,7 @@ items:
     type: cloze
     prompt: "A string written on the first line of a function body, describing what the function does, is called a ____ ."
     explanation: "A docstring documents a function; `help()` and editors show it."
-    accept: ["docstring", "doc string", "doc-string"]
+    accept: [ "docstring", "doc string", "doc-string" ]
   - id: f1-functions-09
     type: order
     prompt: "Order the lines to define and use a function that returns the larger of two numbers."

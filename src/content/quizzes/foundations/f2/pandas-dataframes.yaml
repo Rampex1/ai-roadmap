@@ -16,10 +16,10 @@ items:
       - text: A pandas Series
         correct: true
         why: A single column is a labelled 1D array, which is a Series.
-      - text: A DataFrame with one column
-        why: That is what df[["price"]] (with a list) gives.
       - text: A Python list
         why: Use .tolist() if you want a plain list.
+      - text: A DataFrame with one column
+        why: That is what df[["price"]] (with a list) gives.
   - id: f2-pandas-dataframes-03
     type: output
     prompt: "What does this print?"
@@ -43,11 +43,11 @@ items:
     prompt: "Which line keeps the rows where `age` is over 30 **and** `city` is \"York\"?"
     explanation: "As in NumPy, combine masks with & and put brackets around each comparison."
     options:
+      - text: "df[df[\"age\"] > 30 and df[\"city\"] == \"York\"]"
+        why: Python's and cannot combine whole Series and raises a ValueError.
       - text: "df[(df[\"age\"] > 30) & (df[\"city\"] == \"York\")]"
         correct: true
         why: Two bracketed masks combined element-wise with &.
-      - text: "df[df[\"age\"] > 30 and df[\"city\"] == \"York\"]"
-        why: Python's and cannot combine whole Series and raises a ValueError.
       - text: "df[df[\"age\"] > 30 & df[\"city\"] == \"York\"]"
         why: Without brackets, & is applied before the comparisons, which gives an error or a wrong mask.
   - id: f2-pandas-dataframes-06
@@ -75,14 +75,14 @@ items:
     prompt: "You load a CSV and `df.dtypes` shows the `price` column as `str` instead of a number type. What could explain it?"
     explanation: "If any value cannot be read as a number, pandas keeps the whole column as text. Look for typos, units or placeholders in the data. Standard markers such as NA, n/a or null are read as missing (NaN), so they do not cause this."
     options:
+      - text: The column has more than 1000 rows
+        why: Size has nothing to do with the dtype.
       - text: "Some prices contain text such as \"£300\" or \"unknown\""
         correct: true
         why: One unreadable value makes the whole column text.
       - text: "Some prices have a unit after them, such as \"300 GBP\""
         correct: true
         why: Text after the number makes the value unreadable as a number, so the whole column stays text.
-      - text: The column has more than 1000 rows
-        why: Size has nothing to do with the dtype.
   - id: f2-pandas-dataframes-09
     type: output
     prompt: "What does this print?"
@@ -95,5 +95,5 @@ items:
   - id: f2-pandas-dataframes-10
     type: cloze
     prompt: "To select rows and columns by **position** (like NumPy) rather than by label, use `df.____[...]`."
-    accept: ["iloc", ".iloc", "iloc[]"]
+    accept: [ "iloc", ".iloc", "iloc[]" ]
     explanation: "iloc is integer-position based; loc is label based."

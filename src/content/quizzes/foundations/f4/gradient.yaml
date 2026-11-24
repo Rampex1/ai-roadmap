@@ -7,12 +7,12 @@ items:
       - text: (2x, 6y)
         correct: true
         why: One partial derivative per input.
-      - text: 2x + 6y
-        why: The gradient is a vector of partials, not their sum.
-      - text: (x², 3y²)
-        why: Those are the terms of f, not their derivatives.
       - text: (2, 6)
         why: That is the gradient at the point (1, 1), not everywhere.
+      - text: (x², 3y²)
+        why: Those are the terms of f, not their derivatives.
+      - text: 2x + 6y
+        why: The gradient is a vector of partials, not their sum.
   - id: f4-gradient-02
     type: numeric
     prompt: "For $f(x, y) = x^2 + 3y^2$, what is the length $\\lVert\\nabla f\\rVert$ of the gradient at $(2, 0.5)$?"
@@ -29,10 +29,10 @@ items:
         why: cos θ = 1 there, giving the largest slope, ‖∇f‖.
       - text: Along minus the gradient
         why: That is the direction of fastest decrease.
-      - text: Along a contour line
-        why: Along a contour the function does not change at all.
       - text: Along the x axis
         why: That is only the steepest direction if the gradient happens to point along x.
+      - text: Along a contour line
+        why: Along a contour the function does not change at all.
   - id: f4-gradient-04
     type: numeric
     prompt: "At a point where $\\nabla f = (3, 4)$, what is the directional derivative in the direction of the unit vector $\\mathbf{u} = (0, 1)$?"
@@ -44,15 +44,15 @@ items:
     prompt: "How is the gradient at a point related to the contour line through that point?"
     explanation: "Along a contour the function is constant, so the slope is 0, which means ∇f · u = 0: the contour direction is perpendicular to the gradient."
     options:
-      - text: It is perpendicular to the contour
-        correct: true
-        why: Moving along the contour gives zero change, so ∇f · u = 0.
       - text: It is parallel to the contour
         why: Moving along a contour does not change the function, so that cannot be the steepest direction.
       - text: It always points towards the minimum
         why: It points uphill, and even minus the gradient need not point straight at the minimum.
       - text: There is no fixed relationship
         why: Perpendicularity always holds where the gradient is nonzero.
+      - text: It is perpendicular to the contour
+        correct: true
+        why: Moving along the contour gives zero change, so ∇f · u = 0.
   - id: f4-gradient-06
     type: output
     prompt: "What does this print?"
@@ -77,15 +77,15 @@ items:
     prompt: "Which statements about the gradient are true?"
     explanation: "It has one entry per input, its length is the steepest slope, it is zero at a smooth minimum, and gradient descent steps against it."
     options:
-      - text: It has one entry for each input variable
-        correct: true
-        why: It is the vector of all partial derivatives.
-      - text: Its length is the slope in the steepest uphill direction
-        correct: true
-        why: The maximum of ‖∇f‖ cos θ is ‖∇f‖.
       - text: At a minimum of a smooth function it is the zero vector
         correct: true
         why: All partials are zero where the surface is flat.
+      - text: Its length is the slope in the steepest uphill direction
+        correct: true
+        why: The maximum of ‖∇f‖ cos θ is ‖∇f‖.
+      - text: It has one entry for each input variable
+        correct: true
+        why: It is the vector of all partial derivatives.
       - text: Gradient descent moves the parameters in the direction of +∇L
         why: That would increase the loss; gradient descent steps along -∇L.
   - id: f4-gradient-08
@@ -96,10 +96,10 @@ items:
       - text: The learning rate, a small positive step size
         correct: true
         why: It controls how far each step moves against the gradient.
-      - text: The loss value
-        why: The loss is L(θ); η is a separate setting.
       - text: The number of parameters
         why: η is a step size, not a count.
+      - text: The loss value
+        why: The loss is L(θ); η is a separate setting.
       - text: The gradient's length
         why: The gradient is computed; η is chosen by you.
   - id: f4-gradient-09
@@ -111,5 +111,5 @@ items:
   - id: f4-gradient-10
     type: cloze
     prompt: "The symbol $\\nabla$ used for the gradient is called ____."
-    accept: ["nabla", "del", "grad"]
+    accept: [ "nabla", "del", "grad" ]
     explanation: "∇ is read nabla, del, or simply grad."

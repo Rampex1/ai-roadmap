@@ -31,13 +31,13 @@ items:
     prompt: "A table has 1000 rows and 12 columns. Each column has about 5% missing values, scattered at random. What is the main risk of `df.dropna()`?"
     explanation: "dropna drops a row if any column is missing. With many columns, most rows have at least one gap, so a large share of the data can vanish."
     options:
+      - text: It changes df in place and cannot be undone
+        why: dropna returns a new DataFrame and leaves df as it was.
+      - text: It replaces missing values with zeros
+        why: dropna removes rows; fillna is what fills values.
       - text: It may throw away far more rows than 5%, because a row goes if any of its 12 columns is missing
         correct: true
         why: The chance that a row has no gaps at all is about 0.95 to the power 12, roughly 54%, so nearly half the rows go.
-      - text: It replaces missing values with zeros
-        why: dropna removes rows; fillna is what fills values.
-      - text: It changes df in place and cannot be undone
-        why: dropna returns a new DataFrame and leaves df as it was.
   - id: f2-pandas-groupby-05
     type: numeric
     prompt: "`s = pd.Series([2.0, None, 6.0, None])`. After `s = s.fillna(s.mean())`, what is `s.sum()`?"
@@ -62,26 +62,26 @@ items:
       - text: Some customer_id values appear more than once in customers
         correct: true
         why: Each order is matched with every customer row sharing its id, multiplying rows.
-      - text: Some orders have no matching customer
-        why: Unmatched rows are kept once with NaN; they do not add rows.
       - text: A left join always adds the right table's rows
         why: A left join never adds rows for keys found only in the right table; an outer join does.
+      - text: Some orders have no matching customer
+        why: Unmatched rows are kept once with NaN; they do not add rows.
   - id: f2-pandas-groupby-08
     type: multi
     prompt: "`df` has columns `city` and `price`. Which of these give the mean price per city?"
     explanation: "All three correct forms group by city and average price; they differ only in the shape of the result."
     options:
-      - text: "df.groupby(\"city\")[\"price\"].mean()"
-        correct: true
-        why: A Series indexed by city.
+      - text: "df[\"price\"].mean()"
+        why: That is one overall mean, not one per city.
       - text: "df.groupby(\"city\").agg(avg=(\"price\", \"mean\"))"
         correct: true
         why: A DataFrame with one column named avg, indexed by city.
+      - text: "df.groupby(\"city\")[\"price\"].mean()"
+        correct: true
+        why: A Series indexed by city.
       - text: "df.groupby(\"city\", as_index=False)[\"price\"].mean()"
         correct: true
         why: A DataFrame with city as an ordinary column.
-      - text: "df[\"price\"].mean()"
-        why: That is one overall mean, not one per city.
   - id: f2-pandas-groupby-09
     type: mcq
     prompt: "A groupby shows that region X has the highest average sales. The count column shows region X has 2 rows; other regions have about 300 each. What should you conclude?"

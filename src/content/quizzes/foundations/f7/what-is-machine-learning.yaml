@@ -1,0 +1,121 @@
+items:
+  - id: f7-what-is-machine-learning-01
+    type: mcq
+    prompt: "You have 5,000 past house sales with floor area, location and sale price, and want to estimate the price of a new listing. What kind of problem is this?"
+    options:
+      - text: "Supervised regression"
+        correct: true
+        why: "Every training row has the answer (the sale price) and the answer is a number."
+      - text: "Supervised classification"
+        why: "Classification predicts a category. A price is a number."
+      - text: "Unsupervised learning"
+        why: "Unsupervised learning has no label column, but here the price is known for every training row."
+      - text: "Reinforcement learning"
+        why: "There is no agent acting and receiving rewards, just a table of examples with answers."
+    explanation: "A known label for each training row makes it supervised; a numeric label makes it regression."
+  - id: f7-what-is-machine-learning-02
+    type: multi
+    prompt: "Which of these are **classification** tasks?"
+    options:
+      - text: "Deciding whether an email is spam"
+        correct: true
+        why: "Two categories: spam or not spam."
+      - text: "Recognising which digit, 0 to 9, is in an image"
+        correct: true
+        why: "Ten categories. The digits are labels here, not quantities."
+      - text: "Predicting tomorrow's maximum temperature"
+        why: "Temperature is a number, so this is regression."
+      - text: "Predicting whether a loan will be repaid"
+        correct: true
+        why: "Two categories: repaid or defaulted."
+      - text: "Grouping customers into segments when no segment labels exist"
+        why: "With no labels this is clustering, an unsupervised task."
+    explanation: "Classification predicts a category, even when the categories are written as numbers like 0 to 9."
+  - id: f7-what-is-machine-learning-03
+    type: mcq
+    prompt: "A shop has purchase histories but no labels, and wants to find groups of customers who buy similar things. Which kind of learning fits?"
+    options:
+      - text: "Unsupervised learning, for example clustering"
+        correct: true
+        why: "There is only X, no y, and the goal is to find structure."
+      - text: "Supervised classification"
+        why: "Classification needs a label for each training row, and there is none."
+      - text: "Supervised regression"
+        why: "Regression needs a numeric label for each training row."
+    explanation: "No label column means unsupervised learning; finding groups is clustering."
+  - id: f7-what-is-machine-learning-04
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      area = np.array([30, 45, 50, 70])
+      print(area.reshape(-1, 1).shape)
+    answer: "(4, 1)"
+    explanation: "`reshape(-1, 1)` makes one column with as many rows as needed: 4 rows, 1 column, the 2-D shape scikit-learn expects for a single feature."
+  - id: f7-what-is-machine-learning-05
+    type: mcq
+    prompt: "In scikit-learn, what does the trailing underscore in `model.coef_` tell you?"
+    options:
+      - text: "It was learned from the data by fit, so it exists only after fitting"
+        correct: true
+        why: "That is the convention: learned attributes end in an underscore."
+      - text: "It is a private attribute you should not read"
+        why: "A leading underscore marks private names in Python. A trailing one in scikit-learn marks learned values, which you are meant to read."
+      - text: "It is a hyperparameter you set in the constructor"
+        why: "Hyperparameters are constructor arguments without an underscore, such as n_neighbors."
+    explanation: "Anything ending in `_` (coef_, intercept_, mean_) is set by `fit`. Asking for it before fitting raises an error."
+  - id: f7-what-is-machine-learning-06
+    type: mcq
+    prompt: "Where do you set the number of neighbours for a k-nearest neighbours classifier in scikit-learn?"
+    options:
+      - text: "In the constructor: KNeighborsClassifier(n_neighbors=7)"
+        correct: true
+        why: "Settings chosen before training are hyperparameters and go in the constructor."
+      - text: "As an argument to fit"
+        why: "fit takes the data (X and y), not the model's settings."
+      - text: "As an argument to predict"
+        why: "predict takes the new rows only."
+    explanation: "Hyperparameters go in the constructor; data goes to fit and predict."
+  - id: f7-what-is-machine-learning-07
+    type: order
+    prompt: "Put the steps of a basic supervised learning project in order."
+    items:
+      - "Collect a table of examples with features and labels"
+      - "Split off rows the model will not see while learning"
+      - "Fit the model on the remaining rows"
+      - "Predict labels for the held-out rows"
+      - "Compare those predictions with the true held-out labels"
+    explanation: "Collect, split, fit, predict, evaluate. The split must come before fitting, so the held-out rows play no part in training."
+  - id: f7-what-is-machine-learning-08
+    type: cloze
+    prompt: "A deliberately trivial model, such as always predicting the training mean, that every real model should beat is called a ____ model."
+    accept: ["baseline", "dummy", "base line", "baseline model"]
+    explanation: "A baseline model, available in scikit-learn as `DummyRegressor` and `DummyClassifier`."
+  - id: f7-what-is-machine-learning-09
+    type: mcq
+    prompt: "Why is a model judged on data it was not trained on?"
+    options:
+      - text: "A model can score perfectly on its training rows by memorising them and still fail on new rows"
+        correct: true
+        why: "What matters is generalisation to new data, which training data cannot measure."
+      - text: "Scoring on training data is slower"
+        why: "Speed is not the issue; the training score is simply biased upwards."
+      - text: "scikit-learn refuses to score a model on its training data"
+        why: "It allows it, and the lessons do it for illustration; the result just flatters the model."
+    explanation: "The goal is good predictions on new data. Only held-out data can estimate that."
+  - id: f7-what-is-machine-learning-10
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      from sklearn.dummy import DummyRegressor
+      m = DummyRegressor().fit(np.zeros((4, 1)), [1, 2, 3, 6])
+      print(m.predict(np.zeros((2, 1))))
+    answer: "[3. 3.]"
+    explanation: "DummyRegressor predicts the training mean, (1 + 2 + 3 + 6) / 4 = 3, for every row, ignoring the features."
+  - id: f7-what-is-machine-learning-11
+    type: numeric
+    prompt: "A table has 500 rows and 12 columns. One column is the label and the rest are features. What is $d$, the number of features, in the shape $(n, d)$ of $X$?"
+    answer: 11
+    tol: 0
+    explanation: "X holds the 11 feature columns, so its shape is (500, 11); the label column becomes y, of length 500."

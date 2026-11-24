@@ -10,15 +10,15 @@ items:
     prompt: "In the lesson's emails, $P(\\text{spam} \\mid \\text{free}) = 0.75$. What can you say about $P(\\text{free} \\mid \\text{spam})$ without more information?"
     explanation: "Swapping the condition asks a different question. It was 0.6 for that data, but you cannot get it from 0.75 alone: you also need P(spam) and P(free)."
     options:
+      - text: It must be smaller than 0.75
+        why: It could be larger or smaller depending on the base rates.
+      - text: It is 0.25
+        why: 1 - 0.75 is P(not spam | free), which is a different quantity.
+      - text: It is also 0.75
+        why: Conditional probabilities are not symmetric; assuming so is the confusion of the inverse.
       - text: Nothing definite; it is a different question and needs more information
         correct: true
         why: Converting one into the other needs the base rates, which is what Bayes' theorem does.
-      - text: It is also 0.75
-        why: Conditional probabilities are not symmetric; assuming so is the confusion of the inverse.
-      - text: It is 0.25
-        why: 1 - 0.75 is P(not spam | free), which is a different quantity.
-      - text: It must be smaller than 0.75
-        why: It could be larger or smaller depending on the base rates.
   - id: f5-conditional-probability-03
     type: output
     prompt: "What does this print?"
@@ -46,13 +46,13 @@ items:
     prompt: "Events A and B have $P(A) = 0.3$ and $P(B) = 0.5$, and they are disjoint. Are they independent?"
     explanation: "Disjoint means P(A and B) = 0, but independence would need P(A and B) = 0.3 × 0.5 = 0.15. They are dependent: knowing A happened tells you B did not."
     options:
+      - text: Yes, disjoint and independent mean the same thing
+        why: They are different ideas; disjoint events with positive probability are always dependent.
+      - text: Yes, because they have nothing to do with each other
+        why: Not overlapping is a strong relationship; one rules the other out.
       - text: No, because P(A and B) = 0 but P(A)P(B) = 0.15
         correct: true
         why: The independence test fails, so they are dependent.
-      - text: Yes, because they have nothing to do with each other
-        why: Not overlapping is a strong relationship; one rules the other out.
-      - text: Yes, disjoint and independent mean the same thing
-        why: They are different ideas; disjoint events with positive probability are always dependent.
       - text: It cannot be decided from this information
         why: P(A), P(B) and P(A and B) = 0 are all you need for the test.
   - id: f5-conditional-probability-07
@@ -63,32 +63,32 @@ items:
       - text: P(A and B) = P(A) P(B)
         correct: true
         why: This is the standard test.
-      - text: P(A | B) = P(A)
-        correct: true
-        why: Learning B does not change the probability of A.
       - text: P(B | A) = P(B)
         correct: true
         why: The relationship is symmetric.
       - text: P(A and B) = 0
         why: That says A and B are disjoint, which makes them dependent.
+      - text: P(A | B) = P(A)
+        correct: true
+        why: Learning B does not change the probability of A.
   - id: f5-conditional-probability-08
     type: mcq
     prompt: "With two fair dice, is \"the first die is even\" independent of \"the sum is 8\"?"
     explanation: "P(first even and sum 8) = 3/36 (pairs (2, 6), (4, 4), (6, 2)), but P(first even) × P(sum 8) = 1/2 × 5/36 = 5/72 ≈ 0.069. They differ, so the events are dependent."
     options:
-      - text: No, P(both) is 3/36 but the product of the probabilities is 5/72
-        correct: true
-        why: The product rule fails, so they are dependent.
-      - text: Yes, dice are always independent
-        why: The two dice are independent of each other, but events built from the sum can depend on the first die.
       - text: Yes, exactly as for a sum of 7
         why: A sum of 7 is independent of the first die; a sum of 8 is not, because a first die of 1 makes 8 impossible.
       - text: No, because they are disjoint
         why: They can happen together, for example (2, 6).
+      - text: Yes, dice are always independent
+        why: The two dice are independent of each other, but events built from the sum can depend on the first die.
+      - text: No, P(both) is 3/36 but the product of the probabilities is 5/72
+        correct: true
+        why: The product rule fails, so they are dependent.
   - id: f5-conditional-probability-09
     type: cloze
     prompt: "Training examples assumed to be drawn independently from the same distribution are called i.i.d., short for independent and ________ distributed."
-    accept: ["identically"]
+    accept: [ "identically" ]
     explanation: "i.i.d. means independent and identically distributed: every example comes from the same distribution, and knowing one tells you nothing about another."
   - id: f5-conditional-probability-10
     type: output

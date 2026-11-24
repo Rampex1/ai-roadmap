@@ -60,27 +60,27 @@ items:
     prompt: "Which loop is the better fit for \"keep training until the validation loss stops improving\"?"
     explanation: "You do not know in advance how many passes you need, so a while loop on the stopping condition fits."
     options:
+      - text: A list comprehension
+        why: Comprehensions build lists from existing sequences; they cannot stop on a changing condition.
       - text: A while loop that checks the stopping condition
         correct: true
         why: while repeats for as long as a condition holds, however many passes that takes.
       - text: A for loop over range(10)
         why: That always runs exactly 10 times, whether or not the loss is still improving.
-      - text: A list comprehension
-        why: Comprehensions build lists from existing sequences; they cannot stop on a changing condition.
   - id: f1-loops-08
     type: multi
     prompt: "Which of these produce the list `[0, 2, 4, 6]`?"
     explanation: "All three of the correct options generate the even numbers from 0 up to 6."
     options:
-      - text: list(range(0, 8, 2))
-        correct: true
-        why: Start 0, stop before 8, step 2.
       - text: "[2 * i for i in range(4)]"
         correct: true
         why: i is 0 to 3, doubled gives 0, 2, 4, 6.
       - text: "[i for i in range(7) if i % 2 == 0]"
         correct: true
         why: Keeps the even values from 0 to 6.
+      - text: list(range(0, 8, 2))
+        correct: true
+        why: Start 0, stop before 8, step 2.
       - text: list(range(0, 6, 2))
         why: The stop value 6 is excluded, so this is [0, 2, 4].
   - id: f1-loops-09
@@ -106,4 +106,4 @@ items:
     type: cloze
     prompt: "The keyword that exits a loop immediately, skipping any remaining passes, is ____ ."
     explanation: "`break` leaves the loop; `continue` only skips the rest of the current pass."
-    accept: ["break"]
+    accept: [ "break" ]

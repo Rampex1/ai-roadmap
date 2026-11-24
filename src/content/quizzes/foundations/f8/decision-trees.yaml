@@ -1,0 +1,110 @@
+items:
+  - id: f8-decision-trees-01
+    type: numeric
+    prompt: "A node holds 8 rows of class A and 2 of class B. What is its Gini impurity?"
+    answer: 0.32
+    tol: 0.001
+    explanation: "$p = (0.8, 0.2)$, so Gini $= 1 - (0.64 + 0.04) = 0.32$."
+  - id: f8-decision-trees-02
+    type: numeric
+    prompt: "A node holds 4 rows of each of two classes. What is its entropy in bits?"
+    answer: 1
+    tol: 0.001
+    explanation: "A 50/50 split has $-0.5\\log_2 0.5 - 0.5\\log_2 0.5 = 1$ bit, the maximum for two classes."
+  - id: f8-decision-trees-03
+    type: numeric
+    prompt: "A parent node has Gini 0.5 and 10 rows. A split sends 4 rows to a pure left child and 6 rows to a right child with Gini 0.5. By how much does the split decrease the weighted Gini?"
+    answer: 0.2
+    tol: 0.001
+    explanation: "Weighted Gini $= 0.4 \\times 0 + 0.6 \\times 0.5 = 0.3$, so the decrease is $0.5 - 0.3 = 0.2$."
+  - id: f8-decision-trees-04
+    type: mcq
+    prompt: "A classification tree reaches a leaf containing 3 training rows of class `cat` and 1 of class `dog`. What does `predict_proba` return for a new row landing there (columns cat, dog)?"
+    explanation: "A leaf predicts its majority class and uses its class proportions as probabilities: 3/4 cat, 1/4 dog."
+    options:
+      - text: "[0.75, 0.25]"
+        correct: true
+        why: The leaf's class proportions are the predicted probabilities.
+      - text: "[1.0, 0.0]"
+        why: That is the hard prediction; predict_proba gives the proportions.
+      - text: "[0.5, 0.5]"
+        why: The leaf is not evenly split; it has three cats and one dog.
+      - text: "[3, 1]"
+        why: Those are counts, not probabilities; they must be divided by 4.
+  - id: f8-decision-trees-05
+    type: multi
+    prompt: "Which statements about Gini impurity and entropy are true?"
+    explanation: "Both are 0 for a pure node and largest for an even mix; they usually choose the same split. Gini is the scikit-learn default and needs no logarithm."
+    options:
+      - text: Both are zero for a pure node
+        correct: true
+        why: With one class at probability 1, both formulas give 0.
+      - text: Both are largest when the classes are evenly mixed
+        correct: true
+        why: An even mix is the most uncertain node.
+      - text: They usually lead to the same or very similar splits
+        correct: true
+        why: Their curves have nearly the same shape, so the ranking of splits rarely differs.
+      - text: Entropy can be negative for a very impure node
+        why: Entropy is never negative; each term is a probability times a non-negative surprise.
+  - id: f8-decision-trees-06
+    type: mcq
+    prompt: "A numeric feature takes the sorted distinct values 2, 5, 9 in a node. Which thresholds does a tree consider for it?"
+    explanation: "Only gaps between distinct sorted values change which rows go where, and the conventional threshold is each gap's midpoint: 3.5 and 7."
+    options:
+      - text: "3.5 and 7"
+        correct: true
+        why: One midpoint per gap between consecutive distinct values.
+      - text: "2, 5 and 9"
+        why: Thresholds sit between values; scikit-learn reports midpoints.
+      - text: Every real number between 2 and 9
+        why: All thresholds inside the same gap split the rows identically, so one per gap is enough.
+      - text: Only the median, 5
+        why: The tree searches all gaps, not just the median.
+  - id: f8-decision-trees-07
+    type: mcq
+    prompt: "Why does a decision tree not need its features standardised?"
+    explanation: "Each split compares one feature with a threshold. Rescaling a feature moves the threshold with it but sends the same rows each way, so the tree is unchanged."
+    options:
+      - text: Each split compares a single feature with a threshold, so rescaling a feature just rescales the threshold
+        correct: true
+        why: Any monotone rescaling keeps the same order of values and so the same partitions.
+      - text: Trees standardise features internally before training
+        why: They do not; they do not need to.
+      - text: Trees ignore features with large values
+        why: Magnitude does not matter at all; only the ordering of values does.
+      - text: Trees only work with binary features
+        why: Trees handle numeric features through thresholds.
+  - id: f8-decision-trees-08
+    type: mcq
+    prompt: "What does it mean that tree training is **greedy**?"
+    explanation: "At each node CART picks the split that looks best right now and never revisits it, which is fast but not guaranteed to give the best tree overall."
+    options:
+      - text: It picks the best split at each node and never revisits earlier choices
+        correct: true
+        why: Locally best choices, made once, top-down.
+      - text: It tries every possible tree and keeps the best one
+        why: There are far too many trees; that search is infeasible.
+      - text: It uses as many features as possible in each split
+        why: Each split uses exactly one feature.
+      - text: It always grows the tree to maximum depth
+        why: Depth is controlled by stopping rules, not by greediness.
+  - id: f8-decision-trees-09
+    type: cloze
+    prompt: "With entropy as the impurity measure, the decrease in impurity produced by a split is called the information ____."
+    accept: ["gain"]
+    explanation: "Information gain is the parent's entropy minus the size-weighted entropy of the children."
+  - id: f8-decision-trees-10
+    type: mcq
+    prompt: "What does a leaf of a **regression** tree predict?"
+    explanation: "Regression trees use variance (squared error) as impurity, and each leaf predicts the mean target of its training rows, which minimises squared error inside the leaf."
+    options:
+      - text: The mean target value of the training rows in that leaf
+        correct: true
+        why: The mean minimises squared error within the leaf.
+      - text: A linear function of the features
+        why: Standard regression trees predict a constant per leaf.
+      - text: The target of the single nearest training row
+        why: That is 1-nearest neighbour, not a tree.
+      - text: The majority target value
+        why: Majority is for classes; numeric targets use the mean.

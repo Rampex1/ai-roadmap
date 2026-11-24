@@ -43,9 +43,6 @@ items:
     prompt: "Which of these make an independent copy of the list `a` (so changing the copy leaves `a` alone)?"
     explanation: "`a.copy()`, `list(a)` and the full slice `a[:]` all build a new list. Plain assignment only adds a name."
     options:
-      - text: a.copy()
-        correct: true
-        why: The copy method builds a new list with the same items.
       - text: list(a)
         correct: true
         why: list() builds a new list from any sequence.
@@ -54,6 +51,9 @@ items:
         why: Slicing always creates a new list, and [:] takes everything.
       - text: b = a
         why: This gives the same list a second name; no copy is made.
+      - text: a.copy()
+        correct: true
+        why: The copy method builds a new list with the same items.
   - id: f1-lists-06
     type: numeric
     prompt: "`grid = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]`. What is `grid[2][0] + grid[0][2]`?"
@@ -74,18 +74,18 @@ items:
     prompt: "What is the key difference between a list and a string?"
     explanation: "Both are ordered sequences you can index and slice, but only lists can be changed in place."
     options:
+      - text: Only strings can be sliced
+        why: Lists slice exactly like strings.
+      - text: Lists start counting at 1, strings at 0
+        why: Both use zero-based indexing.
       - text: Lists are mutable (changeable in place); strings are immutable
         correct: true
         why: You can do lst[0] = x, but s[0] = x is a TypeError.
-      - text: Lists start counting at 1, strings at 0
-        why: Both use zero-based indexing.
-      - text: Only strings can be sliced
-        why: Lists slice exactly like strings.
   - id: f1-lists-09
     type: cloze
     prompt: "To add the value 7 to the end of the list `xs`, you write `xs.____(7)`."
     explanation: "`append` adds one item to the end of a list, changing it in place."
-    accept: ["append"]
+    accept: [ "append" ]
   - id: f1-lists-10
     type: order
     prompt: "`xs = [4, 2, 9]`. Order these expressions by the value they give, smallest first."

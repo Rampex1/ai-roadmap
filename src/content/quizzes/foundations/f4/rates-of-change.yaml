@@ -10,15 +10,15 @@ items:
     prompt: "For the line $f(x) = -2x + 5$, what happens to the output when the input increases by 1?"
     explanation: "The slope is -2, so each one-unit step to the right lowers the output by 2. The 5 only sets where the line crosses the vertical axis."
     options:
+      - text: It increases by 3
+        why: That adds the slope and intercept, which has no meaning here.
       - text: It decreases by 2
         correct: true
         why: The slope -2 is the change in output per unit change in input.
-      - text: It increases by 5
-        why: 5 is the intercept, the value at x = 0, not the rate of change.
-      - text: It increases by 3
-        why: That adds the slope and intercept, which has no meaning here.
       - text: It depends on which x you start from
         why: For a straight line the slope is the same everywhere.
+      - text: It increases by 5
+        why: 5 is the intercept, the value at x = 0, not the rate of change.
   - id: f4-rates-of-change-03
     type: numeric
     prompt: "What is the average rate of change of $f(x) = x^2$ between $x = 1$ and $x = 4$?"
@@ -44,10 +44,10 @@ items:
       - text: The slope of the tangent line to x squared at x = 1
         correct: true
         why: Shrinking the interval turns the secant into the tangent, the rate of change at one point.
-      - text: The average rate of change of x squared between 0 and 1
-        why: That is (1 - 0) / 1 = 1, a different number.
       - text: The value of x squared at x = 1
         why: f(1) = 1 is a height, not a slope.
+      - text: The average rate of change of x squared between 0 and 1
+        why: That is (1 - 0) / 1 = 1, a different number.
       - text: Nothing, because the fraction is 0/0 when h = 0
         why: We never set h to 0; we look at what the fraction approaches as h gets close to 0.
   - id: f4-rates-of-change-06
@@ -55,17 +55,17 @@ items:
     prompt: "A car's distance-versus-time graph is a curve. Which statements are true?"
     explanation: "The secant slope over an interval is the average speed; the tangent slope at an instant is the speedometer reading; a steeper curve means faster."
     options:
-      - text: The slope of a secant line over one hour is the average speed in that hour
-        correct: true
-        why: Average rate of change of distance over time is average speed.
       - text: The slope of the tangent line at an instant is the speed at that instant
         correct: true
         why: Shrinking the interval to a single instant gives the instantaneous speed.
+      - text: The average speed over the whole trip equals the speed at every moment
+        why: Only for a straight-line graph. A curved graph means the speed changes.
+      - text: The slope of a secant line over one hour is the average speed in that hour
+        correct: true
+        why: Average rate of change of distance over time is average speed.
       - text: Where the curve is steeper, the car is moving faster
         correct: true
         why: Steeper means more distance per unit of time.
-      - text: The average speed over the whole trip equals the speed at every moment
-        why: Only for a straight-line graph. A curved graph means the speed changes.
   - id: f4-rates-of-change-07
     type: output
     prompt: "What does this print?"
@@ -80,19 +80,19 @@ items:
     prompt: "The training loss $L$ goes up when a weight $w$ is increased slightly. What does this suggest about how to change $w$ to reduce the loss?"
     explanation: "A positive rate of change of loss with respect to w means increasing w increases the loss, so decreasing w should reduce it, at least for small changes."
     options:
+      - text: Set w to 0
+        why: Nothing in the rate of change says 0 is a good value.
+      - text: Leave w alone; the rate of change says nothing useful
+        why: The sign of the rate tells you which way is downhill.
       - text: Decrease w slightly
         correct: true
         why: The rate of change is positive, so moving w the other way lowers the loss.
       - text: Increase w a lot
         why: That moves in the direction that raises the loss.
-      - text: Leave w alone; the rate of change says nothing useful
-        why: The sign of the rate tells you which way is downhill.
-      - text: Set w to 0
-        why: Nothing in the rate of change says 0 is a good value.
   - id: f4-rates-of-change-09
     type: cloze
     prompt: "A straight line through two points on a curve is called a ____ line."
-    accept: ["secant", "secant line"]
+    accept: [ "secant", "secant line" ]
     explanation: "A secant cuts the curve at two points. Its slope is the average rate of change between them."
   - id: f4-rates-of-change-10
     type: numeric

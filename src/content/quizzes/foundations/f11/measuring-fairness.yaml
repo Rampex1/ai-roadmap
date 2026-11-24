@@ -26,10 +26,10 @@ items:
         why: "It asks for equal true positive rates: qualified people are approved at the same rate in each group."
       - text: "Demographic parity"
         why: "Demographic parity does not condition on y; it compares plain selection rates."
-      - text: "Calibration"
-        why: "Calibration conditions on the score and asks about y, the other way round."
       - text: "Equalized odds"
         why: "Equalized odds requires this and also equal false positive rates. The formula shown is only the first half."
+      - text: "Calibration"
+        why: "Calibration conditions on the score and asks about y, the other way round."
     explanation: "Equal opportunity equalises TPR; equalized odds equalises TPR and FPR; demographic parity equalises selection rates."
   - id: f11-measuring-fairness-05
     type: output
@@ -60,13 +60,13 @@ items:
     type: mcq
     prompt: "A scholarship programme trusts its outcome labels and wants every genuinely strong applicant to have the same chance of being selected, whatever their group. Which criterion fits best?"
     options:
+      - text: "Equal false positive rates only"
+        why: "That is about unqualified people being selected, not the stated goal."
+      - text: "Demographic parity"
+        why: "Demographic parity ignores who is qualified; it fits better when labels themselves are distrusted."
       - text: "Equal opportunity (equal true positive rates)"
         correct: true
         why: "It is about qualified people having the same chance of the benefit."
-      - text: "Demographic parity"
-        why: "Demographic parity ignores who is qualified; it fits better when labels themselves are distrusted."
-      - text: "Equal false positive rates only"
-        why: "That is about unqualified people being selected, not the stated goal."
       - text: "Overall accuracy"
         why: "Accuracy is not a fairness criterion and hides group differences."
     explanation: "Choose the criterion from the decision: which error harms whom? For a benefit with trusted labels, equal opportunity is natural."
@@ -74,31 +74,31 @@ items:
     type: multi
     prompt: "Which statements about demographic parity are true? Select all that apply."
     options:
+      - text: "It can be checked without any labels"
+        correct: true
+        why: "Because it ignores y, you only need predictions and group membership."
+      - text: "A model that satisfies it must also have equal true positive rates"
+        why: "Equal selection rates say nothing about how the selections split between qualified and unqualified people."
       - text: "It compares selection rates and ignores the true outcomes"
         correct: true
         why: "It only uses predictions and group, never y."
       - text: "If base rates genuinely differ, achieving it usually means selecting people with different chances of success in each group"
         correct: true
         why: "Equal selection with unequal base rates forces different standards."
-      - text: "A model that satisfies it must also have equal true positive rates"
-        why: "Equal selection rates say nothing about how the selections split between qualified and unqualified people."
-      - text: "It can be checked without any labels"
-        correct: true
-        why: "Because it ignores y, you only need predictions and group membership."
     explanation: "Demographic parity is about outcomes of the decision, not about errors. That makes it useful when labels are distrusted, and contentious when they are not."
   - id: f11-measuring-fairness-09
     type: mcq
     prompt: "Group B has only 4 actual positives in your test set, and its TPR is 0.5. What is the most important caveat?"
     options:
+      - text: "A TPR of 0.5 is always acceptable"
+        why: "Whether 0.5 is acceptable depends on the decision and the other group's rate."
       - text: "The estimate is very noisy: one person changing outcome moves it by 25 points, so report counts and an interval"
         correct: true
         why: "Small groups give unreliable rates. A bootstrap interval would be wide."
-      - text: "TPR cannot be computed with fewer than 10 positives"
-        why: "It can be computed; it just is not very precise."
-      - text: "A TPR of 0.5 is always acceptable"
-        why: "Whether 0.5 is acceptable depends on the decision and the other group's rate."
       - text: "The group should be dropped from the audit"
         why: "Dropping small groups hides exactly the people most likely to be poorly served. Collect more data instead."
+      - text: "TPR cannot be computed with fewer than 10 positives"
+        why: "It can be computed; it just is not very precise."
     explanation: "Report the counts behind every rate, and use intervals, before drawing conclusions about a gap."
   - id: f11-measuring-fairness-10
     type: numeric

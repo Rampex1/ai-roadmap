@@ -1,0 +1,111 @@
+items:
+  - id: f7-linear-regression-with-scikit-learn-01
+    type: numeric
+    prompt: "A model's sum of squared residuals is 20 and the sum of squared deviations of $y$ from its mean is 80. What is $R^2$?"
+    answer: 0.75
+    tol: 0.001
+    explanation: "$R^2 = 1 - 20/80 = 0.75$: the model explains 75% of the variance in y."
+  - id: f7-linear-regression-with-scikit-learn-02
+    type: mcq
+    prompt: "A regression model has $R^2 = 0$ on some data. What does that mean?"
+    options:
+      - text: "It does exactly as well as always predicting the mean of y"
+        correct: true
+        why: "The denominator of R² is the error of the mean predictor, so R² = 0 means equal error."
+      - text: "It predicts every value exactly"
+        why: "That is R² = 1."
+      - text: "Its predictions are all zero"
+        why: "R² compares errors with the mean predictor; it says nothing directly about the predicted values."
+      - text: "It cannot be evaluated"
+        why: "R² = 0 is a perfectly valid result."
+    explanation: "R² compares the model's squared error with that of always predicting $\\bar{y}$. Zero means no improvement."
+  - id: f7-linear-regression-with-scikit-learn-03
+    type: mcq
+    prompt: "On new data, a regression model scores $R^2 = -0.3$. Which statement is right?"
+    options:
+      - text: "It predicts worse than simply using the mean of those labels"
+        correct: true
+        why: "Negative R² means the squared error is larger than that of the mean predictor."
+      - text: "This is impossible; R² is always between 0 and 1"
+        why: "On training data with an intercept R² is at least 0, but on new data it can be any value up to 1."
+      - text: "It explains 30% of the variance, in the opposite direction"
+        why: "R² has no direction; negative just means worse than the baseline."
+    explanation: "R² can be negative on held-out data, typically for an overfitted model."
+  - id: f7-linear-regression-with-scikit-learn-04
+    type: numeric
+    prompt: "How many columns does `PolynomialFeatures(degree=2, include_bias=False)` produce from 3 input features $a, b, c$?"
+    answer: 9
+    tol: 0
+    explanation: "3 original features, 3 squares ($a^2, b^2, c^2$) and 3 products ($ab, ac, bc$): 9 columns."
+  - id: f7-linear-regression-with-scikit-learn-05
+    type: mcq
+    prompt: "Fitting $\\hat{y} = w_1 x + w_2 x^2 + b$ draws a curve. Why is it still called linear regression?"
+    options:
+      - text: "The prediction is linear in the weights, so least squares works unchanged"
+        correct: true
+        why: "x² is just another input column; the model is a weighted sum of its columns."
+      - text: "Because the curve is approximately straight over the data range"
+        why: "A parabola can bend sharply; the name is not about the shape of the curve."
+      - text: "It is not; it is called polynomial classification"
+        why: "It predicts a number, so it is regression, and it is linear in the weights."
+    explanation: "Linear regression means linear in the parameters. Any fixed transformation of the inputs can be used as a feature."
+  - id: f7-linear-regression-with-scikit-learn-06
+    type: mcq
+    prompt: "Why solve the normal equations with `np.linalg.solve(A.T @ A, A.T @ y)` rather than `np.linalg.inv(A.T @ A) @ A.T @ y`?"
+    options:
+      - text: "solve is faster and numerically more accurate"
+        correct: true
+        why: "Forming an explicit inverse does extra work and amplifies rounding errors."
+      - text: "inv gives a different answer in exact arithmetic"
+        why: "In exact arithmetic both give the same weights; the difference is speed and rounding."
+      - text: "inv only works for square matrices and A.T @ A is not square"
+        why: "A.T @ A is square, (d+1) by (d+1)."
+    explanation: "Solving a system is cheaper and more stable than inverting a matrix, and library solvers go further by avoiding A.T @ A altogether."
+  - id: f7-linear-regression-with-scikit-learn-07
+    type: multi
+    prompt: "When is gradient descent the better choice than the closed-form least-squares solution?"
+    options:
+      - text: "When there are hundreds of thousands of features"
+        correct: true
+        why: "The closed form costs about d³ to solve, which becomes too expensive."
+      - text: "When the data does not fit in memory"
+        correct: true
+        why: "Mini-batch gradient descent can stream the data from disk."
+      - text: "When the model has no closed-form solution, as with logistic regression"
+        correct: true
+        why: "Then iteration is the only option."
+      - text: "For 1,000 rows and 5 features"
+        why: "Here the closed form is exact, instant and has nothing to tune."
+    explanation: "Use the closed form when it exists and fits in memory; use gradient descent otherwise."
+  - id: f7-linear-regression-with-scikit-learn-08
+    type: numeric
+    prompt: "A model's mean squared error on house prices (in £1,000s) is 2.25. What is its RMSE, in £1,000s?"
+    answer: 1.5
+    tol: 0.001
+    explanation: "RMSE = √2.25 = 1.5, in the units of y: predictions are typically off by about £1,500."
+  - id: f7-linear-regression-with-scikit-learn-09
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      from sklearn.preprocessing import PolynomialFeatures
+      print(PolynomialFeatures(degree=3, include_bias=False).fit_transform(np.array([[2.0]])))
+    answer: "[[2. 4. 8.]]"
+    explanation: "For one feature x = 2, the columns are x, x² and x³: 2, 4 and 8. include_bias=False drops the column of ones."
+  - id: f7-linear-regression-with-scikit-learn-10
+    type: cloze
+    prompt: "With $A$ the feature matrix plus a column of ones, the normal equations are $A^\\top A\\,\\mathbf{w} = $ ____ . (Write it with A, a transpose and y.)"
+    regex: "^\\s*(A\\s*(\\^\\s*T|ᵀ|\\.T|'|\\^\\{T\\}|\\^\\\\top)|transpose\\(A\\)|At)\\s*(@|\\*|·)?\\s*y\\s*$"
+    explanation: "$A^\\top A\\mathbf{w} = A^\\top\\mathbf{y}$, from setting the gradient $\\frac{2}{n}A^\\top(A\\mathbf{w} - \\mathbf{y})$ to zero."
+  - id: f7-linear-regression-with-scikit-learn-11
+    type: mcq
+    prompt: "A fitted model has a weight of $-2.1$ on the feature \"distance to station (km)\". What may you conclude?"
+    options:
+      - text: "In this data, with the other features held fixed, the prediction falls by 2.1 per extra km"
+        correct: true
+        why: "That is exactly what a weight in a linear model says, and no more."
+      - text: "Moving a flat 1 km further from the station would lower its rent by 2.1"
+        why: "That is a causal claim; the weight only describes an association in this data."
+      - text: "Distance is the least important feature"
+        why: "Weights can only be compared across features that are on the same scale."
+    explanation: "Weights describe associations in the fitted data, conditional on the other features. They are not causal effects."

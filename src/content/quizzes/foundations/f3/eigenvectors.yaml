@@ -7,10 +7,10 @@ items:
       - text: It scales v by lambda without moving it off its line
         correct: true
         why: That is the definition of an eigenvector.
-      - text: It rotates v by an angle of lambda
-        why: Rotations generally move vectors off their line; eigenvectors stay on it.
       - text: It adds lambda to every component of v
         why: lambda multiplies the vector; it is not added.
+      - text: It rotates v by an angle of lambda
+        why: Rotations generally move vectors off their line; eigenvectors stay on it.
   - id: f3-eigenvectors-02
     type: numeric
     prompt: "$A = \\begin{pmatrix} 4 & 1 \\\\ 2 & 3 \\end{pmatrix}$ and $\\mathbf{v} = (1, 1)$. $\\mathbf{v}$ is an eigenvector. What is its eigenvalue?"
@@ -22,26 +22,26 @@ items:
     prompt: "What are the eigenvalues of the diagonal matrix $\\begin{pmatrix} 3 & 0 \\\\ 0 & -2 \\end{pmatrix}$? Select all."
     explanation: "A diagonal matrix scales each axis by its diagonal entry, so $\\mathbf{e}_1$ has eigenvalue 3 and $\\mathbf{e}_2$ has eigenvalue $-2$."
     options:
-      - text: "3"
-        correct: true
-        why: e1 is stretched by 3.
       - text: "-2"
         correct: true
         why: e2 is flipped and stretched by 2.
-      - text: "0"
-        why: Neither axis is squashed; the determinant is -6, not 0.
       - text: "1"
         why: No direction is left unchanged.
+      - text: "0"
+        why: Neither axis is squashed; the determinant is -6, not 0.
+      - text: "3"
+        correct: true
+        why: e1 is stretched by 3.
   - id: f3-eigenvectors-04
     type: mcq
     prompt: "After `vals, vecs = np.linalg.eig(A)`, which expression is the eigenvector that goes with `vals[1]`?"
     explanation: "NumPy returns eigenvectors as the columns of `vecs`, so the one for `vals[i]` is `vecs[:, i]`."
     options:
+      - text: vecs[1]
+        why: That is row 1, a common mistake.
       - text: vecs[:, 1]
         correct: true
         why: Column 1.
-      - text: vecs[1]
-        why: That is row 1, a common mistake.
       - text: vecs[1, 1]
         why: That is a single number, not a vector.
   - id: f3-eigenvectors-05
@@ -71,16 +71,16 @@ items:
     prompt: "Which are true for a real **symmetric** matrix?"
     explanation: "The spectral theorem: real eigenvalues, perpendicular eigenvectors, and $A = Q\\Lambda Q^\\top$. Eigenvalues can still be negative or zero."
     options:
-      - text: All its eigenvalues are real numbers
-        correct: true
-        why: Part of the spectral theorem.
       - text: Its eigenvectors can be chosen perpendicular to each other and of length 1
         correct: true
         why: They form an orthonormal basis.
-      - text: All its eigenvalues are positive
-        why: A symmetric matrix such as [[0, 1], [1, 0]] has eigenvalue -1.
+      - text: All its eigenvalues are real numbers
+        correct: true
+        why: Part of the spectral theorem.
       - text: It is always invertible
         why: A symmetric matrix can have eigenvalue 0, like [[1, 1], [1, 1]].
+      - text: All its eigenvalues are positive
+        why: A symmetric matrix such as [[0, 1], [1, 0]] has eigenvalue -1.
   - id: f3-eigenvectors-08
     type: mcq
     prompt: "Why does a 90 degree rotation matrix have no real eigenvectors?"
@@ -104,10 +104,10 @@ items:
     prompt: "For the covariance matrix of a dataset, what does its eigenvector with the largest eigenvalue represent?"
     explanation: "The covariance matrix's top eigenvector is the direction along which the data varies most, and the eigenvalue is the variance along it. This is the first principal component."
     options:
+      - text: The data point farthest from the origin
+        why: Eigenvectors are directions, not data points.
+      - text: The mean of the data
+        why: The mean is subtracted before computing the covariance.
       - text: The direction in which the data spreads out the most
         correct: true
         why: Its eigenvalue is the variance along that direction.
-      - text: The mean of the data
-        why: The mean is subtracted before computing the covariance.
-      - text: The data point farthest from the origin
-        why: Eigenvectors are directions, not data points.

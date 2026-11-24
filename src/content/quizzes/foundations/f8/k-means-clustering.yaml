@@ -1,0 +1,119 @@
+items:
+  - id: f8-k-means-clustering-01
+    type: order
+    prompt: "Put one run of k-means (Lloyd's algorithm) in order."
+    items:
+      - "Choose k starting centroids"
+      - "Assign every point to its nearest centroid"
+      - "Move each centroid to the mean of its assigned points"
+      - "Repeat the last two steps until the centroids stop moving"
+    explanation: "Initialise, then alternate assign and update until nothing changes."
+  - id: f8-k-means-clustering-02
+    type: numeric
+    prompt: "A cluster contains the 1-D points 1, 2 and 6. What is the centroid after the update step?"
+    answer: 3
+    tol: 0.001
+    explanation: "The centroid is the mean: $(1 + 2 + 6)/3 = 3$."
+  - id: f8-k-means-clustering-03
+    type: numeric
+    prompt: "Points 1, 2 and 6 are all assigned to a centroid at 3. What is their contribution to the inertia?"
+    answer: 14
+    tol: 0.001
+    explanation: "Squared distances: $(1-3)^2 + (2-3)^2 + (6-3)^2 = 4 + 1 + 9 = 14$."
+  - id: f8-k-means-clustering-04
+    type: mcq
+    prompt: "Why does scikit-learn's `KMeans` run several initialisations (`n_init`) and keep the best?"
+    explanation: "Lloyd's algorithm only reaches a local minimum of the inertia, which depends on the start; restarts reduce the chance of keeping a bad one."
+    options:
+      - text: Each run only finds a local minimum, and different starts can end in different ones
+        correct: true
+        why: Keeping the lowest inertia among several runs avoids most bad local minima.
+      - text: Each run uses a different value of k
+        why: k is fixed; only the starting centroids change.
+      - text: To average the cluster labels across runs
+        why: Labels are arbitrary numbers and are not averaged; the best run is kept.
+      - text: Because a single run never converges
+        why: Each run always converges, just not necessarily to the best solution.
+  - id: f8-k-means-clustering-05
+    type: mcq
+    prompt: "How does k-means++ choose each new starting centroid after the first?"
+    explanation: "It samples points with probability proportional to their squared distance from the nearest centroid already chosen, so starting centroids tend to be spread out."
+    options:
+      - text: At random, with probability proportional to its squared distance from the nearest chosen centroid
+        correct: true
+        why: Far-away points are favoured, spreading the starts out.
+      - text: Always the point farthest from all chosen centroids
+        why: That deterministic rule is very sensitive to outliers; k-means++ samples randomly.
+      - text: Uniformly at random
+        why: That is plain random initialisation.
+      - text: The mean of all data points
+        why: All centroids would start at the same place.
+  - id: f8-k-means-clustering-06
+    type: mcq
+    prompt: "Inertia keeps falling as k increases from 1 to 10. What should you conclude?"
+    explanation: "Inertia always falls (or stays the same) with more clusters, reaching 0 when every point is its own cluster, so it cannot choose k by its minimum. Look for an elbow, or use the silhouette."
+    options:
+      - text: Nothing by itself; inertia always falls with more clusters
+        correct: true
+        why: More centroids always means shorter distances to the nearest one.
+      - text: k = 10 is best
+        why: By that logic k = n, one cluster per point, would be best.
+      - text: The data have no clusters
+        why: Falling inertia happens whether or not clusters exist.
+      - text: The features were not scaled
+        why: Inertia falls with k regardless of scaling.
+  - id: f8-k-means-clustering-07
+    type: numeric
+    prompt: "A point has mean distance $a = 2$ to the rest of its own cluster and mean distance $b = 5$ to the nearest other cluster. What is its silhouette?"
+    answer: 0.6
+    tol: 0.001
+    explanation: "$s = (b - a)/\\max(a, b) = (5 - 2)/5 = 0.6$."
+  - id: f8-k-means-clustering-08
+    type: mcq
+    prompt: "A point's silhouette is negative. What does that suggest?"
+    explanation: "Negative means $a > b$: on average it is closer to another cluster than to its own, so it is probably misassigned."
+    options:
+      - text: It is closer on average to another cluster than to its own
+        correct: true
+        why: Negative silhouette means b is smaller than a.
+      - text: It sits right in the middle of its cluster
+        why: That gives a silhouette near 1.
+      - text: Its cluster has only one point
+        why: Singletons get a silhouette of 0 by convention.
+      - text: The distances were computed wrongly
+        why: Negative silhouettes are a normal possible value.
+  - id: f8-k-means-clustering-09
+    type: multi
+    prompt: "On which data is k-means likely to give poor clusters?"
+    explanation: "k-means draws straight boundaries halfway between centroids, so it struggles with curved or elongated shapes, very unequal spreads, unscaled features and far outliers."
+    options:
+      - text: Two interleaving half-moon shapes
+        correct: true
+        why: The boundary between centroids is a straight line, which cuts the moons.
+      - text: One large diffuse cluster next to a small tight one
+        correct: true
+        why: The halfway boundary cuts into the large cluster.
+      - text: Customer data with income in euros and age in years, unscaled
+        correct: true
+        why: Income dominates the distances, so age is ignored.
+      - text: Several well-separated round blobs of similar size
+        why: That is exactly what k-means assumes.
+  - id: f8-k-means-clustering-10
+    type: mcq
+    prompt: "What does DBSCAN do that k-means cannot?"
+    explanation: "DBSCAN grows clusters from dense regions, so it finds arbitrary shapes, does not need k, and labels points in sparse regions as noise (-1)."
+    options:
+      - text: Find clusters of any shape and label sparse points as noise, without being told k
+        correct: true
+        why: Clusters are dense regions chained together; isolated points get label -1.
+      - text: Guarantee the minimum possible inertia
+        why: DBSCAN does not optimise inertia at all.
+      - text: Work without any parameters
+        why: It needs eps and min_samples.
+      - text: Handle clusters of very different densities easily
+        why: That is one of its weaknesses; a single eps suits one density.
+  - id: f8-k-means-clustering-11
+    type: cloze
+    prompt: "In hierarchical clustering, the tree that records the full sequence of merges is called a ____."
+    accept: ["dendrogram"]
+    explanation: "Cutting the dendrogram at a chosen height gives a clustering with a particular number of clusters."

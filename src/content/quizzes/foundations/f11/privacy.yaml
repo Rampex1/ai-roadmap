@@ -3,15 +3,15 @@ items:
     type: mcq
     prompt: "A hospital deletes names and patient IDs but keeps ZIP code, sex and full date of birth, then publishes the data. Why is this risky?"
     options:
+      - text: "Dates of birth are always encrypted, so only ZIP and sex are visible"
+        why: "Nothing in the scenario encrypts them."
+      - text: "Only ZIP code is a problem, because it is a location"
+        why: "Each column alone is weak; the combination is what identifies people."
       - text: "Those quasi-identifiers together single out most people and can be linked to public records such as voter rolls"
         correct: true
         why: "Sweeney estimated about 87% of the US population was likely unique on 5-digit ZIP, sex and date of birth, and re-identified a governor's records this way."
       - text: "It is not risky; without names the data are anonymous"
         why: "Removing names is not anonymisation when the remaining columns can be linked to other data."
-      - text: "Only ZIP code is a problem, because it is a location"
-        why: "Each column alone is weak; the combination is what identifies people."
-      - text: "Dates of birth are always encrypted, so only ZIP and sex are visible"
-        why: "Nothing in the scenario encrypts them."
     explanation: "Quasi-identifiers are not identifying alone but are identifying in combination, and they appear in other datasets."
   - id: f11-privacy-02
     type: output
@@ -27,11 +27,11 @@ items:
     type: mcq
     prompt: "A table is 5-anonymous on (age band, district), and in one group all 5 people have the diagnosis \"HIV positive\". What is the problem?"
     options:
+      - text: "There is no problem, because k = 5 is large enough"
+        why: "k only counts rows; it says nothing about variety in the sensitive column."
       - text: "Anyone who knows a person is in that group learns their diagnosis: a homogeneity attack"
         correct: true
         why: "k-anonymity hides which row is yours, but if every row in the group has the same sensitive value, it does not matter."
-      - text: "There is no problem, because k = 5 is large enough"
-        why: "k only counts rows; it says nothing about variety in the sensitive column."
       - text: "The table is actually only 1-anonymous"
         why: "The groups have 5 rows on the quasi-identifiers, so it is 5-anonymous; it still leaks."
       - text: "Differential privacy has been violated by the hospital's model"
@@ -44,12 +44,12 @@ items:
       - text: "The noise scale 1/epsilon grows: stronger privacy, less accurate answers"
         correct: true
         why: "Smaller epsilon means outputs must depend even less on any one person, which needs more noise."
+      - text: "Nothing, epsilon only matters for training models"
+        why: "Epsilon is the privacy parameter for any differentially private computation."
       - text: "The noise shrinks and privacy gets stronger"
         why: "Less noise would make answers depend more on individuals, weakening privacy."
       - text: "The true count changes"
         why: "Epsilon only controls the noise, not the data."
-      - text: "Nothing, epsilon only matters for training models"
-        why: "Epsilon is the privacy parameter for any differentially private computation."
     explanation: "Noise scale = sensitivity / epsilon, and a count has sensitivity 1."
   - id: f11-privacy-05
     type: numeric
@@ -61,15 +61,15 @@ items:
     type: mcq
     prompt: "A curious analyst asks a differentially private system the same counting query 100 times and averages the answers. Why do real systems limit this?"
     options:
+      - text: "Laplace noise grows each time a query is repeated"
+        why: "The noise distribution is fixed by epsilon; the budget is what stops repetition."
       - text: "Privacy loss adds up over queries; averaging many noisy answers would cancel the noise, so systems track a privacy budget"
         correct: true
         why: "Roughly, 100 queries at epsilon each cost 100 x epsilon in total."
-      - text: "Repeated queries always return exactly the same noisy answer"
-        why: "Fresh noise is drawn each time, which is why averaging would work without a budget."
-      - text: "Laplace noise grows each time a query is repeated"
-        why: "The noise distribution is fixed by epsilon; the budget is what stops repetition."
       - text: "There is no need to limit it"
         why: "Without a budget, the guarantee would erode with every query."
+      - text: "Repeated queries always return exactly the same noisy answer"
+        why: "Fresh noise is drawn each time, which is why averaging would work without a budget."
     explanation: "Composition: privacy loss accumulates, so each release spends some of a finite budget."
   - id: f11-privacy-07
     type: mcq
@@ -78,40 +78,40 @@ items:
       - text: "Querying it could extract hundreds of verbatim training sequences, including names, phone numbers and email addresses, some appearing in only one document"
         correct: true
         why: "This is training data extraction from memorisation. They also found larger models more vulnerable."
-      - text: "It never memorises anything because it only learns statistics"
-        why: "The paper demonstrated verbatim memorisation."
-      - text: "Only smaller models memorise; larger models generalise and leak less"
-        why: "They found the opposite: larger models were more vulnerable."
       - text: "Memorisation only happens for text repeated thousands of times"
         why: "Some extracted sequences appeared in just one training document."
+      - text: "Only smaller models memorise; larger models generalise and leak less"
+        why: "They found the opposite: larger models were more vulnerable."
+      - text: "It never memorises anything because it only learns statistics"
+        why: "The paper demonstrated verbatim memorisation."
     explanation: "If sensitive data goes into training, assume a model might give some of it back."
   - id: f11-privacy-08
     type: multi
     prompt: "Which are examples of data minimisation? Select all that apply."
     options:
-      - text: "Storing year of birth instead of full date of birth because the model only needs age in years"
-        correct: true
-        why: "Coarsening to what the purpose needs is minimisation."
+      - text: "Collecting every available field in case it is useful later"
+        why: "That is the opposite: collecting beyond the stated purpose."
       - text: "Dropping a free-text notes column the model does not use before it enters the training pipeline"
         correct: true
         why: "Data never collected or kept cannot leak."
       - text: "Deleting raw logs after 90 days and keeping only aggregate counts"
         correct: true
         why: "Keeping data only as long as needed is part of minimisation."
-      - text: "Collecting every available field in case it is useful later"
-        why: "That is the opposite: collecting beyond the stated purpose."
+      - text: "Storing year of birth instead of full date of birth because the model only needs age in years"
+        correct: true
+        why: "Coarsening to what the purpose needs is minimisation."
     explanation: "The cheapest privacy protection is data you never collected or no longer keep."
   - id: f11-privacy-09
     type: mcq
     prompt: "What does a membership inference attack try to learn?"
     options:
-      - text: "Whether a particular person's record was in the model's training set"
-        correct: true
-        why: "Being in a dataset can itself be sensitive, for example a dataset of patients with one condition."
+      - text: "Which group a person belongs to"
+        why: "That is attribute inference. Membership inference is about presence in the training data."
       - text: "The model's architecture"
         why: "That is a different kind of attack (model stealing), not membership inference."
       - text: "The exact value of every weight"
         why: "Membership inference only asks whether a record was used in training."
-      - text: "Which group a person belongs to"
-        why: "That is attribute inference. Membership inference is about presence in the training data."
+      - text: "Whether a particular person's record was in the model's training set"
+        correct: true
+        why: "Being in a dataset can itself be sensitive, for example a dataset of patients with one condition."
     explanation: "Models are often more confident on examples they trained on, which these attacks exploit."

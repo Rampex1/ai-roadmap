@@ -17,13 +17,13 @@ items:
     prompt: "What is the difference between `=` and `==`?"
     explanation: "`=` attaches a name to a value; `==` compares two values and gives a boolean."
     options:
+      - text: == is a stricter version of = that also checks the type
+        why: Both are different operations entirely. One assigns, one compares.
       - text: = assigns a value to a name; == asks whether two values are equal
         correct: true
         why: Assignment changes what a name refers to, while == only produces True or False.
       - text: They are interchangeable
         why: Using = inside an if condition is a SyntaxError, so they are not interchangeable.
-      - text: == is a stricter version of = that also checks the type
-        why: Both are different operations entirely. One assigns, one compares.
   - id: f1-conditionals-03
     type: output
     prompt: "What does this print?"
@@ -49,31 +49,31 @@ items:
     prompt: "Which of these values are falsy (treated as False by `if`)?"
     explanation: "Zero, empty strings, None and empty collections are falsy. Any non-empty string is truthy, even \"False\" or \"0\"."
     options:
-      - text: "0"
-        correct: true
-        why: The number zero is falsy.
+      - text: '"False"'
+        why: This is a non-empty string, and every non-empty string is truthy, whatever it says.
+      - text: "-1"
+        why: Any non-zero number is truthy, including negatives.
       - text: '""'
         correct: true
         why: The empty string is falsy.
       - text: None
         correct: true
         why: None, meaning no value, is falsy.
-      - text: '"False"'
-        why: This is a non-empty string, and every non-empty string is truthy, whatever it says.
-      - text: "-1"
-        why: Any non-zero number is truthy, including negatives.
+      - text: "0"
+        correct: true
+        why: The number zero is falsy.
   - id: f1-conditionals-06
     type: mcq
     prompt: "A program checks `if score >= 50:` and then `elif score >= 80:` to print \"pass\" and \"distinction\". What happens for a score of 85?"
     explanation: "85 >= 50 is true, so the first branch runs and the elif is skipped. Put the more specific check, >= 80, first."
     options:
+      - text: It prints both pass and distinction
+        why: That would need two separate if statements, not if and elif.
+      - text: It prints distinction, because 85 is closer to 80
+        why: Python does not look for the best match, only the first true one.
       - text: It prints pass, because the first true condition wins
         correct: true
         why: if/elif runs only the first branch whose condition holds.
-      - text: It prints distinction, because 85 is closer to 80
-        why: Python does not look for the best match, only the first true one.
-      - text: It prints both pass and distinction
-        why: That would need two separate if statements, not if and elif.
   - id: f1-conditionals-07
     type: output
     prompt: "What does this print?"
@@ -87,7 +87,7 @@ items:
     type: cloze
     prompt: "The keyword short for \"else if\", used to test another condition in a chain, is ____ ."
     explanation: "`elif` lets you check further conditions after an `if`."
-    accept: ["elif"]
+    accept: [ "elif" ]
   - id: f1-conditionals-09
     type: order
     prompt: "Order the lines to make a valid program that prints \"even\" or \"odd\" for n."

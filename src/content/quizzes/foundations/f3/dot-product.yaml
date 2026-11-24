@@ -29,15 +29,15 @@ items:
     prompt: "Two nonzero vectors have a negative dot product. What can you conclude?"
     explanation: "$\\mathbf{a}\\cdot\\mathbf{b} = \\lVert\\mathbf{a}\\rVert\\lVert\\mathbf{b}\\rVert\\cos\\theta$ and the lengths are positive, so $\\cos\\theta < 0$, which means $\\theta$ is more than 90 degrees."
     options:
+      - text: They point in exactly opposite directions
+        why: That is only the extreme case of 180 degrees; any obtuse angle gives a negative dot product.
+      - text: They are perpendicular
+        why: Perpendicular vectors have a dot product of exactly 0.
       - text: The angle between them is more than 90 degrees
         correct: true
         why: A negative cosine means an obtuse angle.
       - text: One of the vectors has negative length
         why: Lengths are never negative.
-      - text: They point in exactly opposite directions
-        why: That is only the extreme case of 180 degrees; any obtuse angle gives a negative dot product.
-      - text: They are perpendicular
-        why: Perpendicular vectors have a dot product of exactly 0.
   - id: f3-dot-product-05
     type: numeric
     prompt: "What is the cosine similarity of $\\mathbf{a} = (1, 2)$ and $\\mathbf{b} = (3, 6)$?"
@@ -49,9 +49,6 @@ items:
     prompt: "Which statements about cosine similarity are true?"
     explanation: "It compares direction only, ranges from -1 to 1, and is undefined for the zero vector. For unit vectors it equals the plain dot product."
     options:
-      - text: Scaling one vector by 5 does not change it
-        correct: true
-        why: The 5 appears in both the numerator and the norm in the denominator, and cancels.
       - text: For two unit-length vectors it equals their dot product
         correct: true
         why: Both norms are 1, so the denominator is 1.
@@ -59,6 +56,9 @@ items:
         why: Dividing by the lengths keeps it between -1 and 1.
       - text: It is defined for the zero vector and equals 0
         why: The denominator would be 0, so it is undefined.
+      - text: Scaling one vector by 5 does not change it
+        correct: true
+        why: The 5 appears in both the numerator and the norm in the denominator, and cancels.
   - id: f3-dot-product-07
     type: output
     prompt: "What does this print?"

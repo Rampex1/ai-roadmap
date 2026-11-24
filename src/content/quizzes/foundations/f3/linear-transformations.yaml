@@ -7,12 +7,12 @@ items:
       - text: "[[1, 0], [0, -1]]"
         correct: true
         why: Column 1 is (1, 0) and column 2 is (0, -1).
-      - text: "[[-1, 0], [0, 1]]"
-        why: That flips x, which reflects in the y-axis.
       - text: "[[0, 1], [1, 0]]"
         why: That swaps x and y, a reflection in the line y = x.
       - text: "[[1, 0], [0, 0]]"
         why: That is the projection onto the x-axis; it squashes rather than reflects.
+      - text: "[[-1, 0], [0, 1]]"
+        why: That flips x, which reflects in the y-axis.
   - id: f3-linear-transformations-02
     type: output
     prompt: "What does this print?"
@@ -34,16 +34,16 @@ items:
     prompt: "Which of these maps on 2-D vectors are linear?"
     explanation: "Linear maps fix the origin and respect addition and scaling. A shift moves the origin, and squaring is not linear."
     options:
-      - text: Rotating by 30 degrees about the origin
-        correct: true
-        why: Rotations about the origin are linear.
+      - text: Squaring each component, (x, y) to (x squared, y squared)
+        why: Doubling the input quadruples the output, which breaks linearity.
       - text: Projecting onto the line y = x
         correct: true
         why: Projection onto a line through the origin is linear.
+      - text: Rotating by 30 degrees about the origin
+        correct: true
+        why: Rotations about the origin are linear.
       - text: Shifting every point right by 1
         why: It moves the origin, so it is affine, not linear.
-      - text: Squaring each component, (x, y) to (x squared, y squared)
-        why: Doubling the input quadruples the output, which breaks linearity.
   - id: f3-linear-transformations-05
     type: numeric
     prompt: "Project $\\mathbf{a} = (4, 2)$ onto $\\mathbf{u} = (1, 0)$ and then take the length of the **perpendicular** remainder. What is it?"
@@ -58,10 +58,10 @@ items:
       - text: S R
         correct: true
         why: R acts first, so it goes on the right.
-      - text: R S
-        why: That stretches first and then rotates.
       - text: R + S
         why: Adding matrices does not compose maps.
+      - text: R S
+        why: That stretches first and then rotates.
   - id: f3-linear-transformations-07
     type: mcq
     prompt: "A $2 \\times 2$ matrix has determinant 0. What does it do to the plane?"
@@ -94,12 +94,12 @@ items:
       - text: "5"
         correct: true
         why: Rotations preserve length.
-      - text: 5 times cos theta
-        why: That is the x-component after rotating (5, 0), not the length.
       - text: It depends on the vector's direction
         why: Every vector keeps its length under a rotation.
+      - text: 5 times cos theta
+        why: That is the x-component after rotating (5, 0), not the length.
   - id: f3-linear-transformations-10
     type: cloze
     prompt: "A map of the form $\\mathbf{x} \\mapsto A\\mathbf{x} + \\mathbf{b}$ with $\\mathbf{b} \\ne \\mathbf{0}$ is not linear; it is called ____ ."
-    accept: ["affine"]
+    accept: [ "affine" ]
     explanation: "An affine map is a linear map followed by a shift. Neural network layers are affine before the activation."

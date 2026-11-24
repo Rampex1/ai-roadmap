@@ -4,15 +4,15 @@ items:
     prompt: "Why does momentum reduce zigzagging in a long, narrow valley?"
     explanation: "The velocity is a decaying sum of past gradients. Across the valley the gradient alternates in sign and mostly cancels; along it the gradient keeps its sign and accumulates."
     options:
-      - text: Gradients across the valley alternate in sign and cancel in the velocity, while gradients along it add up
-        correct: true
-        why: Averaging keeps the consistent part and damps the oscillating part.
+      - text: It ignores the gradient after the first step
+        why: Every step adds the new gradient to the velocity.
       - text: It uses a smaller learning rate in the steep direction
         why: Plain momentum uses the same learning rate for every coordinate; per-coordinate scaling is the idea behind RMSProp and Adam (AdaGrad came first).
       - text: It computes the exact minimum of the valley
         why: Momentum only combines past gradients; it never solves for the minimum.
-      - text: It ignores the gradient after the first step
-        why: Every step adds the new gradient to the velocity.
+      - text: Gradients across the valley alternate in sign and cancel in the velocity, while gradients along it add up
+        correct: true
+        why: Averaging keeps the consistent part and damps the oscillating part.
   - id: f6-momentum-and-adam-02
     type: numeric
     prompt: "With momentum $\\beta = 0.9$ and the **same** gradient $g = 1$ every step, the velocity $v \\leftarrow \\beta v + g$ approaches what value?"
@@ -35,15 +35,15 @@ items:
     prompt: "What does RMSProp divide each coordinate's gradient by?"
     explanation: "RMSProp keeps a moving average s of squared gradients per coordinate and divides by √s + ε, the root mean square of recent gradients."
     options:
+      - text: The number of steps taken so far
+        why: That would shrink every coordinate equally, not adapt to each one.
+      - text: The current loss value
+        why: RMSProp's scaling uses gradient statistics, not the loss.
       - text: The square root of a moving average of that coordinate's squared gradients
         correct: true
         why: That is the root mean square of its recent gradients.
-      - text: The number of steps taken so far
-        why: That would shrink every coordinate equally, not adapt to each one.
       - text: The norm of the whole gradient vector
         why: That rescales all coordinates by the same amount.
-      - text: The current loss value
-        why: RMSProp's scaling uses gradient statistics, not the loss.
   - id: f6-momentum-and-adam-05
     type: mcq
     prompt: "Why does Adam divide $\\mathbf{m}_t$ by $1 - \\beta_1^t$?"
@@ -54,10 +54,10 @@ items:
         why: After one step m is (1 - β₁)g, and dividing by 1 - β₁ restores g.
       - text: To make the learning rate decay over time
         why: The factor approaches 1 as t grows, so it fades away rather than decaying the step.
-      - text: To keep m from becoming negative
-        why: m can be negative whenever the gradient is; the correction does not change its sign.
       - text: To convert the gradient into a probability
         why: Nothing in Adam is a probability.
+      - text: To keep m from becoming negative
+        why: m can be negative whenever the gradient is; the correction does not change its sign.
   - id: f6-momentum-and-adam-06
     type: numeric
     prompt: "Adam's first step ($t = 1$, $\\mathbf{m}_0 = \\mathbf{v}_0 = \\mathbf{0}$, $\\varepsilon$ negligible) with $\\eta = 0.01$ sees the gradient $g = 250$ for one parameter. By how much does that parameter change (give the size, a positive number)?"
@@ -69,15 +69,15 @@ items:
     prompt: "Which statements about Adam are true? Select all that apply."
     explanation: "Adam keeps two moving averages (two extra numbers per parameter), scales each coordinate separately, and its common defaults are β₁ = 0.9 and β₂ = 0.999. The learning rate still often needs tuning."
     options:
+      - text: Common defaults are β₁ = 0.9 and β₂ = 0.999
+        correct: true
+        why: These come from the original paper.
       - text: It keeps two extra numbers per parameter
         correct: true
         why: The first moment m and the second moment v.
       - text: It gives each parameter its own effective step size
         correct: true
         why: Dividing by √v̂ adapts the step per coordinate.
-      - text: Common defaults are β₁ = 0.9 and β₂ = 0.999
-        correct: true
-        why: These come from the original paper.
       - text: It never needs its learning rate tuned
         why: The defaults work often, but the learning rate is still the first thing to tune.
   - id: f6-momentum-and-adam-08
@@ -85,15 +85,15 @@ items:
     prompt: "Setting $\\beta = 0$ in momentum $\\mathbf{v} \\leftarrow \\beta\\mathbf{v} + \\nabla L$, $\\boldsymbol{\\theta} \\leftarrow \\boldsymbol{\\theta} - \\eta\\mathbf{v}$ gives…"
     explanation: "With β = 0 the velocity is just the current gradient, so the update is θ ← θ - η∇L: plain gradient descent."
     options:
+      - text: divergence for any learning rate
+        why: It behaves exactly like gradient descent, which converges for small learning rates.
       - text: plain gradient descent
         correct: true
         why: The velocity has no memory and equals the current gradient.
-      - text: a method that never moves
-        why: The gradient is still applied every step.
       - text: Adam
         why: Adam also needs the squared-gradient average and bias correction.
-      - text: divergence for any learning rate
-        why: It behaves exactly like gradient descent, which converges for small learning rates.
+      - text: a method that never moves
+        why: The gradient is still applied every step.
   - id: f6-momentum-and-adam-09
     type: order
     prompt: "Order the lines of one Adam step."
@@ -111,9 +111,9 @@ items:
       - text: About 800 MB
         correct: true
         why: Two extra numbers per parameter, m and v.
+      - text: About 4 GB
+        why: That would be ten extra numbers per parameter.
       - text: About 400 MB
         why: That would be one extra number per parameter, as with plain momentum.
       - text: Almost nothing
         why: Adam's moving averages have one entry per parameter each.
-      - text: About 4 GB
-        why: That would be ten extra numbers per parameter.

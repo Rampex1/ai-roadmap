@@ -1,0 +1,117 @@
+items:
+  - id: f7-logistic-regression-01
+    type: numeric
+    prompt: "What is $\\sigma(0)$, the sigmoid at zero?"
+    answer: 0.5
+    tol: 0.0001
+    explanation: "$\\sigma(0) = 1/(1 + e^0) = 1/2$. A score of zero means the model is undecided."
+  - id: f7-logistic-regression-02
+    type: numeric
+    prompt: "A logistic regression has $w = 2$, $b = -1$. What probability of class 1 does it give for $x = 1.5$? (Three decimal places.)"
+    answer: 0.881
+    tol: 0.002
+    explanation: "$z = 2 \\times 1.5 - 1 = 2$, and $\\sigma(2) = 1/(1 + e^{-2}) \\approx 0.881$."
+  - id: f7-logistic-regression-03
+    type: mcq
+    prompt: "With the default threshold of 0.5, where is a logistic regression's decision boundary?"
+    options:
+      - text: "Where w·x + b = 0"
+        correct: true
+        why: "σ(z) = 0.5 exactly when z = 0."
+      - text: "Where w·x + b = 0.5"
+        why: "0.5 is the threshold on the probability, which corresponds to z = 0, not z = 0.5."
+      - text: "Where w·x + b = 1"
+        why: "z = 1 gives a probability of about 0.73, not 0.5."
+    explanation: "The sigmoid crosses 0.5 at z = 0, so the boundary is the line or hyperplane w·x + b = 0."
+  - id: f7-logistic-regression-04
+    type: numeric
+    prompt: "A one-feature logistic regression has $w = 2$ and $b = -6$. At what value of $x$ is the decision boundary?"
+    answer: 3
+    tol: 0.001
+    explanation: "Solve $2x - 6 = 0$: $x = 3$. Above it the model predicts class 1, below it class 0."
+  - id: f7-logistic-regression-05
+    type: mcq
+    prompt: "Why is logistic regression trained with log loss rather than the mean squared error between $p$ and $y$?"
+    options:
+      - text: "With the sigmoid, MSE gives a non-convex loss whose gradient nearly vanishes when the model is confidently wrong"
+        correct: true
+        why: "Log loss is convex and punishes confident mistakes strongly, so learning is fastest when it matters."
+      - text: "MSE cannot be computed for probabilities"
+        why: "It can; it just trains badly here."
+      - text: "Log loss gives a closed-form solution"
+        why: "Neither loss has a closed form for logistic regression."
+    explanation: "Log loss is the negative log-likelihood, convex in the weights, with the simple gradient p − y."
+  - id: f7-logistic-regression-06
+    type: mcq
+    prompt: "For one example with $p = \\sigma(z)$, what is $\\partial L / \\partial z$ for the log loss?"
+    options:
+      - text: "p − y"
+        correct: true
+        why: "The sigmoid's derivative cancels the loss's denominators, leaving prediction minus label."
+      - text: "p(1 − p)"
+        why: "That is dp/dz, the sigmoid's derivative, only one factor in the chain rule."
+      - text: "−y / p"
+        why: "That is part of dL/dp; it still needs the chain rule through the sigmoid."
+    explanation: "dL/dp × dp/dz simplifies to p − y, giving the full gradient (1/n) Xᵀ(p − y)."
+  - id: f7-logistic-regression-07
+    type: mcq
+    prompt: "In scikit-learn's `LogisticRegression`, what does a **smaller** `C` do?"
+    options:
+      - text: "Makes the L2 penalty stronger, shrinking the weights"
+        correct: true
+        why: "C is the inverse of the penalty strength."
+      - text: "Makes the penalty weaker"
+        why: "That is a larger C; C = 1e6 is almost unpenalised."
+      - text: "Lowers the decision threshold"
+        why: "C controls regularisation, not the threshold."
+    explanation: "C = 1 / strength. Small C means heavy regularisation and probabilities pulled towards 0.5."
+  - id: f7-logistic-regression-08
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      from sklearn.linear_model import LogisticRegression
+      X = np.array([[0.0], [1.0], [2.0], [3.0]])
+      y = np.array([0, 0, 1, 1])
+      print(LogisticRegression().fit(X, y).predict_proba(X).shape)
+    answer: "(4, 2)"
+    explanation: "predict_proba gives one row per example and one column per class: P(y = 0) and P(y = 1)."
+  - id: f7-logistic-regression-09
+    type: numeric
+    prompt: "An example has true label $y = 1$ and the model gives $p = 0.25$. What is its log loss, $-\\ln p$? (Three decimal places.)"
+    answer: 1.386
+    tol: 0.002
+    explanation: "$-\\ln 0.25 = \\ln 4 \\approx 1.386$. Had the model said 0.9, the loss would have been only 0.105."
+  - id: f7-logistic-regression-10
+    type: mcq
+    prompt: "In a logistic regression on standardised features, a weight is 0.7. What does a one-unit increase in that feature do, with the others fixed?"
+    options:
+      - text: "Multiplies the odds of class 1 by about e^0.7, roughly 2"
+        correct: true
+        why: "The weight adds 0.7 to the log-odds, which multiplies the odds by e^0.7 ≈ 2.01."
+      - text: "Adds 0.7 to the probability of class 1"
+        why: "The weight acts on the log-odds; the change in probability depends on where you start."
+      - text: "Multiplies the probability by 0.7"
+        why: "Weights are additive on the log-odds scale, not multiplicative on probabilities."
+    explanation: "z is the log-odds, so each weight is a change in log-odds; exponentiate to get an odds ratio."
+  - id: f7-logistic-regression-11
+    type: multi
+    prompt: "Which statements about logistic regression are true?"
+    options:
+      - text: "Its log loss is convex in the weights"
+        correct: true
+        why: "So any local minimum is the global minimum."
+      - text: "It has no closed-form solution and is fitted iteratively"
+        correct: true
+        why: "The probabilities are non-linear in w, so setting the gradient to zero cannot be solved directly."
+      - text: "Its decision boundary is a straight line or flat hyperplane in the feature space"
+        correct: true
+        why: "The boundary is w·x + b = 0, linear in x (unless you add non-linear features)."
+      - text: "Its predicted probabilities can be greater than 1"
+        why: "The sigmoid keeps them strictly between 0 and 1."
+    explanation: "Convex, iterative, linear boundary, outputs in (0, 1)."
+  - id: f7-logistic-regression-12
+    type: cloze
+    prompt: "In logistic regression, $z = \\ln\\frac{p}{1 - p}$ is called the ____ ."
+    accept: ["log-odds", "log odds", "logit", "logodds", "log-odds ratio"]
+    explanation: "The log-odds, also called the logit. Logistic regression models it as a linear function of the features."

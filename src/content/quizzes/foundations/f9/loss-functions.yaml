@@ -1,0 +1,103 @@
+items:
+  - id: f9-loss-functions-01
+    type: numeric
+    prompt: "Predictions $\\hat y = (1, 3)$, targets $y = (2, 3)$. What is the mean squared error?"
+    answer: 0.5
+    tol: 0.0001
+    explanation: "Errors are −1 and 0; squared 1 and 0; mean (1 + 0)/2 = 0.5."
+  - id: f9-loss-functions-02
+    type: numeric
+    prompt: "A model assigns probability 0.25 to the true class. What is the cross-entropy loss $-\\ln p_y$ for this example? (Natural log, 3 decimal places.)"
+    answer: 1.386
+    tol: 0.001
+    explanation: "−ln 0.25 = ln 4 ≈ 1.386."
+  - id: f9-loss-functions-03
+    type: numeric
+    prompt: "An untrained 10-class classifier outputs nearly equal logits for every input. Roughly what mean cross-entropy loss should you see? (Natural log.)"
+    answer: 2.303
+    tol: 0.01
+    explanation: "Equal logits give p = 1/10 for every class, so the loss is −ln(0.1) = ln 10 ≈ 2.303. A first loss far from this suggests a bug or a bad initialisation."
+  - id: f9-loss-functions-04
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      z = np.array([3.0, 3.0, 3.0, 3.0])
+      e = np.exp(z - z.max())
+      print(e / e.sum())
+    answer: "[0.25 0.25 0.25 0.25]"
+    explanation: "Equal logits give equal probabilities; after subtracting the max every exponent is e⁰ = 1, and 1/4 = 0.25."
+  - id: f9-loss-functions-05
+    type: mcq
+    prompt: "Why does a stable softmax subtract the largest logit before calling `np.exp`?"
+    explanation: "Softmax is unchanged by adding a constant to all logits. Subtracting the maximum makes the largest exponent e⁰ = 1, so nothing can overflow to inf."
+    options:
+      - text: Softmax is unchanged by shifting all logits, and the shift keeps every exponent at most 1, so nothing overflows
+        correct: true
+        why: The common factor e to the minus m cancels between top and bottom.
+      - text: It makes the probabilities sum to 1
+        why: Dividing by the total already does that; the shift is about overflow.
+      - text: It changes the probabilities so the largest becomes exactly 1
+        why: The probabilities are identical with or without the shift.
+      - text: It removes negative logits, which softmax cannot handle
+        why: Softmax handles negative logits fine; after the shift all logits are at most 0.
+  - id: f9-loss-functions-06
+    type: mcq
+    prompt: "Why compute $\\log p_y$ with log-sum-exp instead of `np.log(softmax(z))[y]`?"
+    explanation: "A very small probability can round to exactly 0.0 in floating point, and log(0) is −inf. Log-sum-exp computes the log-probability directly, giving a large but finite number."
+    options:
+      - text: A tiny probability can round to 0, and log 0 is minus infinity; log-sum-exp stays finite
+        correct: true
+        why: z_y − m − log Σ exp(z − m) never takes the log of 0.
+      - text: np.log cannot be applied to arrays
+        why: np.log works element by element on arrays.
+      - text: Log-sum-exp gives a different, better loss
+        why: Mathematically it is the same loss, just computed safely.
+      - text: Softmax outputs can be negative
+        why: Softmax outputs are always positive.
+  - id: f9-loss-functions-07
+    type: mcq
+    prompt: "For one example with softmax probabilities $\\mathbf{p} = (0.7, 0.2, 0.1)$ and true class 1 (the second class), what is the gradient of the cross-entropy with respect to the logits?"
+    explanation: "The gradient is p minus the one-hot label: (0.7, 0.2, 0.1) − (0, 1, 0) = (0.7, −0.8, 0.1)."
+    options:
+      - text: "(0.7, −0.8, 0.1)"
+        correct: true
+        why: Subtract 1 at the true class only.
+      - text: "(−0.3, 0.2, 0.1)"
+        why: That subtracts 1 at class 0, not at the true class 1.
+      - text: "(0.7, 0.2, 0.1)"
+        why: That forgets to subtract the one-hot label.
+      - text: "(0, −0.8, 0)"
+        why: Every logit gets a gradient, not only the true class.
+  - id: f9-loss-functions-08
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      logp = np.array([[-0.1, -2.0, -3.0],
+                       [-1.5, -0.5, -2.5]])
+      y = np.array([2, 1])
+      print(logp[np.arange(2), y])
+    answer: "[-3.  -0.5]"
+    explanation: "Row 0 column 2 is −3.0 and row 1 column 1 is −0.5: one entry per row, the log-probability of each true class."
+  - id: f9-loss-functions-09
+    type: multi
+    prompt: "Which statements about softmax and cross-entropy are true? Select all that apply."
+    explanation: "Softmax outputs are positive and sum to 1, and are unchanged by adding a constant to all logits. Cross-entropy grows without limit as the true class's probability goes to 0. The largest logit always gets the largest probability, but not necessarily above 0.5."
+    options:
+      - text: Adding 100 to every logit leaves the softmax probabilities unchanged
+        correct: true
+        why: The factor e¹⁰⁰ cancels between numerator and denominator.
+      - text: Cross-entropy has no upper limit for a confident wrong prediction
+        correct: true
+        why: As p_y approaches 0, −log p_y goes to infinity.
+      - text: The largest logit always gets a probability above 0.5
+        why: With logits (1, 1, 0.9) the largest probability is only about 0.35.
+      - text: The rows of the gradient (P − Y)/n each sum to zero
+        correct: true
+        why: Each row of P sums to 1 and each row of Y sums to 1.
+  - id: f9-loss-functions-10
+    type: cloze
+    prompt: "The trick $\\log\\sum_c e^{z_c} = m + \\log\\sum_c e^{z_c - m}$, with $m$ the largest $z_c$, is called the log-______-exp trick."
+    accept: ["sum"]
+    explanation: "Log-sum-exp: pull out the largest term so the exponentials cannot overflow."

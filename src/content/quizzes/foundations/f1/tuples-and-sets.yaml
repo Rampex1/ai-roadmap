@@ -20,11 +20,11 @@ items:
     prompt: "What does `x = {}` create?"
     explanation: "Empty curly braces make an empty dictionary. For an empty set, write `set()`."
     options:
+      - text: An empty set
+        why: An empty set must be written set(), because {} was already taken by dicts.
       - text: An empty dictionary
         correct: true
         why: Curly braces with nothing in them are a dict, for historical reasons.
-      - text: An empty set
-        why: An empty set must be written set(), because {} was already taken by dicts.
       - text: An empty tuple
         why: An empty tuple is ().
   - id: f1-tuples-and-sets-04
@@ -32,17 +32,17 @@ items:
     prompt: "Which of these can be used as dictionary keys?"
     explanation: "Keys must be immutable. Strings, numbers and tuples of immutable values qualify; lists and sets do not."
     options:
-      - text: "(2, 3)"
-        correct: true
-        why: Tuples are immutable, so a coordinate pair makes a fine key.
       - text: '"label"'
         correct: true
         why: Strings are immutable.
+      - text: "(2, 3)"
+        correct: true
+        why: Tuples are immutable, so a coordinate pair makes a fine key.
+      - text: "[2, 3]"
+        why: Lists are mutable, so they cannot be keys.
       - text: "42"
         correct: true
         why: Numbers are immutable.
-      - text: "[2, 3]"
-        why: Lists are mutable, so they cannot be keys.
   - id: f1-tuples-and-sets-05
     type: output
     prompt: "What does this print?"
@@ -60,22 +60,22 @@ items:
       - text: int
         correct: true
         why: (7) is just 7 in parentheses.
-      - text: tuple
-        why: A one-item tuple needs a trailing comma, (7,).
       - text: list
         why: Lists use square brackets.
+      - text: tuple
+        why: A one-item tuple needs a trailing comma, (7,).
   - id: f1-tuples-and-sets-07
     type: mcq
     prompt: "You need to check, millions of times, whether a user ID is in a large collection of known IDs. Which collection is best?"
     explanation: "Membership tests on a set (or dict keys) are fast regardless of size, while a list is searched item by item."
     options:
+      - text: A tuple
+        why: Tuples are searched item by item, just like lists.
+      - text: A list
+        why: x in some_list checks items one by one, which gets slow for large lists.
       - text: A set
         correct: true
         why: x in some_set takes about the same time however many items there are.
-      - text: A list
-        why: x in some_list checks items one by one, which gets slow for large lists.
-      - text: A tuple
-        why: Tuples are searched item by item, just like lists.
   - id: f1-tuples-and-sets-08
     type: output
     prompt: "What does this print?"
@@ -91,7 +91,7 @@ items:
     type: cloze
     prompt: "Writing `x, y = point` to pull a tuple apart into separate names is called ____ ."
     explanation: "This is (tuple) unpacking, also used in `for i, v in enumerate(...)`."
-    accept: ["unpacking", "tuple unpacking", "destructuring"]
+    accept: [ "unpacking", "tuple unpacking", "destructuring" ]
   - id: f1-tuples-and-sets-10
     type: order
     prompt: "Order these from the fewest items to the most."

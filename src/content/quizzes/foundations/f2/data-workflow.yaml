@@ -28,10 +28,10 @@ items:
       - text: Investigate those values, treat them as missing or remove them, and record how many rows were affected
         correct: true
         why: They are almost certainly placeholders or errors, and they would distort means and plots.
-      - text: Ignore them; describe always shows a few odd values
-        why: Two placeholder values can shift a mean a lot, and 999 would wreck any plot's scale.
       - text: Replace them with the mean age
         why: The mean is itself distorted by these values; and first you should understand what they mean.
+      - text: Ignore them; describe always shows a few odd values
+        why: Two placeholder values can shift a mean a lot, and 999 would wreck any plot's scale.
   - id: f2-data-workflow-04
     type: output
     prompt: "What does this print?"
@@ -49,14 +49,14 @@ items:
       - text: Give the actual numbers being compared, not just "higher"
         correct: true
         why: Readers can then judge whether the difference matters.
-      - text: Give the number of rows behind each group
-        correct: true
-        why: Averages over small groups are unreliable.
+      - text: Say that one variable causes the other whenever they are correlated
+        why: Observational data shows association; causes need experiments or much stronger arguments.
       - text: Say how many rows cleaning removed and why
         correct: true
         why: Cleaning choices can change conclusions.
-      - text: Say that one variable causes the other whenever they are correlated
-        why: Observational data shows association; causes need experiments or much stronger arguments.
+      - text: Give the number of rows behind each group
+        correct: true
+        why: Averages over small groups are unreliable.
   - id: f2-data-workflow-06
     type: output
     prompt: "What does this print?"
@@ -71,13 +71,13 @@ items:
     prompt: "Why should you inspect `raw[\"day\"].unique()` before grouping by `day`?"
     explanation: "Spelling, case and spacing variants of the same category create extra groups and split the data."
     options:
+      - text: unique() sorts the data, which groupby needs
+        why: groupby does not need sorted data.
+      - text: groupby fails on text columns
+        why: groupby works fine on text; the problem is inconsistent text.
       - text: Variants like "Sat", "sat " and "SAT" would become separate groups
         correct: true
         why: groupby compares exact strings, so variants are counted as different days.
-      - text: groupby fails on text columns
-        why: groupby works fine on text; the problem is inconsistent text.
-      - text: unique() sorts the data, which groupby needs
-        why: groupby does not need sorted data.
   - id: f2-data-workflow-08
     type: numeric
     prompt: "Weekend days average 180 rentals and weekdays average 120. By what percentage are weekends busier? (Enter a number, such as 25 for 25%.)"

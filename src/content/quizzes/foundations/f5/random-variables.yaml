@@ -16,15 +16,15 @@ items:
     prompt: "A fair die has expected value 3.5. What does that mean?"
     explanation: "The expected value is the long-run average over many rolls. It need not be a value the die can show."
     options:
+      - text: The most likely roll is 3.5
+        why: A die can never show 3.5; all six faces are equally likely.
       - text: Over many rolls, the average result approaches 3.5
         correct: true
         why: The expected value is the probability-weighted average, the long-run mean.
-      - text: The most likely roll is 3.5
-        why: A die can never show 3.5; all six faces are equally likely.
-      - text: Half the rolls are below 3.5 and you will roll 3.5 eventually
-        why: The die cannot show 3.5 at all.
       - text: The roll is 3.5 on average only if the die is loaded
         why: 3.5 is the mean of a fair die.
+      - text: Half the rolls are below 3.5 and you will roll 3.5 eventually
+        why: The die cannot show 3.5 at all.
   - id: f5-random-variables-04
     type: numeric
     prompt: "$X$ has variance 4. What is the variance of $Y = 3X + 10$?"
@@ -53,17 +53,17 @@ items:
     prompt: "Which statements about softmax are true? Select all."
     explanation: "Softmax makes positive numbers that add to 1, keeps the order of the scores, and is unchanged when the same constant is subtracted from every score."
     options:
-      - text: Its outputs are positive and add up to 1
-        correct: true
-        why: Exponentials are positive and the division normalises them.
-      - text: The largest score gets the largest probability
-        correct: true
-        why: The exponential is increasing, so order is kept.
+      - text: Its outputs equal the scores divided by their sum
+        why: That fails for negative scores; softmax exponentiates first.
       - text: Subtracting the same number from every score leaves the output unchanged
         correct: true
         why: The common factor cancels in the fraction, which is why subtracting the maximum is safe.
-      - text: Its outputs equal the scores divided by their sum
-        why: That fails for negative scores; softmax exponentiates first.
+      - text: The largest score gets the largest probability
+        correct: true
+        why: The exponential is increasing, so order is kept.
+      - text: Its outputs are positive and add up to 1
+        correct: true
+        why: Exponentials are positive and the division normalises them.
   - id: f5-random-variables-08
     type: mcq
     prompt: "Why does `np.exp(z) / np.sum(np.exp(z))` return `nan` for `z = np.array([1000.0, 999.0])`?"
@@ -72,28 +72,28 @@ items:
       - text: np.exp(1000.0) overflows to inf, and inf divided by inf is nan
         correct: true
         why: Floats cannot hold e^1000; the fix is to subtract z.max() first.
-      - text: Softmax is undefined for scores above 100
-        why: Mathematically it is fine; the problem is floating-point overflow.
       - text: The two scores are too close together
         why: Close scores are fine; their size is the problem.
       - text: np.sum cannot add more than one infinite value
         why: It can, the sum is inf; the problem is the division that follows.
+      - text: Softmax is undefined for scores above 100
+        why: Mathematically it is fine; the problem is floating-point overflow.
   - id: f5-random-variables-09
     type: mcq
     prompt: "$X$ and $Y$ are the results of two independent dice, each with variance about 2.92. What is the variance of $X + Y$?"
     explanation: "For independent random variables variances add: 2.92 + 2.92 ≈ 5.83."
     options:
+      - text: About 3.42
+        why: That adds the standard deviations, 1.71 + 1.71, not the variances.
       - text: About 5.83
         correct: true
         why: Variances add for independent variables.
-      - text: About 2.92
-        why: Adding a second independent die adds more spread.
       - text: About 11.67
         why: That would be Var(2X) = 4 Var(X), the variance of doubling one die.
-      - text: About 3.42
-        why: That adds the standard deviations, 1.71 + 1.71, not the variances.
+      - text: About 2.92
+        why: Adding a second independent die adds more spread.
   - id: f5-random-variables-10
     type: cloze
     prompt: "The raw scores a classifier produces before softmax are called ________."
-    accept: ["logits", "logit"]
+    accept: [ "logits", "logit" ]
     explanation: "Logits are unnormalised scores; softmax turns them into a categorical distribution."

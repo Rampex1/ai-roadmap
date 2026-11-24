@@ -1,0 +1,121 @@
+items:
+  - id: f8-random-forests-01
+    type: numeric
+    prompt: "A bootstrap resample of $n = 1{,}000$ rows is drawn. About what fraction of the original rows are left **out** of it? (Give a decimal.)"
+    answer: 0.368
+    tol: 0.01
+    explanation: "Each row is missed with probability $(1 - 1/n)^n \\approx e^{-1} \\approx 0.368$."
+  - id: f8-random-forests-02
+    type: numeric
+    prompt: "Ten models each have prediction variance 4, and every pair has correlation 0.5. What is the variance of their average? Use $\\rho\\sigma^2 + (1-\\rho)\\sigma^2/B$."
+    answer: 2.2
+    tol: 0.01
+    explanation: "$0.5 \\times 4 + 0.5 \\times 4 / 10 = 2 + 0.2 = 2.2$. The correlated part (2) never averages away."
+  - id: f8-random-forests-03
+    type: mcq
+    prompt: "What does a random forest add on top of bagging?"
+    explanation: "Bagging already resamples the rows. A random forest also restricts each split to a random subset of features, which makes the trees less alike."
+    options:
+      - text: Each split considers only a random subset of the features
+        correct: true
+        why: This decorrelates the trees, so averaging removes more variance.
+      - text: Each tree is trained on a bootstrap resample
+        why: That is bagging itself, not the extra step.
+      - text: Trees are pruned to depth 3
+        why: Forest trees are usually grown deep; averaging handles their variance.
+      - text: Each tree corrects the errors of the previous one
+        why: That is boosting; forest trees are trained independently.
+  - id: f8-random-forests-04
+    type: mcq
+    prompt: "You raise `n_estimators` of a random forest from 300 to 3,000. What is the most likely effect on test error?"
+    explanation: "More trees only stabilise the average; they do not add flexibility, so test error stays about the same (or improves slightly) while training takes ten times longer."
+    options:
+      - text: About the same, but training takes much longer
+        correct: true
+        why: The forest's accuracy has already plateaued by a few hundred trees.
+      - text: Much worse, because the forest overfits
+        why: Adding trees to an average does not make the model more flexible.
+      - text: Much better, because each tree is now deeper
+        why: The number of trees does not change how deep each tree grows.
+      - text: It becomes identical to a single tree
+        why: More trees move further from a single tree, not closer.
+  - id: f8-random-forests-05
+    type: mcq
+    prompt: "How is a random forest's out-of-bag prediction for training row $i$ made?"
+    explanation: "Only the trees whose bootstrap sample did not contain row $i$ vote on it, so the prediction is like one on unseen data."
+    options:
+      - text: By averaging only the trees whose bootstrap sample did not include row i
+        correct: true
+        why: Those trees never saw row i, so it acts as validation data for them.
+      - text: By averaging all trees
+        why: Most trees trained on row i, so that would be an optimistic training prediction.
+      - text: By training a new tree without row i
+        why: No extra trees are needed; the left-out rows come for free.
+      - text: By using the test set
+        why: OOB uses only training data.
+  - id: f8-random-forests-06
+    type: multi
+    prompt: "Which are known weaknesses of impurity-based `feature_importances_`?"
+    explanation: "It is computed on training data, so deep trees give noise features some credit, and features with many distinct values get more chances to be split on. It also says nothing about causes."
+    options:
+      - text: It is computed on the training data, so noise features get some credit
+        correct: true
+        why: Deep trees split on noise to purify small leaves.
+      - text: It is biased towards features with many distinct values
+        correct: true
+        why: More thresholds mean more chances to fit noise.
+      - text: It cannot be computed for random forests
+        why: Forests provide it as feature_importances_.
+      - text: It tells you which features cause the outcome
+        why: No importance measure is causal; it describes the model.
+  - id: f8-random-forests-07
+    type: mcq
+    prompt: "Two features are almost copies of each other and both are predictive. What does permutation importance typically show?"
+    explanation: "Shuffling one copy barely hurts because the model can use the other, so both can look unimportant even though together they matter a lot."
+    options:
+      - text: Both can look unimportant, because each one can stand in for the other
+        correct: true
+        why: Permuting one leaves its twin carrying the same information.
+      - text: Both get double the importance
+        why: Shuffling one hurts less, not more, when a copy remains.
+      - text: Exactly half the importance of the pair goes to each
+        why: There is no such guarantee; the split of credit is unpredictable and often near zero.
+      - text: An error is raised
+        why: Permutation importance runs fine; it is just misleading here.
+  - id: f8-random-forests-08
+    type: order
+    prompt: "Put the steps of permutation importance for one feature in order."
+    items:
+      - "Fit the model on training data"
+      - "Score it on held-out data"
+      - "Shuffle the feature's column in the held-out data"
+      - "Score again and record the drop from the first score"
+    explanation: "Fit, take a baseline held-out score, shuffle one column, rescore. Repeat the last two steps several times and average the drops."
+  - id: f8-random-forests-09
+    type: mcq
+    prompt: "In scikit-learn 1.8, `RandomForestRegressor()` with default settings is effectively…"
+    explanation: "Its default `max_features` is 1.0, all features, so each split considers every feature: plain bagging of deep trees. The classifier's default is sqrt."
+    options:
+      - text: bagging, because max_features defaults to all features
+        correct: true
+        why: With every feature on offer at each split, only the bootstrap randomises the trees.
+      - text: a single decision tree
+        why: It still averages 100 bootstrap trees by default.
+      - text: gradient boosting
+        why: Forest trees are trained independently, not sequentially.
+      - text: a forest using the square root of the number of features per split
+        why: That is the classifier's default, not the regressor's.
+  - id: f8-random-forests-10
+    type: mcq
+    prompt: "Why does bagging help deep trees far more than it helps linear regression?"
+    explanation: "Bagging reduces variance. Deep trees have high variance and change a lot between resamples; linear regression is stable, so its bootstrap fits are nearly identical and averaging them changes little."
+    options:
+      - text: Deep trees have high variance, and averaging mainly reduces variance
+        correct: true
+        why: Stable models gain little from averaging nearly identical copies.
+      - text: Linear regression cannot be trained on a bootstrap resample
+        why: It can; the fits just barely differ.
+      - text: Bagging reduces bias, and linear models have no bias
+        why: Bagging mainly reduces variance, and linear models can be quite biased.
+      - text: Trees are faster to train
+        why: Speed is not why the accuracy gain differs.

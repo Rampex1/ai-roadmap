@@ -7,12 +7,12 @@ items:
       - text: The limit as h goes to 0 of (f(a + h) - f(a)) / h
         correct: true
         why: This is the secant slope with the interval shrinking to nothing.
-      - text: (f(a + h) - f(a)) / h with h = 0
-        why: At h = 0 the fraction is 0/0, which is undefined. The limit is needed.
       - text: The limit as h goes to 0 of f(a + h) - f(a)
         why: Without dividing by h this just goes to 0 for any continuous function.
       - text: f(a) / a
         why: That is the slope of the line from the origin to the point, not the tangent slope.
+      - text: (f(a + h) - f(a)) / h with h = 0
+        why: At h = 0 the fraction is 0/0, which is undefined. The limit is needed.
   - id: f4-the-derivative-02
     type: numeric
     prompt: "Using $\\frac{d}{dx}x^2 = 2x$, what is the slope of the tangent line to $y = x^2$ at $x = -3$?"
@@ -24,14 +24,14 @@ items:
     prompt: "At a point where $f'(x) = 0$ for a smooth function $f$, which statements are true?"
     explanation: "A zero derivative means the tangent is flat at that instant. Minimums and maximums of smooth functions occur at such points, but a flat point is not guaranteed to be either (x cubed at 0 is flat but neither)."
     options:
+      - text: It must be a minimum
+        why: It might be a maximum, or neither, like x cubed at 0.
       - text: The tangent line is horizontal there
         correct: true
         why: Its slope is f'(x) = 0.
       - text: It could be a minimum or a maximum
         correct: true
         why: Smooth functions have zero slope at their minimums and maximums.
-      - text: It must be a minimum
-        why: It might be a maximum, or neither, like x cubed at 0.
       - text: The function value must be 0 there
         why: The slope is 0, not the height. x squared plus 5 has f'(0) = 0 but f(0) = 5.
   - id: f4-the-derivative-04
@@ -71,33 +71,33 @@ items:
     prompt: "Why does gradient descent take *small* steps?"
     explanation: "The derivative describes the tangent line (or plane), which matches the function well only near the current point. Small steps keep the approximation trustworthy."
     options:
-      - text: The derivative only describes the function accurately near the current point
-        correct: true
-        why: The local linear approximation is excellent for small steps and poor for large ones.
-      - text: Large steps are slower to compute
-        why: A step costs the same to compute whatever its size.
       - text: The derivative is always small
         why: Derivatives can be any size; that is unrelated to the step size choice.
       - text: Small steps guarantee reaching the global minimum
         why: Small steps help each step go downhill, but nothing guarantees the global minimum.
+      - text: Large steps are slower to compute
+        why: A step costs the same to compute whatever its size.
+      - text: The derivative only describes the function accurately near the current point
+        correct: true
+        why: The local linear approximation is excellent for small steps and poor for large ones.
   - id: f4-the-derivative-08
     type: mcq
     prompt: "Why does $f(x) = |x|$ have no derivative at $x = 0$?"
     explanation: "The slope is -1 just left of 0 and +1 just right of it. The secant slopes approach different values from each side, so there is no single tangent line."
     options:
+      - text: Because |x| is never negative
+        why: Being non-negative has nothing to do with differentiability.
+      - text: It does have one, equal to 0
+        why: No secant through 0 is flat; the slopes are -1 and +1.
       - text: The slope from the left is -1 and from the right is +1, so the limit does not exist
         correct: true
         why: A derivative needs one limit from both sides; at a corner they differ.
       - text: Because f(0) = 0
         why: Many functions have f(0) = 0 and a perfectly good derivative there, such as x squared.
-      - text: Because |x| is never negative
-        why: Being non-negative has nothing to do with differentiability.
-      - text: It does have one, equal to 0
-        why: No secant through 0 is flat; the slopes are -1 and +1.
   - id: f4-the-derivative-09
     type: cloze
     prompt: "In Leibniz notation the derivative of $f$ with respect to $x$ is written $\\frac{df}{d?}$. Type the missing letter."
-    accept: ["x"]
+    accept: [ "x" ]
     explanation: "df/dx reads as a tiny change in f divided by a tiny change in x."
   - id: f4-the-derivative-10
     type: numeric

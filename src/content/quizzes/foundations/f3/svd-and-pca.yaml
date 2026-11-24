@@ -40,13 +40,13 @@ items:
     prompt: "Why must the data be centred before PCA?"
     explanation: "PCA finds directions of maximum spread around the centre of the cloud. Without centring, the first component tends to point from the origin towards the mean instead."
     options:
+      - text: It makes every feature have variance 1
+        why: That is standardising, which also divides by the standard deviation.
+      - text: The SVD only works for matrices with zero mean
+        why: The SVD works for any matrix; centring is about what PCA is meant to measure.
       - text: Otherwise the first component mostly points towards the mean instead of along the spread
         correct: true
         why: Variance is measured around the mean.
-      - text: The SVD only works for matrices with zero mean
-        why: The SVD works for any matrix; centring is about what PCA is meant to measure.
-      - text: It makes every feature have variance 1
-        why: That is standardising, which also divides by the standard deviation.
   - id: f3-svd-and-pca-06
     type: multi
     prompt: "Your PCA's first component is $(0.6, -0.8)$ and scikit-learn's is $(-0.6, 0.8)$. Which are true?"
@@ -55,13 +55,13 @@ items:
       - text: Both are correct; components are only defined up to sign
         correct: true
         why: v and -v span the same line.
+      - text: The explained variance ratios will differ
+        why: The variance along a line does not depend on which way the arrow points.
+      - text: One of the two implementations has a bug
+        why: A sign flip is not a bug.
       - text: Your projected values on that component will be the negatives of scikit-learn's
         correct: true
         why: Dotting with -v negates every coordinate.
-      - text: One of the two implementations has a bug
-        why: A sign flip is not a bug.
-      - text: The explained variance ratios will differ
-        why: The variance along a line does not depend on which way the arrow points.
   - id: f3-svd-and-pca-07
     type: numeric
     prompt: "A centred data matrix with $N = 101$ rows has a top singular value $\\sigma_1 = 20$. What is the variance along the first principal component?"
@@ -88,12 +88,12 @@ items:
       - text: The eigenvectors of the covariance matrix
         correct: true
         why: Both are directions of greatest variance.
-      - text: The rows of the data matrix
-        why: Singular vectors are new directions, not data points.
       - text: The columns of the identity matrix
         why: Only if the features were already uncorrelated and sorted by variance.
+      - text: The rows of the data matrix
+        why: Singular vectors are new directions, not data points.
   - id: f3-svd-and-pca-10
     type: cloze
     prompt: "Keeping only the top $k$ singular values of $A$ gives the best possible rank-____ approximation of $A$."
-    accept: ["k"]
+    accept: [ "k" ]
     explanation: "Truncating the SVD to $k$ terms gives the closest rank-$k$ matrix (the Eckart–Young theorem)."

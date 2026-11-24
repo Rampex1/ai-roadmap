@@ -16,13 +16,13 @@ items:
     prompt: "Why does `print(\"7 + 1\")` print `7 + 1` rather than `8`?"
     explanation: "Quotes make text. Python never does arithmetic inside text; it prints the characters as they are."
     options:
-      - text: Because the quotes make it a piece of text, not a calculation
-        correct: true
-        why: Anything inside quotes is text, so Python prints the characters exactly.
       - text: Because print cannot do arithmetic
         why: "print(7 + 1) prints 8: Python works out the sum first, then print shows the result."
       - text: Because the spaces around + stop the calculation
         why: Spaces around operators are optional and do not change the meaning.
+      - text: Because the quotes make it a piece of text, not a calculation
+        correct: true
+        why: Anything inside quotes is text, so Python prints the characters exactly.
   - id: f1-first-program-03
     type: output
     prompt: "What does this print? (Comments are part of the code.)"
@@ -43,11 +43,11 @@ items:
     prompt: "Running `Print(\"hi\")` fails with `NameError: name 'Print' is not defined`. What is the fix?"
     explanation: "Python is case-sensitive; the function is `print` in lowercase."
     options:
+      - text: Use single quotes instead of double quotes
+        why: Both kinds of quotes mean the same thing; the problem is the name.
       - text: Write print in lowercase
         correct: true
         why: Names in Python are case-sensitive, and only lowercase print exists.
-      - text: Use single quotes instead of double quotes
-        why: Both kinds of quotes mean the same thing; the problem is the name.
       - text: Install the Print package
         why: print is built into Python. Nothing needs installing; the capital P is the problem.
   - id: f1-first-program-06
@@ -58,11 +58,11 @@ items:
       - text: Python ignores everything after a # on that line
         correct: true
         why: That is exactly what a comment is.
+      - text: Comments make a program run faster
+        why: Comments have no effect on what the program does or how fast it runs.
       - text: A comment can sit at the end of a line of code
         correct: true
         why: "Code before the # still runs; only the part after # is ignored."
-      - text: Comments make a program run faster
-        why: Comments have no effect on what the program does or how fast it runs.
       - text: The best comments explain why the code does something
         correct: true
         why: The code already says what it does; a comment adds the reason.
@@ -78,16 +78,16 @@ items:
     type: cloze
     prompt: "When an error appears, read the ____ line of the message first: it names the kind of error."
     explanation: "The last line names the error type and gives a short description; the lines above show where it happened."
-    accept: ["last", "final", "bottom"]
+    accept: [ "last", "final", "bottom" ]
   - id: f1-first-program-09
     type: mcq
     prompt: "What is wrong with `print(\"Hello)`?"
     explanation: "The text is opened with a quote but never closed, so Python cannot tell where it ends. That breaks the syntax rules, so nothing runs."
     options:
+      - text: The parentheses should be square brackets
+        why: Functions are called with round parentheses.
       - text: The closing quote is missing, which is a SyntaxError
         correct: true
         why: Text must be wrapped in a matching pair of quotes.
       - text: Nothing; it prints Hello)
         why: Python cannot tell where the text ends, so it refuses to run the line.
-      - text: The parentheses should be square brackets
-        why: Functions are called with round parentheses.
