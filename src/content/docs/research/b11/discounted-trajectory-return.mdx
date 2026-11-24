@@ -1,0 +1,47 @@
+---
+title: Compute discounted returns over a trajectory
+module: b11
+order: 1
+estMinutes: 8
+objectives:
+  - Explain states, actions, transitions and rewards
+  - Compute return from each point in an episode
+goDeeper: sutton-barto-rl
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A Markov decision process specifies states, actions, transition probabilities and rewards. A policy selects actions using the available state. The Markov assumption says that the state and action contain the information needed to specify the distribution of the next transition. An observation that hides important variables may not be a sufficient state.
+
+Given a sequence of rewards after actions, the <Term id="discounted-trajectory-return" /> at an index is that reward plus gamma times the return at the next index. Compute the vector backward starting from zero after a true terminal step. The immediate reward has coefficient one; later terms are multiplied by powers of gamma.
+
+In a continuing task the value may include a continuation beyond the collected window. Discounting and termination are distinct choices. This exercise treats the supplied list as complete through termination.
+
+## Worked example
+
+The final reward is not discounted in its own return.
+
+```python
+def discounted_returns(rewards,gamma):
+    if not 0<=gamma<=1:
+        raise ValueError("invalid discount")
+    future=0.0
+    returns=[]
+    for reward in reversed(rewards):
+        future=reward+gamma*future
+        returns.append(future)
+    return list(reversed(returns))
+
+print(discounted_returns([1,2,4],0.5))
+```
+
+```text title="Output"
+[3.0, 4.0, 4.0]
+```
+
+Inspect the reward and termination conventions before comparing policies.
+
+## Try it
+
+<CodeExercise id="b11-discounted-trajectory-return-01" />

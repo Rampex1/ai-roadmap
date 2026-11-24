@@ -1,0 +1,22 @@
+id: b11-tabular-rl-lab
+module: b11
+kind: homework
+title: Learn from a small synthetic decision process
+brief: |-
+  Use a two-action toy environment with known transitions. Track the difference between observed rewards, bootstrap targets and a sampled policy update.
+
+  1. Calculate returns on a fixed trajectory.
+  2. Evaluate an expected one-step backup.
+  3. Check a Q-learning transition.
+  4. Compute a Bernoulli policy gradient.
+  5. Learn a greedy policy from a fixed transition log.
+
+  Explain how exploration affects the experience collected. Compare a true terminal state with a time-limit truncation when choosing whether to bootstrap.
+notebook: /homework/b11-tabular-rl-lab.ipynb
+rubric:
+  - Returns use the declared discount.
+  - Bellman expectations preserve transition probabilities.
+  - True terminal targets omit continuation.
+  - The policy gradient uses a detached advantage.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

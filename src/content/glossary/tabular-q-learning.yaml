@@ -1,0 +1,4 @@
+term: "Q-learning"
+short: "An off-policy update that moves one action value toward reward plus a greedy estimate at the next state."
+body: "Q(s,a) ← Q(s,a) + α[r + γ max_{a'} Q(s',a') − Q(s,a)], with the max term left out at a true terminal step. It is off-policy because the target is greedy whatever behaviour policy collected the data."
+related: ["bellman-policy-backup","stochastic-gradient-descent"]

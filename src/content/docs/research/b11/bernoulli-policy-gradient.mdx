@@ -1,0 +1,42 @@
+---
+title: Derive a one-step policy-gradient update
+module: b11
+order: 4
+estMinutes: 8
+objectives:
+  - Compute the Bernoulli log-policy derivative
+  - Use a baseline without treating it as a target gradient
+goDeeper: sutton-barto-rl
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+For one decision, let action a be one with probability p=sigmoid(z). The derivative of log probability of the sampled action with respect to the logit z is a−p. A sampled <Term id="bernoulli-policy-gradient" /> multiplies this score by return or an advantage estimate. Ascending this estimate increases the probability of an action with positive advantage.
+
+Subtracting an action-independent baseline can reduce variance without changing the expected gradient, since the expected score is zero under the policy. Treat the baseline and sampled return as fixed multipliers in this update; learning the baseline uses its own objective. A state-dependent baseline can be valid when it does not depend on the current sampled action.
+
+For a trajectory, objective conventions matter. Multi-step estimators use time-indexed returns or advantages and may require additional discount weighting depending on the objective. This exercise is a single-step logit gradient for maximization.
+
+## Worked example
+
+A positive advantage and action one give a positive ascent direction.
+
+```python
+def logit_policy_gradient(action,probability,observed_return,baseline):
+    if action not in (0,1) or not 0<probability<1:
+        raise ValueError("invalid Bernoulli action or probability")
+    return (observed_return-baseline)*(action-probability)
+
+print(logit_policy_gradient(1,0.25,5,1))
+```
+
+```text title="Output"
+3.0
+```
+
+Specify whether your training loop ascends reward or descends a negated loss.
+
+## Try it
+
+<CodeExercise id="b11-bernoulli-policy-gradient-01" />

@@ -1,0 +1,25 @@
+id: b11-tabular-q-learning-01
+lesson: research/b11/tabular-q-learning
+title: Implement tabular q learning
+prompt: Implement q_update for a sampled transition and valid gamma and rate. Return the interpolated action value. A nonterminal transition must have next action values. Ignore next_values at termination.
+starter: |
+  def q_update(old,reward,next_values,terminal,gamma,rate):
+      raise NotImplementedError
+solution: |
+  def q_update(old,reward,next_values,terminal,gamma,rate):
+      if not terminal and not next_values:
+          raise ValueError("missing next actions")
+      target=reward if terminal else reward+gamma*max(next_values)
+      return old+rate*(target-old)
+tests: |
+  assert q_update(2,1,[3,5],False,0.8,0.5)==3.5
+  assert q_update(2,1,[],True,0.9,0.5)==1.5
+  assert q_update(2,1,[100],True,0.9,1)==1
+  try:
+      q_update(2,1,[],False,0.9,1)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("missing bootstrap candidates")
+hints:
+  - Use max only for a nonterminal transition.

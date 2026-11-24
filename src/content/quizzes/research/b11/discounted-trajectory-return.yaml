@@ -1,0 +1,94 @@
+items:
+  - id: b11-discounted-trajectory-return-01
+    type: mcq
+    prompt: Under the Markov assumption, what must the current state and action alone determine?
+    explanation: The Markov property says the next state and reward depend on the past only through the current state and action, so no extra history is needed.
+    options:
+      - text: Only the terminal reward
+        why: State is a decision-time concept.
+      - text: The distribution of the next state and reward
+        why: That is the Markov property; earlier history adds nothing once the state and action are known.
+        correct: true
+      - text: The name of the environment
+        why: Names do not specify dynamics.
+  - id: b11-discounted-trajectory-return-02
+    type: mcq
+    prompt: What multiplier does the immediate reward get?
+    explanation: Discount starts on later rewards.
+    options:
+      - text: Gamma squared
+        why: That weights a reward two steps later.
+      - text: Gamma
+        why: Only following rewards are discounted in this convention.
+      - text: One
+        why: Discount starts on later rewards.
+        correct: true
+  - id: b11-discounted-trajectory-return-03
+    type: mcq
+    prompt: What does gamma zero keep?
+    explanation: Continuation is multiplied by zero.
+    options:
+      - text: Only the immediate reward at each index
+        why: Continuation is multiplied by zero.
+        correct: true
+      - text: All undiscounted future rewards
+        why: That would use gamma one.
+      - text: Only the final reward everywhere
+        why: That reverses the weighting rule.
+  - id: b11-discounted-trajectory-return-04
+    type: mcq
+    prompt: Why compute backward?
+    explanation: The recursion avoids repeatedly summing a suffix.
+    options:
+      - text: Each return reuses the next return
+        why: The recursion avoids repeatedly summing a suffix.
+        correct: true
+      - text: To make labels independent
+        why: The sequence remains dependent.
+      - text: To change the episode order for the policy
+        why: Outputs still follow original order.
+  - id: b11-discounted-trajectory-return-05
+    type: multi
+    prompt: Which define a trajectory?
+    explanation: They describe the decisions. They determine the realized return.
+    options:
+      - text: State and action sequence
+        why: They describe the decisions.
+        correct: true
+      - text: Observed rewards
+        why: They determine the realized return.
+        correct: true
+      - text: The final chart file name
+        why: It does not determine experience.
+  - id: b11-discounted-trajectory-return-06
+    type: cloze
+    prompt: Weighting later rewards by gamma powers is ______.
+    accept:
+      - discounting
+      - discount
+    explanation: Later contributions may receive lower weights.
+  - id: b11-discounted-trajectory-return-07
+    type: order
+    prompt: Order episodic return calculation.
+    items:
+      - Collect rewards in time order
+      - Starting from zero after termination, sweep backward using the recurrence
+      - Return values in chronological order
+    explanation: "You need the full reward list first. Each earlier return depends on the next through G_t = R_{t+1} + γG_{t+1}, so the sweep starts from zero after termination and runs backward; the results are then reversed into time order."
+  - id: b11-discounted-trajectory-return-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def discounted_returns(rewards,gamma):
+          if not 0<=gamma<=1:
+              raise ValueError("invalid discount")
+          future=0.0
+          returns=[]
+          for reward in reversed(rewards):
+              future=reward+gamma*future
+              returns.append(future)
+          return list(reversed(returns))
+
+      print(discounted_returns([2, 4], 0.5)[0])
+    answer: "4.0"
+    explanation: Two plus half of four is four.

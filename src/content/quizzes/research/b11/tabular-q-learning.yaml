@@ -1,0 +1,91 @@
+items:
+  - id: b11-tabular-q-learning-01
+    type: mcq
+    prompt: Which next action value is used in Q-learning?
+    explanation: The target is greedy.
+    options:
+      - text: The largest available value
+        why: The target is greedy.
+        correct: true
+      - text: Always the action actually sampled
+        why: That describes SARSA.
+      - text: Always the smallest value
+        why: This lesson models reward maximization.
+  - id: b11-tabular-q-learning-02
+    type: mcq
+    prompt: Which old value is updated?
+    explanation: One transition supplies one update.
+    options:
+      - text: All actions in the next state
+        why: They contribute only to the target.
+      - text: The sampled state and action
+        why: One transition supplies one update.
+        correct: true
+      - text: Only terminal actions
+        why: Learning occurs throughout the episode.
+  - id: b11-tabular-q-learning-03
+    type: mcq
+    prompt: What does a rate of one do?
+    explanation: The full temporal difference is added.
+    options:
+      - text: Keep the old value
+        why: A zero rate would keep it.
+      - text: Replace old value with target
+        why: The full temporal difference is added.
+        correct: true
+      - text: Set the target to zero
+        why: Rate controls interpolation.
+  - id: b11-tabular-q-learning-04
+    type: mcq
+    prompt: Why retain exploration?
+    explanation: Greedy decisions alone may miss alternatives.
+    options:
+      - text: It changes true terminal rewards
+        why: Behavior does not redefine the task.
+      - text: Exploration guarantees every estimate is exact immediately
+        why: Experience remains finite.
+      - text: Some actions need evidence before their values can improve
+        why: Greedy decisions alone may miss alternatives.
+        correct: true
+  - id: b11-tabular-q-learning-05
+    type: multi
+    prompt: What should be logged for research?
+    explanation: They affect visited state-action pairs. Training estimates do not replace outcomes.
+    options:
+      - text: Behavior policy and exploration schedule
+        why: They affect visited state-action pairs.
+        correct: true
+      - text: Only the highest learned Q value
+        why: That is not a measured return.
+      - text: Evaluation return under a declared policy
+        why: Training estimates do not replace outcomes.
+        correct: true
+  - id: b11-tabular-q-learning-06
+    type: cloze
+    prompt: Subtracting old Q from the target gives temporal difference ______.
+    accept:
+      - error
+      - td error
+    explanation: The signed difference drives the update.
+  - id: b11-tabular-q-learning-07
+    type: order
+    prompt: Order an update.
+    items:
+      - Observe the sampled transition
+      - Form a terminal-aware target
+      - Subtract the old action value
+      - Apply the scaled difference
+    explanation: The chosen state-action estimate receives the update.
+  - id: b11-tabular-q-learning-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def q_update(old,reward,next_values,terminal,gamma,rate):
+          if not terminal and not next_values:
+              raise ValueError("missing next actions")
+          target=reward if terminal else reward+gamma*max(next_values)
+          return old+rate*(target-old)
+
+      print(q_update(0, 3, [], True, 0.9, 1))
+    answer: "3"
+    explanation: At termination the full target is immediate reward three.

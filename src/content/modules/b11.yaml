@@ -4,5 +4,7 @@ title: "Reinforcement learning"
 order: 12
 prereqs: ["b10"]
 objectives:
-  - "Explain the core ideas of reinforcement learning"
-  - "Derive or implement the key methods of reinforcement learning"
+  - Define a Markov decision process and calculate discounted returns
+  - Compute a Bellman expectation backup under a fixed policy
+  - Implement terminal-aware tabular Q-learning
+  - Derive a sampled policy-gradient update with a state baseline

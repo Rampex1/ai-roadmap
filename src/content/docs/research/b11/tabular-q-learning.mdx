@@ -1,0 +1,43 @@
+---
+title: Update action values from experience
+module: b11
+order: 3
+estMinutes: 8
+objectives:
+  - Compute temporal difference error for Q-learning
+  - Distinguish behavior actions from the greedy bootstrap
+goDeeper: sutton-barto-rl
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+<Term id="tabular-q-learning" cap /> uses the target reward plus gamma times the maximum next action value on nonterminal transitions. Subtract the old action value to obtain a temporal difference error. Update only the state-action pair that produced the sample. A terminal transition uses reward alone.
+
+The greedy maximum in the target need not be the action used to collect data. An exploring behavior policy may choose randomly, so the learning target is off-policy. If the algorithm instead uses the next action actually chosen in that trajectory, the related tabular update is SARSA.
+
+Coverage matters: a rarely tried action may keep a misleading value. Noisy maxima can overestimate values, so a rising max is not sufficient evidence of improved return. Evaluate the chosen policy separately and report exploration settings.
+
+## Worked example
+
+The greedy target is five and the error is three.
+
+```python
+def q_update(old,reward,next_values,terminal,gamma,rate):
+    if not terminal and not next_values:
+        raise ValueError("missing next actions")
+    target=reward if terminal else reward+gamma*max(next_values)
+    return old+rate*(target-old)
+
+print(q_update(2,1,[3,5],False,0.8,0.5))
+```
+
+```text title="Output"
+3.5
+```
+
+Evaluate return under a stated policy rather than reading the largest training estimate.
+
+## Try it
+
+<CodeExercise id="b11-tabular-q-learning-01" />

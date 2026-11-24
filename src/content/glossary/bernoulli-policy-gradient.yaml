@@ -1,0 +1,4 @@
+term: "Policy gradient"
+short: "An estimate of how changing policy parameters changes expected reward."
+body: "REINFORCE estimates ∇J as (G − b)∇log π(a|s). For a Bernoulli policy with p = σ(z), ∂log π(a)/∂z = a − p. Subtracting a baseline b that does not depend on the action leaves the expected gradient unchanged."
+related: ["gradient","discounted-trajectory-return"]

@@ -1,0 +1,31 @@
+id: b11-bernoulli-policy-gradient-01
+lesson: research/b11/bernoulli-policy-gradient
+title: Implement bernoulli policy gradient
+prompt: Implement logit_policy_gradient for a sampled action 0 or 1 and probability strictly between zero and one. Multiply advantage by the Bernoulli log-policy derivative and return an ascent direction.
+starter: |
+  def logit_policy_gradient(action,probability,observed_return,baseline):
+      raise NotImplementedError
+solution: |
+  def logit_policy_gradient(action,probability,observed_return,baseline):
+      if action not in (0,1) or not 0<probability<1:
+          raise ValueError("invalid Bernoulli action or probability")
+      return (observed_return-baseline)*(action-probability)
+tests: |
+  assert logit_policy_gradient(1,0.25,5,1)==3
+  assert logit_policy_gradient(0,0.25,5,1)==-1
+  assert logit_policy_gradient(1,0.5,2,4)==-1
+  assert logit_policy_gradient(1,0.5,4,4)==0
+  try:
+      logit_policy_gradient(1,1,2,0)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("require a finite interior logit")
+  try:
+      logit_policy_gradient(2,0.5,1,0)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("action must be 0 or 1")
+hints:
+  - Action minus probability is the derivative of the observed log probability.

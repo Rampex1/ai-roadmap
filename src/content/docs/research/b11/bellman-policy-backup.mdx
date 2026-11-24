@@ -1,0 +1,41 @@
+---
+title: Evaluate a Bellman expectation backup
+module: b11
+order: 2
+estMinutes: 8
+objectives:
+  - Average over transition outcomes
+  - Handle terminal continuation explicitly
+goDeeper: sutton-barto-rl
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A value function estimates expected return from a state under a specified policy. A <Term id="bellman-policy-backup" /> expresses it recursively: use expected reward plus gamma times next-state value, averaging over actions chosen by the policy and possible next outcomes. This fixture receives the already combined probabilities for a state.
+
+If a transition truly terminates the task, there is no next-state value term. A time limit can instead truncate observation of a continuing process. Treat those cases differently when defining targets. The fixture explicitly marks true terminal outcomes.
+
+A backup uses a supplied value table. Repeated consistent backups can evaluate a fixed policy in a small known model. Compare exact expectations with sampled targets, which are noisy estimates of a backup.
+
+## Worked example
+
+The large terminal next value is ignored.
+
+```python
+def expected_backup(outcomes,gamma):
+    return sum(prob*(reward+(0 if terminal else gamma*next_value))
+               for prob,reward,next_value,terminal in outcomes)
+
+print(expected_backup([(0.5,2,6,False),(0.5,1,100,True)],0.5))
+```
+
+```text title="Output"
+3.0
+```
+
+Separate the transition model and policy from the value table used for bootstrapping.
+
+## Try it
+
+<CodeExercise id="b11-bellman-policy-backup-01" />

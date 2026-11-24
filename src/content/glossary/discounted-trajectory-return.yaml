@@ -1,0 +1,4 @@
+term: "Discounted return"
+short: "A sum of future rewards weighted by increasing powers of a discount factor."
+body: "The return from step t is G_t = R_{t+1} + γR_{t+2} + γ²R_{t+3} + …, with 0 ≤ γ ≤ 1. It satisfies G_t = R_{t+1} + γG_{t+1}, with G = 0 after a true terminal step."
+related: ["bellman-policy-backup","tabular-q-learning","bernoulli-policy-gradient"]

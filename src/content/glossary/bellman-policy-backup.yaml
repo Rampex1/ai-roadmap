@@ -1,0 +1,4 @@
+term: "Bellman expectation backup"
+short: "Recomputing a value as expected immediate reward plus discounted continuation under a fixed policy."
+body: "V(s) ← Σ_a π(a|s) Σ_{s',r} p(s',r|s,a)[r + γV(s')], where V(s') is taken as zero for terminal s'. Repeating this backup on a known model evaluates the fixed policy π."
+related: ["discounted-trajectory-return","tabular-q-learning"]

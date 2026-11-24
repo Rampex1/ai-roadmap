@@ -1,0 +1,88 @@
+items:
+  - id: b11-bernoulli-policy-gradient-01
+    type: mcq
+    prompt: What is the derivative of log policy in this fixture?
+    explanation: Both Bernoulli cases simplify to this expression.
+    options:
+      - text: Action minus probability
+        why: Both Bernoulli cases simplify to this expression.
+        correct: true
+      - text: The sampled return
+        why: Return is a weighting factor.
+      - text: Probability minus action
+        why: That has the opposite sign.
+  - id: b11-bernoulli-policy-gradient-02
+    type: mcq
+    prompt: What if advantage is zero?
+    explanation: The log derivative is multiplied by zero.
+    options:
+      - text: The update always increases probability
+        why: No direction is supplied.
+      - text: The sampled direction is zero
+        why: The log derivative is multiplied by zero.
+        correct: true
+      - text: The policy should force action zero
+        why: The outcome does not specify that.
+  - id: b11-bernoulli-policy-gradient-03
+    type: mcq
+    prompt: Why can a state-only baseline leave expectation unchanged?
+    explanation: The baseline can factor outside the action expectation.
+    options:
+      - text: It changes the terminal state
+        why: It only weights gradients.
+      - text: The baseline equals return on every case
+        why: Then individual updates would vanish.
+      - text: The expected log-policy derivative is zero
+        why: The baseline can factor outside the action expectation.
+        correct: true
+  - id: b11-bernoulli-policy-gradient-04
+    type: mcq
+    prompt: Which sign is returned here?
+    explanation: A minimization implementation would negate the objective.
+    options:
+      - text: An ascent direction for expected return
+        why: A minimization implementation would negate the objective.
+        correct: true
+      - text: An automatic descent direction
+        why: The sign convention is stated explicitly.
+      - text: Always positive
+        why: Negative advantages and actions can change signs.
+  - id: b11-bernoulli-policy-gradient-05
+    type: multi
+    prompt: Which are distinct from the score derivative?
+    explanation: It weights the sampled action. It centers the weighting signal.
+    options:
+      - text: The action minus probability itself
+        why: That is the derivative.
+      - text: The baseline
+        why: It centers the weighting signal.
+        correct: true
+      - text: Observed return
+        why: It weights the sampled action.
+        correct: true
+  - id: b11-bernoulli-policy-gradient-06
+    type: cloze
+    prompt: Return minus the baseline is an ______ estimate.
+    accept:
+      - advantage
+    explanation: It measures performance relative to the baseline.
+  - id: b11-bernoulli-policy-gradient-07
+    type: order
+    prompt: Order a sampled update.
+    items:
+      - Sample one action from the policy
+      - Compute its log-policy derivative and the advantage from its observed reward
+      - Multiply those two quantities and step in the ascent direction
+    explanation: The observed action determines the log-policy derivative.
+  - id: b11-bernoulli-policy-gradient-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def logit_policy_gradient(action,probability,observed_return,baseline):
+          if action not in (0,1) or not 0<probability<1:
+              raise ValueError("invalid Bernoulli action or probability")
+          return (observed_return-baseline)*(action-probability)
+
+      print(logit_policy_gradient(0, 0.5, 0, 2))
+    answer: "1.0"
+    explanation: A negative advantage for action zero gives a positive update for the action-one logit.

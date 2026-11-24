@@ -1,0 +1,89 @@
+items:
+  - id: b11-bellman-policy-backup-01
+    type: mcq
+    prompt: What happens to terminal continuation?
+    explanation: There is no future reward in the defined episode.
+    options:
+      - text: It is zero
+        why: There is no future reward in the defined episode.
+        correct: true
+      - text: It replaces the immediate reward
+        why: The terminal transition reward still counts.
+      - text: It equals the next table value as usual
+        why: Terminal transitions end the return.
+  - id: b11-bellman-policy-backup-02
+    type: mcq
+    prompt: How are possible outcomes combined?
+    explanation: The backup is an expectation.
+    options:
+      - text: Maximum over all outcomes
+        why: Random outcomes are not chosen by the agent.
+      - text: Probability-weighted mean
+        why: The backup is an expectation.
+        correct: true
+      - text: Unweighted sum regardless of probability
+        why: That is not the stated expectation.
+  - id: b11-bellman-policy-backup-03
+    type: mcq
+    prompt: What does a sampled target replace?
+    explanation: Sampling is noisy.
+    options:
+      - text: The complete outcome expectation with one observation
+        why: Sampling is noisy.
+        correct: true
+      - text: The reward definition with a label name
+        why: The observed reward remains numeric.
+      - text: Discounting entirely
+        why: Continuation still uses gamma.
+  - id: b11-bellman-policy-backup-04
+    type: mcq
+    prompt: Why distinguish timeout from termination?
+    explanation: The theoretical task may continue.
+    options:
+      - text: A timeout can leave valid future value outside the sample
+        why: The theoretical task may continue.
+        correct: true
+      - text: Every reset must imply the same learning boundary
+        why: The environment semantics matter.
+      - text: A timeout always means reward zero
+        why: Timeout rewards are task-dependent.
+  - id: b11-bellman-policy-backup-05
+    type: multi
+    prompt: Which are inputs to this backup?
+    explanation: They define the immediate expectation. They approximate remaining return.
+    options:
+      - text: Transition probabilities and rewards
+        why: They define the immediate expectation.
+        correct: true
+      - text: Values for allowed continuation
+        why: They approximate remaining return.
+        correct: true
+      - text: A maximization over independent rewards
+        why: Evaluation keeps the policy fixed.
+  - id: b11-bellman-policy-backup-06
+    type: cloze
+    prompt: A value target using an existing next value is ______.
+    accept:
+      - bootstrapped
+      - bootstrapping
+      - bootstrap
+    explanation: Continuation uses an estimate rather than a full observed return.
+  - id: b11-bellman-policy-backup-07
+    type: order
+    prompt: Order an expectation backup.
+    items:
+      - Compute the reward-plus-continuation target for each outcome
+      - Multiply each computed target by its outcome probability
+      - Add the weighted targets to return the expectation
+    explanation: The weighted sum gives the expected target.
+  - id: b11-bellman-policy-backup-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def expected_backup(outcomes,gamma):
+          return sum(prob*(reward+(0 if terminal else gamma*next_value))
+                     for prob,reward,next_value,terminal in outcomes)
+
+      print(expected_backup([(1, 0, 6, False)], 0.5))
+    answer: "3.0"
+    explanation: The only outcome gives discounted continuation three.

@@ -1,0 +1,17 @@
+id: b11-bellman-policy-backup-01
+lesson: research/b11/bellman-policy-backup
+title: Implement bellman policy backup
+prompt: Implement expected_backup. Outcomes are probability, reward, next value and true-terminal flag, with probabilities summing to one. Compute their weighted expectation and omit continuation for terminal transitions.
+starter: |
+  def expected_backup(outcomes,gamma):
+      raise NotImplementedError
+solution: |
+  def expected_backup(outcomes,gamma):
+      return sum(prob*(reward+(0 if terminal else gamma*next_value))
+                 for prob,reward,next_value,terminal in outcomes)
+tests: |
+  assert expected_backup([(0.5,2,6,False),(0.5,1,100,True)],0.5)==3
+  assert expected_backup([(1,2,100,True)],1)==2
+  assert expected_backup([(1,-1,4,False)],0.5)==1
+hints:
+  - Multiply each complete conditional target by its probability.
