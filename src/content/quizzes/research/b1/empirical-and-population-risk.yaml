@@ -1,0 +1,92 @@
+items:
+  - id: b1-empirical-and-population-risk-01
+    type: mcq
+    prompt: Which quantity is a population expectation?
+    explanation: It averages under the distribution.
+    options:
+      - text: Number of candidate names
+        why: Class size is distinct.
+      - text: Training sample average
+        why: That is empirical risk.
+      - text: Risk on a fresh draw from the target distribution
+        why: It averages under the distribution.
+        correct: true
+  - id: b1-empirical-and-population-risk-02
+    type: mcq
+    prompt: Why is a fixed-hypothesis argument insufficient for ERM?
+    explanation: Selection can exploit random variation.
+    options:
+      - text: The selected hypothesis depends on the sample
+        why: Selection can exploit random variation.
+        correct: true
+      - text: ERM cannot compare hypotheses
+        why: Comparison defines ERM.
+      - text: All loss values become unbounded
+        why: Bounded losses may still be selected on.
+  - id: b1-empirical-and-population-risk-03
+    type: mcq
+    prompt: When is minimizing total loss equivalent to minimizing mean?
+    explanation: The denominator is constant.
+    options:
+      - text: Whenever samples have different sizes
+        why: Totals are then not directly comparable.
+      - text: Every candidate uses the same positive sample size
+        why: The denominator is constant.
+        correct: true
+      - text: Only when every loss is zero
+        why: No zero-loss condition is needed.
+  - id: b1-empirical-and-population-risk-04
+    type: mcq
+    prompt: Does zero empirical risk prove zero population risk?
+    explanation: A finite sample omits possible fresh examples.
+    options:
+      - text: No, unseen examples can still incur loss
+        why: A finite sample omits possible fresh examples.
+        correct: true
+      - text: Only when there are two hypotheses
+        why: Class size alone is insufficient.
+      - text: Yes, ERM is a proof of correctness
+        why: Optimization does not prove generalization.
+  - id: b1-empirical-and-population-risk-05
+    type: multi
+    prompt: Which need to be fixed for a clear ERM comparison?
+    explanation: It defines the search. It defines what the objective values mean.
+    options:
+      - text: Loss on each case
+        why: It defines what the objective values mean.
+        correct: true
+      - text: Candidate class
+        why: It defines the search.
+        correct: true
+      - text: The unknown future sample outcomes
+        why: They are not available at selection.
+  - id: b1-empirical-and-population-risk-06
+    type: cloze
+    prompt: Mean observed training loss is ______ risk.
+    accept:
+      - empirical
+    explanation: It averages the observed sample.
+  - id: b1-empirical-and-population-risk-07
+    type: order
+    prompt: Order an ERM experiment that fixes its loss and candidate class before collecting data.
+    items:
+      - Fix a loss and hypothesis class
+      - Collect the training sample
+      - Score every candidate on aligned cases
+      - Select a minimum with the tie rule
+    explanation: Selection comes after measuring empirical risk.
+  - id: b1-empirical-and-population-risk-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def empirical_winner(losses):
+          if not losses:
+              return None
+          sizes = {len(values) for values in losses.values()}
+          if len(sizes) != 1 or 0 in sizes:
+              raise ValueError("use a shared nonempty sample")
+          return min(losses,key=lambda name:(sum(losses[name]),name))
+
+      print(empirical_winner({"a":[1,1],"b":[0,1]}))
+    answer: b
+    explanation: b has the smaller empirical total.

@@ -1,0 +1,28 @@
+id: b1-empirical-and-population-risk-01
+lesson: research/b1/empirical-and-population-risk
+title: Select the empirical winner
+prompt: Implement empirical_winner(losses). Values are score lists on aligned cases. Return minimum total loss, breaking ties by smallest name. Return None for no candidates and reject unequal or empty loss lists.
+starter: |
+  def empirical_winner(losses):
+      raise NotImplementedError
+solution: |
+  def empirical_winner(losses):
+      if not losses:
+          return None
+      sizes = {len(values) for values in losses.values()}
+      if len(sizes) != 1 or 0 in sizes:
+          raise ValueError("use a shared nonempty sample")
+      return min(losses,key=lambda name:(sum(losses[name]),name))
+tests: |
+  assert empirical_winner({"b":[0,1],"a":[1,0]}) == "a"
+  assert empirical_winner({"a":[1,0],"b":[0,0]}) == "b"
+  assert empirical_winner({}) is None
+  for rows in ({"a":[]},{"a":[1],"b":[1,0]}):
+      try:
+          empirical_winner(rows)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError("reject an invalid shared sample")
+hints:
+  - Compare totals only once common sample size is verified.

@@ -1,0 +1,45 @@
+---
+title: Empirical and population risk
+module: b1
+order: 1
+estMinutes: 8
+objectives:
+  - Write risk as a population expectation
+  - Select an empirical minimizer over a fixed class
+goDeeper: understanding-machine-learning
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Population risk is the expectation of loss on a fresh example from the target distribution. <Term id="empirical-and-population-risk" cap /> replaces that expectation with a sample average. For a hypothesis fixed independently of an i.i.d. sample, this average estimates its population risk. Once a learner selects a hypothesis on that same sample, the independence argument no longer applies directly.
+
+Empirical risk minimization (ERM) chooses a candidate of minimum observed average loss. With the same number of examples for each candidate, minimizing the total is equivalent. Ties need a deterministic convention to make a result reproducible. Even a perfect training score can come from fitting sample noise.
+
+A population-optimal member of a class need not be the empirical minimizer. Generalization theory asks when their population risks will be close. This fixture scores given lists of losses on aligned cases and rejects missing or unequal sample sizes.
+
+## Worked example
+
+Two candidates tie on the same training examples.
+
+```python
+def empirical_winner(losses):
+    if not losses:
+        return None
+    sizes = {len(values) for values in losses.values()}
+    if len(sizes) != 1 or 0 in sizes:
+        raise ValueError("use a shared nonempty sample")
+    return min(losses,key=lambda name:(sum(losses[name]),name))
+
+print(empirical_winner({"z":[0,1],"a":[1,0],"w":[1,1]}))
+```
+
+```text title="Output"
+a
+```
+
+Specify the candidate class, loss and tie-break before interpreting ERM.
+
+## Try it
+
+<CodeExercise id="b1-empirical-and-population-risk-01" />

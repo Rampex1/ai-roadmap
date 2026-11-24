@@ -1,0 +1,4 @@
+term: "Empirical risk"
+short: "Average loss of a hypothesis on the observed sample."
+body: "The sample average of a loss over n observed examples, used as an estimate of the population risk, which is the expected loss on a fresh draw. For a hypothesis fixed before seeing the sample it is unbiased; for a hypothesis selected on the same sample it is typically optimistic."
+related: ["validation","held-out-set"]

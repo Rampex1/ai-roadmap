@@ -1,0 +1,4 @@
+term: "Uniform convergence"
+short: "Simultaneous agreement of empirical and population risk throughout a hypothesis class."
+body: "A guarantee that, with probability at least 1−δ, the empirical risk of every hypothesis in a class is within ε of its population risk at the same time. Because the guarantee holds for all of them together, it also applies to a hypothesis chosen from the data, such as the ERM winner."
+related: ["empirical-and-population-risk","iid"]

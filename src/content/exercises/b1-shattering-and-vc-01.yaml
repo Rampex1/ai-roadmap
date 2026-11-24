@@ -1,0 +1,31 @@
+id: b1-shattering-and-vc-01
+lesson: research/b1/shattering-and-vc
+title: Enumerate one-direction threshold labelings
+prompt: Implement threshold_labelings(n). Return tuples for 0 through n leading zeroes in that order. Include the empty labeling for n=0. Reject negative or noninteger n.
+starter: |
+  def threshold_labelings(n):
+      raise NotImplementedError
+solution: |
+  def threshold_labelings(n):
+      if type(n) is not int or n < 0:
+          raise ValueError("invalid number of points")
+      return [(0,)*zeros + (1,)*(n-zeros) for zeros in range(n+1)]
+tests: |
+  assert threshold_labelings(0) == [()]
+  assert threshold_labelings(1) == [(1,),(0,)]
+  assert threshold_labelings(2) == [(1,1),(0,1),(0,0)]
+  assert len(threshold_labelings(5)) == 6
+  try:
+      threshold_labelings(-1)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject a negative number of points")
+  try:
+      threshold_labelings(1.5)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject noninteger n")
+hints:
+  - Each threshold can only change the number of leading zeroes.

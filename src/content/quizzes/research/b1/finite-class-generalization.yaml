@@ -1,0 +1,90 @@
+items:
+  - id: b1-finite-class-generalization-01
+    type: mcq
+    prompt: What probability is bounded after the union step?
+    explanation: It is the union of candidate bad events.
+    options:
+      - text: Only the first trained candidate fails
+        why: The union covers the entire class.
+      - text: At least one candidate violates the gap
+        why: It is the union of candidate bad events.
+        correct: true
+      - text: All hypotheses must violate together
+        why: That is an intersection event.
+  - id: b1-finite-class-generalization-02
+    type: mcq
+    prompt: Does the union bound need independent candidate errors?
+    explanation: The sum of event probabilities is valid without this independence.
+    options:
+      - text: No
+        why: The sum of event probabilities is valid without this independence.
+        correct: true
+      - text: Yes, always
+        why: It applies even to overlapping events.
+      - text: Only for small M
+        why: Independence is not a condition here.
+  - id: b1-finite-class-generalization-03
+    type: mcq
+    prompt: Why does class size enter logarithmically after rearranging?
+    explanation: Taking logs turns the multiplier into an additive term.
+    options:
+      - text: It multiplies the exponential probability bound
+        why: Taking logs turns the multiplier into an additive term.
+        correct: true
+      - text: Class size is a probability
+        why: It counts hypotheses.
+      - text: Loss is averaged over classes
+        why: The mean is over sample examples.
+  - id: b1-finite-class-generalization-04
+    type: mcq
+    prompt: How large can in-class ERM excess risk be on the uniform event?
+    explanation: Two empirical-to-population comparisons contribute ε each.
+    options:
+      - text: At most 2ε
+        why: Two empirical-to-population comparisons contribute ε each.
+        correct: true
+      - text: Always at most ε
+        why: That would omit one replacement.
+      - text: Exactly 2ε
+        why: The bound need not be tight.
+  - id: b1-finite-class-generalization-05
+    type: multi
+    prompt: Which assumptions are used in this argument?
+    explanation: They support the fixed-hypothesis concentration claim. Hoeffding uses a bound on individual losses.
+    options:
+      - text: Independent identical sample draws
+        why: They support the fixed-hypothesis concentration claim.
+        correct: true
+      - text: Bounded losses
+        why: Hoeffding uses a bound on individual losses.
+        correct: true
+      - text: Independence between hypothesis bad events
+        why: The union step does not need it.
+  - id: b1-finite-class-generalization-06
+    type: cloze
+    prompt: The step bounding the probability of any violation uses a ______ bound.
+    accept:
+      - union
+    explanation: Subadditivity bounds the union probability.
+  - id: b1-finite-class-generalization-07
+    type: order
+    prompt: Order the finite-class proof. First establish a uniform bound at the target failure probability, then use it for ERM.
+    items:
+      - Bound one fixed hypothesis
+      - Take a union over the fixed class
+      - Solve the failure probability constraint
+      - Apply the simultaneous event to ERM
+    explanation: The selected hypothesis inherits the uniform guarantee.
+  - id: b1-finite-class-generalization-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def finite_sample_bound(size, epsilon, delta):
+          from math import ceil, log
+          if type(size) is not int or size < 1 or not 0 < epsilon < 1 or not 0 < delta < 1:
+              raise ValueError("invalid finite-class bound inputs")
+          return ceil((log(2) + log(size) - log(delta)) / (2 * epsilon**2))
+
+      print(finite_sample_bound(1, 0.5, 0.25))
+    answer: "5"
+    explanation: The ceiling of ln(8)/0.5 is five.

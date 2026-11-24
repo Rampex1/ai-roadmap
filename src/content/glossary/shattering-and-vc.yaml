@@ -1,0 +1,4 @@
+term: "VC dimension"
+short: "The largest size of a point set for which a binary class realizes every possible labeling."
+body: "A class shatters a set of points if it can produce all 2^n binary labelings of it. The VC dimension d is the size of the largest shattered set. Proving it takes two parts: one shattered set of size d, and an argument that no set of size d+1 can be shattered. One-direction thresholds on the real line have d = 1."
+related: ["finite-class-generalization","decision-tree"]

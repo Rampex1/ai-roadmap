@@ -4,5 +4,7 @@ title: "Learning theory"
 order: 2
 prereqs: ["b0"]
 objectives:
-  - "Explain the core ideas of learning theory"
-  - "Derive or implement the key methods of learning theory"
+  - Distinguish empirical risk from population risk
+  - Derive finite-class uniform convergence from Hoeffding and the union bound
+  - Relate shattering and VC dimension to threshold classifiers
+  - Separate approximation and estimation errors

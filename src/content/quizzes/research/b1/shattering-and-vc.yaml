@@ -1,0 +1,89 @@
+items:
+  - id: b1-shattering-and-vc-01
+    type: mcq
+    prompt: What is needed to shatter n points?
+    explanation: Shattering includes all assignments.
+    options:
+      - text: All hypotheses return the same labeling
+        why: That provides only one assignment.
+      - text: Only one correct labeling is attainable
+        why: That does not establish shattering.
+      - text: Every one of the 2^n labelings is attainable
+        why: Shattering includes all assignments.
+        correct: true
+  - id: b1-shattering-and-vc-02
+    type: mcq
+    prompt: What is the VC dimension of one-direction real thresholds?
+    explanation: A single point is shattered and two ordered points cannot realize (1,0).
+    options:
+      - text: Infinite because the threshold is real
+        why: Infinitely many parameter values do not guarantee shattering.
+      - text: Two
+        why: A required labeling is impossible.
+      - text: One
+        why: A single point is shattered and two ordered points cannot realize (1,0).
+        correct: true
+  - id: b1-shattering-and-vc-03
+    type: mcq
+    prompt: How many distinct labelings are possible on three sorted points here?
+    explanation: There are zero through three leading zeroes.
+    options:
+      - text: Four
+        why: There are zero through three leading zeroes.
+        correct: true
+      - text: Three
+        why: Both constant endpoints are possible.
+      - text: Eight
+        why: Many binary assignments violate monotonicity.
+  - id: b1-shattering-and-vc-04
+    type: mcq
+    prompt: What proves the upper bound d?
+    explanation: Ruling out only one set is insufficient in general.
+    options:
+      - text: One set of d points is shattered
+        why: That gives a lower bound.
+      - text: No set of d+1 points can be shattered
+        why: Ruling out only one set is insufficient in general.
+        correct: true
+      - text: The model has a numeric parameter
+        why: Parameter existence does not prove the upper bound.
+  - id: b1-shattering-and-vc-05
+    type: multi
+    prompt: What are monotone threshold labelings here?
+    explanation: A threshold can lie below every point. The sorted scores cross the threshold once.
+    options:
+      - text: All ones
+        why: A threshold can lie below every point.
+        correct: true
+      - text: Zeroes followed by ones
+        why: The sorted scores cross the threshold once.
+        correct: true
+      - text: Ones followed by zeroes with both labels present
+        why: That reverses the prediction rule.
+  - id: b1-shattering-and-vc-06
+    type: cloze
+    prompt: Realizing every labeling on a set is called ______ the set.
+    accept:
+      - shattering
+    explanation: The hypothesis class can realize all assignments.
+  - id: b1-shattering-and-vc-07
+    type: order
+    prompt: Order a VC dimension proof that establishes the lower bound before the upper bound.
+    items:
+      - Specify the binary class
+      - Exhibit a shattered set of the claimed size
+      - Show that no set of the next size is shattered
+      - Conclude the dimension
+    explanation: Both lower and upper bounds are needed.
+  - id: b1-shattering-and-vc-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def threshold_labelings(n):
+          if type(n) is not int or n < 0:
+              raise ValueError("invalid number of points")
+          return [(0,)*zeros + (1,)*(n-zeros) for zeros in range(n+1)]
+
+      print(len(threshold_labelings(4)))
+    answer: "5"
+    explanation: Four points admit five distinct threshold labelings.

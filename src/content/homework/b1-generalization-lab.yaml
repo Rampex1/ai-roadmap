@@ -1,0 +1,22 @@
+id: b1-generalization-lab
+module: b1
+kind: homework
+title: Audit a finite-class generalization argument
+brief: |-
+  Work through a binary-learning experiment with finite, predefined hypothesis classes. Compare empirical selection, sample requirements, expressiveness and excess risk.
+
+  1. Select an empirical-risk minimizer.
+  2. Calculate the finite-class sample bound.
+  3. Enumerate threshold labelings.
+  4. Decompose population excess risk.
+  5. Measure selection error on a known finite population.
+
+  Explain why applying a fixed-hypothesis bound to the empirical winner can fail. Describe where independence and boundedness enter the proof.
+notebook: /homework/b1-generalization-lab.ipynb
+rubric:
+  - ERM uses the same data for every candidate.
+  - The bound includes both tails and all hypotheses.
+  - Labeling enumeration includes both constant endpoints.
+  - Excess risk is measured against the correct reference.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

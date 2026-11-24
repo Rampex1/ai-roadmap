@@ -1,0 +1,89 @@
+items:
+  - id: b1-approximation-and-estimation-01
+    type: mcq
+    prompt: What is the approximation component?
+    explanation: It measures class restriction.
+    options:
+      - text: Best in-class risk minus broader reference risk
+        why: It measures class restriction.
+        correct: true
+      - text: Training risk minus test risk
+        why: That is an empirical generalization-gap estimate.
+      - text: Selected risk minus best in class
+        why: That is estimation error.
+  - id: b1-approximation-and-estimation-02
+    type: mcq
+    prompt: What can a richer class reduce?
+    explanation: A superset contains previous candidates.
+    options:
+      - text: The sampling noise by definition
+        why: Sample variability remains.
+      - text: Every observed test error automatically
+        why: Finite-sample selection can still worsen.
+      - text: The best achievable in-class risk
+        why: A superset contains previous candidates.
+        correct: true
+  - id: b1-approximation-and-estimation-03
+    type: mcq
+    prompt: When is the estimation component zero?
+    explanation: There is no gap within the class.
+    options:
+      - text: Whenever training risk is zero
+        why: Population risk can still be higher.
+      - text: Selected model reaches the best in-class population risk
+        why: There is no gap within the class.
+        correct: true
+      - text: When the class contains many members
+        why: Size alone is insufficient.
+  - id: b1-approximation-and-estimation-04
+    type: mcq
+    prompt: Why avoid substituting training loss?
+    explanation: Training loss answers a different question.
+    options:
+      - text: The decomposition compares population risks
+        why: Training loss answers a different question.
+        correct: true
+      - text: It necessarily exceeds all population risks
+        why: It can be lower or higher.
+      - text: Training loss is always negative
+        why: Losses here are nonnegative.
+  - id: b1-approximation-and-estimation-05
+    type: multi
+    prompt: Which can explain failure of a trained model?
+    explanation: A finite sample can select a worse in-class member, which is estimation error. A class that cannot express a good predictor gives approximation error.
+    options:
+      - text: The candidate class cannot express a good predictor
+        why: This produces approximation error.
+        correct: true
+      - text: Finite sample selection missed a better in-class member
+        why: This produces estimation error.
+        correct: true
+      - text: The model has exactly the reference population risk
+        why: There is no excess risk in that case.
+  - id: b1-approximation-and-estimation-06
+    type: cloze
+    prompt: The gap above the best member of the class is ______ error here.
+    accept:
+      - estimation
+    explanation: It measures how much risk was lost during finite-sample selection.
+  - id: b1-approximation-and-estimation-07
+    type: order
+    prompt: Start with the broadest reference and narrow to the selected model. Order the risk quantities and the final calculation.
+    items:
+      - Identify the broader reference risk
+      - Identify the best in-class population risk
+      - Measure the selected population risk
+      - Subtract adjacent risks
+    explanation: The terms sum to the overall excess risk.
+  - id: b1-approximation-and-estimation-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def excess_parts(selected, best_in_class, reference):
+          if not 0 <= reference <= best_in_class <= selected <= 1:
+              raise ValueError("invalid ordered risks")
+          return best_in_class-reference, selected-best_in_class
+
+      print(excess_parts(0.5, 0.5, 0.25))
+    answer: (0.25, 0.0)
+    explanation: There is a class gap of 0.25 and no gap within the class.

@@ -1,0 +1,42 @@
+---
+title: Separate approximation and estimation error
+module: b1
+order: 4
+estMinutes: 8
+objectives:
+  - Identify the best possible risk inside a restricted class
+  - Decompose excess population risk without training-loss substitutions
+goDeeper: understanding-machine-learning
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Use three population quantities: the selected model risk, the smallest risk in its candidate class and the best risk under the chosen broader reference. Their ordered differences split the total excess risk. <Term id="approximation-and-estimation" cap /> is the gap between best in class and the reference. Estimation error is the gap between the selected model and best in class.
+
+A larger class can reduce approximation error while making a finite sample less informative about which candidate wins. This trade-off explains why increasing capacity can improve training fit without improving test performance. Optimization error is an additional concern when the algorithm does not find an empirical minimizer.
+
+Do not plug training loss into the population decomposition. In an experiment you may estimate these values with separate evaluation or calculate them exactly under a synthetic data-generating process. This fixture provides the three population risks in order, which need not be estimable in real problems.
+
+## Worked example
+
+The class and chosen candidate both contribute to the total gap.
+
+```python
+def excess_parts(selected, best_in_class, reference):
+    if not 0 <= reference <= best_in_class <= selected <= 1:
+        raise ValueError("invalid ordered risks")
+    return best_in_class-reference, selected-best_in_class
+
+print(excess_parts(0.5,0.25,0.125))
+```
+
+```text title="Output"
+(0.125, 0.25)
+```
+
+Use the decomposition to decide whether richer features or stronger estimation evidence is needed.
+
+## Try it
+
+<CodeExercise id="b1-approximation-and-estimation-01" />

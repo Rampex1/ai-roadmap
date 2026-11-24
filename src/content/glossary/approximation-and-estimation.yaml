@@ -1,0 +1,4 @@
+term: "Approximation error"
+short: "The gap between the lowest population risk achievable in a class and a broader optimal reference risk."
+body: "The excess population risk caused by restricting predictors to a hypothesis class: the best risk inside the class minus the best risk under a broader reference. Enlarging the class can only lower it, but this does not reduce estimation error."
+related: ["empirical-and-population-risk","shattering-and-vc"]

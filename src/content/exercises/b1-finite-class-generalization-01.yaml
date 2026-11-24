@@ -1,0 +1,26 @@
+id: b1-finite-class-generalization-01
+lesson: research/b1/finite-class-generalization
+title: Compute a sufficient sample size
+prompt: Implement finite_sample_bound(size,epsilon,delta). Use the two-sided Hoeffding union bound and round up. Reject nonpositive or noninteger class sizes and epsilon or delta outside the open interval (0,1).
+starter: |
+  def finite_sample_bound(size, epsilon, delta):
+      raise NotImplementedError
+solution: |
+  def finite_sample_bound(size, epsilon, delta):
+      from math import ceil, log
+      if type(size) is not int or size < 1 or not 0 < epsilon < 1 or not 0 < delta < 1:
+          raise ValueError("invalid finite-class bound inputs")
+      return ceil((log(2) + log(size) - log(delta)) / (2 * epsilon**2))
+tests: |
+  assert finite_sample_bound(10,0.2,0.1) == 67
+  assert finite_sample_bound(1,0.5,0.25) == 5
+  assert finite_sample_bound(10,0.1,0.1) > 67
+  for args in ((0,0.2,0.1),(1,0,0.1),(1,0.2,1),(1.5,0.2,0.1),(10,0.2,0.0)):
+      try:
+          finite_sample_bound(*args)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError("reject invalid parameters")
+hints:
+  - Use natural logs and round the final bound upward.
