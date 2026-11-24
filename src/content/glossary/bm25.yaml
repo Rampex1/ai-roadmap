@@ -1,0 +1,8 @@
+term: "BM25"
+short: "A lexical ranking function that scores a document by the query words it contains, weighting rare words more and damping repeats and long documents."
+body: |
+  Each matching term adds its inverse document frequency times a saturating term-frequency factor
+  controlled by k1 and a length normalisation controlled by b (typical defaults k1 = 1.2, b = 0.75).
+  It is a strong baseline for exact names, codes and rare words, and is often combined with dense
+  retrieval in hybrid search.
+related: ["text-embedding", "reciprocal-rank-fusion"]

@@ -1,0 +1,114 @@
+items:
+  - id: c4-approximate-search-01
+    type: mcq
+    prompt: What usually changes when a graph index explores more candidates?
+    explanation: In HNSW, raising ef keeps a longer candidate list at the bottom layer, so the search visits more of the graph. It finds more of the true neighbours but does more distance computations per query. Every ANN knob trades recall against latency in this way.
+    options:
+      - text: Recall may improve and latency may rise
+        why: Exploring more candidates recovers more true neighbours at the cost of more work.
+        correct: true
+      - text: Embeddings gain dimensions
+        why: Search does not change the stored encoding.
+      - text: Queries automatically become cheaper
+        why: More search work can increase cost.
+  - id: c4-approximate-search-02
+    type: mcq
+    prompt: What is index recall compared against?
+    explanation: Index recall at k is the share of the exact top-k, computed by brute force with the same embedding, metric, filter and tie-break, that the approximate index also returned. It measures fidelity to exact search, nothing more.
+    options:
+      - text: The number of dimensions
+        why: Dimension is unrelated to overlap.
+      - text: Only the first candidate returned
+        why: All top-k exact hits contribute.
+      - text: An exact ranked reference for the same query
+        why: Brute-force results for the same query and settings define the neighbours the index should find.
+        correct: true
+  - id: c4-approximate-search-03
+    type: mcq
+    prompt: Can perfect index recall coexist with poor human relevance?
+    explanation: Index recall compares the index with brute force under the same embedding. If the encoder ranks an unhelpful page first, a perfect index faithfully returns that page. Relevance must be measured separately against human-labelled answers.
+    options:
+      - text: Yes, if the embedding ranking is weak
+        why: A perfect index reproduces the embedding's ranking, including its mistakes.
+        correct: true
+      - text: No, if the index uses a graph
+        why: The index structure does not establish relevance.
+      - text: No, because exact means relevant
+        why: Exact refers to score ordering.
+  - id: c4-approximate-search-04
+    type: mcq
+    prompt: Under the lesson's rule (recall = distinct exact IDs found ÷ number of distinct exact IDs), how should a query whose exact result set is empty be handled?
+    explanation: The denominator is zero, so recall is undefined. Leave the query out of the mean and report how many were skipped. Scoring it 0 would blame the index for nothing; scoring it 1 would hide how often filters leave nothing to find.
+    options:
+      - text: Divide hits by requested k
+        why: Requested k does not create exact neighbors.
+      - text: Count it as zero for every mean
+        why: A query with nothing to find is not a miss.
+      - text: Mark recall undefined and report skipped cases
+        why: With no exact neighbours there is nothing to recover, so the ratio has no value and the skip must be visible.
+        correct: true
+  - id: c4-approximate-search-05
+    type: multi
+    prompt: Which help compare index settings fairly?
+    explanation: Hold the corpus, queries, metric and exact reference fixed so that only the index setting changes. Report recall together with latency, since any setting can buy recall with more work.
+    options:
+      - text: Use the same queries and metric
+        why: Fixing the task means differences come from the index setting alone.
+        correct: true
+      - text: Report latency and recall together
+        why: Settings trade search work for agreement, so either number alone is misleading.
+        correct: true
+      - text: Change the corpus for each setting without recording it
+        why: Corpus differences confound results.
+  - id: c4-approximate-search-06
+    type: cloze
+    prompt: HNSW searches by navigating a multilayer proximity ______.
+    accept:
+      - graph
+    explanation: HNSW links each vector to some of its near neighbours. Sparse upper layers allow long jumps toward the query, and the full bottom layer refines the result.
+  - id: c4-approximate-search-07
+    type: order
+    prompt: Order an approximate index benchmark that freezes exact reference rankings before measuring approximate settings.
+    items:
+      - Fix corpus, metric and query set
+      - Compute each exact reference ranking
+      - Run the approximate configuration on the same queries
+      - Compare recall and latency across settings
+    explanation: The exact reference depends on the fixed corpus, metric and queries, and recall can only be computed once both the reference and the approximate results exist. Freezing the reference first keeps every setting measured against the same answers.
+  - id: c4-approximate-search-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def index_recall(exact, approximate):
+          expected = set(exact)
+          if not expected:
+              return None
+          return len(expected.intersection(approximate)) / len(expected)
+
+      print(index_recall(["p", "q", "r", "s"], ["s", "q", "q", "x"]))
+    answer: "0.5"
+    explanation: The exact set is p, q, r and s. The approximate list contains s and q (q twice, counted once through the set) and x, which is not exact. Two of four exact IDs were found, so recall is 0.5.
+  - id: c4-approximate-search-09
+    type: numeric
+    prompt: Product quantisation stores each of 1,000,000 vectors as 64 one-byte codes. Ignoring the small codebooks, how many decimal MB do the codes take?
+    answer: 64
+    tol: 0.001
+    explanation: 1,000,000 × 64 bytes = 64,000,000 bytes = 64 MB. At d = 768 the float32 vectors would take 3,072 MB, so this is 48 times smaller, paid for with approximate scores and lower recall.
+  - id: c4-approximate-search-10
+    type: numeric
+    prompt: Three queries give index recall 1.0, 0.5 and undefined (an empty exact set). Following the lesson's rule, what mean recall do you report?
+    answer: 0.75
+    tol: 0.001
+    explanation: Skip the undefined query and average the other two, (1.0 + 0.5) / 2 = 0.75, reporting 1 skipped query alongside it. Counting the empty query as 0 would wrongly give 0.5.
+  - id: c4-approximate-search-11
+    type: mcq
+    prompt: In an IVF index with nprobe = 4, which vectors are scored for a query?
+    explanation: IVF compares the query only with the centroids, picks the 4 whose centroids are nearest the query, and scores the vectors filed in those clusters. A true neighbour filed under a different centroid is missed, which is why recall rises with nprobe.
+    options:
+      - text: The vectors in the 4 clusters whose centroids are nearest the query
+        why: IVF scans only the lists of the nprobe nearest centroids.
+        correct: true
+      - text: The vectors in the 4 largest clusters
+        why: Clusters are chosen by centroid distance to the query, not by size.
+      - text: The 4 vectors nearest the query
+        why: That would require exact search; nprobe counts clusters, not vectors.

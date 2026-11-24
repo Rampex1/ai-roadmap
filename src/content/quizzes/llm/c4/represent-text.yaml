@@ -1,0 +1,114 @@
+items:
+  - id: c4-represent-text-01
+    type: mcq
+    prompt: What must two dense-search encodings share?
+    explanation: Each encoder learns its own meaning for every coordinate. Two 768-dimensional vectors from different models are like two lists of numbers measured in different units, so their cosine is meaningless. Documents and queries must come from the same model, version and preprocessing.
+    options:
+      - text: A compatible embedding space
+        why: Only vectors from the same encoder setup give coordinates the same meaning, so their similarity can be compared.
+        correct: true
+      - text: Only the same API key
+        why: Authentication does not define a vector space.
+      - text: Only equal dimension
+        why: Equal length alone does not align learned coordinates.
+  - id: c4-represent-text-02
+    type: mcq
+    prompt: What is a weakness of word counts?
+    explanation: In a sparse vector every distinct word has its own coordinate, so "log in" and "sign in" share nothing and score zero against each other. Dense encoders learn that such phrases are related; sparse vectors in turn win on exact strings like product codes.
+    options:
+      - text: They can miss synonyms with different spellings
+        why: Different words occupy different coordinates, so synonyms contribute no overlap.
+        correct: true
+      - text: They cannot match exact terms
+        why: Exact terms are a strength of lexical methods.
+      - text: They never have stable dimensions
+        why: A fixed vocabulary fixes dimension.
+  - id: c4-represent-text-03
+    type: mcq
+    prompt: Why record the embedding model version?
+    explanation: A new encoder version defines a new vector space. Queries embedded by the new model cannot be compared with documents embedded by the old one, so the whole corpus must be re-embedded. Without the version recorded, you cannot even tell that the two sides have drifted apart.
+    options:
+      - text: A replacement can require rebuilding document vectors
+        why: Changing the encoder changes the space, so stored document vectors must be re-embedded to match new queries.
+        correct: true
+      - text: Version determines document permissions
+        why: Permissions belong in metadata and application logic.
+      - text: Version converts a cosine into a probability
+        why: Versioning does not calibrate scores.
+  - id: c4-represent-text-04
+    type: mcq
+    prompt: Why keep a parent document ID with a chunk?
+    explanation: Search returns chunks, but users and citations need the source document. Storing the parent ID with each chunk lets you show where an answer came from, group chunks from one document, and delete or update all chunks of a document together.
+    options:
+      - text: To trace retrieved text back to its source
+        why: The parent ID links a retrieved chunk to the document it came from, for citation and updates.
+        correct: true
+      - text: To make every vector unique
+        why: Different passages can map to the same vector.
+      - text: To force a higher similarity score
+        why: The ID need not affect the score.
+  - id: c4-represent-text-05
+    type: multi
+    prompt: Which should be recorded when encoding a corpus?
+    explanation: Anything that changes the vectors must be recorded, because the query side has to repeat it exactly. That includes the encoder and its revision and preprocessing such as lowercasing, truncation length and any query or passage prefix. Top-k is a query-time choice and does not change the stored vectors.
+    options:
+      - text: Only the number of search results to return
+        why: Top-k is decided at query time.
+      - text: Preprocessing settings
+        why: Changing preprocessing changes the vectors, so queries must use the same settings.
+        correct: true
+      - text: Encoder revision
+        why: The revision identifies the learned space the vectors live in.
+        correct: true
+  - id: c4-represent-text-06
+    type: cloze
+    prompt: The numerical vector a text encoder returns for a passage is called a text ______.
+    accept:
+      - embedding
+      - embedding vector
+    explanation: A text embedding is one dense vector for a whole passage, produced by an encoder model. It differs from a token embedding, which is one row of a model's embedding matrix for a single token.
+  - id: c4-represent-text-07
+    type: order
+    prompt: Order an offline indexing pipeline.
+    items:
+      - Split documents into retrievable chunks
+      - Encode each chunk
+      - Store each vector with its search metadata
+      - Query the stored vectors
+    explanation: Chunks must exist before they can be encoded, and vectors must be stored with their IDs and metadata before any query can be compared against them. Encoding happens once offline; only the query is encoded at search time.
+  - id: c4-represent-text-08
+    type: output
+    prompt: What does the baseline produce?
+    code: |
+      def keyword_vector(text, vocabulary):
+          from collections import Counter
+          counts = Counter(text.casefold().split())
+          return [counts[word] for word in vocabulary]
+
+      print(keyword_vector("a B a c", ["b", "a", "d"]))
+    answer: "[1, 2, 0]"
+    explanation: The output follows the vocabulary order, not the text order. After case folding, b occurs once and a twice, d never occurs, and c is ignored because it is outside the vocabulary.
+  - id: c4-represent-text-09
+    type: numeric
+    prompt: Using $w = \text{tf} \times \ln(N/\text{df})$, a word appears 2 times in a document and in 1 of the corpus's 8 documents. What is its TF-IDF weight? Give 3 decimal places.
+    answer: 4.159
+    tol: 0.01
+    explanation: The idf is ln(8/1) = ln 8 ≈ 2.079, and multiplying by the count 2 gives about 4.159. A word found in all 8 documents would get ln(8/8) = 0, however often it appeared.
+  - id: c4-represent-text-10
+    type: numeric
+    prompt: In BM25 with $k_1 = 1.2$, a document of exactly average length contains a query word 2 times. What is the term-frequency factor $\text{tf}(k_1+1)/(\text{tf}+k_1)$?
+    answer: 1.375
+    tol: 0.001
+    explanation: At average length the length factor is 1, so the factor is 2 × 2.2 / (2 + 1.2) = 4.4 / 3.2 = 1.375. One occurrence gives 1.0, so the second occurrence adds only 0.375. Repeats saturate toward k1 + 1 = 2.2.
+  - id: c4-represent-text-11
+    type: mcq
+    prompt: A user searches for the error code `E1234`, which appears verbatim in one support note. Which retriever is more likely to put that note first?
+    explanation: The code is rare, so BM25 gives it a high idf and matches it exactly. A dense encoder splits an unseen code into sub-word pieces whose vector lands near many other codes. This is why hybrid search runs both retrievers and merges the ranked lists, usually with reciprocal rank fusion.
+    options:
+      - text: A dense encoder, because it understands every code
+        why: Encoders have not learned the meaning of arbitrary codes and blur them together.
+      - text: BM25, because the rare exact string gets a high idf
+        why: Exact rare strings are where lexical scoring is strongest.
+        correct: true
+      - text: Neither can match it, because codes are not words
+        why: A whitespace tokeniser treats the code as an ordinary token that BM25 can match.

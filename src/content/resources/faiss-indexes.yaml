@@ -1,0 +1,6 @@
+title: Faiss index types
+url: https://github.com/facebookresearch/faiss/wiki/Faiss-indexes
+kind: tool
+free: true
+modules:
+  - c4

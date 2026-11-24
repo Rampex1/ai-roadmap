@@ -1,0 +1,146 @@
+---
+title: Measure approximate vector search
+module: c4
+order: 4
+estMinutes: 15
+objectives:
+  - Explain how IVF and HNSW indexes avoid scanning every vector, and what nprobe and ef control
+  - Estimate the memory saved by scalar and product quantisation
+  - Measure index recall at k against exact results and read a recall-versus-budget sweep
+  - Distinguish index recall from relevance recall
+goDeeper: pinecone-hnsw
+---
+
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import ivfImg from '@/assets/diagrams/c4-ivf-nprobe.svg';
+
+[Lesson 3](/llm/c4/exact-vector-search/) showed that brute force reads all $n \cdot d$ numbers for every
+query. At tens of millions of vectors, or thousands of queries per second, that is too slow or too
+expensive. <Term id="approximate-nearest-neighbor" text="Approximate nearest-neighbour (ANN)" /> indexes
+look at a small part of the data and accept that they will sometimes miss a true neighbour. The
+engineering question is always the same: how much recall do you give up for how much speed and memory?
+
+## IVF: search only nearby clusters
+
+An **inverted file index** (IVF) is built in two steps. First, run k-means on the vectors to find `nlist`
+centroids (say 1,000 for a million vectors). Then file each vector in the list of its nearest centroid.
+At query time, compare the query with the centroids and scan only the `nprobe` clusters whose centroids
+are nearest the query.
+
+<Figure src={ivfImg} alt="Four cells, each around a centroid. The two upper cells are shaded as probed. The query sits near the boundary between the two upper cells, and its true nearest neighbour sits just below the boundary in an unshaded lower cell." caption="IVF with nprobe = 2. Only the two shaded cells are scanned. The query's true nearest neighbour was filed under a different centroid, so this search misses it." />
+
+The figure shows why IVF is approximate. A cluster's centroid being near the query does not guarantee
+that every near neighbour lives in that cluster; queries near a boundary have neighbours on the other
+side. Raising `nprobe` scans more clusters: recall goes up and so does the work, roughly
+$\text{nprobe}/\text{nlist}$ of the corpus.
+
+## HNSW: walk a graph
+
+**HNSW** (hierarchical navigable small world) links every vector to a few dozen of its near neighbours,
+forming a graph. It builds several layers: the bottom layer holds every vector, and each layer above
+holds a random, sparser subset, like express stops on a train line. A search enters at the top, greedily
+hops toward the query in big jumps, drops a layer, and refines with shorter hops until it reaches the
+bottom layer.
+
+At the bottom it keeps a candidate list of size `ef` (often `efSearch`). Larger `ef` explores more of the
+graph: better recall, slower queries. Another setting, `M`, sets how many links each vector keeps; more
+links mean better recall and more memory. HNSW is fast and accurate, and it is the default in many vector
+databases as of late 2026, but its graph lives in memory on top of the vectors, and deleting vectors is
+awkward.
+
+## Quantisation: smaller vectors
+
+Indexes can also shrink the vectors themselves, a form of <Term id="quantisation" /> applied to stored
+vectors rather than model weights. Take 1,000,000 vectors at $d = 768$:
+
+| Storage | bytes per vector | total |
+|---|---|---|
+| float32 | $768 \times 4 = 3{,}072$ | 3.07 GB |
+| float16 | $768 \times 2 = 1{,}536$ | 1.54 GB |
+| int8 (scalar quantisation) | 768 | 0.77 GB |
+| PQ, 96 sub-vectors at 1 byte each | 96 | 0.096 GB |
+
+**Product quantisation** (PQ) cuts each vector into $m$ pieces (here 96 pieces of 8 numbers), learns 256
+typical values for each piece with k-means, and stores just the 1-byte index of the closest one. That is
+32 times smaller, plus small codebooks ($256 \times 768 \times 4$ bytes $\approx 0.79$ MB). Scores become
+approximations, so recall drops; a common fix is to re-score the best few hundred candidates with the
+full vectors. IVF and PQ combine (Faiss calls it `IVFPQ`).
+
+## Measuring recall at k
+
+For one query, let $E$ be the exact top-$k$ IDs (from brute force with the same metric, filter and
+tie-break) and $A$ the approximate results. **Index recall at k** is
+
+$$
+\text{recall@}k = \frac{|E \cap A|}{|E|}
+$$
+
+Count distinct IDs only: returning the same ID twice must not count twice. If a restrictive filter leaves
+no eligible documents, $E$ is empty and recall is undefined. Skip that query when averaging and report how
+many you skipped. Counting it as 0 would punish the index for something it could not find; counting it
+as 1 would hide how many queries returned nothing.
+
+## Worked example: a recall-versus-budget sweep
+
+The simulation below builds a 20,000-vector IVF index with 100 clusters, runs 200 queries at increasing
+`nprobe`, and compares each result with brute force. It runs in a few seconds.
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(0)
+n, d, nlist, k = 20_000, 32, 100, 10
+centers = rng.normal(size=(20, d))
+X = centers[rng.integers(20, size=n)] + 1.0 * rng.normal(size=(n, d))
+X /= np.linalg.norm(X, axis=1, keepdims=True)          # unit vectors: dot = cosine
+Q = X[rng.choice(n, 200, replace=False)] + 0.1 * rng.normal(size=(200, d))
+Q /= np.linalg.norm(Q, axis=1, keepdims=True)
+
+# "Train" the index: a few rounds of k-means, then file every vector under its nearest centroid.
+C = X[rng.choice(n, nlist, replace=False)]
+for _ in range(10):
+    assign = np.argmax(X @ C.T, axis=1)
+    C = np.stack([X[assign == j].mean(axis=0) if np.any(assign == j) else C[j] for j in range(nlist)])
+    C /= np.linalg.norm(C, axis=1, keepdims=True)
+assign = np.argmax(X @ C.T, axis=1)
+
+exact = np.argsort(-(Q @ X.T), axis=1)[:, :k]          # brute-force reference
+for nprobe in (1, 2, 4, 8, 16, 32):
+    recalls, scanned = [], []
+    for q, truth in zip(Q, exact):
+        probe = np.argsort(-(C @ q))[:nprobe]           # clusters whose centroids are nearest q
+        cand = np.flatnonzero(np.isin(assign, probe))
+        top = cand[np.argsort(-(X[cand] @ q))[:k]]
+        recalls.append(len(set(top) & set(truth)) / k)
+        scanned.append(len(cand))
+    print(f"nprobe={nprobe:>2}  recall@10={np.mean(recalls):.3f}  scanned={np.mean(scanned) / n:.1%}")
+```
+
+```text title="Output"
+nprobe= 1  recall@10=0.496  scanned=1.3%
+nprobe= 2  recall@10=0.714  scanned=2.5%
+nprobe= 4  recall@10=0.902  scanned=4.4%
+nprobe= 8  recall@10=0.986  scanned=8.2%
+nprobe=16  recall@10=0.998  scanned=16.1%
+nprobe=32  recall@10=1.000  scanned=32.1%
+```
+
+Read it as a budget curve. One cluster finds only half the true top 10. Eight clusters, about 8% of the
+work, find 98.6%. Going from 8 to 16 doubles the work for 1.2 more points. A sensible choice is the
+smallest `nprobe` that meets your target, measured at the 95th or 99th percentile of latency, not just
+the mean. Real embeddings are less neatly clustered than this toy data, so measure on your own corpus and
+queries, including queries with restrictive filters.
+
+:::caution[Index recall is not relevance]
+Index recall compares the index with brute force *under the same embedding*. It answers "did the index
+find what exact search would have found?" It says nothing about whether those documents answer the
+question. If the encoder ranks a useless page first, a perfect index returns that useless page with
+recall 1.0. Relevance needs human-labelled (query, relevant document) pairs, which C5 and C9 use. Tune the
+index with index recall; judge the search with relevance labels.
+:::
+
+## Try it
+
+<CodeExercise id="c4-approximate-search-01" />

@@ -1,0 +1,120 @@
+---
+title: Compare vectors with cosine similarity
+module: c4
+order: 2
+estMinutes: 12
+objectives:
+  - Calculate dot product, cosine similarity and Euclidean distance for small vectors by hand
+  - Show that for unit vectors the three measures give the same ranking, using the identity between squared distance and cosine
+  - Explain why normalisation can change a ranking and how to handle zero vectors
+goDeeper: sklearn-pairwise-metrics
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Lesson 1 turned text into vectors. Search now needs one number per (query, document) pair that says how
+close they are. Three measures are in common use, and every vector database asks you to pick one. You met
+the ingredients in F3's [dot product lesson](/foundations/f3/dot-product/) and used cosine on word
+vectors in [F10](/foundations/f10/embeddings/); here we line them up and see when they agree.
+
+## Three measures
+
+For vectors $\mathbf{a}$ and $\mathbf{b}$ with $d$ coordinates, and lengths
+$\lVert\mathbf{a}\rVert = \sqrt{\mathbf{a}\cdot\mathbf{a}}$:
+
+- **Dot product** $\mathbf{a}\cdot\mathbf{b} = \sum_{i=1}^{d} a_i b_i$. Larger means more similar. It grows
+  when directions align and also when either vector gets longer.
+- **<Term id="cosine-similarity" text="Cosine similarity" />** divides out both lengths:
+
+  $$
+  \cos\theta = \frac{\mathbf{a}\cdot\mathbf{b}}{\lVert\mathbf{a}\rVert\,\lVert\mathbf{b}\rVert}
+  $$
+
+  where $\theta$ is the angle between the vectors. It ranges from $-1$ (opposite) through $0$
+  (perpendicular) to $1$ (same direction), and multiplying either vector by a positive number leaves it
+  unchanged.
+- **Euclidean (L2) distance** $\lVert\mathbf{a}-\mathbf{b}\rVert = \sqrt{\sum_i (a_i - b_i)^2}$.
+  Smaller means more similar.
+
+## Worked example: when they disagree
+
+Query $\mathbf{q} = (1, 0)$ and two documents $\mathbf{u} = (3, 4)$ and $\mathbf{v} = (2, 0)$.
+
+| | dot with $\mathbf{q}$ | length | cosine | L2 distance to $\mathbf{q}$ |
+|---|---|---|---|---|
+| $\mathbf{u} = (3, 4)$ | 3 | 5 | $3/5 = 0.6$ | $\sqrt{4 + 16} \approx 4.47$ |
+| $\mathbf{v} = (2, 0)$ | 2 | 2 | $2/2 = 1.0$ | $1$ |
+
+The dot product prefers $\mathbf{u}$ because it is long; cosine and distance prefer $\mathbf{v}$, which
+points exactly the same way as the query. In text search, length often tracks things you do not want to
+reward, such as document length or how common a topic is. Most text-embedding models are trained for
+cosine, and many return vectors already scaled to length 1. Use the measure the model card recommends,
+and check on labelled queries.
+
+## Normalise once, and the three agree
+
+Divide every vector by its length: $\hat{\mathbf{a}} = \mathbf{a}/\lVert\mathbf{a}\rVert$. For unit vectors
+the cosine *is* the dot product, because both lengths are 1. Distance follows too. Expand the square:
+
+$$
+\lVert\hat{\mathbf{a}}-\hat{\mathbf{b}}\rVert^2
+= \hat{\mathbf{a}}\cdot\hat{\mathbf{a}} - 2\,\hat{\mathbf{a}}\cdot\hat{\mathbf{b}} + \hat{\mathbf{b}}\cdot\hat{\mathbf{b}}
+= 1 - 2\cos\theta + 1 = 2 - 2\cos\theta
+$$
+
+Squared distance is a decreasing function of cosine, so ranking by smallest distance gives the same order
+as ranking by largest cosine or largest dot product.
+
+Check it on $\mathbf{u}$: $\hat{\mathbf{u}} = (0.6, 0.8)$ and $\hat{\mathbf{q}} = (1, 0)$. The squared
+distance is $(0.6 - 1)^2 + 0.8^2 = 0.16 + 0.64 = 0.8$, and $2 - 2 \times 0.6 = 0.8$. ✓
+
+This is why the usual recipe is: **normalise every vector when you build the index, normalise each
+query, then rank by dot product.** One matrix product scores a whole batch, exactly as F10 did with
+`En @ En.T`. It also means a distance threshold can be converted to a cosine threshold, but only for unit
+vectors; never move a threshold between metrics without the identity behind it.
+
+:::caution[Thresholds are model-specific]
+"Cosine above 0.8 means relevant" is not a law. Different encoders spread their scores differently: one
+model's unrelated pairs may sit around 0.1, another's around 0.6. If you need a cutoff, pick it from
+labelled pairs for the model you actually use.
+:::
+
+## The zero vector
+
+A vector of all zeros has no direction, so $\cos\theta$ divides by zero and is undefined. It happens in
+practice: a sparse query whose words are all outside the vocabulary becomes all zeros. A function must
+choose a convention. The exercise returns 0.0, meaning "no evidence of similarity"; a search service
+might instead reject the query or skip the document. Either way, a 0.0 produced by the convention is
+not a measured angle, so do not average it with real scores without saying so.
+
+```python
+from math import hypot
+
+def cosine(a, b):
+    if len(a) != len(b):
+        raise ValueError("vector lengths differ")
+    scale = hypot(*a) * hypot(*b)
+    if scale == 0:
+        return 0.0
+    return sum(x * y for x, y in zip(a, b)) / scale
+
+print(cosine([1, 0], [3, 4]))
+print(cosine([1, 0], [2, 0]))
+print(cosine([3, 4], [0, 0]))
+```
+
+```text title="Output"
+0.6
+1.0
+0.0
+```
+
+:::tip[Check dimensions loudly]
+`zip` silently stops at the shorter vector, so a 384-dimensional query against a 768-dimensional
+index would produce plausible-looking garbage. Raise an error on a length mismatch instead.
+:::
+
+## Try it
+
+<CodeExercise id="c4-similarity-metrics-01" />

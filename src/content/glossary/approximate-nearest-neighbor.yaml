@@ -1,0 +1,6 @@
+term: Approximate nearest-neighbor search
+short: Search that trades guaranteed exact neighbors for reduced work or latency.
+body: Measure its recall against the exact neighbors for the same queries, metric and eligible corpus. Search effort, latency and memory vary across index settings.
+related:
+  - cosine-similarity
+  - embedding

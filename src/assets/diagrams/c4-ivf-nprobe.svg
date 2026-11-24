@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 380" width="560" height="380" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title>An IVF index splits the vectors into cells, one per centroid. With nprobe = 2 the search scans only the two cells whose centroids are nearest the query. The query's true nearest neighbour sits just across a boundary in a third cell, so this search misses it.</title>
+<g font-size="13">
+<rect x="20" y="20" width="520" height="300" rx="10" fill="none" stroke="#8b93b8" stroke-width="1.5"/>
+<rect x="20" y="20" width="260" height="158" fill="#0f766e" fill-opacity="0.16"/>
+<rect x="280" y="20" width="260" height="158" fill="#0f766e" fill-opacity="0.16"/>
+<line x1="280" y1="20" x2="280" y2="320" stroke="#8b93b8" stroke-width="1.5" stroke-dasharray="6 5"/>
+<line x1="20" y1="178" x2="540" y2="178" stroke="#8b93b8" stroke-width="1.5" stroke-dasharray="6 5"/>
+<g fill="#8b93b8">
+<circle cx="90" cy="60" r="4"/><circle cx="170" cy="110" r="4"/><circle cx="200" cy="55" r="4"/><circle cx="120" cy="135" r="4"/><circle cx="230" cy="120" r="4"/>
+<circle cx="340" cy="60" r="4"/><circle cx="440" cy="120" r="4"/><circle cx="480" cy="55" r="4"/><circle cx="380" cy="140" r="4"/><circle cx="500" cy="135" r="4"/>
+<circle cx="80" cy="220" r="4"/><circle cx="180" cy="290" r="4"/><circle cx="220" cy="230" r="4"/><circle cx="100" cy="295" r="4"/>
+<circle cx="350" cy="250" r="4"/><circle cx="440" cy="215" r="4"/><circle cx="490" cy="285" r="4"/><circle cx="400" cy="295" r="4"/>
+</g>
+<circle cx="262" cy="184" r="5" fill="none" stroke="#c2410c" stroke-width="2.5"/>
+<g stroke="#0f766e" stroke-width="3">
+<path d="M144 82 l12 12 M156 82 l-12 12"/><path d="M414 82 l12 12 M426 82 l-12 12"/>
+<path d="M144 262 l12 12 M156 262 l-12 12"/><path d="M414 262 l12 12 M426 262 l-12 12"/>
+</g>
+<path transform="translate(5 -13)" d="M270 148 l4 9 l10 1 l-7 7 l2 10 l-9 -5 l-9 5 l2 -10 l-7 -7 l10 -1z" fill="#c2410c"/>
+<text x="292" y="146" fill="#c2410c" font-weight="700">query</text>
+<text x="180" y="206" fill="#c2410c" font-size="12">true nearest</text>
+<text x="30" y="40" fill="#0f766e" font-size="12" font-weight="700">probed</text>
+<text x="290" y="40" fill="#0f766e" font-size="12" font-weight="700">probed</text>
+<text x="30" y="198" fill="#8b93b8" font-size="12">not scanned</text>
+<text x="456" y="198" fill="#8b93b8" font-size="12">not scanned</text>
+</g>
+<g font-size="12" fill="#8b93b8">
+<path d="M34 346 l10 10 M44 346 l-10 10" stroke="#0f766e" stroke-width="3"/><text x="52" y="356">centroid</text>
+<circle cx="132" cy="351" r="4"/><text x="142" y="356">stored vector</text>
+<rect x="240" y="343" width="16" height="16" fill="#0f766e" fill-opacity="0.16" stroke="#0f766e"/><text x="264" y="356">cell scanned with nprobe = 2</text>
+</g>
+</svg>

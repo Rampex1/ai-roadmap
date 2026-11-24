@@ -1,0 +1,21 @@
+id: c4-support-search
+module: c4
+kind: homework
+title: "Support search: sparse versus dense, recall and index budgets"
+brief: |-
+  A support team wants search over its help notes. The exercises built keyword vectors, cosine, exact filtered top-k and index recall; this notebook extends them into the measurements you would make before choosing a search design. Everything runs offline with NumPy and the standard library; small hand-made vectors stand in for an embedding model.
+
+  1. Implement BM25 and compare it with dense retrieval on nine notes and six labelled queries, reporting relevance recall at 2 for each method.
+  2. Average index recall over many queries, skipping queries whose exact result set is empty and reporting how many were skipped.
+  3. Estimate index memory for float32, int8 and product-quantised storage of 1,000,000 vectors at 768 dimensions.
+  4. Build a simulated IVF index over 5,000 vectors, sweep `nprobe`, and trace mean recall at 10 against the fraction of vectors scanned; choose the smallest `nprobe` that reaches 0.95.
+  5. Interpret the results: where each retriever wins and why, which `nprobe` you would ship, what fits on an 8 GB laptop, and why index recall is not relevance.
+notebook: /homework/c4-support-search.ipynb
+rubric:
+  - BM25 matches the lesson's worked scores, counts each query term once and normalises for length.
+  - The retriever comparison identifies the code query BM25 wins and the paraphrase queries dense retrieval wins, and explains both.
+  - Mean index recall ignores duplicate IDs, skips empty exact sets and reports the skipped count.
+  - The memory estimates include PQ codebooks and reject a sub-vector count that does not divide the dimension.
+  - The nprobe sweep breaks ties by index, shows non-decreasing recall and scan fraction, and reaches recall 1.0 when every cluster is probed.
+  - The write-up separates index recall from relevance recall with evidence from tasks 1 and 4.
+compute: Any laptop or free Colab CPU, NumPy only, under a minute of run time. Allow 75 to 105 minutes.

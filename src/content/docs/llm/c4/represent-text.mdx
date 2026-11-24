@@ -1,0 +1,153 @@
+---
+title: Represent text as vectors
+module: c4
+order: 1
+estMinutes: 14
+objectives:
+  - Compute TF-IDF and BM25 scores by hand and explain what each term of BM25 rewards
+  - Explain what sparse lexical vectors and dense text embeddings each miss, and why hybrid search combines them
+  - Choose an embedding model by language, domain, dimension and measured quality, and keep index and query encoders identical
+goDeeper: openai-embedding-guide
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+[C1](/llm/c1/context-windows/) ended with a rule: once content runs past a few thousand tokens, retrieve
+the relevant passages instead of stuffing everything into the prompt. Retrieval needs a way to score
+"how well does this document match this query?" for thousands or millions of documents in milliseconds.
+The trick is to turn every text into a vector once, offline, and then compare vectors. This module builds
+that machinery; C5 puts it to work in retrieval-augmented generation.
+
+There are two families of text vectors: **sparse** ones built from word counts and **dense** ones
+produced by a trained encoder. Production search usually uses both.
+
+## Sparse vectors: one coordinate per word
+
+Fix a vocabulary. A text becomes a vector with one coordinate per vocabulary word, holding how often the
+word appears. Most coordinates are zero, hence "sparse". The exercise below builds exactly this.
+
+Raw counts have two problems. Common words such as "the" dominate, and a word repeated ten times counts
+ten times as much. **TF-IDF** fixes the first: the weight of term $t$ in document $d$ is
+
+$$
+w_{t,d} = \text{tf}_{t,d} \times \log\frac{N}{\text{df}_t}
+$$
+
+where $\text{tf}_{t,d}$ is the count of $t$ in $d$, $N$ is the number of documents and $\text{df}_t$ is
+how many documents contain $t$. In a 4-document corpus, a word found in every document gets
+$\log(4/4) = 0$, and a word found in one document gets $\log 4 \approx 1.386$. Rare words carry the signal.
+
+<Term id="bm25" /> is the refined version that most search engines have used as their default for
+decades. For a query with terms $t$ and a document of length $|d|$ words:
+
+$$
+\text{score}(q, d) = \sum_{t \in q} \text{idf}_t \cdot
+\frac{\text{tf}_{t,d}\,(k_1 + 1)}{\text{tf}_{t,d} + k_1\left(1 - b + b\,\dfrac{|d|}{\text{avgdl}}\right)},
+\qquad
+\text{idf}_t = \ln\!\left(1 + \frac{N - \text{df}_t + 0.5}{\text{df}_t + 0.5}\right)
+$$
+
+Read it term by term:
+
+- **idf** rewards rare words, like TF-IDF.
+- **Saturation** ($k_1$, typically 1.2 to 2). With $k_1 = 1.2$ and an average-length document, the
+  fraction is 1.0 for one occurrence, 1.375 for two, 1.571 for three and 1.964 for ten. Repeating a word
+  helps less and less, and the factor can never pass $k_1 + 1 = 2.2$.
+- **Length normalisation** ($b$, typically 0.75). avgdl is the average document length. A long
+  document matches more words by chance, so its term frequencies are discounted.
+
+### A worked score
+
+Four short notes, query "card refund", $k_1 = 1.2$, $b = 0.75$. Lengths are 3, 6, 8 and 3 words, so
+avgdl = 5. "card" and "refund" each appear in 2 of the 4 notes, so both have
+$\text{idf} = \ln(1 + 2.5/2.5) = \ln 2 \approx 0.693$.
+
+For note 1 ("refund to card", 3 words) the length factor is $1 - 0.75 + 0.75 \cdot 3/5 = 0.7$, so each
+matching word contributes $0.693 \times 2.2 / (1 + 1.2 \times 0.7) = 0.693 \times 1.196 \approx 0.829$.
+Two matching words give about 1.658. Note 3 says "refund" three times but has 8 words: its length
+factor is 1.45 and its single matching term gives $0.693 \times 6.6/4.74 \approx 0.965$. Saying "refund"
+three times did not beat mentioning both query words once.
+
+```python
+import math
+from collections import Counter
+
+def bm25_scores(query, docs, k1=1.2, b=0.75):
+    toks = [d.casefold().split() for d in docs]
+    n_docs, avgdl = len(toks), sum(map(len, toks)) / len(toks)
+    df = Counter(t for d in toks for t in set(d))
+    scores = []
+    for d in toks:
+        tf, s = Counter(d), 0.0
+        for t in set(query.casefold().split()):
+            if tf[t]:
+                idf = math.log(1 + (n_docs - df[t] + 0.5) / (df[t] + 0.5))
+                s += idf * tf[t] * (k1 + 1) / (tf[t] + k1 * (1 - b + b * len(d) / avgdl))
+        scores.append(round(s, 3))
+    return scores
+
+docs = ["refund to card",
+        "card declined error e1234 at checkout",
+        "refund refund refund policy for orders shipped late",
+        "reset your password"]
+print(bm25_scores("card refund", docs))
+```
+
+```text title="Output"
+[1.658, 0.641, 0.965, 0.0]
+```
+
+**What sparse vectors miss:** meaning. "I can't log in" scores zero against "reset your password"
+because they share no word. Stemming and synonym lists help a little. **What they are good at:** exact
+strings. An error code like `e1234`, a product name or a person's name is matched precisely, and the
+score is explainable word by word.
+
+## Dense vectors: learned meaning
+
+A <Term id="text-embedding" text="text embedding" /> model is a transformer encoder trained so that a
+query and a passage that answers it map to nearby vectors, typically with a few hundred to a few
+thousand coordinates, nearly all nonzero. It is a cousin of the token
+[embeddings of F10](/foundations/f10/embeddings/), but one vector summarises a whole passage.
+"cancel subscription" and "end my plan" land close together although they share no words.
+
+**What dense vectors miss:** precise strings. An encoder has never seen your product code `e1234`; it
+gets split into sub-word pieces whose vector is close to every other code. Rare names, numbers and
+negations ("not refundable") are common failure cases. Similarity is a learned preference, so measure it
+on your own queries.
+
+**Hybrid search** runs both retrievers and merges their ranked lists. Raw BM25 scores and cosine scores
+sit on different scales, so the usual merge works on ranks; reciprocal rank fusion, taught in C5, is the
+standard method.
+
+## Choosing an embedding model
+
+:::note[Dated content]
+As of late 2026. The model landscape changes quickly; treat names as examples and compare current options
+on a leaderboard such as MTEB and, more importantly, on your own labelled queries.
+:::
+
+- **Hosted APIs** such as OpenAI's `text-embedding-3-small` (1,536 dimensions) and
+  `text-embedding-3-large` (3,072) need no GPU and can return shorter vectors on request.
+- **Open models** run locally through `sentence-transformers` or Ollama. Small English models (for
+  example `all-MiniLM-L6-v2`, 384 dimensions) run on a laptop CPU; families such as BGE, E5, Nomic and
+  Qwen3-Embedding offer larger and multilingual variants.
+- **Dimension** sets memory and search cost (lesson 3): 384 float32 numbers take 1.5 KB per chunk;
+  3,072 take 12 KB.
+- **Language and domain.** An English-only model degrades on other languages; a general model may
+  rank legal or medical text poorly. Some models expect a prefix such as `query:` or `passage:`. Read
+  the model card.
+
+:::caution[Never mix encoders]
+Every document vector in an index and every query vector must come from the same model, version and
+preprocessing (including any prefix). Vectors from two different encoders can have the same length and
+still be meaningless to compare, because each model assigns its own meaning to each coordinate.
+Record the encoder name and version with the index, and re-embed the whole corpus when you change it.
+:::
+
+Long documents are split into chunks before encoding, each keeping its parent document ID so results
+can be cited. Choosing chunk sizes is part of C5.
+
+## Try it
+
+<CodeExercise id="c4-represent-text-01" />

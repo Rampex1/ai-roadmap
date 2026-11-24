@@ -1,0 +1,18 @@
+id: c4-represent-text-01
+lesson: llm/c4/represent-text
+title: Build a lexical vector baseline
+prompt: Write keyword_vector(text, vocabulary). Case-fold the text and split on whitespace. The vocabulary is a list of distinct lowercase words. Return one occurrence count per vocabulary entry in the given order. Ignore out-of-vocabulary words.
+starter: |
+  def keyword_vector(text, vocabulary):
+      raise NotImplementedError
+solution: |
+  def keyword_vector(text, vocabulary):
+      from collections import Counter
+      counts = Counter(text.casefold().split())
+      return [counts[word] for word in vocabulary]
+tests: |
+  assert keyword_vector("Reset RESET device", ["device", "refund", "reset"]) == [1, 0, 2], "Count in vocabulary order"
+  assert keyword_vector("refund? refund", ["refund", "refund?"]) == [1, 1], "Split only on whitespace"
+  assert keyword_vector("", ["reset"]) == [0], "Empty text has zero counts"
+hints:
+  - Count the normalized tokens before building the vector.

@@ -1,0 +1,20 @@
+id: c4-approximate-search-01
+lesson: llm/c4/approximate-search
+title: Calculate index recall
+prompt: Write index_recall(exact, approximate). Return distinct exact IDs found in the approximate results divided by the number of distinct exact IDs. Return None for an empty exact reference.
+starter: |
+  def index_recall(exact, approximate):
+      raise NotImplementedError
+solution: |
+  def index_recall(exact, approximate):
+      expected = set(exact)
+      if not expected:
+          return None
+      return len(expected.intersection(approximate)) / len(expected)
+tests: |
+  assert index_recall(["a", "b"], ["a", "a"]) == 0.5, "Duplicates do not improve recall"
+  assert index_recall(["a", "b", "c", "d"], ["a", "x", "b"]) == 0.5, "Use exact result count as denominator"
+  assert index_recall([], ["x"]) is None, "An empty reference has no defined recall"
+  assert index_recall(["a"], []) == 0, "An empty candidate list misses an available hit"
+hints:
+  - Convert the exact references to a set and count the overlap.

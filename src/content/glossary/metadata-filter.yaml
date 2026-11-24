@@ -1,0 +1,6 @@
+term: Metadata filter
+short: A restriction on which records can be searched, using fields other than the similarity score.
+body: Examples include a category, publication date or authorized workspace. Apply eligibility before choosing the final top results.
+related:
+  - embedding
+  - approximate-nearest-neighbor

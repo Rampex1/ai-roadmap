@@ -1,0 +1,6 @@
+title: scikit-learn pairwise metrics
+url: https://scikit-learn.org/stable/modules/metrics.html
+kind: tool
+free: true
+modules:
+  - c4

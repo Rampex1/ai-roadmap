@@ -1,0 +1,111 @@
+items:
+  - id: c4-similarity-metrics-01
+    type: mcq
+    prompt: What does positive rescaling of a nonzero vector do to cosine?
+    explanation: If b becomes cb with c greater than 0, the dot product becomes c times larger and so does the length of b, so the factor c cancels in a·b / (‖a‖‖b‖). Cosine measures direction only. The raw dot product, by contrast, grows by the factor c.
+    options:
+      - text: Leaves it unchanged
+        why: The scale factor multiplies both the numerator and one length in the denominator, so it cancels.
+        correct: true
+      - text: Always increases it
+        why: That is a magnitude effect for some raw dot products.
+      - text: Makes it zero
+        why: Direction is preserved.
+  - id: c4-similarity-metrics-02
+    type: mcq
+    prompt: What does a cosine of zero mean for two nonzero vectors?
+    explanation: Cosine is zero exactly when the dot product is zero, which for nonzero vectors means a 90 degree angle. For text embeddings that reads as no shared direction, not as opposite meanings, which would be negative cosine.
+    options:
+      - text: They are perpendicular
+        why: Cosine is zero exactly when the dot product is zero, which is the definition of perpendicular.
+        correct: true
+      - text: They are the same vector
+        why: Same direction scores one.
+      - text: They must both have unit length
+        why: The identity holds at any nonzero lengths.
+  - id: c4-similarity-metrics-03
+    type: mcq
+    prompt: What happens when cosine is applied to a zero vector mathematically?
+    explanation: The formula divides by ‖a‖‖b‖, which is zero, and a zero vector has no direction to measure an angle from. Code must pick a convention, such as returning 0.0 or rejecting the input, and that convention is not a measured angle.
+    options:
+      - text: It is undefined
+        why: The denominator ‖a‖‖b‖ is zero, so the division has no value.
+        correct: true
+      - text: It equals one
+        why: Zero has no direction.
+      - text: It equals negative one
+        why: Zero has no opposite direction.
+  - id: c4-similarity-metrics-04
+    type: mcq
+    prompt: Which score ranks unit vectors in the same order as descending cosine?
+    explanation: For unit vectors, ‖a − b‖² = a·a − 2a·b + b·b = 2 − 2a·b = 2 − 2cos θ. Larger cosine means smaller squared distance, so ascending distance gives the same order as descending cosine.
+    options:
+      - text: Ascending Euclidean distance
+        why: Squared distance equals 2 minus twice the cosine, so the smallest distance is the largest cosine.
+        correct: true
+      - text: Descending Euclidean distance
+        why: Large distance means small cosine.
+      - text: Descending vector length
+        why: All lengths are one.
+  - id: c4-similarity-metrics-05
+    type: multi
+    prompt: Which operations can recover cosine rankings?
+    explanation: After normalising, the dot product equals the cosine, and squared distance equals 2 − 2cos θ, which decreases as cosine increases. Both give the cosine ranking. Document length is unrelated to direction.
+    options:
+      - text: Normalize both sides and rank by ascending squared Euclidean distance
+        why: Squared distance between unit vectors is 2 minus twice the cosine, so it falls as cosine rises.
+        correct: true
+      - text: Normalize both sides and rank by descending dot product
+        why: The dot product of unit vectors is exactly their cosine.
+        correct: true
+      - text: Rank by input document length alone
+        why: Text length does not establish direction.
+  - id: c4-similarity-metrics-06
+    type: cloze
+    prompt: Scaling a vector to length one is called unit ______.
+    accept:
+      - normalization
+      - normalisation
+    explanation: Dividing a vector by its length keeps its direction and makes its length one. Normalising every stored vector once, and each query, lets a fast dot product stand in for cosine.
+  - id: c4-similarity-metrics-07
+    type: order
+    prompt: Order the steps for the normalized-dot-product method.
+    items:
+      - Check vector dimensions and nonzero lengths
+      - Divide each vector by its length
+      - Compute the dot product of the unit vectors
+    explanation: You cannot divide by a length until you know it is nonzero, and mismatched dimensions would silently truncate in zip. Once both vectors have length one, their dot product is the cosine.
+  - id: c4-similarity-metrics-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def cosine(a, b):
+          from math import hypot
+          if len(a) != len(b):
+              raise ValueError("vector lengths differ")
+          scale = hypot(*a) * hypot(*b)
+          if scale == 0:
+              return 0.0
+          return sum(x * y for x, y in zip(a, b)) / scale
+
+      print(round(cosine([1, 0], [-3, 4]), 2))
+    answer: "-0.6"
+    explanation: The dot product is 1 × (−3) + 0 × 4 = −3, and the lengths are 1 and 5, so the cosine is −3/5 = −0.6. The negative sign means the vectors point partly in opposite directions.
+  - id: c4-similarity-metrics-09
+    type: numeric
+    prompt: What is the cosine similarity of $(1, 2, 2)$ and $(2, 0, 1)$? Give 3 decimal places.
+    answer: 0.596
+    tol: 0.001
+    explanation: The dot product is 2 + 0 + 2 = 4. The lengths are √9 = 3 and √5 ≈ 2.236, so the cosine is 4 / 6.708 ≈ 0.596.
+  - id: c4-similarity-metrics-10
+    type: numeric
+    prompt: Two unit vectors have cosine similarity 0.6. What is their squared Euclidean distance?
+    answer: 0.8
+    tol: 0.001
+    explanation: For unit vectors ‖a − b‖² = 2 − 2cos θ = 2 − 1.2 = 0.8. Check with (0.6, 0.8) and (1, 0) as in the lesson; (0.6 − 1)² + 0.8² = 0.16 + 0.64 = 0.8.
+  - id: c4-similarity-metrics-11
+    type: numeric
+    prompt: What is the Euclidean (L2) distance between $(1, 2)$ and $(4, 6)$?
+    answer: 5
+    tol: 0.001
+    explanation: The difference is (3, 4), and √(3² + 4²) = √25 = 5. Distance depends on length as well as direction, which is why it agrees with cosine only after normalising.

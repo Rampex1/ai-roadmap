@@ -1,0 +1,29 @@
+id: c4-similarity-metrics-01
+lesson: llm/c4/similarity-metrics
+title: Calculate cosine similarity
+prompt: Implement cosine(a, b) for vectors of equal dimension. Return 0.0 by convention if either length is zero, and raise ValueError for dimension mismatch.
+starter: |
+  def cosine(a, b):
+      raise NotImplementedError
+solution: |
+  def cosine(a, b):
+      from math import hypot
+      if len(a) != len(b):
+          raise ValueError("vector lengths differ")
+      scale = hypot(*a) * hypot(*b)
+      if scale == 0:
+          return 0.0
+      return sum(x * y for x, y in zip(a, b)) / scale
+tests: |
+  assert abs(cosine([2, 0], [3, 4]) - 0.6) < 1e-9, "Divide by both lengths"
+  assert abs(cosine([1, 2], [-2, -4]) + 1) < 1e-9, "Opposite directions score negative one"
+  assert cosine([0, 0], [4, 2]) == 0, "Handle the zero convention"
+  assert cosine([3, 4], [0, 0]) == 0, "A zero vector on either side returns 0.0 by convention"
+  try:
+      cosine([1], [1, 2])
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("Reject dimension mismatch")
+hints:
+  - The Euclidean length is the square root of the sum of squares.

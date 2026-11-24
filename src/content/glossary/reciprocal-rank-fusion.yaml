@@ -1,0 +1,5 @@
+term: "Reciprocal rank fusion"
+short: "A rank aggregation method that rewards high positions across multiple ordered lists."
+body: |
+  Reciprocal rank fusion (RRF) merges several ranked lists, such as lexical and dense search results, using only positions. Each candidate $d$ scores $\mathrm{RRF}(d) = \sum_i 1/(k + r_i(d))$, where $r_i(d)$ is its rank in list $i$ counting from 1, lists that do not contain $d$ add nothing, and $k$ is a positive constant (60 in the original paper by Cormack, Clarke and Büttcher, 2009). Candidates are sorted by decreasing score. Because raw scores are never used, lists with incomparable score scales can be merged without calibration. A larger $k$ rewards agreement between lists more than a single top position. Fusion can only reorder candidates that at least one list returned.
+related: ["bm25","embedding","evidence-recall"]

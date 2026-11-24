@@ -4,5 +4,7 @@ title: "Embeddings and vector search"
 order: 4
 prereqs: ["c3"]
 objectives:
-  - "Explain the core ideas of embeddings and vector search"
-  - "Build and evaluate an application using embeddings and vector search"
+  - Score documents with BM25 and with dense text embeddings, and explain what each misses and why hybrid search combines them
+  - Compute cosine, dot product and Euclidean distance, and show they rank unit vectors identically
+  - Build an exact search baseline that filters before top-k, breaks ties deterministically and fits a stated memory budget
+  - Explain how IVF, HNSW and quantisation trade recall for speed and memory, and measure index recall separately from relevance

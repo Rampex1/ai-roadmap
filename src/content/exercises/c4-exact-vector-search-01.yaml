@@ -1,0 +1,32 @@
+id: c4-exact-vector-search-01
+lesson: llm/c4/exact-vector-search
+title: Implement exact filtered top-k
+prompt: Write top_matches(query, records, category, k). The records are (unique ID, category, vector) triples with the same dimension as query. Score only matching-category records by dot product, sort descending by score then ascending by ID, and return up to k IDs. Reject negative k.
+starter: |
+  def top_matches(query, records, category, k):
+      raise NotImplementedError
+solution: |
+  def top_matches(query, records, category, k):
+      if k < 0:
+          raise ValueError("k must be nonnegative")
+      eligible = []
+      for doc_id, tag, vector in records:
+          if tag == category:
+              score = sum(x * y for x, y in zip(query, vector))
+              eligible.append((doc_id, score))
+      eligible.sort(key=lambda match: (-match[1], match[0]))
+      return [doc_id for doc_id, score in eligible[:k]]
+tests: |
+  records = [("z", "b", [1, 0]), ("a", "b", [1, 0]), ("x", "t", [1, 0]), ("m", "b", [0, 1])]
+  assert top_matches([1, 0], records, "b", 2) == ["a", "z"], "Resolve ties by ID after filtering"
+  assert top_matches([0, 1], records, "b", 2) == ["m", "a"], "Rank by query dot product"
+  assert top_matches([1, 0], records, "missing", 3) == [], "No documents match this filter"
+  assert top_matches([1, 0], records, "b", 0) == [], "Zero requested hits"
+  try:
+      top_matches([1, 0], records, "b", -1)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("Reject negative k")
+hints:
+  - Sort on the negative score and then the ID.

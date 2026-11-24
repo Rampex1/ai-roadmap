@@ -1,0 +1,7 @@
+term: "Text embedding"
+short: "A fixed-length dense vector that an encoder model produces for a whole piece of text, used to compare texts by similarity."
+body: |
+  Unlike a token embedding (one row of a model's embedding matrix), a text embedding summarises a
+  sentence, passage or query. Vectors are only comparable when they come from the same encoder and
+  preprocessing; vectors from different models live in different spaces even when their lengths match.
+related: ["embedding", "cosine-similarity", "approximate-nearest-neighbor"]

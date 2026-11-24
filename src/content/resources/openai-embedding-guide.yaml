@@ -1,0 +1,6 @@
+title: OpenAI vector embeddings guide
+url: https://developers.openai.com/api/docs/guides/embeddings
+kind: tool
+free: true
+modules:
+  - c4

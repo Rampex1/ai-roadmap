@@ -1,0 +1,6 @@
+title: "Pinecone: Hierarchical Navigable Small Worlds (HNSW)"
+url: https://www.pinecone.io/learn/series/faiss/hnsw/
+kind: course
+free: true
+modules:
+  - c4
