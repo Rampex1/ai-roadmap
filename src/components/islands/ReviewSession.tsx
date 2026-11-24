@@ -6,28 +6,40 @@ import { useProgress } from './useProgress';
 
 const CAP = 50;
 
-export default function ReviewSession({ itemModule }: { itemModule: Record<string, string> }) {
+export default function ReviewSession() {
   const [state] = useProgress();
   const [session, setSession] = useState<PoolItem[] | null>(null);
   const [failed, setFailed] = useState(false);
   // Pick the due items once when the session starts (answering must not reshuffle the page),
   // then fetch only the modules they come from.
   useEffect(() => {
-    const due = dueItems(state, new Date(), new Set(Object.keys(itemModule)));
-    for (let i = due.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [due[i], due[j]] = [due[j], due[i]];
+    const due = dueItems(state, new Date());
+    if (!due.length) {
+      setSession([]);
+      return;
     }
-    const picked = due.slice(0, CAP);
-    const modules = [...new Set(picked.map((id) => itemModule[id]))];
-    Promise.all(modules.map((m) => fetch(`/quiz/${m}.json`).then((r) => (r.ok ? (r.json() as Promise<PoolItem[]>) : Promise.reject(r.status)))))
-      .then((lists) => {
-        const byId = new Map(lists.flat().map((i) => [i.id, i]));
-        setSession(picked.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : [])));
-      })
-      .catch(() => setFailed(true));
+    const load = async () => {
+      const index = await fetch('/quiz/index.json');
+      if (!index.ok) throw new Error('Quiz index unavailable');
+      const itemModule: Record<string, string> = await index.json();
+      const known = due.filter((id) => Object.hasOwn(itemModule, id));
+      for (let i = known.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [known[i], known[j]] = [known[j], known[i]];
+      }
+      const picked = known.slice(0, CAP);
+      const modules = [...new Set(picked.map((id) => itemModule[id]))];
+      const lists = await Promise.all(modules.map(async (module) => {
+        const response = await fetch(`/quiz/${module}.json`);
+        if (!response.ok) throw new Error(`Quiz module unavailable: ${module}`);
+        return response.json() as Promise<PoolItem[]>;
+      }));
+      const byId = new Map(lists.flat().map((item) => [item.id, item]));
+      setSession(picked.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : [])));
+    };
+    load().catch(() => setFailed(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [itemModule]);
+  }, []);
   if (failed) return <p role="alert" className="air-callout air-callout-error not-content">Could not load review items. Reload the page to try again.</p>;
   if (!session) return <p className="not-content" role="status">Loading your review…</p>;
   const total = Object.keys(state.cards).length;

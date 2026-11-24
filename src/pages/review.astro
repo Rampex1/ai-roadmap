@@ -1,18 +1,8 @@
 ---
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
-import { getCollection } from 'astro:content';
 import ReviewSession from '@/components/islands/ReviewSession';
-
-// Only an item → module map ships with the page; the session fetches /quiz/<module>.json for modules with due items.
-const [quizzes, docs] = await Promise.all([getCollection('quizzes'), getCollection('docs')]);
-const moduleOf = new Map(docs.map((d) => [d.id, (d.data as { module?: string }).module]));
-const itemModule: Record<string, string> = {};
-for (const q of quizzes) {
-  const m = moduleOf.get(q.id);
-  if (m) for (const it of q.data.items) itemModule[it.id] = m;
-}
 ---
 
 <StarlightPage frontmatter={{ title: 'Review', description: 'Spaced review of quiz items that are due today', overview: true, tableOfContents: false }}>
-  <ReviewSession client:only="react" itemModule={itemModule} />
+  <ReviewSession client:only="react" />
 </StarlightPage>

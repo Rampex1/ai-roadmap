@@ -20,12 +20,12 @@ function arrange(entries: Entry[], o: Awaited<ReturnType<typeof orders>>): Entry
     e.type === 'link' ? o.lesson.get(e.href ?? '') ?? 0 : o.module.get(e.label.toLowerCase())?.order ?? 0;
   const moduleGroups = entries.length > 0 && entries.every((e) => e.type === 'group' && o.module.has(e.label.toLowerCase()));
   const lessonLinks = entries.length > 0 && entries.every((e) => e.type === 'link' && o.lesson.has(e.href ?? ''));
-  const out = entries.map((e) => {
+  const ordered = moduleGroups || lessonLinks ? [...entries].sort((a, b) => rankOf(a) - rankOf(b)) : entries;
+  return ordered.map((e) => {
     if (e.type !== 'group') return e;
     const mod = o.module.get(e.label.toLowerCase());
     return { ...e, label: mod ? `${e.label.toUpperCase()} · ${mod.title}` : e.label, entries: arrange(e.entries ?? [], o) };
   });
-  return moduleGroups || lessonLinks ? [...out].sort((a, b) => rankOf(a) - rankOf(b)) : out;
 }
 
 // Filter the sidebar to the current course, order modules and lessons, and recompute prev/next
