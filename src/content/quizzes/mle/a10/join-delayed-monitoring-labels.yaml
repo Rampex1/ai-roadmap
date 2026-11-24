@@ -1,0 +1,93 @@
+items:
+  - id: a10-join-delayed-monitoring-labels-01
+    type: mcq
+    prompt: Which version should label joins retain?
+    explanation: Current deployment can differ.
+    options:
+      - text: The version that made the original prediction
+        why: Current deployment can differ.
+        correct: true
+      - text: The latest promoted version always
+        why: That misattributes past outcomes.
+      - text: No version
+        why: Version is central to monitoring.
+  - id: a10-join-delayed-monitoring-labels-02
+    type: mcq
+    prompt: What if a label arrives after the historical cutoff?
+    explanation: It was not available at that time.
+    options:
+      - text: Discard the prediction entirely
+        why: Attempts should remain observable.
+      - text: Leave the outcome pending for that report
+        why: It was not available at that time.
+        correct: true
+      - text: Attach it anyway
+        why: That introduces hindsight.
+  - id: a10-join-delayed-monitoring-labels-03
+    type: mcq
+    prompt: Why compare cohorts of similar age?
+    explanation: Coverage differences can distort accuracy estimates.
+    options:
+      - text: Older cohorts may have had more time to receive labels
+        why: Coverage differences can distort accuracy estimates.
+        correct: true
+      - text: Age replaces input features
+        why: The cohort age is a reporting condition.
+      - text: It forces identical labels
+        why: Differences can remain.
+  - id: a10-join-delayed-monitoring-labels-04
+    type: mcq
+    prompt: What does missing outcome imply?
+    explanation: The class remains unknown.
+    options:
+      - text: It is always a service error
+        why: A successful prediction can await a label.
+      - text: The label is unavailable under the declared rules
+        why: The class remains unknown.
+        correct: true
+      - text: It is always negative
+        why: Missing is not a true class.
+  - id: a10-join-delayed-monitoring-labels-05
+    type: multi
+    prompt: Which belong in outcome metrics provenance?
+    explanation: They link outcomes correctly. It specifies which evidence was visible.
+    options:
+      - text: Only the current dashboard URL
+        why: A URL does not identify evidence timing.
+      - text: Prediction identity and version
+        why: They link outcomes correctly.
+        correct: true
+      - text: Label availability cutoff
+        why: It specifies which evidence was visible.
+        correct: true
+  - id: a10-join-delayed-monitoring-labels-06
+    type: cloze
+    prompt: The fraction with usable labels is outcome ______.
+    accept:
+      - coverage
+      - label coverage
+    explanation: It measures completeness of observed outcomes.
+  - id: a10-join-delayed-monitoring-labels-07
+    type: order
+    prompt: Order a delayed label report.
+    items:
+      - Choose cohort and cutoff
+      - Read predictions with original versions
+      - Join eligible labels by ID
+      - Report coverage and measured errors
+    explanation: Labels must be available before entering error metrics.
+  - id: a10-join-delayed-monitoring-labels-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def outcomes_at(predictions, labels, cutoff):
+          result = []
+          for request_id, version, predicted in predictions:
+              label = labels.get(request_id)
+              actual = label[1] if label is not None and label[0] <= cutoff else None
+              result.append((request_id,version,predicted,actual))
+          return result
+
+      print(outcomes_at([("a", "v", 0)], {"a":(4,1)}, 4)[0][-1])
+    answer: "1"
+    explanation: The availability boundary is inclusive.

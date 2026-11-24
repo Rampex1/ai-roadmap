@@ -1,0 +1,94 @@
+items:
+  - id: a10-monitor-service-and-data-01
+    type: mcq
+    prompt: What does a rise in timeout rate show directly?
+    explanation: Timeouts are service outcomes.
+    options:
+      - text: A reliability issue in the measured window
+        why: Timeouts are service outcomes.
+        correct: true
+      - text: A decrease in classification accuracy for sure
+        why: Labels are needed for that conclusion.
+      - text: That every returned score is wrong
+        why: Successful predictions require separate assessment.
+  - id: a10-monitor-service-and-data-02
+    type: mcq
+    prompt: Is a valid review outcome a failed request here?
+    explanation: The service returned its documented outcome.
+    options:
+      - text: No, review is an accepted decision
+        why: The service returned its documented outcome.
+        correct: true
+      - text: Yes, all fallback decisions are unavailable responses
+        why: Availability and policy differ.
+      - text: Only if the version changed
+        why: Version does not define failure.
+  - id: a10-monitor-service-and-data-03
+    type: mcq
+    prompt: Why report metrics by version?
+    explanation: Grouping supports troubleshooting.
+    options:
+      - text: A mixed rollout can hide which artifact changed behaviour
+        why: Grouping supports troubleshooting.
+        correct: true
+      - text: It avoids gathering observation times
+        why: Windows still matter.
+      - text: It guarantees equal traffic proportions
+        why: Assignment can vary.
+  - id: a10-monitor-service-and-data-04
+    type: mcq
+    prompt: What denominator is needed for service failure rate?
+    explanation: Failures are among attempts.
+    options:
+      - text: All attempted requests in the window
+        why: Failures are among attempts.
+        correct: true
+      - text: Only successful requests
+        why: That excludes the failed population.
+      - text: Only known positive labels
+        why: Those are for predictive metrics.
+  - id: a10-monitor-service-and-data-05
+    type: multi
+    prompt: Which are useful without labels?
+    explanation: They are observed immediately. These are available at request time.
+    options:
+      - text: Service timeouts
+        why: They are observed immediately.
+        correct: true
+      - text: Invalid input counts
+        why: These are available at request time.
+        correct: true
+      - text: Final accuracy for pending outcomes
+        why: Accuracy needs labels.
+  - id: a10-monitor-service-and-data-06
+    type: cloze
+    prompt: A bounded traffic interval is an observation ______.
+    accept:
+      - window
+      - serving window
+    explanation: Signals can be compared across defined windows.
+  - id: a10-monitor-service-and-data-07
+    type: order
+    prompt: Order a serving report.
+    items:
+      - Define time window and version
+      - Collect status and routing outcomes
+      - Aggregate attempts and other counts
+      - Compare against an operational baseline
+    explanation: Counts and scope precede interpretation.
+  - id: a10-monitor-service-and-data-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def window_counts(rows):
+          output = {}
+          for version, status, review in rows:
+              counts = output.setdefault(version, {"attempted":0,"failed":0,"reviewed":0})
+              counts["attempted"] += 1
+              counts["failed"] += status != "ok"
+              counts["reviewed"] += status == "ok" and review
+          return output
+
+      print(window_counts([("v1", "ok", False)])["v1"]["reviewed"])
+    answer: "0"
+    explanation: The successful outcome was not a review.

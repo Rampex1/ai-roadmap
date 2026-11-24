@@ -1,0 +1,4 @@
+term: "Alert persistence"
+short: "A requirement that an observed condition continue across multiple valid windows before triggering an alert."
+body: "Alert persistence requires the trigger condition to hold in each of the last N consecutive valid windows. A single noisy window cannot fire it; a missing or undersized window resets the streak rather than counting as evidence."
+related: ["monitor-service-and-data","release-gate"]

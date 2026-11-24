@@ -1,0 +1,29 @@
+id: a10-triage-drift-alerts-01
+lesson: mle/a10/triage-drift-alerts
+title: Require repeated valid evidence
+prompt: Implement persistent_alert(windows, required, minimum, threshold). Require a positive required window count. The last required windows must each have count at least minimum and a nonmissing metric strictly above threshold. Insufficient history returns false.
+starter: |
+  def persistent_alert(windows, required, minimum, threshold):
+      raise NotImplementedError
+solution: |
+  def persistent_alert(windows, required, minimum, threshold):
+      if required <= 0:
+          raise ValueError("required windows must be positive")
+      return len(windows) >= required and all(
+          count >= minimum and metric is not None and metric > threshold
+          for count,metric in windows[-required:])
+tests: |
+  assert persistent_alert([(10,0.1),(20,0.4),(20,0.5)],2,20,0.3)
+  assert not persistent_alert([(20,0.4),(19,0.5)],2,20,0.3)
+  assert not persistent_alert([(20,0.4),(20,None)],2,20,0.3)
+  assert not persistent_alert([(20,0.3)],1,20,0.3)
+  assert not persistent_alert([],1,20,0.3)
+  assert not persistent_alert([(100,0.9)],2,50,0.2), "One window cannot satisfy a two-window requirement"
+  try:
+      persistent_alert([],0,20,0.3)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("Reject zero required windows")
+hints:
+  - Check recent consecutive evidence with a strict comparison.

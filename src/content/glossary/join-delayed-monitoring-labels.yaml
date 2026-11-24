@@ -1,0 +1,4 @@
+term: "Outcome coverage"
+short: "The share of observed predictions with a usable outcome by the reporting cutoff."
+body: "Outcome coverage is labelled predictions divided by all attempted predictions in a cohort, counting only labels available by the cutoff. Error rates computed on low or uneven coverage describe only the labelled subset, which may differ systematically from pending cases."
+related: ["label-delay","point-in-time-join"]

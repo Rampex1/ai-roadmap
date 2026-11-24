@@ -1,0 +1,22 @@
+id: a10-join-delayed-monitoring-labels-01
+lesson: mle/a10/join-delayed-monitoring-labels
+title: Replay labelled outcomes as of a cutoff
+prompt: Implement outcomes_at(predictions, labels, cutoff). Predictions are (request ID, version, binary prediction). Labels map ID to (available_time,binary label). Preserve prediction order and version. Attach None when there is no eligible label, including a label available only after cutoff.
+starter: |
+  def outcomes_at(predictions, labels, cutoff):
+      raise NotImplementedError
+solution: |
+  def outcomes_at(predictions, labels, cutoff):
+      result = []
+      for request_id, version, predicted in predictions:
+          label = labels.get(request_id)
+          actual = label[1] if label is not None and label[0] <= cutoff else None
+          result.append((request_id,version,predicted,actual))
+      return result
+tests: |
+  predictions=[("x","old",0),("y","new",1),("z","new",0)]
+  assert outcomes_at(predictions,{"x":(4,1),"y":(5,0)},4) == [("x","old",0,1),("y","new",1,None),("z","new",0,None)]
+  assert outcomes_at(predictions,{"x":(0,0)},0)[0] == ("x","old",0,0)
+  assert outcomes_at([],{},4) == []
+hints:
+  - Check label time before including a result, preserving zero labels.

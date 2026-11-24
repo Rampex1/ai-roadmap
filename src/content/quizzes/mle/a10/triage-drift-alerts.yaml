@@ -1,0 +1,91 @@
+items:
+  - id: a10-triage-drift-alerts-01
+    type: mcq
+    prompt: How does a missing window affect this streak?
+    explanation: The fixture requires each recent observation.
+    options:
+      - text: It breaks consecutive evidence
+        why: The fixture requires each recent observation.
+        correct: true
+      - text: It supplies automatic passing evidence
+        why: Missing is not above threshold.
+      - text: It permanently deletes the baseline
+        why: Baseline selection is separate.
+  - id: a10-triage-drift-alerts-02
+    type: mcq
+    prompt: What happens at metric equal to threshold?
+    explanation: The comparator is strictly above.
+    options:
+      - text: It does not trigger this rule
+        why: The comparator is strictly above.
+        correct: true
+      - text: It always triggers
+        why: That would require at least.
+      - text: It becomes missing
+        why: A value equal to threshold is observed.
+  - id: a10-triage-drift-alerts-03
+    type: mcq
+    prompt: What is a reasonable initial response to input drift?
+    explanation: Drift can have several causes.
+    options:
+      - text: Inspect traffic, feature path and matured outcomes
+        why: Drift can have several causes.
+        correct: true
+      - text: Retrain without identifying the issue
+        why: It may be a pipeline bug or unrelated shift.
+      - text: Delete old deployment versions
+        why: Version history helps triage.
+  - id: a10-triage-drift-alerts-04
+    type: mcq
+    prompt: Why declare minimum sample counts?
+    explanation: Counts affect confidence in a change.
+    options:
+      - text: Tiny windows produce unstable estimates
+        why: Counts affect confidence in a change.
+        correct: true
+      - text: Counts improve model weights directly
+        why: This is detection logic.
+      - text: It removes the need for labels forever
+        why: Quality still requires outcomes.
+  - id: a10-triage-drift-alerts-05
+    type: multi
+    prompt: Which should accompany an actionable alert?
+    explanation: Someone can investigate and act. These make it interpretable.
+    options:
+      - text: Reference, threshold and evidence counts
+        why: These make it interpretable.
+        correct: true
+      - text: Only a color on a chart
+        why: The decision and context would be missing.
+      - text: A responsible owner and triage path
+        why: Someone can investigate and act.
+        correct: true
+  - id: a10-triage-drift-alerts-06
+    type: cloze
+    prompt: Requiring a signal across multiple windows is alert ______.
+    accept:
+      - persistence
+    explanation: Persistence distinguishes repeated evidence from a single noisy point.
+  - id: a10-triage-drift-alerts-07
+    type: order
+    prompt: Order a drift incident response.
+    items:
+      - Confirm the measured windows meet the rule
+      - Check schema, releases and traffic slices
+      - Inspect labelled outcomes and examples
+      - Choose remediation and verify recovery
+    explanation: Investigate cause before retraining or rollback.
+  - id: a10-triage-drift-alerts-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def persistent_alert(windows, required, minimum, threshold):
+          if required <= 0:
+              raise ValueError("required windows must be positive")
+          return len(windows) >= required and all(
+              count >= minimum and metric is not None and metric > threshold
+              for count,metric in windows[-required:])
+
+      print(persistent_alert([(100, 0.9)], 2, 50, 0.2))
+    answer: "False"
+    explanation: One window is fewer than the two required.

@@ -1,0 +1,44 @@
+---
+title: Measure change in discrete feature distributions
+module: a10
+order: 2
+estMinutes: 8
+objectives:
+  - Distinguish train-serving skew from change over serving time
+  - Calculate total variation over a shared category union
+goDeeper: bigquery-model-monitoring-guide
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Train-serving skew compares training and inference inputs or their computation paths. Drift over time compares serving windows or another serving baseline. Both need explicit reference and current populations. Changing feature extraction can move distributions even if incoming cases are unchanged.
+
+<Term id="measure-input-drift" /> is zero for identical distributions and one when their supports do not overlap. Normalize each count histogram by its own total and use the union of categories. An absent category contributes probability zero. An empty histogram has no defined empirical distribution.
+
+Choose a stable binning scheme before comparing a numeric feature. Segment by channel and version to check whether a shift is a traffic mix effect. Input change is a diagnostic signal; delayed outcomes and qualitative review may be needed before inferring degraded decisions.
+
+## Worked example
+
+The share moving between two categories is 0.3.
+
+```python
+def total_variation(reference, current):
+    old_total, new_total = sum(reference.values()), sum(current.values())
+    if not old_total or not new_total:
+        return None
+    return sum(abs(reference.get(key,0)/old_total-current.get(key,0)/new_total)
+               for key in sorted(reference.keys() | current.keys())) / 2
+
+print(total_variation({"web":8,"app":2},{"web":5,"app":5}))
+```
+
+```text title="Output"
+0.30000000000000004
+```
+
+Check whether preprocessing or traffic mix explains a shift before acting on it.
+
+## Try it
+
+<CodeExercise id="a10-measure-input-drift-01" />

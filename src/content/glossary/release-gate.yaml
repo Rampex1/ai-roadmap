@@ -1,4 +1,4 @@
 term: "Release gate"
 short: "A predefined requirement that must pass before a deployment or rollout is advanced."
-body: "Verify rollback and fallback before granting the candidate more authority."
+body: "A predefined, checkable condition (minimum evidence, metric threshold, no critical incident, working rollback) that must hold before a rollout advances; insufficient evidence means hold, a failed condition means stop or roll back."
 related: ["canary-release","model-card"]

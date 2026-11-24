@@ -1,0 +1,93 @@
+items:
+  - id: a10-measure-input-drift-01
+    type: mcq
+    prompt: Why normalize separate histograms?
+    explanation: The comparison concerns distribution proportions.
+    options:
+      - text: Counts may all be negative
+        why: Inputs are nonnegative counts.
+      - text: Normalization supplies labels
+        why: It only converts counts to mass.
+      - text: Request volumes can differ
+        why: The comparison concerns distribution proportions.
+        correct: true
+  - id: a10-measure-input-drift-02
+    type: mcq
+    prompt: What is the distance for disjoint categorical distributions?
+    explanation: All mass differs across the union.
+    options:
+      - text: One
+        why: All mass differs across the union.
+        correct: true
+      - text: Zero
+        why: Zero requires identical masses.
+      - text: Unknown whenever categories differ
+        why: The union supports missing category values.
+  - id: a10-measure-input-drift-03
+    type: mcq
+    prompt: What can a large input distance establish?
+    explanation: It is descriptive of that feature and window.
+    options:
+      - text: The measured feature distribution changed
+        why: It is descriptive of that feature and window.
+        correct: true
+      - text: The model must be retrained immediately
+        why: Quality implications need investigation.
+      - text: The true label rules changed for sure
+        why: Input distributions cannot prove concept drift.
+  - id: a10-measure-input-drift-04
+    type: mcq
+    prompt: Why fix bin edges when comparing numeric features?
+    explanation: Moving bins changes the comparison basis.
+    options:
+      - text: It doubles every model probability
+        why: Binning is diagnostic.
+      - text: It prevents changes in traffic
+        why: It only makes the measurement comparable.
+      - text: Both histograms must describe the same categories
+        why: Moving bins changes the comparison basis.
+        correct: true
+  - id: a10-measure-input-drift-05
+    type: multi
+    prompt: Which explain a distribution change without proven quality loss?
+    explanation: Different cohorts can have different feature distributions. The same raw input can be represented differently.
+    options:
+      - text: A traffic mix shift
+        why: Different cohorts can have different feature distributions.
+        correct: true
+      - text: A preprocessing rollout
+        why: The same raw input can be represented differently.
+        correct: true
+      - text: A proven score decline without any evaluation
+        why: A decline first needs outcome evidence.
+  - id: a10-measure-input-drift-06
+    type: cloze
+    prompt: A persistent shift over serving time is data ______.
+    accept:
+      - drift
+      - feature drift
+      - shift
+    explanation: Drift is measured relative to a specified reference.
+  - id: a10-measure-input-drift-07
+    type: order
+    prompt: Order a drift comparison.
+    items:
+      - Choose reference and observation windows
+      - Build comparable histograms
+      - Normalize and calculate distance
+      - Inspect affected categories and slices
+    explanation: The category contract must be shared.
+  - id: a10-measure-input-drift-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def total_variation(reference, current):
+          old_total, new_total = sum(reference.values()), sum(current.values())
+          if not old_total or not new_total:
+              return None
+          return sum(abs(reference.get(key,0)/old_total-current.get(key,0)/new_total)
+                     for key in sorted(reference.keys() | current.keys())) / 2
+
+      print(total_variation({"a":1}, {"a":1,"b":1}))
+    answer: "0.5"
+    explanation: Half of total absolute mass difference is 0.5.

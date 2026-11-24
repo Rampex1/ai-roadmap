@@ -1,0 +1,44 @@
+---
+title: Measure traffic and failures by model version
+module: a10
+order: 1
+estMinutes: 8
+objectives:
+  - Keep operational latency and error signals distinct from model quality
+  - Use explicit counts and versioned time windows
+goDeeper: bigquery-model-monitoring-guide
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="monitor-service-and-data" /> should show attempts, errors, latency on successful calls, and model version. Predictions alone cannot prove predictive quality. Track invalid or unavailable responses separately from successful cases routed to review. A rise in review load can be operationally important without being an HTTP error.
+
+Track schema validation failures and missing features as input signals. Preserve a stable baseline and observation window to support comparisons. Avoid mixing multiple model versions in one alert without labels. The fixture reports simple counts rather than retaining raw request content.
+
+## Worked example
+
+Review is a successful policy outcome in the fixture.
+
+```python
+def window_counts(rows):
+    output = {}
+    for version, status, review in rows:
+        counts = output.setdefault(version, {"attempted":0,"failed":0,"reviewed":0})
+        counts["attempted"] += 1
+        counts["failed"] += status != "ok"
+        counts["reviewed"] += status == "ok" and review
+    return output
+
+print(window_counts([("v1","ok",True),("v1","timeout",False),("v2","ok",False)]))
+```
+
+```text title="Output"
+{'v1': {'attempted': 2, 'failed': 1, 'reviewed': 1}, 'v2': {'attempted': 1, 'failed': 0, 'reviewed': 0}}
+```
+
+Attach service, feature and outcome metrics to explicit time windows and model identities.
+
+## Try it
+
+<CodeExercise id="a10-monitor-service-and-data-01" />

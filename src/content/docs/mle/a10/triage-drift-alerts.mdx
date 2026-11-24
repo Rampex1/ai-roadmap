@@ -1,0 +1,44 @@
+---
+title: Set robust alerts and triage before acting
+module: a10
+order: 4
+estMinutes: 8
+objectives:
+  - Use persistence and sample rules to dampen noise
+  - Diagnose likely sources before model retraining
+goDeeper: bigquery-model-monitoring-guide
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+An alert should have an owner and decision, not just a chart. Choose a baseline, minimum sample and threshold suited to the metric. Use <Term id="triage-drift-alerts" /> for ordinary noisy signals and a separate immediate path for critical incidents. Missing evidence must be handled explicitly.
+
+Triage by checking deployment version, feature schema, data freshness, per-slice distributions and service errors. Then examine matured labels and representative cases. A traffic change can require a policy or product adjustment, while a pipeline bug may need rollback. Automatic retraining is not a general fix for unexplained signals.
+
+The fixture checks the most recent consecutive windows. Each must meet the minimum count and exceed the configured threshold. A missing or small window breaks the streak; a separate data-quality alert can track that condition.
+
+## Worked example
+
+Both recent windows have enough traffic and exceed the limit.
+
+```python
+def persistent_alert(windows, required, minimum, threshold):
+    if required <= 0:
+        raise ValueError("required windows must be positive")
+    return len(windows) >= required and all(
+        count >= minimum and metric is not None and metric > threshold
+        for count,metric in windows[-required:])
+
+print(persistent_alert([(100,0.4),(110,0.3)],2,100,0.25))
+```
+
+```text title="Output"
+True
+```
+
+Define what happens after an alert and validate the cause with outcomes or controlled evidence.
+
+## Try it
+
+<CodeExercise id="a10-triage-drift-alerts-01" />

@@ -1,0 +1,4 @@
+term: "Goodput"
+short: "The rate of useful completed work, often successes that meet a specified latency target."
+body: "Unlike raw throughput, goodput leaves out failures, timeouts and successes that miss the latency objective. It is computed as qualifying completions divided by the length of the measurement window, at a stated offered load."
+related: ["latency","canary-release"]

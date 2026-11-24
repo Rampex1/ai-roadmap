@@ -1,0 +1,43 @@
+---
+title: Join delayed labels without hiding missing outcomes
+module: a10
+order: 3
+estMinutes: 8
+objectives:
+  - Match predictions to labels by identity and availability
+  - Preserve denominators for pending cases
+goDeeper: bigquery-model-monitoring-guide
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Outcome-based monitoring arrives later than traffic and input diagnostics. Join predictions to labels using stable IDs and label availability. A future label should not appear in a historical report. If there are corrections, choose the latest revision actually available by the cutoff. Preserve the model version from the prediction instead of the currently deployed version.
+
+Low <Term id="join-delayed-monitoring-labels" /> can make an observed error rate misleading. Reporting channels can differ by group and outcome. Compare cohorts at similar maturity and retain the denominator of attempted predictions. An unknown label is pending rather than negative. This fixture assumes at most one label record per identity.
+
+## Worked example
+
+The second prediction exists but its label is not available by time five.
+
+```python
+def outcomes_at(predictions, labels, cutoff):
+    result = []
+    for request_id, version, predicted in predictions:
+        label = labels.get(request_id)
+        actual = label[1] if label is not None and label[0] <= cutoff else None
+        result.append((request_id,version,predicted,actual))
+    return result
+
+print(outcomes_at([("r1","v1",1),("r2","v2",0)], {"r1":(3,1),"r2":(8,1)}, 5))
+```
+
+```text title="Output"
+[('r1', 'v1', 1, 1), ('r2', 'v2', 0, None)]
+```
+
+Report labelled and attempted counts together, especially when comparing cohorts of different ages.
+
+## Try it
+
+<CodeExercise id="a10-join-delayed-monitoring-labels-01" />

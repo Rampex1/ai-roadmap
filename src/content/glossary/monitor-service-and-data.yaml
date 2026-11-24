@@ -1,0 +1,4 @@
+term: "Serving window"
+short: "A bounded observation interval whose traffic, version, measurements and denominators are recorded together."
+body: "A serving window fixes the start and end times, model version and denominators behind a set of service, input and outcome metrics, so that two windows or two versions can be compared on the same basis."
+related: ["inference-telemetry","goodput"]

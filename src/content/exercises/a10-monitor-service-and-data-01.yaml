@@ -1,0 +1,22 @@
+id: a10-monitor-service-and-data-01
+lesson: mle/a10/monitor-service-and-data
+title: Count service outcomes per version
+prompt: Implement window_counts(rows) for (version, status, review Boolean) tuples. All rows are attempted. Non-ok status is failed. Count review only on ok rows.
+starter: |
+  def window_counts(rows):
+      raise NotImplementedError
+solution: |
+  def window_counts(rows):
+      output = {}
+      for version, status, review in rows:
+          counts = output.setdefault(version, {"attempted":0,"failed":0,"reviewed":0})
+          counts["attempted"] += 1
+          counts["failed"] += status != "ok"
+          counts["reviewed"] += status == "ok" and review
+      return output
+tests: |
+  assert window_counts([("v","ok",True),("v","timeout",True)]) == {"v":{"attempted":2,"failed":1,"reviewed":1}}
+  assert window_counts([("a","ok",False),("b","invalid",False)])["b"]["failed"] == 1
+  assert window_counts([]) == {}
+hints:
+  - Include every row in attempts before classifying its outcome.

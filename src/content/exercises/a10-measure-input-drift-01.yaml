@@ -1,0 +1,22 @@
+id: a10-measure-input-drift-01
+lesson: mle/a10/measure-input-drift
+title: Calculate categorical total variation
+prompt: Implement total_variation(reference,current) for dictionaries with string categories and nonnegative counts. Compare normalized masses across all categories and return None if either histogram has zero total.
+starter: |
+  def total_variation(reference, current):
+      raise NotImplementedError
+solution: |
+  def total_variation(reference, current):
+      old_total, new_total = sum(reference.values()), sum(current.values())
+      if not old_total or not new_total:
+          return None
+      return sum(abs(reference.get(key,0)/old_total-current.get(key,0)/new_total)
+                 for key in sorted(reference.keys() | current.keys())) / 2
+tests: |
+  assert abs(total_variation({"a":8,"b":2},{"a":5,"b":5})-0.3) < 1e-12
+  assert total_variation({"a":2},{"b":3}) == 1
+  assert total_variation({"a":2,"b":3},{"b":6,"a":4}) == 0
+  assert total_variation({"a":0},{"a":1}) is None
+  assert total_variation({"a":1},{}) is None
+hints:
+  - Each histogram needs its own denominator.

@@ -4,5 +4,7 @@ title: "Monitoring and drift"
 order: 10
 prereqs: ["a9"]
 objectives:
-  - "Explain the core ideas of monitoring and drift"
-  - "Apply monitoring and drift to a working ML project"
+  - Separate traffic, service quality, input shift and predictive quality metrics
+  - Quantify distribution change on an explicit reference and feature space
+  - Join delayed labels to versioned predictions without losing coverage
+  - Use actionable alert rules and investigate before retraining
