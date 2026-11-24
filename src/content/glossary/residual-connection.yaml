@@ -1,0 +1,7 @@
+term: "Residual connection"
+short: "Adding a layer's input to its output, x + f(x), so the layer learns a change rather than a replacement."
+body: |
+  Also called a skip connection. The identity path lets gradients flow directly to early layers, which
+  makes very deep networks such as transformers trainable, and a layer that has learned nothing useful can
+  simply output nearly zero.
+related: ["transformer", "backpropagation"]

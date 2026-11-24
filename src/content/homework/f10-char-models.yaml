@@ -1,0 +1,37 @@
+id: f10-char-models
+module: f10
+kind: homework
+title: "From a bigram model to a tiny attention model"
+brief: |
+  Train two character-level language models on the opening of *Alice's Adventures in Wonderland* (public
+  domain, included in the notebook, so nothing is downloaded) and compare them. Download the notebook and
+  open it in [Google Colab](https://colab.research.google.com/) (File > Upload notebook), where PyTorch is
+  preinstalled, or in local Jupyter with PyTorch. The CPU runtime is enough.
+
+  Each task has `TODO` cells and a check cell that prints `OK` when your code is right:
+
+  1. **A1, vocabulary:** `chars`, `stoi`, `itos`, `encode` and `decode`, with a round-trip check.
+  2. **A2, count bigram model:** `bigram_probs` with add-α smoothing and `avg_nll`; compare train and
+     validation loss and perplexity for three values of α and pick the best.
+  3. **A3, sampling:** generate text from the count model with a seeded `torch.Generator`.
+  4. **B1, batches:** `get_batch` returning input windows and the same windows shifted by one.
+  5. **B2, neural bigram:** an `nn.Embedding(V, V)` model trained with cross-entropy, which should match
+     the count model's validation loss.
+  6. **B3, TinyGPT:** causal self-attention heads and a one-block transformer (embeddings plus positions,
+     attention and MLP with residuals and layer norm). It must pass a causality check and beat the bigram
+     model's validation loss by at least 0.15 nats.
+  7. **B4, generation:** autoregressive sampling with temperature; compare samples from both models at
+     temperatures 0.5 and 1.0.
+  8. **C, explain:** a table of validation losses and perplexities, what attention lets the model get
+     right, the effect of temperature, and the train/validation gap.
+
+  A stretch task loads pretrained GloVe word vectors with `gensim` (a 66 MB download) to explore nearest
+  neighbours, analogies and gendered associations.
+notebook: /homework/f10-char-models.ipynb
+rubric:
+  - "Every check cell for A1, A2, A3, B1, B2, B3 and B4 prints OK after restarting and running all cells"
+  - "The count bigram model is fitted on the training split only, and the chosen alpha has the lowest validation loss"
+  - "TinyGPT passes the causality check and its validation loss is at least 0.15 below the bigram model's"
+  - "The loss curves of both networks are plotted with labelled axes and the uniform ln V baseline"
+  - "The Part C answers use your own numbers and samples, including a loss and perplexity table and an explanation of the train/validation gap"
+compute: "Any laptop or free Colab CPU runtime, under 5 minutes in total (the solution ran in about 30 seconds on a laptop CPU); no GPU and no downloads needed, except about 66 MB for the optional stretch task"

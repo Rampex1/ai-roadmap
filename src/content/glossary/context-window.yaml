@@ -1,0 +1,7 @@
+term: "Context window"
+short: "The maximum number of tokens a language model can take into account at once, counting the prompt and the generated output together."
+body: |
+  Anything outside the window is invisible to the model. Applications that chat for a long time must drop
+  or summarise old messages. Attention cost grows with the square of the sequence length in the basic
+  transformer, so long contexts are slower and more expensive.
+related: ["token", "large-language-model", "attention"]

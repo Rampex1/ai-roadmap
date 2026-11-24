@@ -1,0 +1,97 @@
+id: f10-tokens-01
+lesson: foundations/f10/tokens
+title: One step of byte-pair encoding
+prompt: |
+  A corpus is a dictionary that maps each word, written as a **tuple of symbols**, to how often it occurs,
+  for example `{("l", "o", "w", "</w>"): 5, ("n", "e", "w", "</w>"): 2}`.
+
+  Write three functions:
+
+  - `pair_counts(words)` returns a `dict` (a `Counter` is fine) mapping each adjacent pair of symbols, such
+    as `("l", "o")`, to its total count, weighting each word by its frequency.
+  - `best_pair(words)` returns the most frequent pair. **If several pairs tie, return the one that comes
+    first in alphabetical order** (the smallest tuple). Return `None` if no word has two symbols.
+  - `merge(words, pair)` returns a **new** dictionary in which every occurrence of the pair, scanning each
+    word from left to right, is replaced by one symbol joining the two strings (`"l" + "o"` gives `"lo"`).
+    Counts stay with their words. Do not change the input dictionary.
+
+  Merging `("a", "a")` in `("a", "a", "a")` gives `("aa", "a")`: once two symbols are merged, the scan
+  moves past both.
+starter: |
+  from collections import Counter
+
+  def pair_counts(words):
+      counts = Counter()
+      for symbols, freq in words.items():
+          for pair in zip(symbols, symbols[1:]):
+              counts[pair] += 1
+      return counts
+
+  def best_pair(words):
+      counts = pair_counts(words)
+      return max(counts, key=counts.get)
+
+  def merge(words, pair):
+      return words
+solution: |
+  from collections import Counter
+
+  def pair_counts(words):
+      counts = Counter()
+      for symbols, freq in words.items():
+          for pair in zip(symbols, symbols[1:]):
+              counts[pair] += freq
+      return counts
+
+  def best_pair(words):
+      counts = pair_counts(words)
+      if not counts:
+          return None
+      return min(counts, key=lambda p: (-counts[p], p))
+
+  def merge(words, pair):
+      a, b = pair
+      out = {}
+      for symbols, freq in words.items():
+          new, i = [], 0
+          while i < len(symbols):
+              if i < len(symbols) - 1 and symbols[i] == a and symbols[i + 1] == b:
+                  new.append(a + b)
+                  i += 2
+              else:
+                  new.append(symbols[i])
+                  i += 1
+          out[tuple(new)] = freq
+      return out
+tests: |
+  _w = {("l", "o", "w", "</w>"): 5, ("l", "o", "w", "e", "r", "</w>"): 2,
+        ("n", "e", "w", "e", "s", "t", "</w>"): 6, ("w", "i", "d", "e", "s", "t", "</w>"): 3}
+  _c = pair_counts(_w)
+  assert _c is not None, "pair_counts returned None"
+  assert dict(_c).get(("e", "s")) == 9, f"('e', 's') appears 6 times in newest and 3 in widest, so its count is 9, got {dict(_c).get(('e', 's'))}: weight each pair by the word frequency"
+  assert dict(_c).get(("l", "o")) == 7, "('l', 'o') should count 5 + 2 = 7"
+  assert dict(_c).get(("w", "e")) == 8, "('w', 'e') should count 2 (lower) + 6 (newest) = 8"
+  assert len([k for k, v in dict(_c).items() if v > 0]) == 14, "there are 14 distinct adjacent pairs in this corpus"
+  assert best_pair(_w) == ("e", "s"), f"three pairs tie at 9; the alphabetically first is ('e', 's'), got {best_pair(_w)}"
+  assert best_pair({("x", "y"): 1, ("a", "b"): 1}) == ("a", "b"), "on a tie, return the smallest pair in alphabetical order"
+  assert best_pair({("b", "c"): 4, ("a", "b"): 1}) == ("b", "c"), "the most frequent pair should win even if another pair is alphabetically first"
+  assert best_pair({("a",): 3}) is None, "with no adjacent pairs, best_pair should return None"
+  _before = dict(_w)
+  _m = merge(_w, ("e", "s"))
+  assert _w == _before, "merge must not change the input dictionary"
+  assert _m == {("l", "o", "w", "</w>"): 5, ("l", "o", "w", "e", "r", "</w>"): 2,
+                ("n", "e", "w", "es", "t", "</w>"): 6, ("w", "i", "d", "es", "t", "</w>"): 3}, f"merge(('e', 's')) gave {_m}"
+  assert merge({("a", "a", "a"): 4}, ("a", "a")) == {("aa", "a"): 4}, "('a','a','a') merged on ('a','a') should give ('aa', 'a')"
+  assert merge({("a", "a", "a", "a"): 1}, ("a", "a")) == {("aa", "aa"): 1}, "('a','a','a','a') should give ('aa', 'aa')"
+  _x = {("h", "u", "g"): 10, ("p", "u", "g"): 5, ("p", "u", "n"): 12, ("b", "u", "n"): 4, ("h", "u", "g", "s"): 5}
+  _seq = []
+  for _ in range(3):
+      _p = best_pair(_x)
+      _seq.append(_p)
+      _x = merge(_x, _p)
+  assert _seq == [("u", "g"), ("u", "n"), ("h", "ug")], f"three merges on the hug/pug/pun corpus should be ug, un, hug; got {_seq}"
+  assert _x == {("hug",): 10, ("p", "ug"): 5, ("p", "un"): 12, ("b", "un"): 4, ("hug", "s"): 5}, f"after three merges got {_x}"
+hints:
+  - "In pair_counts add freq, not 1, for every pair in a word."
+  - "min(counts, key=lambda p: (-counts[p], p)) picks the highest count and breaks ties alphabetically."
+  - "In merge walk with an index i; when symbols[i] and symbols[i + 1] form the pair, append a + b and move i forward by 2."

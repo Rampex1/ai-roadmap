@@ -1,0 +1,84 @@
+id: f10-attention-01
+lesson: foundations/f10/attention
+title: Scaled dot-product attention with a causal mask
+prompt: |
+  Write `attention(Q, K, V, causal=False)` for `Q` of shape `(T, d_k)`, `K` of shape `(T, d_k)` and `V`
+  of shape `(T, d_v)`. It returns a pair `(out, A)`:
+
+  - `A`, shape `(T, T)`: the softmax of each row of $QK^\top / \sqrt{d_k}$. If `causal` is true, first
+    set every score above the diagonal (column `j` greater than row `i`) to `-np.inf`.
+  - `out = A @ V`, shape `(T, d_v)`.
+
+  Use a stable softmax along each row. The lesson's worked example is printed by the starter; the
+  tests also compare your function with a reference on random inputs of several sizes.
+starter: |
+  import numpy as np
+
+  def attention(Q, K, V, causal=False):
+      S = Q @ K.T
+      A = np.exp(S) / np.exp(S).sum()
+      return A @ V, A
+
+  Q = np.array([[1.0, 0.0], [0.0, 2.0], [1.0, 1.0]])
+  K = np.array([[2.0, 0.0], [0.0, 1.0], [1.0, 1.0]])
+  V = np.array([[1.0, 0.0], [0.0, 1.0], [5.0, 5.0]])
+  out, A = attention(Q, K, V, causal=True)
+  print(np.round(A, 3))
+  print(np.round(out, 3))
+solution: |
+  import numpy as np
+
+  def attention(Q, K, V, causal=False):
+      T, d_k = Q.shape[0], K.shape[1]
+      S = Q @ K.T / np.sqrt(d_k)
+      if causal:
+          S = np.where(np.triu(np.ones((T, K.shape[0]), dtype=bool), k=1), -np.inf, S)
+      S = S - S.max(axis=1, keepdims=True)
+      E = np.exp(S)
+      A = E / E.sum(axis=1, keepdims=True)
+      return A @ V, A
+
+  Q = np.array([[1.0, 0.0], [0.0, 2.0], [1.0, 1.0]])
+  K = np.array([[2.0, 0.0], [0.0, 1.0], [1.0, 1.0]])
+  V = np.array([[1.0, 0.0], [0.0, 1.0], [5.0, 5.0]])
+  out, A = attention(Q, K, V, causal=True)
+  print(np.round(A, 3))
+  print(np.round(out, 3))
+tests: |
+  import numpy as np
+  def _ref(Q, K, V, causal):
+      S = Q @ K.T / np.sqrt(K.shape[1])
+      if causal:
+          S = S + np.triu(np.full(S.shape, -np.inf), k=1)
+      S = S - S.max(axis=1, keepdims=True)
+      A = np.exp(S); A = A / A.sum(axis=1, keepdims=True)
+      return A @ V, A
+  _Q = np.array([[1.0, 0.0], [0.0, 2.0], [1.0, 1.0]])
+  _K = np.array([[2.0, 0.0], [0.0, 1.0], [1.0, 1.0]])
+  _V = np.array([[1.0, 0.0], [0.0, 1.0], [5.0, 5.0]])
+  _res = attention(_Q, _K, _V)
+  assert isinstance(_res, tuple) and len(_res) == 2, "attention should return a pair (out, A)"
+  _o, _A = _res
+  np.testing.assert_allclose(_A, [[0.576, 0.140, 0.284], [0.108, 0.446, 0.446], [0.401, 0.198, 0.401]], atol=1e-3, err_msg="weights for the worked example are wrong: divide the scores by sqrt(d_k) and softmax each row")
+  np.testing.assert_allclose(_o, [[1.996, 1.560], [2.337, 2.675], [2.407, 2.203]], atol=1e-3, err_msg="out should be A @ V")
+  _o, _A = attention(_Q, _K, _V, causal=True)
+  np.testing.assert_allclose(_A, [[1, 0, 0], [0.196, 0.804, 0], [0.401, 0.198, 0.401]], atol=1e-3, err_msg="with causal=True the weights above the diagonal must be 0")
+  _rng = np.random.default_rng(0)
+  for _T, _dk, _dv in [(4, 8, 8), (6, 3, 5), (1, 4, 2), (10, 16, 4)]:
+      _Qr, _Kr, _Vr = _rng.normal(size=(_T, _dk)) * 3, _rng.normal(size=(_T, _dk)) * 3, _rng.normal(size=(_T, _dv))
+      for _c in [False, True]:
+          _o, _A = attention(_Qr, _Kr, _Vr, causal=_c)
+          _ro, _rA = _ref(_Qr, _Kr, _Vr, _c)
+          assert np.shape(_o) == (_T, _dv) and np.shape(_A) == (_T, _T), f"shapes should be ({_T}, {_dv}) and ({_T}, {_T})"
+          assert np.all(np.isfinite(_A)), "weights contain nan or inf: use a stable softmax along each row"
+          np.testing.assert_allclose(_A, _rA, atol=1e-10, err_msg=f"weights differ from the reference (T={_T}, d_k={_dk}, causal={_c})")
+          np.testing.assert_allclose(_o, _ro, atol=1e-10, err_msg=f"outputs differ from the reference (T={_T}, causal={_c})")
+          if _c:
+              assert np.all(np.triu(_A, k=1) == 0), "causal weights must be exactly 0 above the diagonal"
+  _big = np.array([[30.0, 0.0], [0.0, 30.0]])
+  _o, _A = attention(_big, _big, np.eye(2))
+  assert np.all(np.isfinite(_A)), "large scores overflowed: subtract each row maximum before np.exp"
+hints:
+  - "Scores: S = Q @ K.T / np.sqrt(d_k), shape (T, T)."
+  - "np.triu(np.ones((T, T), dtype=bool), k=1) is True exactly where j > i; use np.where to put -np.inf there."
+  - "Softmax each row: subtract S.max(axis=1, keepdims=True), exponentiate, divide by the row sums."

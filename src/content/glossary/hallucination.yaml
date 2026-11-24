@@ -1,0 +1,7 @@
+term: "Hallucination"
+short: "Fluent, confident output from a language model that is false or unsupported, such as an invented citation."
+body: |
+  It follows from training on next-token prediction: a plausible-looking continuation is likely text even
+  when it is untrue. Post-training and retrieving real sources into the prompt reduce it, but specific
+  claims from an LLM should be checked.
+related: ["large-language-model", "knowledge-cutoff"]

@@ -1,0 +1,76 @@
+id: f10-language-models-02
+lesson: foundations/f10/language-models
+title: Sampling with temperature and top-k
+prompt: |
+  Write two functions for a 1-D array of logits:
+
+  1. `next_token_probs(logits, temperature=1.0, top_k=None)`:
+     - if `top_k` is given, keep only the `top_k` largest logits and set the others to `-np.inf`;
+     - divide the logits by `temperature`;
+     - return the softmax (subtract the maximum first for stability).
+  2. `sample(logits, rng, temperature=1.0, top_k=None)` computes those probabilities `p` and returns
+     **exactly** `int(rng.choice(len(p), p=p))`, so that a seeded `np.random.default_rng` gives
+     reproducible samples. The tests compare your samples with a reference that uses the same seed.
+
+  You may assume `temperature > 0` and that the logits have no ties around the top-k cut.
+starter: |
+  import numpy as np
+
+  def next_token_probs(logits, temperature=1.0, top_k=None):
+      e = np.exp(logits)
+      return e / e.sum()
+
+  def sample(logits, rng, temperature=1.0, top_k=None):
+      return int(np.argmax(logits))
+
+  print(next_token_probs(np.array([2.0, 1.0, 0.0]), temperature=0.5))
+solution: |
+  import numpy as np
+
+  def next_token_probs(logits, temperature=1.0, top_k=None):
+      z = np.array(logits, dtype=float)
+      if top_k is not None:
+          cut = np.sort(z)[-top_k]
+          z = np.where(z >= cut, z, -np.inf)
+      z = z / temperature
+      e = np.exp(z - z.max())
+      return e / e.sum()
+
+  def sample(logits, rng, temperature=1.0, top_k=None):
+      p = next_token_probs(logits, temperature, top_k)
+      return int(rng.choice(len(p), p=p))
+
+  print(next_token_probs(np.array([2.0, 1.0, 0.0]), temperature=0.5))
+tests: |
+  import numpy as np
+  def _ref_p(z, T=1.0, k=None):
+      z = np.array(z, dtype=float)
+      if k is not None:
+          keep = np.argsort(z)[-k:]
+          m = np.full_like(z, -np.inf); m[keep] = z[keep]; z = m
+      z = z / T
+      e = np.exp(z - z.max())
+      return e / e.sum()
+  _l = np.array([2.0, 1.0, 0.0])
+  np.testing.assert_allclose(next_token_probs(_l), [0.665, 0.245, 0.090], atol=1e-3, err_msg="at temperature 1 the result is the plain softmax")
+  np.testing.assert_allclose(next_token_probs(_l, temperature=0.5), [0.867, 0.117, 0.016], atol=1e-3, err_msg="temperature 0.5 should sharpen: divide the logits by the temperature")
+  np.testing.assert_allclose(next_token_probs(_l, temperature=2.0), [0.506, 0.307, 0.186], atol=1e-3, err_msg="temperature 2 should flatten the distribution")
+  _p = next_token_probs(np.array([1000.0, 999.0, 0.0]))
+  assert np.all(np.isfinite(_p)), "next_token_probs overflowed: subtract the maximum logit before np.exp"
+  np.testing.assert_allclose(next_token_probs(np.array([2.0, 1.0, 0.5, -1.0]), top_k=2), [0.731, 0.269, 0, 0], atol=1e-3, err_msg="top_k=2 should keep only the two largest logits")
+  _rng = np.random.default_rng(1)
+  _z = _rng.normal(0, 2, size=10)
+  for _T, _k in [(1.0, None), (0.7, 3), (1.5, 5), (0.3, None)]:
+      np.testing.assert_allclose(next_token_probs(_z, _T, _k), _ref_p(_z, _T, _k), atol=1e-12, err_msg=f"wrong probabilities for temperature={_T}, top_k={_k}")
+      _ra, _rb = np.random.default_rng(42), np.random.default_rng(42)
+      _mine = [sample(_z, _ra, _T, _k) for _ in range(50)]
+      _pr = _ref_p(_z, _T, _k)
+      _theirs = [int(_rb.choice(len(_pr), p=_pr)) for _ in range(50)]
+      assert _mine == _theirs, f"with the same seed, sample should match int(rng.choice(len(p), p=p)) for temperature={_T}, top_k={_k}"
+      if _k is not None:
+          _allowed = set(np.argsort(_z)[-_k:].tolist())
+          assert set(_mine) <= _allowed, f"top_k={_k} sampled a token outside the top {_k}"
+hints:
+  - "For top-k, find the k-th largest logit with np.sort(z)[-k] and set every smaller logit to -np.inf."
+  - "Divide by the temperature before the softmax; np.exp(-np.inf) is 0, so masked tokens get probability 0."
+  - "In sample, call rng.choice(len(p), p=p) exactly once and convert the result with int()."

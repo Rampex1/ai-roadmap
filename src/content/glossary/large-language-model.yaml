@@ -1,0 +1,7 @@
+term: "Large language model"
+short: "A transformer language model with billions of parameters, pretrained on huge text corpora and usually tuned to follow instructions; abbreviated LLM."
+body: |
+  LLMs generate text one token at a time. They are strong at language tasks, code and learning from
+  examples in the prompt, but they can hallucinate, have a knowledge cutoff and keep no memory between
+  calls.
+related: ["language-model", "transformer", "hallucination", "context-window"]

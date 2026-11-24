@@ -1,0 +1,6 @@
+term: "Knowledge cutoff"
+short: "The date after which a language model's training data stops, so it knows nothing about later events."
+body: |
+  A model may not know its own cutoff precisely. Current information has to be supplied in the prompt, for
+  example by search or retrieval.
+related: ["large-language-model", "hallucination"]

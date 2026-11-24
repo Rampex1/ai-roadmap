@@ -1,0 +1,7 @@
+term: "RLHF"
+short: "Reinforcement learning from human feedback: tuning a language model towards responses that people prefer, using a reward model trained on human comparisons."
+body: |
+  People rank pairs of responses, a reward model learns to predict those preferences, and the language
+  model is optimised for high reward with a KL penalty that keeps it close to its starting point. Direct
+  preference optimisation (DPO) is a simpler alternative that learns from the preference pairs directly.
+related: ["instruction-tuning", "pretraining", "kl-divergence"]

@@ -1,0 +1,8 @@
+term: "Attention"
+short: "A mechanism in which each position takes a weighted average of value vectors, with weights from a softmax of query-key dot products."
+body: |
+  Scaled dot-product attention computes softmax(Q Kᵀ / √d_k) V. Each row of the weight matrix sums to 1
+  and says how much one position draws from every other position. In self-attention the queries, keys and
+  values all come from the same sequence. Multi-head attention runs several smaller attentions in
+  parallel.
+related: ["dot-product", "softmax", "transformer", "causal-mask"]

@@ -1,0 +1,7 @@
+term: "Perplexity"
+short: "The exponential of a language model's average cross-entropy loss per token: the effective number of tokens it is choosing between."
+body: |
+  A model that spreads probability uniformly over V tokens has perplexity V; a perfect model has
+  perplexity 1. Lower is better. Perplexities are only comparable between models that use the same
+  tokeniser and test text.
+related: ["cross-entropy", "language-model", "entropy"]

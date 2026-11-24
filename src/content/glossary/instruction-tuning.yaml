@@ -1,0 +1,6 @@
+term: "Instruction tuning"
+short: "Supervised fine-tuning of a pretrained language model on examples of instructions paired with good responses."
+body: |
+  The loss is still next-token cross-entropy, usually only on the response tokens. It teaches the model
+  the format of being a helpful assistant; preference tuning such as RLHF usually follows.
+related: ["pretraining", "rlhf", "large-language-model"]

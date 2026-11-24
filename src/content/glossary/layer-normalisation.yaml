@@ -1,0 +1,7 @@
+term: "Layer normalisation"
+short: "Rescaling each position's feature vector to mean 0 and variance 1, then applying a learned scale and shift."
+body: |
+  LN(x) = γ ⊙ (x − μ) / √(σ² + ε) + β, with μ and σ² computed across the features of one vector.
+  Transformers apply it before (pre-norm) or after (post-norm) each sub-layer to keep activations at a
+  stable scale. RMSNorm is a simpler variant that skips the mean subtraction.
+related: ["transformer", "residual-connection"]

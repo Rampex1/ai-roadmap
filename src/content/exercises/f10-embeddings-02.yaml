@@ -1,0 +1,62 @@
+id: f10-embeddings-02
+lesson: foundations/f10/embeddings
+title: Nearest neighbours by cosine similarity
+prompt: |
+  `E` is an embedding matrix with one row per word, and `words` is the list of words in the same order.
+
+  1. `cosine_matrix(E)` returns the matrix `S` with `S[i, j]` equal to the cosine similarity of rows `i`
+     and `j`. Normalise every row to length 1, then use one matrix product.
+  2. `nearest(word, words, E, k)` returns a list of the `k` **other** words most similar to `word`, most
+     similar first. Never include `word` itself, even if another row is identical to it.
+
+  Example with the lesson's table: `nearest("cat", words, E, 2)` gives `["dog", "man"]`.
+starter: |
+  import numpy as np
+
+  def cosine_matrix(E):
+      return E @ E.T
+
+  def nearest(word, words, E, k):
+      S = cosine_matrix(E)
+      i = words.index(word)
+      order = np.argsort(S[i])
+      return [words[j] for j in order[:k]]
+solution: |
+  import numpy as np
+
+  def cosine_matrix(E):
+      En = E / np.linalg.norm(E, axis=1, keepdims=True)
+      return En @ En.T
+
+  def nearest(word, words, E, k):
+      S = cosine_matrix(E)
+      i = words.index(word)
+      order = [j for j in np.argsort(-S[i]) if j != i]
+      return [words[j] for j in order[:k]]
+tests: |
+  import numpy as np
+  _words = ["king", "queen", "man", "woman", "cat", "dog", "apple", "bread"]
+  _E = np.array([[0.9, 0.5, 0.1, 0.0], [0.9, -0.5, 0.1, 0.0], [0.1, 0.6, 0.2, 0.0], [0.1, -0.6, 0.2, 0.0],
+                 [0.0, 0.1, 0.9, 0.1], [0.0, 0.2, 0.9, 0.2], [0.0, 0.0, 0.0, 0.9], [0.1, 0.0, 0.0, 0.9]])
+  _S = cosine_matrix(_E)
+  assert np.shape(_S) == (8, 8), "cosine_matrix should return a (V, V) matrix"
+  np.testing.assert_allclose(np.diag(_S), 1.0, rtol=1e-9, err_msg="every word has cosine similarity 1 with itself: normalise each row first")
+  np.testing.assert_allclose(_S[4, 5], 0.989, atol=1e-3, err_msg="cosine(cat, dog) should be about 0.989")
+  np.testing.assert_allclose(_S, _S.T, err_msg="the cosine matrix should be symmetric")
+  assert list(nearest("cat", _words, _E, 2)) == ["dog", "man"], f"nearest('cat', ..., 2) should be ['dog', 'man'], got {nearest('cat', _words, _E, 2)}"
+  assert list(nearest("king", _words, _E, 3)) == ["man", "queen", "dog"], f"nearest('king', ..., 3) should be ['man', 'queen', 'dog'], got {nearest('king', _words, _E, 3)}"
+  _rng = np.random.default_rng(7)
+  _R = _rng.normal(size=(30, 6)) * _rng.uniform(0.5, 5, size=(30, 1))
+  _names = [f"w{i}" for i in range(30)]
+  _Rn = _R / np.linalg.norm(_R, axis=1, keepdims=True)
+  np.testing.assert_allclose(cosine_matrix(_R), _Rn @ _Rn.T, rtol=1e-9, err_msg="cosine_matrix is wrong on random vectors of different lengths")
+  for _q in [0, 11, 29]:
+      _s = _Rn @ _Rn[_q]
+      _ref = [_names[j] for j in np.argsort(-_s) if j != _q][:5]
+      assert list(nearest(_names[_q], _names, _R, 5)) == _ref, f"nearest('{_names[_q]}') should be {_ref}"
+  _D = np.array([[1.0, 0.0], [1.0, 0.0], [0.0, 1.0]])
+  assert list(nearest("b", ["a", "b", "c"], _D, 1)) == ["a"], "with an identical row elsewhere, nearest must still skip the query word itself"
+hints:
+  - "En = E / np.linalg.norm(E, axis=1, keepdims=True) makes every row unit length."
+  - "np.argsort(-S[i]) sorts from most to least similar."
+  - "Skip the query index itself by comparing indices, not similarity values."

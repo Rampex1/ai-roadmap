@@ -1,0 +1,168 @@
+---
+title: "What LLMs can and cannot do"
+module: f10
+order: 6
+estMinutes: 13
+objectives:
+  - "Explain how a chat with a large language model becomes a single sequence of tokens, and why the model has no memory between calls"
+  - "Explain hallucination and the knowledge cutoff in terms of how the model was trained"
+  - "Estimate the token usage and cost of an LLM application"
+  - "Apply basic rules for using LLMs responsibly"
+goDeeper: karpathy-intro-to-llms
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+You now know what is inside a <Term id="large-language-model" />: [tokens](/foundations/f10/tokens/),
+[embeddings](/foundations/f10/embeddings/), [attention](/foundations/f10/attention/) and a stack of
+[transformer blocks](/foundations/f10/transformers/), trained to predict the next token and then tuned to
+be helpful. That one fact, *it is a next-token predictor*, explains most of what LLMs are good at and most
+of the ways they fail. This lesson connects the two, then turns to cost and responsible use.
+
+## What happens when you chat
+
+A chat looks like a conversation, but the model only ever sees one sequence of tokens. A **chat
+template** flattens the messages into text with special marker tokens, roughly:
+
+```text
+<|system|>You are a helpful assistant.<|end|>
+<|user|>What is the capital of France?<|end|>
+<|assistant|>
+```
+
+The model then generates the assistant's reply one token at a time, by
+[sampling](/foundations/f10/language-models/), until it produces an end marker. (The exact markers differ
+between model families.)
+
+Two consequences:
+
+- **No memory between calls.** The weights do not change while you chat. To "remember" the conversation,
+  the application sends the *whole* history again with every new message. Chat products that remember
+  you across sessions do it by storing notes and putting them back into the prompt.
+- **Everything has to fit.** System instructions, the history, pasted documents and the reply must all
+  fit in the <Term id="context-window" />. When a conversation grows too long, applications drop or
+  summarise old messages, and the model genuinely cannot see what was removed.
+
+## What they do well
+
+Because they were trained on a vast range of text, then tuned to follow instructions, LLMs are strong at:
+
+- writing, rewriting, summarising and translating text;
+- explaining concepts and answering questions about common knowledge;
+- writing and explaining code, especially in popular languages;
+- **in-context learning**: following a pattern from a few examples placed in the prompt, with no
+  retraining;
+- extracting structure from messy text (turning an email into fields, for example).
+
+With **tools** (a search engine, a calculator, code execution, your company's database) they can also
+look things up and act. Track C covers retrieval (C5), tool use (C6) and agents (C7).
+
+## Where they fail, and why
+
+### Hallucination
+
+A <Term id="hallucination" /> is fluent, confident output that is false: a made-up citation, a
+nonexistent function, a wrong date stated with total assurance. It follows from the training objective:
+the model learned to produce *plausible continuations*, and a plausible-looking reference is likely text
+even when no such reference exists. Nothing in next-token prediction forces the model to say "I don't
+know". Post-training reduces hallucination, and retrieving real documents into the prompt helps further,
+but as of late 2026 no model is free of it. Treat every specific claim (names, numbers, quotes, citations,
+legal or medical facts) as unverified until checked.
+
+### The knowledge cutoff
+
+The model knows only what was in its training data, which stops at a date called its
+<Term id="knowledge-cutoff" />. It does not know about later events, new library versions or today's
+prices, and it may not even know its own cutoff exactly. Supplying current information in the prompt, by
+search or retrieval, is the standard fix.
+
+### Token-level blind spots
+
+The model sees [tokens, not letters](/foundations/f10/tokens/). Counting characters, reversing strings
+and exact arithmetic on long numbers have historically been weak points. Reasoning models and tool use
+(running code to do the arithmetic) have reduced these failures, but tokenisation is still the right
+first suspect for odd mistakes about spelling.
+
+### Other failure modes
+
+- **Sensitivity to wording.** Small changes to a prompt can change the answer. Evaluate on many inputs
+  (C9), not one impressive example.
+- **Randomness.** With temperature above 0, the same prompt gives different outputs.
+- **Long contexts.** Fitting in the window is not the same as being used well; information buried in the
+  middle of a very long prompt can be overlooked.
+- **Sycophancy.** Models tuned on human preferences can tend to agree with the user, even when the user
+  is wrong.
+- **Prompt injection.** Text the model reads (a web page, an email) can contain instructions that hijack
+  it. This matters as soon as an LLM can take actions (C11).
+- **Bias and memorisation.** Models reflect the associations in their training text
+  ([F11](/foundations/f11/bias-in-data/)) and can sometimes reproduce training data verbatim, including
+  personal data ([F11 privacy](/foundations/f11/privacy/)).
+
+## Tokens and cost
+
+Hosted LLMs are priced per token, usually quoted per million tokens, with **output tokens priced several
+times higher than input tokens** because each one needs its own pass through the model. Prices change
+often and differ a lot between models, so always check the provider's current page. With illustrative
+prices of 3 US dollars per million input tokens and 15 per million output tokens:
+
+```python
+def cost(input_tokens, output_tokens, price_in=3.0, price_out=15.0):
+    """Cost in dollars; prices are per million tokens."""
+    return (input_tokens * price_in + output_tokens * price_out) / 1e6
+
+one = cost(2000, 500)                 # a 2,000-token prompt and a 500-token answer
+print(f"${one:.4f} per request, ${one * 10_000:,.0f} per 10,000 requests")
+```
+
+```text title="Output"
+$0.0135 per request, $135 per 10,000 requests
+```
+
+Because the history is re-sent every turn, a long chat costs more than its length suggests. If each of 10
+turns adds 300 tokens (question plus answer), the input of turn $k$ is about $300k$ tokens, and the total
+input is $300(1 + 2 + \dots + 10) = 16{,}500$ tokens rather than 3,000: the cost grows with the square of
+the number of turns. Applications fight this by trimming or summarising history, which is what the
+exercise below does. Running an open model on your own machine has no per-token price, but is limited
+by memory: an 8 GB laptop can run small models of a few billion parameters (C2).
+
+## Using LLMs responsibly
+
+- **Verify.** Check facts, figures, citations and code before relying on them. Run the code; follow the
+  link; read the source.
+- **Keep people accountable for high-stakes uses.** Hiring, lending, medical, legal and safety decisions
+  need human review and the checks from [F11](/foundations/f11/safety-and-transparency/).
+- **Protect data.** Do not paste secrets, passwords or other people's personal data into a service whose
+  data policy you have not checked; some free tiers may use prompts for training.
+- **Be open about use.** Follow your school's, employer's or publisher's rules on AI assistance and say
+  when text or code was generated.
+- **Use it to learn, not to skip learning.** In this course, ask an LLM for hints and explanations, then
+  do the work yourself. The [mastery checks](/foundations/f0/how-to-learn/) test what *you* can do.
+
+## Where to go next
+
+- **Track C, LLM engineering**, starts from here: how LLMs work in practice (C1), APIs and open models
+  (C2), prompting (C3), embeddings and vector search (C4), retrieval (C5), tools and agents (C6 to C8),
+  evaluation (C9), fine-tuning (C10) and safety (C11).
+- **Track B, research**, builds the transformer from scratch (B7) and covers pretraining and
+  post-training (B8) properly.
+- The free [Hugging Face LLM course](https://huggingface.co/learn/llm-course/chapter1/1) shows how to
+  load, run and fine-tune open models with the `transformers` library.
+- The [F11 Responsible AI](/foundations/f11/why-responsible-ai/) module goes deeper into fairness,
+  privacy and safety.
+
+## Try it
+
+<CodeExercise id="f10-llms-in-practice-01" />
+
+## Summary
+
+- A chat is flattened into one token sequence by a chat template; the model keeps no memory between
+  calls, so the application re-sends the history, all of which must fit in the context window.
+- LLMs excel at language tasks, code and in-context learning, and can act through tools.
+- Hallucination follows from training on plausible continuations; the knowledge cutoff from training data
+  that stops at a date. Verify specific claims and supply current facts in the prompt.
+- Tokenisation, wording sensitivity, randomness, long contexts, sycophancy, prompt injection, bias and
+  memorisation are further failure modes to design around.
+- Cost is per token, output dearer than input; re-sending history makes long chats grow quadratically.
+- Use LLMs responsibly: verify, keep humans accountable for high-stakes decisions, protect data, be open
+  about use.

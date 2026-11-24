@@ -1,0 +1,271 @@
+---
+title: "Language modelling: predicting the next token"
+module: f10
+order: 3
+estMinutes: 18
+objectives:
+  - "Build a bigram language model from counts and turn the counts into next-token probabilities"
+  - "Score a language model with cross-entropy loss and perplexity, and explain why unseen pairs need smoothing"
+  - "Generate text by sampling, and predict how temperature and top-k change the samples"
+goDeeper: karpathy-zero-to-hero
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+You can now turn text into token ids and ids into vectors. What should a model *do* with them? The
+answer behind every GPT-style model is almost embarrassingly simple: **predict the next token**.
+
+## Next-token prediction
+
+A <Term id="language-model" /> assigns a probability to every possible next token, given the tokens so
+far. Writing $x_1, x_2, \dots, x_T$ for a sequence of tokens, the model gives
+
+$$
+P(x_t \mid x_1, \dots, x_{t-1})
+$$
+
+a probability distribution over the whole vocabulary for position $t$. By the chain rule of probability
+(F5), the probability of a whole sequence is the product of these next-token probabilities:
+
+$$
+P(x_1, \dots, x_T) = P(x_1)\, P(x_2 \mid x_1)\, P(x_3 \mid x_1, x_2) \cdots P(x_T \mid x_1, \dots, x_{T-1})
+$$
+
+So a model that predicts the next token well can score any text and, as we will see, generate new text
+one token at a time. Every piece of text is free training data: the "label" for each position is simply
+the token that actually came next.
+
+## The simplest language model: bigram counts
+
+A **bigram** model looks only at the previous token: $P(x_t \mid x_{t-1})$. To build one, count how often
+each token follows each other token. We use characters as tokens and a tiny training text:
+
+```python
+import numpy as np
+
+text = "the cat sat on the mat. the dog sat on the log. the cat saw the dog."
+chars = sorted(set(text))
+V = len(chars)
+stoi = {ch: i for i, ch in enumerate(chars)}
+ids = np.array([stoi[ch] for ch in text])
+print(V, len(ids))
+
+N = np.zeros((V, V))                       # N[a, b] = how often b follows a
+for a, b in zip(ids[:-1], ids[1:]):
+    N[a, b] += 1
+row = N[stoi["t"]]
+print({chars[j]: int(row[j]) for j in np.nonzero(row)[0]})
+```
+
+```text title="Output"
+15 68
+{' ': 4, '.': 1, 'h': 6}
+```
+
+After "t" the text has "h" six times, a space four times and a full stop once. Dividing each row by its
+total turns counts into probabilities: $P(\text{h} \mid \text{t}) = 6/11$. The model is a $V \times V$
+table, one probability distribution per previous token.
+
+### Smoothing: never say never
+
+Raw counts give probability 0 to every pair the training text never contained. That is a disaster for a
+model that must score new text: one impossible pair makes the whole sequence's probability 0. The
+standard fix is **add-$\alpha$ smoothing**: add a small pseudo-count $\alpha$ to every cell before
+normalising, so every pair keeps a little probability.
+
+```python
+def probs(N, alpha):
+    return (N + alpha) / (N + alpha).sum(axis=1, keepdims=True)   # each row sums to 1
+
+P = probs(N, 0.1)
+print(round(P[stoi["t"], stoi["h"]], 3))
+```
+
+```text title="Output"
+0.488
+```
+
+Slightly less than $6/11 \approx 0.545$: some probability moved to the 12 continuations of "t" that were
+never seen.
+
+## Scoring a model: cross-entropy and perplexity
+
+How good is a language model? Ask how much probability it gave to what actually came next. The loss is
+the average negative log-probability of each true next token, which is exactly the
+<Term id="cross-entropy" /> loss from [F5](/foundations/f5/information-theory/) and
+[F9](/foundations/f9/loss-functions/):
+
+$$
+\mathcal{L} = -\frac{1}{T-1}\sum_{t=2}^{T} \ln P(x_t \mid x_{t-1})
+$$
+
+Language models usually also report <Term id="perplexity" />, the exponential of the loss:
+
+$$
+\text{perplexity} = e^{\mathcal{L}}
+$$
+
+Perplexity reads as "the model is as unsure as if it were choosing uniformly among this many tokens". A
+model that knows nothing and spreads probability evenly over $V$ tokens has loss $\ln V$ and perplexity
+exactly $V$; a perfect model has perplexity 1.
+
+```python
+def perplexity(P, ids):
+    loss = -np.log(P[ids[:-1], ids[1:]]).mean()     # P[previous, next] for every position
+    return loss, np.exp(loss)
+
+test = np.array([stoi[c] for c in "the cat sat on a log."])
+for alpha in [0.0, 0.1, 1.0]:
+    P = probs(N, alpha)
+    with np.errstate(divide="ignore"):              # log(0) is -inf when alpha = 0
+        tr = perplexity(P, ids)
+        te = perplexity(P, test)
+    print(f"alpha {alpha}: train loss {tr[0]:.3f}, perplexity {tr[1]:.2f} | new sentence perplexity {te[1]:.2f}")
+```
+
+```text title="Output"
+alpha 0.0: train loss 0.700, perplexity 2.01 | new sentence perplexity inf
+alpha 0.1: train loss 0.929, perplexity 2.53 | new sentence perplexity 3.90
+alpha 1.0: train loss 1.667, perplexity 5.30 | new sentence perplexity 6.55
+```
+
+Three lessons in one table:
+
+- Without smoothing the training perplexity is best, but the new sentence contains " a", a pair never
+  seen, so its perplexity is infinite.
+- Too much smoothing pushes the model towards uniform: perplexity 5.3 on its own training text, much
+  closer to the know-nothing value of 15.
+- As always, judge a model on text it was not trained on (the [test set](/foundations/f9/training-an-mlp/)
+  idea from F9). Smoothing is a form of [regularisation](/foundations/f9/overfitting-and-regularisation/).
+
+## The bigram model as a neural network
+
+The count table is not the only way to get $P(x_t \mid x_{t-1})$. Put a $V \times V$ weight matrix $W$
+in a network: look up row $W[x_{t-1}]$ (an [embedding lookup](/foundations/f10/embeddings/), equivalently
+one-hot times $W$), treat that row as <Term id="logit" text="logits" />, apply
+<Term id="softmax" /> and train with cross-entropy and gradient descent. The model learns logits whose
+softmax matches the counts, so it converges to the same probabilities as the count table (a little weight
+decay plays the role of smoothing). The homework does exactly this in PyTorch.
+
+The point of the neural version is that it generalises. Replace "look up one row" with "look at many
+previous tokens and combine them cleverly" and you have a transformer. The rest of the model changes;
+the softmax over the vocabulary and the cross-entropy loss stay the same.
+
+## Generating text: sampling
+
+To generate, start from a token, look up the distribution for the next one, **sample** from it with
+`rng.choice`, append the sample and repeat. This loop is called **autoregressive** generation: each output
+becomes part of the next input.
+
+```python
+def generate(P, start, n, rng):
+    i, out = stoi[start], [start]
+    for _ in range(n):
+        i = rng.choice(V, p=P[i])         # draw the next id from row i
+        out.append(chars[i])
+    return "".join(out)
+
+P = probs(N, 0.1)
+print(generate(P, "t", 40, np.random.default_rng(1)))
+```
+
+```text title="Output"
+thogsathe cg. t og. e lotne ldthe thl sad
+```
+
+Locally plausible, globally nonsense: the model only ever sees one character back. A chat model generates
+in exactly this loop, just with a far better $P$.
+
+### Temperature
+
+Sampling knobs reshape the distribution before drawing. <Term id="temperature" /> $T$ divides the logits
+$\mathbf{z}$ before the softmax:
+
+$$
+p_i = \frac{e^{z_i / T}}{\sum_j e^{z_j / T}}
+$$
+
+- $T = 1$ leaves the model's distribution unchanged.
+- $T < 1$ sharpens it: likely tokens get likelier. As $T \to 0$ sampling becomes **greedy decoding**,
+  always taking the most likely token.
+- $T > 1$ flattens it towards uniform: more variety, more mistakes.
+
+```python
+def softmax(z):
+    e = np.exp(z - z.max())
+    return e / e.sum()
+
+logits = np.array([2.0, 1.0, 0.0])
+for T in [0.5, 1.0, 2.0]:
+    print(T, np.round(softmax(logits / T), 3))
+```
+
+```text title="Output"
+0.5 [0.867 0.117 0.016]
+1.0 [0.665 0.245 0.09 ]
+2.0 [0.506 0.307 0.186]
+```
+
+On the bigram model (its logits are the log-probabilities, since softmax of $\ln p$ gives back $p$):
+
+```python
+logits = np.log(P)
+for T in [0.5, 1.0, 2.0]:
+    PT = np.array([softmax(row / T) for row in logits])
+    print(T, generate(PT, "t", 40, np.random.default_rng(1)))
+```
+
+```text title="Output"
+0.5 the t. the the og sathe the og. don t the
+1.0 thogsathe cg. t og. e lotne ldthe thl sad
+2.0 tht t.doge se san lcat.ewwng. thatlnt me
+```
+
+Low temperature repeats the safest patterns ("the the"); high temperature produces pairs the text never
+contained.
+
+### Top-k
+
+**Top-k sampling** keeps only the $k$ most likely tokens: set every other logit to $-\infty$ (its
+probability becomes $e^{-\infty} = 0$) and renormalise. It stops a long tail of unlikely tokens from ever
+being picked. A popular relative, **top-p** (nucleus) sampling, keeps the smallest set of tokens whose
+probabilities add up to at least $p$.
+
+```python
+def top_k_probs(logits, k):
+    masked = np.full_like(logits, -np.inf)
+    keep = np.argsort(logits)[-k:]          # indices of the k largest logits
+    masked[keep] = logits[keep]
+    return softmax(masked)
+
+print(np.round(top_k_probs(np.array([2.0, 1.0, 0.5, -1.0]), 2), 3))
+```
+
+```text title="Output"
+[0.731 0.269 0.    0.   ]
+```
+
+:::tip[Reproducible sampling]
+Sampling is random, so the same prompt can give different outputs. In NumPy, pass a seeded
+`np.random.default_rng(seed)` and the same seed gives the same text. Chat APIs often expose temperature
+and top-p; even at temperature 0 their outputs are not always perfectly repeatable.
+:::
+
+## Try it
+
+<CodeExercise id="f10-language-models-01" />
+
+<CodeExercise id="f10-language-models-02" />
+
+## Summary
+
+- A language model gives $P(x_t \mid x_1, \dots, x_{t-1})$, a distribution over the vocabulary for the
+  next token; the sequence probability is the product of these.
+- A bigram model is a $V \times V$ table of next-token probabilities from counts; add-$\alpha$ smoothing
+  keeps unseen pairs above zero.
+- The loss is the mean negative log-probability of the true next tokens (cross-entropy); perplexity
+  $e^{\mathcal{L}}$ is the effective number of choices, $V$ for a know-nothing model.
+- The same bigram model can be a neural network: an embedding lookup gives logits, softmax and
+  cross-entropy train it.
+- Generate by sampling one token at a time. Temperature below 1 sharpens, above 1 flattens; top-k keeps
+  only the $k$ most likely tokens.

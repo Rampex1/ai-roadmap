@@ -1,0 +1,7 @@
+term: "Pretraining"
+short: "The first and most expensive stage of training a language model: next-token prediction on a very large amount of unlabelled text."
+body: |
+  Pretraining produces a base model that continues documents well but does not reliably follow
+  instructions. Later post-training stages, such as instruction tuning and RLHF, turn it into an
+  assistant.
+related: ["language-model", "instruction-tuning", "rlhf"]

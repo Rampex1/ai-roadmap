@@ -1,0 +1,240 @@
+---
+title: "Embeddings: learned vectors for tokens"
+module: f10
+order: 2
+estMinutes: 17
+objectives:
+  - "Show that an embedding lookup is the same as multiplying a one-hot vector by the embedding matrix"
+  - "Explain how embeddings are learned and why tokens used in similar contexts end up with similar vectors"
+  - "Find nearest neighbours with cosine similarity and solve a vector analogy, stating its caveats"
+  - "Project embeddings to 2-D with PCA to visualise them"
+goDeeper: illustrated-word2vec
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import pcaImg from '@/assets/diagrams/f10-embedding-pca.svg';
+
+The [previous lesson](/foundations/f10/tokens/) ended with a problem: one-hot vectors are enormous and
+make every pair of tokens equally unrelated. An <Term id="embedding" /> replaces each token's one-hot
+vector with a short, dense vector of real numbers, for example 768 of them instead of 50,000, and those
+numbers are learned so that they are useful to the model.
+
+## A lookup table that is secretly a matrix product
+
+Store one row per token in an **embedding matrix** $E$ of shape $(V, d)$: $V$ tokens in the vocabulary,
+$d$ numbers per token (the embedding dimension). The embedding of token $i$ is row $i$, $E[i]$.
+
+Now recall [matrix multiplication](/foundations/f3/matrix-multiplication/) from F3. A one-hot row vector
+$\mathbf{x}$ with its 1 in position $i$, times $E$, picks out exactly row $i$:
+
+$$
+\mathbf{x} E = \sum_{j=1}^{V} x_j E[j] = E[i]
+$$
+
+because every term except $j = i$ is multiplied by zero.
+
+```python
+import numpy as np
+
+V, d = 5, 3
+rng = np.random.default_rng(0)
+E = rng.normal(size=(V, d)).round(2)
+print(E)
+x = np.zeros(V)
+x[3] = 1                     # one-hot vector for token 3
+print(x @ E)
+print(E[3])
+```
+
+```text title="Output"
+[[ 0.13 -0.13  0.64]
+ [ 0.1  -0.54  0.36]
+ [ 1.3   0.95 -0.7 ]
+ [-1.27 -0.62  0.04]
+ [-2.33 -0.22 -1.25]]
+[-1.27 -0.62  0.04]
+[-1.27 -0.62  0.04]
+```
+
+So an **embedding layer is a linear layer** (with no bias) applied to one-hot inputs. In practice nobody
+builds the one-hot vector: indexing `E[ids]` gives the same answer without multiplying by thousands of
+zeros. For a whole sequence of ids it returns one row per token:
+
+```python
+ids = np.array([3, 0, 3])
+print(E[ids].shape)          # (sequence length, d)
+```
+
+```text title="Output"
+(3, 3)
+```
+
+In PyTorch the same table is `nn.Embedding(V, d)`, whose `weight` is a $(V, d)$ tensor (F9's
+[tensors](/foundations/f9/pytorch/)).
+
+## How embeddings are learned
+
+At the start, $E$ is random. It is a parameter like any weight matrix, so the gradient of the loss flows
+back into it during training ([backpropagation](/foundations/f9/backpropagation/)). Because the lookup
+selects a row, only the rows of tokens that appeared in a batch receive a gradient through the input
+lookup. (Many language models reuse the same matrix as their output layer, "weight tying", and that use
+updates every row.)
+
+What makes the learned vectors meaningful is the task. Suppose the model must predict the next word.
+"cat" and "dog" appear in similar places ("the ___ sat on the mat", "fed the ___"), so a model that
+predicts well needs similar inputs to produce similar predictions there. The cheapest way to arrange that
+is to give "cat" and "dog" similar vectors. This is the **distributional hypothesis**, summed up as "you
+shall know a word by the company it keeps" (J. R. Firth, 1957).
+
+Two families of embeddings you will meet:
+
+- **Static word embeddings** such as word2vec (2013) and GloVe (2014): one fixed vector per word,
+  trained specifically to predict nearby words. Fast and still useful, but "bank" gets one vector whether
+  it means a river bank or a money bank.
+- **Contextual embeddings** inside a transformer: the input embedding is only the starting point, and
+  every layer updates each token's vector using the tokens around it, so "bank" ends up with different
+  vectors in different sentences. The [attention lesson](/foundations/f10/attention/) shows how.
+
+Track C (C4) uses embedding models that turn a whole sentence or document into one vector for search.
+
+## Similarity is cosine similarity
+
+To compare two embeddings, use <Term id="cosine-similarity" /> from
+[F3](/foundations/f3/dot-product/): the dot product of the two vectors divided by both lengths, from $-1$
+(opposite) through 0 (unrelated) to 1 (same direction). It ignores length, which often reflects how
+frequent a word is rather than what it means.
+
+Real embeddings have hundreds of dimensions with no human-readable meaning. To see the idea, here is a
+hand-made 4-dimensional table whose columns we chose to mean "royal", "male", "animal" and "food":
+
+```python
+import numpy as np
+
+words = ["king", "queen", "man", "woman", "cat", "dog", "apple", "bread"]
+E = np.array([
+    # royal  male  animal  food
+    [0.9,   0.5,  0.1,   0.0],   # king
+    [0.9,  -0.5,  0.1,   0.0],   # queen
+    [0.1,   0.6,  0.2,   0.0],   # man
+    [0.1,  -0.6,  0.2,   0.0],   # woman
+    [0.0,   0.1,  0.9,   0.1],   # cat
+    [0.0,   0.2,  0.9,   0.2],   # dog
+    [0.0,   0.0,  0.0,   0.9],   # apple
+    [0.1,   0.0,  0.0,   0.9],   # bread
+])
+idx = {w: i for i, w in enumerate(words)}
+
+def cosine(a, b):
+    return a @ b / (np.linalg.norm(a) * np.linalg.norm(b))
+
+print(round(cosine(E[idx["cat"]], E[idx["dog"]]), 3))
+print(round(cosine(E[idx["king"]], E[idx["queen"]]), 3))
+print(round(cosine(E[idx["cat"]], E[idx["bread"]]), 3))
+```
+
+```text title="Output"
+0.989
+0.533
+0.109
+```
+
+### Nearest neighbours for every word at once
+
+Normalise every row to length 1. Then one matrix product gives every pairwise cosine similarity, and
+sorting a row finds that word's nearest neighbours:
+
+```python
+En = E / np.linalg.norm(E, axis=1, keepdims=True)    # unit-length rows
+S = En @ En.T                                        # S[i, j] = cosine(word i, word j)
+for w in ["cat", "king", "apple"]:
+    order = np.argsort(-S[idx[w]])                   # most similar first
+    print(w, "->", [words[j] for j in order[1:3]], np.round(S[idx[w], order[1:3]], 3))
+```
+
+```text title="Output"
+cat -> ['dog', 'man'] [0.989 0.411]
+king -> ['man', 'queen'] [0.619 0.533]
+apple -> ['bread', 'dog'] [0.994 0.212]
+```
+
+`order[0]` is always the word itself (similarity 1), so we skip it. Search engines and recommendation
+systems do exactly this with millions of vectors, using special indexes to avoid comparing against every
+one (C4).
+
+## Analogies, with caveats
+
+A famous word2vec result: the vector $E[\text{king}] - E[\text{man}] + E[\text{woman}]$ lands near
+$E[\text{queen}]$. The difference "king minus man" captures something like "royalty without the male
+part", and adding "woman" puts the male part back as female.
+
+```python
+target = E[idx["king"]] - E[idx["man"]] + E[idx["woman"]]
+print(np.round(target, 2))
+sims = En @ (target / np.linalg.norm(target))
+for j in np.argsort(-sims)[:3]:
+    print(words[j], round(sims[j], 3))
+```
+
+```text title="Output"
+[ 0.9 -0.7  0.1  0. ]
+queen 0.988
+woman 0.723
+king 0.397
+```
+
+It works perfectly here because we built the table to make it work. With real embeddings, be careful:
+
+- **The input words are excluded.** In real word2vec vectors the nearest word to the target is often
+  "king" itself; published analogy results exclude the three input words from the answers.
+- **Cherry-picking.** The famous examples are the ones that worked. Many analogies fail, and success
+  varies a lot between relation types.
+- **Embeddings learn the biases of their text.** Researchers found analogies such as "man is to computer
+  programmer as woman is to homemaker" in embeddings trained on news text (Bolukbasi and others, 2016).
+  Any system built on embeddings inherits such associations; [F11](/foundations/f11/bias-in-data/)
+  covers how bias enters models and how to measure it.
+
+## Seeing embeddings: PCA to 2-D
+
+You cannot plot 768 dimensions, but you can project onto the two directions of greatest variance with
+<Term id="pca" text="PCA" />, exactly as in [F3](/foundations/f3/svd-and-pca/): centre the rows, take the
+SVD, and keep the first two components.
+
+```python
+Xc = E - E.mean(axis=0)
+U, s, Vt = np.linalg.svd(Xc, full_matrices=False)
+Z = Xc @ Vt[:2].T                       # (8, 2): one 2-D point per word
+print(np.round(s**2 / (s**2).sum(), 2)) # share of variance per component
+```
+
+```text title="Output"
+[0.36 0.34 0.25 0.06]
+```
+
+<Figure
+  src={pcaImg}
+  alt="Scatter plot of the eight toy words on the first two principal components. cat and dog sit together at the lower left and apple and bread together at the top left. man and king lie low, woman and queen higher, and the step from man to king is parallel to the step from woman to queen"
+  caption="The toy embeddings projected onto their first two principal components (70% of the variance). Related words cluster, and man to king runs parallel to woman to queen. The signs of the axes are arbitrary."
+/>
+
+Two cautions. A 2-D projection throws information away (30% of the variance here, usually far more for
+real embeddings), so words that look close may not be. And the axes of a PCA plot have no fixed meaning
+or sign. For a picture that preserves local neighbourhoods better, people use
+<Term id="t-sne" /> or UMAP, with their own distortions.
+
+## Try it
+
+<CodeExercise id="f10-embeddings-01" />
+
+<CodeExercise id="f10-embeddings-02" />
+
+## Summary
+
+- An embedding matrix $E$ of shape $(V, d)$ stores one learned vector per token; the lookup $E[i]$ equals
+  the one-hot vector times $E$, so an embedding layer is a bias-free linear layer on one-hot inputs.
+- Embeddings start random and are trained by backpropagation; tokens used in similar contexts end up with
+  similar vectors.
+- Compare embeddings with cosine similarity. Normalise the rows once and `En @ En.T` gives all pairs.
+- Vector analogies sometimes work, but exclude the input words, beware of cherry-picked examples, and
+  expect the embeddings to reflect the biases of their training text.
+- PCA gives a 2-D picture of embeddings, at the cost of discarding information.

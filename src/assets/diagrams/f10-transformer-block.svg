@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 480" width="560" height="480" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title>One pre-norm transformer block. The input stream rises from the bottom. A side branch applies layer norm then causal multi-head attention and is added back. A second side branch applies layer norm then an MLP and is added back. The output leaves at the top. The block is repeated N times</title>
+<defs><marker id="f10b-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#8b93b8"/></marker><marker id="f10b-b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="3.5" markerHeight="3.5" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#0f766e"/></marker></defs>
+<rect x="60" y="40" width="380" height="380" rx="16" fill="none" stroke="#8b93b8" stroke-width="1.5" stroke-dasharray="6 5"/>
+<text x="452" y="236" font-size="15" fill="#8b93b8" font-weight="700">× N</text>
+<text x="160" y="466" font-size="14" fill="#8b93b8" text-anchor="middle">input (T, d): embeddings + positions</text>
+<text x="160" y="22" font-size="14" fill="#8b93b8" text-anchor="middle">output (T, d)</text>
+<line x1="160" y1="448" x2="160" y2="352" stroke="#0f766e" stroke-width="4"/>
+<line x1="160" y1="324" x2="160" y2="184" stroke="#0f766e" stroke-width="4"/>
+<line x1="160" y1="156" x2="160" y2="32" stroke="#0f766e" stroke-width="4" marker-end="url(#f10b-b)"/>
+<circle cx="160" cy="338" r="14" fill="#0f766e"/>
+<text x="160" y="345" font-size="20" fill="#ffffff" text-anchor="middle" font-weight="700">+</text>
+<circle cx="160" cy="170" r="14" fill="#0f766e"/>
+<text x="160" y="177" font-size="20" fill="#ffffff" text-anchor="middle" font-weight="700">+</text>
+<text x="112" y="250" font-size="13" fill="#0f766e" text-anchor="middle">residual</text>
+<text x="112" y="266" font-size="13" fill="#0f766e" text-anchor="middle">stream</text>
+<polyline points="160,410 300,410 300,394" fill="none" stroke="#8b93b8" stroke-width="2" marker-end="url(#f10b-a)"/>
+<rect x="240" y="366" width="120" height="28" rx="8" fill="#8b93b8"/>
+<text x="300" y="385" font-size="14" fill="#ffffff" text-anchor="middle" font-weight="700">layer norm</text>
+<line x1="300" y1="366" x2="300" y2="348" stroke="#8b93b8" stroke-width="2" marker-end="url(#f10b-a)"/>
+<rect x="220" y="290" width="160" height="56" rx="10" fill="#4f46e5"/>
+<text x="300" y="314" font-size="15" fill="#ffffff" text-anchor="middle" font-weight="700">causal multi-head</text>
+<text x="300" y="334" font-size="15" fill="#ffffff" text-anchor="middle" font-weight="700">attention</text>
+<polyline points="300,290 300,272 210,272 210,338 176,338" fill="none" stroke="#8b93b8" stroke-width="2" marker-end="url(#f10b-a)"/>
+<text x="400" y="322" font-size="13" fill="#4f46e5">mixes positions</text>
+<polyline points="160,240 300,240 300,224" fill="none" stroke="#8b93b8" stroke-width="2" marker-end="url(#f10b-a)"/>
+<rect x="240" y="196" width="120" height="28" rx="8" fill="#8b93b8"/>
+<text x="300" y="215" font-size="14" fill="#ffffff" text-anchor="middle" font-weight="700">layer norm</text>
+<line x1="300" y1="196" x2="300" y2="178" stroke="#8b93b8" stroke-width="2" marker-end="url(#f10b-a)"/>
+<rect x="220" y="122" width="160" height="56" rx="10" fill="#d97706"/>
+<text x="300" y="146" font-size="15" fill="#ffffff" text-anchor="middle" font-weight="700">MLP</text>
+<text x="300" y="166" font-size="13" fill="#ffffff" text-anchor="middle">d → 4d → d</text>
+<polyline points="300,122 300,104 210,104 210,170 176,170" fill="none" stroke="#8b93b8" stroke-width="2" marker-end="url(#f10b-a)"/>
+<text x="400" y="154" font-size="13" fill="#d97706">each position</text>
+<text x="400" y="170" font-size="13" fill="#d97706">separately</text>
+</svg>

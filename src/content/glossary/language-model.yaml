@@ -1,0 +1,7 @@
+term: "Language model"
+short: "A model that assigns a probability to every possible next token given the tokens before it."
+body: |
+  Multiplying the next-token probabilities gives the probability of a whole sequence. Language models are
+  trained by minimising cross-entropy on real text, scored by perplexity, and generate text by sampling
+  one token at a time and feeding it back in.
+related: ["token", "perplexity", "cross-entropy", "large-language-model"]

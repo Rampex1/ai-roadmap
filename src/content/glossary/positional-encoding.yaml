@@ -1,0 +1,7 @@
+term: "Positional encoding"
+short: "Information about each token's position added to a transformer's input, because attention by itself ignores order."
+body: |
+  GPT-2 learns a position embedding table and adds it to the token embeddings; the original transformer
+  added fixed sine and cosine patterns; many recent models rotate queries and keys by position-dependent
+  angles (rotary embeddings, RoPE).
+related: ["transformer", "embedding", "attention"]

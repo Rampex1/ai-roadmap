@@ -1,0 +1,7 @@
+term: "Temperature"
+short: "A sampling setting that divides the logits before the softmax: below 1 sharpens the distribution, above 1 flattens it."
+body: |
+  At temperature 1 the model's distribution is unchanged. As the temperature approaches 0, sampling
+  becomes greedy and always picks the most likely token; high temperatures give more varied and more
+  error-prone text. It is often combined with top-k or top-p sampling.
+related: ["softmax", "logit", "language-model"]

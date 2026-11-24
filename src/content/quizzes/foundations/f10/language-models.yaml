@@ -1,0 +1,113 @@
+items:
+  - id: f10-language-models-01
+    type: mcq
+    prompt: What does a language model output at each position?
+    explanation: It outputs a probability distribution over the whole vocabulary for the next token, given the tokens so far.
+    options:
+      - text: A probability that the sentence is grammatical
+        why: It scores next tokens; sentence probabilities come from multiplying them.
+      - text: A probability for every token in the vocabulary of being the next token
+        correct: true
+        why: One distribution per position, summing to 1.
+      - text: The single correct next token
+        why: It gives probabilities; picking one is a separate sampling step.
+      - text: An embedding of the whole sentence
+        why: That is a different kind of model (C4).
+  - id: f10-language-models-02
+    type: numeric
+    prompt: In a training text, the character t is followed by h 6 times, by a space 4 times and by a full stop once. Without smoothing, what is $P(\text{h} \mid \text{t})$? (3 decimal places.)
+    answer: 0.545
+    tol: 0.001
+    explanation: 'Divide the count by the row total: 6 / (6 + 4 + 1) = 6/11 ≈ 0.545.'
+  - id: f10-language-models-03
+    type: numeric
+    prompt: Same counts (h 6, space 4, full stop 1 after t) with a vocabulary of $V = 15$ characters and add-one smoothing ($\alpha = 1$). What is $P(\text{h} \mid \text{t})$ now? (3 decimal places.)
+    answer: 0.269
+    tol: 0.001
+    explanation: 'Add 1 to all 15 cells of the row: (6 + 1) / (11 + 15) = 7/26 ≈ 0.269. Smoothing moved a lot of probability to the 12 unseen continuations.'
+  - id: f10-language-models-04
+    type: numeric
+    prompt: A model gives the true next tokens of a 4-token test text the probabilities 0.5, 0.25, 0.5 and 0.25. What is its perplexity on this text? (2 decimal places.)
+    answer: 2.83
+    tol: 0.01
+    explanation: The mean negative log-probability is (ln 2 + ln 4 + ln 2 + ln 4)/4 = 1.5 ln 2 ≈ 1.040; e to that is 2^1.5 ≈ 2.83, the geometric mean of 1/p.
+  - id: f10-language-models-05
+    type: numeric
+    prompt: A character model with a vocabulary of 65 characters gives every character equal probability. What is its perplexity?
+    answer: 65
+    tol: 0.001
+    explanation: 'Each true token gets probability 1/65, so the loss is ln 65 and the perplexity e^(ln 65) = 65. A useful baseline: a trained model must beat V.'
+  - id: f10-language-models-06
+    type: mcq
+    prompt: A bigram model trained without smoothing scores a new sentence and reports infinite perplexity. Why?
+    explanation: The new sentence contains a pair that never occurred in training, so its probability is 0, its negative log is infinite, and so is the mean.
+    options:
+      - text: Perplexity is always infinite on new text
+        why: With smoothing, new-text perplexity is finite.
+      - text: The sentence contains a pair never seen in training, which got probability 0
+        correct: true
+        why: −ln 0 is infinite; smoothing prevents it.
+      - text: The vocabulary is too small
+        why: The cause is an unseen pair, not the vocabulary size.
+      - text: The sentence is longer than the training text
+        why: Length does not matter; one zero-probability pair is enough.
+  - id: f10-language-models-07
+    type: output
+    prompt: What does this print?
+    code: |
+      import numpy as np
+      z = np.array([0.0, np.log(3)])
+      T = 0.5
+      e = np.exp(z / T)
+      print(np.round(e / e.sum(), 2))
+    answer: '[0.1 0.9]'
+    explanation: 'At T = 1 the probabilities would be 1/4 and 3/4. Dividing by 0.5 doubles the logits to 0 and ln 9, so the odds become 1 : 9, giving 0.1 and 0.9: lower temperature sharpens.'
+  - id: f10-language-models-08
+    type: multi
+    prompt: What happens when you lower the sampling temperature from 1 towards 0?
+    explanation: Dividing logits by a small T exaggerates their differences, so the top token dominates; in the limit sampling becomes greedy and text gets repetitive.
+    options:
+      - text: Outputs tend to become more repetitive and less varied
+        correct: true
+        why: As in the bigram example, the safest patterns repeat.
+      - text: The most likely token gets an even larger share of the probability
+        correct: true
+        why: Differences between logits are magnified.
+      - text: Sampling approaches greedy decoding
+        correct: true
+        why: At the limit the top token always wins.
+      - text: The model's weights change
+        why: Temperature only reshapes the output distribution at sampling time.
+      - text: The ranking of the tokens changes
+        why: Dividing by a positive number keeps the order of the logits.
+  - id: f10-language-models-09
+    type: mcq
+    prompt: 'Top-k sampling with $k = 1$ is the same as:'
+    explanation: 'Keeping only the single largest logit gives it probability 1, so the sample is always the most likely token: greedy decoding.'
+    options:
+      - text: Sampling at temperature 1
+        why: That keeps the whole distribution.
+      - text: Uniform random sampling
+        why: Uniform sampling ignores the logits altogether.
+      - text: Greedy decoding
+        correct: true
+        why: Only the top token survives.
+      - text: Top-p sampling with p = 1
+        why: That keeps every token.
+  - id: f10-language-models-10
+    type: cloze
+    prompt: Generating text by sampling one token, appending it to the input and repeating is called ____ generation.
+    accept:
+      - autoregressive
+      - auto-regressive
+    explanation: 'Autoregressive: each output becomes part of the next input.'
+  - id: f10-language-models-11
+    type: order
+    prompt: Put one step of generating with temperature in order.
+    items:
+      - Run the model on the tokens so far to get logits for the next token
+      - Divide the logits by the temperature
+      - Apply the softmax to get probabilities
+      - Sample a token id from the probabilities
+      - Append the sampled token to the sequence
+    explanation: Temperature reshapes the logits before the softmax; the sample is then appended, and the loop repeats.

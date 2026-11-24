@@ -1,0 +1,108 @@
+items:
+  - id: f10-tokens-01
+    type: mcq
+    prompt: Why do modern language models use subword tokens rather than whole words?
+    explanation: Subwords keep the vocabulary to a manageable size while still spelling any word from known pieces, and frequent words stay as single short tokens.
+    options:
+      - text: Subword tokens carry no meaning, which prevents overfitting
+        why: Tokens are chosen by frequency; this is not a regularisation trick.
+      - text: A fixed, manageable vocabulary can still represent any word, including rare and new ones
+        correct: true
+        why: Rare words split into known pieces; common words stay whole.
+      - text: Words cannot be converted to integer ids
+        why: Any finite set of words can be numbered; the problem is the size of the set and unknown words.
+      - text: Subword tokens make every sequence shorter than character tokens and word tokens
+        why: Word tokens give shorter sequences than subwords; subwords sit between the two.
+  - id: f10-tokens-02
+    type: numeric
+    prompt: A BPE corpus has the words hug (10 times), pug (5), pun (12), bun (4) and hugs (5). What is the count of the adjacent pair `u g`?
+    answer: 20
+    tol: 0
+    explanation: '`u g` appears once in hug, pug and hugs: 10 + 5 + 5 = 20. Each occurrence is weighted by the word''s frequency. It is the most frequent pair, so it would be the first merge.'
+  - id: f10-tokens-03
+    type: output
+    prompt: What does this print?
+    code: |
+      from collections import Counter
+      words = {("a", "b", "c"): 3, ("b", "c"): 2, ("a", "b"): 1}
+      c = Counter()
+      for symbols, freq in words.items():
+          for pair in zip(symbols, symbols[1:]):
+              c[pair] += freq
+      print(c.most_common(1))
+    answer: '[((''b'', ''c''), 5)]'
+    explanation: '`a b` occurs in the first and third words: 3 + 1 = 4. `b c` occurs in the first and second: 3 + 2 = 5, the winner.'
+  - id: f10-tokens-04
+    type: mcq
+    prompt: The learned merges, in order, are `e s`, `es t`, `est </w>`, `l o`, `lo w`. How is the unseen word "lowest" tokenised?
+    explanation: 'Start from l o w e s t </w> and replay the merges in order: es, then est, then est</w>, then lo, then low. The result is two tokens, `low` and `est</w>`.'
+    options:
+      - text: l, o, w, e, s, t, </w>
+        why: That ignores the learned merges; BPE replays them on new words.
+      - text: low, est</w>
+        correct: true
+        why: Every merge applies in turn.
+      - text: lowest</w>
+        why: No merge ever joined low with est</w>, so they stay separate tokens.
+      - text: An unknown-word token
+        why: 'BPE never needs an unknown token: any word can be built from characters.'
+  - id: f10-tokens-05
+    type: multi
+    prompt: Which statements about one-hot vectors for tokens are true?
+    explanation: A one-hot vector has length V with a single 1. Any two different ones are perpendicular, so they carry no notion of similarity, and they are huge for realistic vocabularies.
+    options:
+      - text: Tokens with similar meanings get one-hot vectors that point in similar directions
+        why: All pairs of different one-hot vectors are equally unrelated; that is their main weakness.
+      - text: Each has length equal to the vocabulary size
+        correct: true
+        why: One position per token in the vocabulary.
+      - text: The dot product of the one-hot vectors of two different tokens is 0
+        correct: true
+        why: The 1s are in different positions, so every product is 0.
+      - text: They are learned during training
+        why: They are fixed by the token id; the learned version is an embedding.
+  - id: f10-tokens-06
+    type: output
+    prompt: What does this print?
+    code: |
+      text = "banana"
+      chars = sorted(set(text))
+      print([chars.index(ch) for ch in text])
+    answer: '[1, 0, 2, 0, 2, 0]'
+    explanation: 'The vocabulary is sorted: [''a'', ''b'', ''n''], so a = 0, b = 1, n = 2, and banana encodes as 1 0 2 0 2 0.'
+  - id: f10-tokens-07
+    type: cloze
+    prompt: The set of all distinct tokens a model can use, each with its own integer id, is called its ____.
+    accept:
+      - vocabulary
+      - vocab
+    explanation: The vocabulary maps every token to an id; its size V is the length of a one-hot vector and the number of rows in the embedding matrix.
+  - id: f10-tokens-08
+    type: mcq
+    prompt: A language model miscounts the letter r in "strawberry". Which explanation does this lesson give?
+    explanation: The model receives a few token ids, not ten letters. Counting letters needs knowledge of how each token is spelled, which the model has to have memorised.
+    options:
+      - text: The model sees tokens, not individual letters, so the letters are hidden inside a few token ids
+        correct: true
+        why: Tokenisation hides the spelling.
+      - text: The model's vocabulary does not include the letter r
+        why: Byte-level vocabularies include every character; the issue is that the word arrives as larger pieces.
+      - text: The word is too long for the context window
+        why: Context windows hold thousands of tokens or more.
+      - text: Counting is impossible for any neural network
+        why: Networks can count; this specific failure comes from the input representation.
+  - id: f10-tokens-09
+    type: numeric
+    prompt: Using the rule of thumb of about three quarters of an English word per token, roughly how many tokens is a 1,500-word English essay?
+    answer: 2000
+    tol: 250
+    explanation: '1,500 / 0.75 = 2,000 tokens. It is only a rule of thumb: code, numbers and many other languages need more tokens per word.'
+  - id: f10-tokens-10
+    type: order
+    prompt: Put the steps of training a BPE tokeniser in order.
+    items:
+      - Split every word into characters plus an end-of-word marker
+      - Count every adjacent pair of symbols, weighted by word frequency
+      - Merge the most frequent pair into a new symbol everywhere and record the merge
+      - Repeat counting and merging until the vocabulary reaches the target size
+    explanation: BPE starts from characters, then alternates counting and merging, recording each merge so it can be replayed on new text.

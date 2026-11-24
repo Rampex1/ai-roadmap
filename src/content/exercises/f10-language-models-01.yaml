@@ -1,0 +1,67 @@
+id: f10-language-models-01
+lesson: foundations/f10/language-models
+title: A bigram model and its perplexity
+prompt: |
+  Token ids are integers from `0` to `V - 1`.
+
+  1. `bigram_probs(ids, V, alpha)` counts how often each id follows each other id in the 1-D array
+     `ids`, adds `alpha` to every cell, and divides each row by its total. It returns a `(V, V)` array
+     `P` with `P[a, b]` the probability that `b` follows `a`. Every row must sum to 1.
+  2. `perplexity(P, ids)` returns $e^{\mathcal{L}}$, where $\mathcal{L}$ is the mean of
+     $-\ln P[x_{t-1}, x_t]$ over every consecutive pair in `ids`.
+
+  For example, `ids = [0, 1, 0, 1]` with `V = 2` and `alpha = 0` gives `P = [[0, 1], [1, 0]]` and
+  perplexity 1: the model is never surprised.
+starter: |
+  import numpy as np
+
+  def bigram_probs(ids, V, alpha):
+      N = np.zeros((V, V))
+      for a, b in zip(ids[:-1], ids[1:]):
+          N[a, b] += 1
+      return (N + alpha) / (N + alpha).sum()
+
+  def perplexity(P, ids):
+      return 0.0
+solution: |
+  import numpy as np
+
+  def bigram_probs(ids, V, alpha):
+      N = np.zeros((V, V))
+      for a, b in zip(ids[:-1], ids[1:]):
+          N[a, b] += 1
+      return (N + alpha) / (N + alpha).sum(axis=1, keepdims=True)
+
+  def perplexity(P, ids):
+      ids = np.asarray(ids)
+      loss = -np.log(P[ids[:-1], ids[1:]]).mean()
+      return float(np.exp(loss))
+tests: |
+  import numpy as np
+  import math
+  _P = bigram_probs(np.array([0, 1, 0, 1]), 2, 0.0)
+  np.testing.assert_allclose(_P, [[0, 1], [1, 0]], err_msg="for ids [0, 1, 0, 1] and alpha 0, P should be [[0, 1], [1, 0]]")
+  assert math.isclose(perplexity(_P, np.array([0, 1, 0, 1])), 1.0, rel_tol=1e-9), "a model that is never surprised has perplexity 1"
+  _P2 = bigram_probs(np.array([0, 1, 0, 2, 0]), 3, 1.0)
+  np.testing.assert_allclose(_P2, [[1/5, 2/5, 2/5], [2/4, 1/4, 1/4], [2/4, 1/4, 1/4]], err_msg="add alpha to every cell, then divide each row by its own total")
+  _text = "the cat sat on the mat. the dog sat on the log. the cat saw the dog."
+  _chars = sorted(set(_text)); _st = {c: i for i, c in enumerate(_chars)}
+  _ids = np.array([_st[c] for c in _text])
+  for _a, _ppl in [(0.1, 2.53), (1.0, 5.30)]:
+      _Pt = bigram_probs(_ids, 15, _a)
+      np.testing.assert_allclose(_Pt.sum(axis=1), 1.0, err_msg="every row of P must sum to 1: normalise along axis 1 with keepdims=True")
+      assert math.isclose(perplexity(_Pt, _ids), _ppl, abs_tol=0.01), f"with alpha {_a} the training perplexity of the lesson text should be about {_ppl}, got {perplexity(_Pt, _ids)}"
+  _rng = np.random.default_rng(0)
+  _r = _rng.integers(0, 6, size=200)
+  _Pr = bigram_probs(_r, 6, 0.5)
+  _N = np.zeros((6, 6)); np.add.at(_N, (_r[:-1], _r[1:]), 1)
+  _ref = (_N + 0.5) / (_N + 0.5).sum(axis=1, keepdims=True)
+  np.testing.assert_allclose(_Pr, _ref, err_msg="bigram_probs is wrong on a random sequence")
+  _U = np.full((6, 6), 1 / 6)
+  assert math.isclose(perplexity(_U, _r), 6.0, rel_tol=1e-9), "a uniform model over V = 6 tokens must have perplexity 6"
+  _ppl_r = perplexity(_ref, _r)
+  assert math.isclose(_ppl_r, math.exp(-np.log(_ref[_r[:-1], _r[1:]]).mean()), rel_tol=1e-9), "perplexity should be exp of the mean negative log-probability"
+hints:
+  - "Normalise each row: (N + alpha) / (N + alpha).sum(axis=1, keepdims=True)."
+  - "P[ids[:-1], ids[1:]] picks the probability of every actual next token at once."
+  - "Perplexity is np.exp of the mean of -np.log of those probabilities."

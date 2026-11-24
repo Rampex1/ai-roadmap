@@ -1,0 +1,8 @@
+term: "Embedding"
+short: "A learned dense vector that represents a token or other discrete item; the embedding matrix has one row per item."
+body: |
+  Looking up row i of the embedding matrix is the same as multiplying the one-hot vector for item i by
+  that matrix, so an embedding layer is a linear layer applied to one-hot inputs. The vectors start random
+  and are trained with the rest of the model, so items used in similar ways end up with similar vectors,
+  usually compared with cosine similarity.
+related: ["one-hot-encoding", "cosine-similarity", "token"]

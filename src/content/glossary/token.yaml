@@ -1,0 +1,8 @@
+term: "Token"
+short: "A piece of text, such as a word, part of a word or a character, that a language model treats as one unit and maps to an integer id."
+body: |
+  A tokeniser splits text into tokens and looks up each one's id in a fixed vocabulary. Modern language
+  models use subword tokens, so common words are one token and rare words are split into several pieces.
+  Lengths, limits and prices for LLMs are counted in tokens; for English text one token is roughly four
+  characters.
+related: ["byte-pair-encoding", "embedding", "language-model"]

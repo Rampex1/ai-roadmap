@@ -1,0 +1,124 @@
+items:
+  - id: f10-transformers-01
+    type: order
+    prompt: Put the stages of a GPT-style model's forward pass in order.
+    items:
+      - Look up token embeddings and add position embeddings
+      - Pass the vectors through N transformer blocks
+      - Apply a final layer norm
+      - Project each position to vocabulary-sized logits with a linear layer
+      - Apply the softmax to get next-token probabilities
+    explanation: Embed, transform with the blocks, normalise, unembed to logits, softmax.
+  - id: f10-transformers-02
+    type: mcq
+    prompt: Inside a transformer block, how do the jobs of attention and the MLP differ?
+    explanation: Attention is the only place where positions exchange information; the MLP applies the same function to each position on its own.
+    options:
+      - text: The MLP is only used during training
+        why: It is part of every forward pass.
+      - text: Both mix information between all positions
+        why: The MLP uses the same weights on each position independently.
+      - text: Attention processes each position separately; the MLP mixes positions
+        why: It is the other way round.
+      - text: Attention moves information between positions; the MLP processes each position separately
+        correct: true
+        why: Mix, then think per position.
+  - id: f10-transformers-03
+    type: output
+    prompt: What does this print? (Layer normalisation with $\gamma = 1$, $\beta = 0$ and no $\epsilon$.)
+    code: |
+      import numpy as np
+      x = np.array([2.0, 4.0, 6.0])
+      print(np.round((x - x.mean()) / x.std(), 3))
+    answer: '[-1.225  0.     1.225]'
+    explanation: Mean 4, population standard deviation √(8/3) ≈ 1.633, so (−2, 0, 2) / 1.633 ≈ (−1.225, 0, 1.225).
+  - id: f10-transformers-04
+    type: numeric
+    prompt: Using the approximation of $12d^2$ weights per block, about how many weights does one block of a model with $d = 1024$ have?
+    answer: 12582912
+    rtol: 0.01
+    explanation: '12 × 1024² = 12 × 1,048,576 = 12,582,912: 4d² in attention and 8d² in the MLP.'
+  - id: f10-transformers-05
+    type: numeric
+    prompt: Using training compute ≈ $6ND$, how many FLOPs does it take to train a model with $N = 10^9$ parameters on $D = 2 \times 10^{10}$ tokens? (Answer like `1.2e20`.)
+    answer: 1.2e+20
+    rtol: 0.01
+    explanation: 6 × 10⁹ × 2 × 10¹⁰ = 1.2 × 10²⁰ FLOPs.
+  - id: f10-transformers-06
+    type: numeric
+    prompt: By the Chinchilla rule of thumb of about 20 tokens per parameter, roughly how many training tokens suit a 7-billion-parameter model? (Answer like `1.4e11`.)
+    answer: 140000000000.0
+    rtol: 0.05
+    explanation: 20 × 7 × 10⁹ = 1.4 × 10¹¹ tokens. Many current models train on far more, because smaller models are cheaper to run.
+  - id: f10-transformers-07
+    type: mcq
+    prompt: Why does a transformer need positional information added to its input?
+    explanation: Attention compares queries with keys regardless of where tokens sit; permuting the input simply permutes the output. Position embeddings make order visible.
+    options:
+      - text: To make the embedding matrix smaller
+        why: Position embeddings add parameters.
+      - text: To implement the causal mask
+        why: The mask is applied to the scores; it does not tell the model where a token is in its content.
+      - text: Attention by itself treats the input as an unordered set, so word order would be invisible
+        correct: true
+        why: Shuffling the inputs just shuffles the outputs.
+      - text: Because tokens have no ids
+        why: Tokens have ids; the problem is order, not identity.
+  - id: f10-transformers-08
+    type: multi
+    prompt: Which are benefits of residual connections ($X + f(X)$) in deep transformers?
+    explanation: The identity path passes gradients straight back and lets an unhelpful layer do nearly nothing.
+    options:
+      - text: A block that has learned nothing useful can leave the stream almost unchanged
+        correct: true
+        why: It only needs to output nearly zero.
+      - text: Gradients have a direct path back to early layers
+        correct: true
+        why: The derivative includes a 1 from the identity.
+      - text: They make attention cost linear in the sequence length
+        why: Residuals do not change the cost of attention.
+      - text: They remove the need for an optimiser
+        why: Training still uses gradient-based optimisation.
+  - id: f10-transformers-09
+    type: order
+    prompt: Put the usual stages of building a chat assistant in order.
+    items:
+      - Pretraining with next-token prediction on a huge text corpus
+      - Instruction tuning on prompts paired with good responses
+      - Preference tuning, for example RLHF
+    explanation: Pretraining builds the base model; instruction tuning teaches the assistant format; preference tuning shapes behaviour towards what people prefer.
+  - id: f10-transformers-10
+    type: mcq
+    prompt: You ask a base model (pretrained only) "What is the capital of France?". Which response is most typical?
+    explanation: A base model continues documents. A question often appears in a list of questions, so continuing with more questions is a likely continuation.
+    options:
+      - text: It cannot produce any output until it is fine-tuned
+        why: Base models generate text fine.
+      - text: It refuses, because it has no instruction tuning
+        why: Refusals are a learned behaviour from post-training.
+      - text: It continues the text, perhaps with more quiz questions, instead of reliably answering
+        correct: true
+        why: It is a document continuer, not yet an assistant.
+      - text: It always answers with a polite, well-formatted reply
+        why: That format is learned in instruction tuning.
+  - id: f10-transformers-11
+    type: mcq
+    prompt: In RLHF, what does the reward model learn?
+    explanation: People compare pairs of responses; the reward model learns to predict which one they prefer, and the language model is then optimised for that reward.
+    options:
+      - text: To translate prompts into tokens
+        why: That is the tokeniser.
+      - text: To predict the next token
+        why: That is the language model's pretraining task.
+      - text: To predict which of two responses people prefer
+        correct: true
+        why: It is trained on human comparisons.
+      - text: To decide the learning rate
+        why: Optimiser settings are chosen by engineers.
+  - id: f10-transformers-12
+    type: cloze
+    prompt: The maximum number of tokens a model can see at once, prompt and output together, is its context ____.
+    accept:
+      - window
+      - length
+    explanation: The context window. Anything outside it does not exist for the model.

@@ -1,0 +1,122 @@
+items:
+  - id: f10-attention-01
+    type: mcq
+    prompt: In self-attention, what is the role of the key vectors?
+    explanation: Queries ask, keys advertise and values carry the content. A position's weights come from its query's dot products with every key.
+    options:
+      - text: They are compared with a query by dot products to decide how much weight each position gets
+        correct: true
+        why: Query · key gives the score.
+      - text: They are the information that gets averaged into the output
+        why: That is the values.
+      - text: They are what a position is looking for
+        why: That is the query.
+      - text: They store the position of each token
+        why: Keys come from the token vectors; position information is added separately.
+  - id: f10-attention-02
+    type: numeric
+    prompt: A query $\mathbf{q} = (1, 2)$ and a key $\mathbf{k} = (3, 1)$ with $d_k = 2$. What is the scaled score $\mathbf{q}\cdot\mathbf{k}/\sqrt{d_k}$? (3 decimal places.)
+    answer: 3.536
+    tol: 0.001
+    explanation: q · k = 3 + 2 = 5, and 5 / √2 ≈ 3.536.
+  - id: f10-attention-03
+    type: numeric
+    prompt: A position attends to two others with scaled scores $0$ and $\ln 3$. Their value vectors are $(0, 4)$ and $(4, 0)$. What is the **first** component of the output?
+    answer: 3
+    tol: 0.001
+    explanation: Softmax of (0, ln 3) is (1/4, 3/4). The output is 0.25 (0, 4) + 0.75 (4, 0) = (3, 1); its first component is 3.
+  - id: f10-attention-04
+    type: mcq
+    prompt: Why are attention scores divided by $\sqrt{d_k}$?
+    explanation: Dot products of vectors with unit-variance entries have standard deviation about √d_k. Large scores saturate the softmax into near one-hot weights with tiny gradients; the division restores a spread near 1.
+    options:
+      - text: To hide future positions
+        why: That is the causal mask.
+      - text: To make each row of weights sum to 1
+        why: The softmax already does that.
+      - text: The spread (standard deviation) of dot products grows like the square root of d_k, and big scores would saturate the softmax and stall learning
+        correct: true
+        why: Scaling keeps the spread near 1.
+      - text: To convert the scores into probabilities
+        why: That is the softmax's job.
+  - id: f10-attention-05
+    type: output
+    prompt: What does this print?
+    code: |
+      import numpy as np
+      print(np.triu(np.ones((3, 3), dtype=int), k=1))
+    answer: "[[0 1 1]\n [0 0 1]\n [0 0 0]]"
+    explanation: 'np.triu with k=1 keeps entries strictly above the diagonal: exactly the future positions a causal mask blocks.'
+  - id: f10-attention-06
+    type: mcq
+    prompt: With a causal mask, what is the attention output at the **first** position of a sequence?
+    explanation: The first position may only attend to itself, so its single weight is 1 and the output is its own value vector.
+    options:
+      - text: The average of all value vectors
+        why: That would require seeing future positions.
+      - text: The last position's value vector
+        why: The last position is in its future, so it is masked.
+      - text: Its own value vector
+        correct: true
+        why: Weight 1 on itself, 0 on all future positions.
+      - text: A zero vector
+        why: It still attends to itself.
+  - id: f10-attention-07
+    type: numeric
+    prompt: Basic attention computes a $T \times T$ score matrix. By what factor does the number of scores grow when the context goes from 1,000 to 4,000 tokens?
+    answer: 16
+    tol: 0
+    explanation: T² grows by 4² = 16. This quadratic cost is why long contexts are expensive.
+  - id: f10-attention-08
+    type: multi
+    prompt: A model has $d = 512$ and uses multi-head attention with $h = 8$ heads. Which statements are true?
+    explanation: Each head works in d / h = 64 dimensions with its own projections; the head outputs are concatenated back to 512 and mixed by W_O.
+    options:
+      - text: All heads must attend to the same positions
+        why: Different heads typically learn different attention patterns.
+      - text: Eight heads cost about eight times as much as one full-size head
+        why: Each head is 8 times smaller, so the total is about the same.
+      - text: The heads' outputs are concatenated and multiplied by an output matrix W_O
+        correct: true
+        why: Concatenation restores 512 dimensions.
+      - text: Each head's queries and keys have 64 dimensions
+        correct: true
+        why: d_k = 512 / 8.
+      - text: Each head has its own W_Q, W_K and W_V
+        correct: true
+        why: That lets different heads learn different patterns.
+  - id: f10-attention-09
+    type: mcq
+    prompt: What do the entries of each row of the attention weight matrix $A$ add up to?
+    explanation: 'Each row is a softmax, so it sums to 1: every output is a weighted average of the value vectors.'
+    options:
+      - text: '1'
+        correct: true
+        why: A softmax per row.
+      - text: The square root of d_k
+        why: The scaling applies to the scores before the softmax.
+      - text: '0'
+        why: Softmax outputs are positive, except masked entries that are exactly 0.
+      - text: T, the sequence length
+        why: That would be true only without normalisation.
+  - id: f10-attention-10
+    type: cloze
+    prompt: Attention in which the queries, keys and values all come from the same sequence is called ____-attention.
+    accept:
+      - self
+    regex: ^\s*self(-attention)?\s*$
+    explanation: 'Self-attention: every position attends to positions of the same sequence.'
+  - id: f10-attention-11
+    type: mcq
+    prompt: Why must a language model use a causal mask during training?
+    explanation: Each position is trained to predict the next token. Without the mask it could attend to that very token and learn to copy instead of predict.
+    options:
+      - text: Because softmax cannot handle negative scores
+        why: Softmax handles any real scores.
+      - text: To make the weights sum to 1
+        why: The softmax does that with or without a mask.
+      - text: Otherwise each position could look at the token it is meant to predict
+        correct: true
+        why: The mask removes the answer from view.
+      - text: To make attention faster
+        why: The mask does not reduce the computation in the basic form.

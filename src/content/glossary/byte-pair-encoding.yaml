@@ -1,0 +1,8 @@
+term: "Byte-pair encoding"
+short: "A tokenisation method that starts from single characters or bytes and repeatedly merges the most frequent adjacent pair into a new token."
+body: |
+  BPE (byte-pair encoding) learns an ordered list of merges from a training corpus. To tokenise new text,
+  it splits the text into characters (or bytes) and replays the merges in the same order. Frequent words
+  become single tokens, rare words split into known pieces, and nothing is ever unknown. Most GPT-style
+  models use a byte-level variant.
+related: ["token"]

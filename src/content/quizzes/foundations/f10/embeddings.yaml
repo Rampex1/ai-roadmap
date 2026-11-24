@@ -1,0 +1,111 @@
+items:
+  - id: f10-embeddings-01
+    type: output
+    prompt: What does this print?
+    code: |
+      import numpy as np
+      E = np.arange(6).reshape(3, 2)
+      x = np.array([0, 0, 1])
+      print(x @ E)
+    answer: '[4 5]'
+    explanation: E is [[0, 1], [2, 3], [4, 5]]. A one-hot vector with its 1 in position 2 picks out row 2, [4, 5].
+  - id: f10-embeddings-02
+    type: mcq
+    prompt: An embedding layer `E[ids]` is mathematically the same as which operation?
+    explanation: One-hot vector times E selects one row of E, so the lookup is a linear layer without bias applied to one-hot inputs, computed without the zeros.
+    options:
+      - text: PCA applied to the vocabulary
+        why: Embeddings are learned parameters, not a projection of something else.
+      - text: A softmax over the vocabulary
+        why: Softmax produces probabilities at the output, not input vectors.
+      - text: Multiplying the integer id by a weight vector
+        why: That would give vectors along one line, ordered by id; ids have no meaningful size.
+      - text: A linear layer with no bias applied to one-hot vectors of the ids
+        correct: true
+        why: x E = E[i] when x is one-hot at i.
+  - id: f10-embeddings-03
+    type: numeric
+    prompt: How many parameters does an embedding table hold for a vocabulary of 50,000 tokens and embedding dimension 512?
+    answer: 25600000
+    tol: 0
+    explanation: 'One row of 512 numbers per token: 50,000 × 512 = 25,600,000.'
+  - id: f10-embeddings-04
+    type: mcq
+    prompt: Why do "cat" and "dog" tend to end up with similar learned embeddings?
+    explanation: 'They appear in similar contexts. To make similar predictions in those contexts, the cheapest solution for the model is similar input vectors: the distributional hypothesis.'
+    options:
+      - text: They have the same number of letters
+        why: Spelling length plays no role in the learned vectors.
+      - text: They appear in similar contexts, and similar vectors help the model make similar predictions there
+        correct: true
+        why: You shall know a word by the company it keeps.
+      - text: The embeddings are initialised from a dictionary of meanings
+        why: They start random and are learned from the training task.
+      - text: Their token ids are close together
+        why: Ids carry no meaning; embeddings start random.
+  - id: f10-embeddings-05
+    type: numeric
+    prompt: What is the cosine similarity of $(1, 2, 2)$ and $(2, 1, 2)$? (3 decimal places.)
+    answer: 0.889
+    tol: 0.001
+    explanation: Dot product 2 + 2 + 4 = 8; both lengths are √9 = 3; 8 / 9 ≈ 0.889.
+  - id: f10-embeddings-06
+    type: multi
+    prompt: Which are real caveats about word-vector analogies such as king − man + woman ≈ queen?
+    explanation: Published results exclude the input words, famous examples are cherry-picked, and embeddings encode the stereotypes in their training text.
+    options:
+      - text: Many analogies fail; the famous ones were selected because they worked
+        correct: true
+        why: Success varies a lot by relation type.
+      - text: The input words are usually excluded from the candidate answers, because the nearest vector is often one of them
+        correct: true
+        why: Often king itself is nearest to the target.
+      - text: Analogies only work with one-hot vectors
+        why: One-hot vectors are all equally far apart, so no analogy can work with them.
+      - text: Embeddings can encode social biases, such as gender stereotypes about jobs
+        correct: true
+        why: They learn the associations in their text.
+  - id: f10-embeddings-07
+    type: mcq
+    prompt: How does a contextual embedding inside a transformer differ from a static word2vec embedding?
+    explanation: Static embeddings give one vector per word. A transformer's layers update each token's vector using its neighbours, so the same word gets different vectors in different sentences.
+    options:
+      - text: The same word gets different vectors in different sentences, because layers mix in information from surrounding tokens
+        correct: true
+        why: bank by a river and bank with money end up different.
+      - text: Contextual embeddings are one-hot vectors
+        why: They are dense vectors.
+      - text: Contextual embeddings are not learned
+        why: Both kinds are learned.
+      - text: Static embeddings are recomputed for every sentence
+        why: That describes contextual embeddings; static ones are fixed per word.
+  - id: f10-embeddings-08
+    type: output
+    prompt: Row `s` holds a word's cosine similarities to four words, the first being itself. What does this print?
+    code: |
+      import numpy as np
+      s = np.array([1.0, 0.2, 0.9, 0.5])
+      print(np.argsort(-s)[1:3])
+    answer: '[2 3]'
+    explanation: Sorting from most to least similar gives indices 0, 2, 3, 1. Skipping index 0 (the word itself) leaves the two nearest neighbours, 2 and 3.
+  - id: f10-embeddings-09
+    type: mcq
+    prompt: Two words sit close together on a 2-D PCA plot of 300-dimensional embeddings. What can you conclude?
+    explanation: The projection discards most of the variance, so points can overlap in 2-D while being far apart in the full space. Check the cosine similarity in the original space.
+    options:
+      - text: They are synonyms
+        why: Even true closeness in embedding space does not imply synonymy; antonyms often sit close.
+      - text: They must have cosine similarity near 1
+        why: Closeness in a projection does not guarantee closeness in the full space.
+      - text: 'Possibly nothing: they may be far apart in the dimensions the projection discarded'
+        correct: true
+        why: A 2-D projection throws information away.
+      - text: The first principal component means the same as both words
+        why: PCA axes have no fixed meaning or sign.
+  - id: f10-embeddings-10
+    type: cloze
+    prompt: Through the input lookup, only the rows of the embedding matrix for tokens that appear in the batch receive a nonzero ____.
+    accept:
+      - gradient
+      - gradients
+    explanation: The lookup selects rows, so through the input side the loss depends only on the selected rows and all other rows get zero gradient for that batch. (If the same matrix is also used as the output layer, weight tying, that use updates every row.)

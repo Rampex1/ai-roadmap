@@ -1,0 +1,248 @@
+---
+title: "Attention: letting tokens look at each other"
+module: f10
+order: 4
+estMinutes: 18
+objectives:
+  - "Explain the roles of queries, keys and values in self-attention"
+  - "Compute scaled dot-product attention by hand and in NumPy, and explain the division by the square root of d_k"
+  - "Apply a causal mask so that each position attends only to itself and earlier positions"
+  - "Describe what multi-head attention adds and how its shapes fit together"
+goDeeper: illustrated-transformer
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import attnImg from '@/assets/diagrams/f10-attention.svg';
+
+The bigram model of the [previous lesson](/foundations/f10/language-models/) predicts from one token
+back. To predict the next word of "the cat that chased the dogs was ___" a model must look much further:
+the verb agrees with "cat", six words earlier. <Term id="attention" /> is the mechanism that lets every
+position gather information from any earlier position, with weights that depend on the content. It is the
+core of the transformer, introduced in the 2017 paper "Attention Is All You Need".
+
+## From averaging to attention
+
+Each token starts as an embedding vector, so a sequence of $T$ tokens is a matrix $X$ of shape $(T, d)$,
+one row per token. A crude way to let token $t$ see its past: replace its row with the **average** of rows
+$1$ to $t$. That mixes information, but every earlier token gets the same weight, whatever it says.
+
+Attention keeps the idea of a weighted average and makes the weights **learned and content-dependent**.
+Each token produces three vectors from its embedding, each by its own learned matrix:
+
+- a **query** $\mathbf{q}$: "what am I looking for?"
+- a **key** $\mathbf{k}$: "what do I contain?"
+- a **value** $\mathbf{v}$: "what do I pass on if you pick me?"
+
+$$
+Q = X W_Q, \qquad K = X W_K, \qquad V = X W_V
+$$
+
+$W_Q$ and $W_K$ have shape $(d, d_k)$ and $W_V$ has shape $(d, d_v)$, so $Q$ and $K$ are $(T, d_k)$ and
+$V$ is $(T, d_v)$. Token $i$'s interest in token $j$ is the [dot product](/foundations/f3/dot-product/)
+of $i$'s query with $j$'s key: large when they point the same way. A softmax over $j$ turns those scores
+into weights that sum to 1, and token $i$'s output is the weighted average of the value vectors.
+
+Because the queries, keys and values all come from the same sequence, this is called **self-attention**.
+
+## Scaled dot-product attention
+
+In matrix form, all positions at once:
+
+$$
+\operatorname{Attention}(Q, K, V) = \operatorname{softmax}\!\left(\frac{Q K^\top}{\sqrt{d_k}}\right) V
+$$
+
+- $Q K^\top$ is a $(T, T)$ matrix of scores: entry $(i, j)$ is $\mathbf{q}_i \cdot \mathbf{k}_j$.
+- Dividing by $\sqrt{d_k}$ keeps the scores at a sensible size (explained below).
+- The softmax is applied to **each row**, giving the attention weights $A$: row $i$ says how much
+  position $i$ takes from each position $j$.
+- $A V$ has shape $(T, d_v)$: one output vector per position, a weighted average of the values.
+
+<Figure
+  src={attnImg}
+  alt="Flow diagram: the input X goes through three matrices to give Q, K and V. Q and K transposed are multiplied and divided by the square root of d_k to give a T by T score grid; the causal mask blanks the upper triangle; a row-wise softmax gives the weights A; A times V gives the output"
+  caption="Scaled dot-product self-attention with a causal mask. The grey cells of the score grid are future positions, masked out before the softmax."
+/>
+
+### A worked example
+
+Three tokens with $d_k = 2$. To keep the arithmetic visible we skip the $W$ matrices and choose $Q$, $K$
+and $V$ directly:
+
+$$
+Q = \begin{pmatrix} 1 & 0 \\ 0 & 2 \\ 1 & 1 \end{pmatrix}, \quad
+K = \begin{pmatrix} 2 & 0 \\ 0 & 1 \\ 1 & 1 \end{pmatrix}, \quad
+V = \begin{pmatrix} 1 & 0 \\ 0 & 1 \\ 5 & 5 \end{pmatrix}
+$$
+
+Token 1's query $(1, 0)$ dotted with the three keys gives $2, 0, 1$; divided by $\sqrt 2$ that is
+$1.414, 0, 0.707$. The softmax of that row is $0.576, 0.140, 0.284$, so token 1's output is
+
+$$
+0.576\,(1, 0) + 0.140\,(0, 1) + 0.284\,(5, 5) = (1.996, 1.560)
+$$
+
+In NumPy:
+
+```python
+import numpy as np
+np.set_printoptions(precision=3, suppress=True)
+
+def softmax(Z):
+    Z = Z - Z.max(axis=-1, keepdims=True)        # stable softmax along each row
+    E = np.exp(Z)
+    return E / E.sum(axis=-1, keepdims=True)
+
+Q = np.array([[1.0, 0.0], [0.0, 2.0], [1.0, 1.0]])
+K = np.array([[2.0, 0.0], [0.0, 1.0], [1.0, 1.0]])
+V = np.array([[1.0, 0.0], [0.0, 1.0], [5.0, 5.0]])
+S = Q @ K.T / np.sqrt(2)          # scores, (3, 3)
+print(S)
+A = softmax(S)                    # each row sums to 1
+print(A)
+print(A @ V)                      # outputs, (3, 2)
+```
+
+```text title="Output"
+[[1.414 0.    0.707]
+ [0.    1.414 1.414]
+ [1.414 0.707 1.414]]
+[[0.576 0.14  0.284]
+ [0.108 0.446 0.446]
+ [0.401 0.198 0.401]]
+[[1.996 1.56 ]
+ [2.337 2.675]
+ [2.407 2.203]]
+```
+
+Token 2's query $(0, 2)$ matches keys 2 and 3 equally, so it takes 44.6% from each and only 10.8% from
+token 1.
+
+### Why divide by $\sqrt{d_k}$?
+
+If the entries of $\mathbf{q}$ and $\mathbf{k}$ are roughly independent with mean 0 and variance 1, their
+dot product is a sum of $d_k$ such products, so its variance is about $d_k$ and its standard deviation
+$\sqrt{d_k}$. Dividing by $\sqrt{d_k}$ brings it back to about 1:
+
+```python
+rng = np.random.default_rng(0)
+for d in [4, 64, 512]:
+    q = rng.normal(size=(10000, d))
+    k = rng.normal(size=(10000, d))
+    s = (q * k).sum(axis=1)                       # 10,000 dot products
+    print(d, round(s.std(), 2), round((s / np.sqrt(d)).std(), 2))
+print(softmax(np.array([8.0, 0.0, -8.0])), softmax(np.array([1.0, 0.0, -1.0])))
+```
+
+```text title="Output"
+4 2.0 1.0
+64 8.08 1.01
+512 22.58 1.0
+[1. 0. 0.] [0.665 0.245 0.09 ]
+```
+
+Unscaled scores with a spread of 8 or more push the softmax to one-hot weights. A saturated softmax has
+gradients near zero, so learning stalls, the same problem as a saturated sigmoid in
+[F9](/foundations/f9/activation-functions/).
+
+## The causal mask
+
+A language model is trained to predict token $t + 1$ from tokens $1$ to $t$. If position $t$ could
+attend to later positions it would simply read the answer. A <Term id="causal-mask" /> forbids that:
+before the softmax, set every score where $j > i$ (the upper triangle) to $-\infty$. Since
+$e^{-\infty} = 0$, those positions get weight exactly 0, and each row's remaining weights still sum to 1.
+
+```python
+T = 3
+mask = np.triu(np.ones((T, T), dtype=bool), k=1)   # True above the diagonal: the future
+print(mask)
+A = softmax(np.where(mask, -np.inf, S))
+print(A)
+print(A @ V)
+```
+
+```text title="Output"
+[[False  True  True]
+ [False False  True]
+ [False False False]]
+[[1.    0.    0.   ]
+ [0.196 0.804 0.   ]
+ [0.401 0.198 0.401]]
+[[1.    0.   ]
+ [0.196 0.804]
+ [2.407 2.203]]
+```
+
+Token 1 can only see itself, so its output is its own value. Token 3 sees everything and is unchanged.
+
+The mask has a second benefit. One training sequence of $T$ tokens gives $T$ prediction problems
+(predict token 2 from token 1, token 3 from tokens 1 and 2, and so on), and with the mask all of them are
+computed in parallel in one pass, with no position cheating.
+
+## Multi-head attention
+
+One attention computation produces one set of weights per position: one way of deciding what is
+relevant. But a token may need several kinds of information at once: the subject it agrees with, the
+previous word, the matching opening bracket. **Multi-head attention** runs $h$ attention computations,
+the **heads**, side by side, each with its own $W_Q$, $W_K$, $W_V$ and a smaller size $d_k = d / h$.
+The $h$ outputs, each of shape $(T, d/h)$, are concatenated back to $(T, d)$ and multiplied by one more
+learned matrix $W_O$ of shape $(d, d)$:
+
+```python
+def attention(Q, K, V, causal=True):
+    S = Q @ K.T / np.sqrt(K.shape[1])
+    if causal:
+        S = np.where(np.triu(np.ones(S.shape, dtype=bool), k=1), -np.inf, S)
+    return softmax(S) @ V
+
+rng = np.random.default_rng(0)
+T, d, h = 4, 8, 2
+X = rng.normal(size=(T, d))
+heads = []
+for _ in range(h):
+    Wq, Wk, Wv = (rng.normal(size=(d, d // h)) for _ in range(3))
+    heads.append(attention(X @ Wq, X @ Wk, X @ Wv))
+Wo = rng.normal(size=(d, d))
+out = np.concatenate(heads, axis=1) @ Wo
+print([hd.shape for hd in heads], out.shape)
+```
+
+```text title="Output"
+[(4, 4), (4, 4)] (4, 8)
+```
+
+The output has the same shape as the input, which lets the next layer stack on top. Because each head
+works in $d/h$ dimensions, $h$ heads cost about the same as one full-size head. Studies of trained models
+find heads with recognisable jobs, such as attending to the previous token or copying an earlier
+pattern, though many heads do not have a clean story. Track B (B12) returns to this under
+interpretability.
+
+:::note[What attention costs]
+The score matrix is $T \times T$, so time and memory grow with the square of the sequence length:
+doubling the context quadruples that part of the work. This is a major reason long contexts are
+expensive, and why much research goes into faster attention. Real libraries compute exactly the same
+result as the formula above with cleverer memory use.
+:::
+
+To see these computations animated, watch 3Blue1Brown's
+[transformer chapters](https://www.3blue1brown.com/lessons/gpt); the original paper,
+[Attention Is All You Need](https://arxiv.org/abs/1706.03762), is short and readable once you know the
+pieces.
+
+## Try it
+
+Implement attention with an optional causal mask; the tests compare it with a reference on random inputs.
+
+<CodeExercise id="f10-attention-01" />
+
+## Summary
+
+- Self-attention lets every position take a weighted average of other positions' **values**, with weights
+  from how well its **query** matches their **keys**: $\operatorname{softmax}(QK^\top/\sqrt{d_k})\,V$.
+- $Q = XW_Q$, $K = XW_K$, $V = XW_V$ are learned projections of the same token vectors; the score matrix
+  is $T \times T$ and the softmax runs along each row.
+- Dividing by $\sqrt{d_k}$ keeps the scores' spread near 1 so the softmax does not saturate.
+- The causal mask sets future scores to $-\infty$, so each position sees only itself and the past; this
+  also lets a whole sequence train in parallel.
+- Multi-head attention runs $h$ smaller heads in parallel, concatenates them and mixes them with $W_O$.

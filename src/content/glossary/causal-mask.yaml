@@ -1,0 +1,6 @@
+term: "Causal mask"
+short: "A mask that sets attention scores for future positions to minus infinity, so each position can attend only to itself and earlier positions."
+body: |
+  After the softmax the masked positions get weight exactly 0. The mask lets a language model train on
+  every position of a sequence in parallel without seeing the token it must predict.
+related: ["attention", "language-model"]

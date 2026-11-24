@@ -1,0 +1,241 @@
+---
+title: "Text as numbers: tokens"
+module: f10
+order: 1
+estMinutes: 14
+objectives:
+  - "Compare characters, words and subword tokens as units of text, and name the trade-off each makes"
+  - "Run byte-pair encoding merges by hand on a small corpus and apply learned merges to a new word"
+  - "Build a vocabulary that maps tokens to integer ids and back"
+  - "Explain why one-hot vectors are a poor way to represent tokens"
+goDeeper: karpathy-gpt-tokenizer
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Every model in this course so far has eaten numbers: pixel values, house sizes, coordinates. Text is
+not numbers. This module shows how text becomes numbers, how a model can learn what those numbers mean,
+and how the models behind chat assistants are built from the pieces you met in
+[F9](/foundations/f9/the-neuron/). It is an introduction: Track B (B7) builds a transformer from scratch
+in depth, and Track C (from C1) teaches you to engineer with large language models.
+
+The first step is always the same: cut the text into pieces called <Term id="token" text="tokens" />,
+and give each distinct piece an integer id.
+
+## Characters: the simplest choice
+
+Treat every character as a token. The **vocabulary** is the set of distinct tokens, and two
+dictionaries convert between tokens and ids:
+
+```python
+text = "hello world"
+chars = sorted(set(text))
+print(chars)
+stoi = {ch: i for i, ch in enumerate(chars)}      # string to id
+itos = {i: ch for ch, i in stoi.items()}          # id to string
+ids = [stoi[ch] for ch in text]
+print(ids)
+print("".join(itos[i] for i in ids))
+```
+
+```text title="Output"
+[' ', 'd', 'e', 'h', 'l', 'o', 'r', 'w']
+[3, 2, 4, 4, 5, 0, 7, 5, 6, 4, 1]
+hello world
+```
+
+Turning text into ids is **encoding**; turning ids back into text is **decoding**. Encoding then
+decoding must give back the original text exactly.
+
+Characters have two virtues: the vocabulary is tiny (about a hundred for English text) and no text can
+ever contain an unknown token. Their weakness is length. "hello world" became 11 ids, and a model must
+spend effort learning that `h`, `e`, `l`, `l`, `o` together mean something. Longer sequences cost more
+compute, and, as you will see in the [attention lesson](/foundations/f10/attention/), the basic
+transformer's cost grows with the square of the sequence length.
+
+## Words: short sequences, huge vocabulary
+
+Split on spaces instead and "hello world" is two tokens. Sequences are short, and each token already
+carries meaning. But:
+
+- **The vocabulary explodes.** English has hundreds of thousands of word forms once you count
+  "run", "runs", "running", "ran", names, numbers and typos. Each one needs its own entry.
+- **Unknown words.** A word never seen in training ("unfriendliest", a new product name) has no id. Old
+  systems replaced it with a special `<unk>` token and lost the information.
+- **No shared pieces.** "play", "played" and "playing" get unrelated ids; the model must learn their
+  connection from scratch for every word.
+
+## Subword tokens: the middle way
+
+Modern language models split text into **subwords**: frequent words stay whole, and rare words break
+into frequent pieces. "unfriendliest" might become `un`, `friend`, `li`, `est`. The vocabulary stays a
+manageable size, sequences stay fairly short, and any word can be spelled from pieces.
+
+The most common way to choose the pieces is <Term id="byte-pair-encoding" /> (BPE). It began as a data
+compression method and was adapted for language models around 2016. The idea is greedy and simple:
+
+1. Start with every word split into characters, plus an end-of-word marker `</w>`.
+2. Count every pair of adjacent symbols across the corpus, weighting each word by how often it occurs.
+3. Merge the most frequent pair into one new symbol, everywhere it appears. Record the merge.
+4. Repeat until the vocabulary reaches the size you want.
+
+### A BPE walk-through
+
+A tiny corpus with four words and their counts: "low" 5 times, "lower" 2, "newest" 6 and "widest" 3.
+
+```python
+from collections import Counter
+
+words = {("l", "o", "w", "</w>"): 5,
+         ("l", "o", "w", "e", "r", "</w>"): 2,
+         ("n", "e", "w", "e", "s", "t", "</w>"): 6,
+         ("w", "i", "d", "e", "s", "t", "</w>"): 3}
+
+def pair_counts(words):
+    counts = Counter()
+    for symbols, freq in words.items():
+        for pair in zip(symbols, symbols[1:]):     # adjacent pairs
+            counts[pair] += freq
+    return counts
+
+print(pair_counts(words).most_common(4))
+```
+
+```text title="Output"
+[(('e', 's'), 9), (('s', 't'), 9), (('t', '</w>'), 9), (('w', 'e'), 8)]
+```
+
+`e s` appears 6 times in "newest" and 3 times in "widest": 9 in all. Three pairs tie at 9; we break ties
+by taking the alphabetically first pair, so the first merge is `e` + `s` → `es`. Now merge and repeat:
+
+```python
+def merge(words, pair):
+    a, b = pair
+    out = {}
+    for symbols, freq in words.items():
+        new, i = [], 0
+        while i < len(symbols):
+            if i < len(symbols) - 1 and symbols[i] == a and symbols[i + 1] == b:
+                new.append(a + b)                 # the pair becomes one symbol
+                i += 2
+            else:
+                new.append(symbols[i])
+                i += 1
+        out[tuple(new)] = freq
+    return out
+
+merges = []
+for step in range(1, 6):
+    counts = pair_counts(words)
+    best = min(counts, key=lambda p: (-counts[p], p))   # most frequent, ties alphabetical
+    words = merge(words, best)
+    merges.append(best)
+    print(step, best, counts[best])
+for w in words:
+    print(" ".join(w))
+```
+
+```text title="Output"
+1 ('e', 's') 9
+2 ('es', 't') 9
+3 ('est', '</w>') 9
+4 ('l', 'o') 7
+5 ('lo', 'w') 7
+low </w>
+low e r </w>
+n e w est</w>
+w i d est</w>
+```
+
+After five merges the vocabulary has gained `es`, `est`, `est</w>`, `lo` and `low`. The suffix "est"
+at the end of a word, shared by "newest" and "widest", became a single token: BPE discovered a piece of
+English grammar purely from counts.
+
+To **tokenise a new word**, split it into characters and replay the recorded merges in the same order:
+
+```python
+def encode_word(word, merges):
+    symbols = tuple(word) + ("</w>",)
+    for pair in merges:
+        symbols = next(iter(merge({symbols: 1}, pair)))
+    return symbols
+
+print(encode_word("lowest", merges))
+print(encode_word("wider", merges))
+```
+
+```text title="Output"
+('low', 'est</w>')
+('w', 'i', 'd', 'e', 'r', '</w>')
+```
+
+"lowest" never appeared in the corpus, yet it splits into two known tokens. "wider" falls back to single
+characters because no merge covered it. Nothing is ever unknown.
+
+:::note[Real tokenisers]
+Production tokenisers run tens of thousands of merges on huge corpora. GPT-2's vocabulary had 50,257
+tokens; as of late 2026, common vocabularies range from about 32,000 to a few hundred thousand. Most work
+on **bytes** rather than characters (byte-level BPE): they start from the 256 possible byte values, so
+any text in any language, including emoji, can be encoded. Spaces are usually folded into the token
+that follows them, so " the" with its leading space is one token. Each model family has its own
+tokeniser, and the token ids of one model mean nothing to another.
+:::
+
+### Consequences you will meet
+
+- **Token counts are not word counts.** For ordinary English, a common rule of thumb is about 4
+  characters, or three quarters of a word, per token. Code, numbers and many other languages need more
+  tokens for the same content, which makes them slower and more expensive to process. LLM pricing and
+  limits are counted in tokens ([lesson 6](/foundations/f10/llms-in-practice/)).
+- **The model never sees letters.** If "strawberry" arrives as two or three tokens, counting its r's
+  requires the model to have memorised how each token is spelled. Tokenisation explains several odd
+  failures of language models on spelling, rhyming and digit-by-digit arithmetic.
+
+## One-hot vectors, and why they are poor
+
+Ids are integers, but the integers' sizes mean nothing: token 7 is not "more" than token 3. The F7
+answer to a categorical feature was <Term id="one-hot-encoding" />: token $i$ becomes a vector of length
+$V$ (the vocabulary size) with a 1 in position $i$ and 0 everywhere else.
+
+```python
+import numpy as np
+
+V = 8
+one_hot = np.eye(V)          # row i is the one-hot vector of token i
+print(one_hot[3])
+cat, dog, car = one_hot[0], one_hot[1], one_hot[2]
+print(cat @ dog, cat @ car)
+```
+
+```text title="Output"
+[0. 0. 0. 1. 0. 0. 0. 0.]
+0.0 0.0
+```
+
+This is correct but wasteful and uninformative:
+
+- **Size.** With a vocabulary of 100,000, every token is a vector of 100,000 numbers, all but one zero.
+- **No similarity.** Any two different one-hot vectors are perpendicular: their
+  [dot product](/foundations/f3/dot-product/) and cosine similarity are 0. "cat" is exactly as far from
+  "dog" as from "carburettor". Nothing the model learns about cats can transfer to dogs.
+
+The fix is to give every token a short, dense vector whose numbers are *learned*, so that related tokens
+end up near each other. That is an embedding, the subject of the [next lesson](/foundations/f10/embeddings/).
+
+## Try it
+
+Implement one BPE training step: count the pairs, pick the winner with the tie rule, and merge it.
+
+<CodeExercise id="f10-tokens-01" />
+
+## Summary
+
+- Models need numbers, so text is split into tokens and each distinct token gets an integer id; the set
+  of tokens is the vocabulary.
+- Characters: tiny vocabulary, nothing unknown, but long sequences. Words: short sequences, but a huge
+  vocabulary and unknown words.
+- Subword tokens, usually from byte-pair encoding, sit between the two: BPE repeatedly merges the most
+  frequent adjacent pair, and new words are tokenised by replaying the merges in order.
+- Real tokenisers are byte-level with vocabularies of tens to hundreds of thousands; about 4 English
+  characters per token is a rough rule.
+- One-hot vectors are huge and make every pair of tokens equally unrelated. Embeddings fix both.

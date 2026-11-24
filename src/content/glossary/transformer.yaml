@@ -1,0 +1,7 @@
+term: "Transformer"
+short: "A neural network built from repeated blocks of self-attention and a position-wise MLP, each with a residual connection and layer normalisation."
+body: |
+  Introduced in 2017 (Attention Is All You Need), the transformer is the architecture of GPT-style
+  language models, which use causal self-attention and stack dozens of identical blocks between an
+  embedding layer and a softmax over the vocabulary.
+related: ["attention", "residual-connection", "layer-normalisation", "multilayer-perceptron"]

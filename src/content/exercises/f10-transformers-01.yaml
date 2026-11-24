@@ -1,0 +1,101 @@
+id: f10-transformers-01
+lesson: foundations/f10/transformers
+title: One transformer block in NumPy
+prompt: |
+  Build a single-head, pre-norm transformer block. `X` has shape `(T, d)`; `p` is a dictionary of
+  parameters: `g1`, `b1`, `g2`, `b2` (shape `(d,)`), `Wq`, `Wk`, `Wv`, `Wo` (shape `(d, d)`), `W1`
+  (shape `(d, 4d)`), `c1` (shape `(4d,)`), `W2` (shape `(4d, d)`) and `c2` (shape `(d,)`).
+
+  1. `layer_norm(X, gamma, beta, eps=1e-5)` normalises **each row** of `X` to mean 0 and variance 1
+     (use `X.var`, the population variance), dividing by `np.sqrt(var + eps)`, then returns
+     `gamma * normalised + beta`.
+  2. `block(X, p)` computes, using the `causal_attention` function given in the starter:
+
+     ```
+     H = layer_norm(X, g1, b1)
+     X = X + causal_attention(H @ Wq, H @ Wk, H @ Wv) @ Wo
+     H = layer_norm(X, g2, b2)
+     X = X + relu(H @ W1 + c1) @ W2 + c2
+     ```
+
+     and returns the new `X`, shape `(T, d)`. (GPT-2 uses GELU instead of ReLU; the structure is the same.)
+starter: |
+  import numpy as np
+
+  def causal_attention(Q, K, V):
+      T = Q.shape[0]
+      S = Q @ K.T / np.sqrt(K.shape[1])
+      S = np.where(np.triu(np.ones((T, T), dtype=bool), k=1), -np.inf, S)
+      A = np.exp(S - S.max(axis=1, keepdims=True))
+      return (A / A.sum(axis=1, keepdims=True)) @ V
+
+  def layer_norm(X, gamma, beta, eps=1e-5):
+      return gamma * (X - X.mean()) / X.std() + beta
+
+  def block(X, p):
+      H = layer_norm(X, p["g1"], p["b1"])
+      X = causal_attention(H @ p["Wq"], H @ p["Wk"], H @ p["Wv"]) @ p["Wo"]
+      return X
+solution: |
+  import numpy as np
+
+  def causal_attention(Q, K, V):
+      T = Q.shape[0]
+      S = Q @ K.T / np.sqrt(K.shape[1])
+      S = np.where(np.triu(np.ones((T, T), dtype=bool), k=1), -np.inf, S)
+      A = np.exp(S - S.max(axis=1, keepdims=True))
+      return (A / A.sum(axis=1, keepdims=True)) @ V
+
+  def layer_norm(X, gamma, beta, eps=1e-5):
+      mu = X.mean(axis=-1, keepdims=True)
+      var = X.var(axis=-1, keepdims=True)
+      return gamma * (X - mu) / np.sqrt(var + eps) + beta
+
+  def block(X, p):
+      H = layer_norm(X, p["g1"], p["b1"])
+      X = X + causal_attention(H @ p["Wq"], H @ p["Wk"], H @ p["Wv"]) @ p["Wo"]
+      H = layer_norm(X, p["g2"], p["b2"])
+      X = X + np.maximum(0, H @ p["W1"] + p["c1"]) @ p["W2"] + p["c2"]
+      return X
+tests: |
+  import numpy as np
+  def _ln(X, g, b, eps=1e-5):
+      mu = X.mean(axis=-1, keepdims=True); var = X.var(axis=-1, keepdims=True)
+      return g * (X - mu) / np.sqrt(var + eps) + b
+  def _attn(Q, K, V):
+      T = Q.shape[0]
+      S = Q @ K.T / np.sqrt(K.shape[1]) + np.triu(np.full((T, T), -np.inf), k=1)
+      A = np.exp(S - S.max(axis=1, keepdims=True))
+      return (A / A.sum(axis=1, keepdims=True)) @ V
+  def _block(X, p):
+      H = _ln(X, p["g1"], p["b1"])
+      X = X + _attn(H @ p["Wq"], H @ p["Wk"], H @ p["Wv"]) @ p["Wo"]
+      H = _ln(X, p["g2"], p["b2"])
+      return X + np.maximum(0, H @ p["W1"] + p["c1"]) @ p["W2"] + p["c2"]
+  _x = np.array([[1.0, 2.0, 3.0, 6.0], [100.0, 102.0, 98.0, 100.0]])
+  _y = layer_norm(_x, np.ones(4), np.zeros(4))
+  np.testing.assert_allclose(_y, [[-1.069, -0.535, 0.0, 1.604], [0.0, 1.414, -1.414, 0.0]], atol=1e-3, err_msg="layer_norm should normalise each row separately: use axis=-1 and keepdims=True")
+  np.testing.assert_allclose(layer_norm(_x, np.full(4, 2.0), np.full(4, 0.5)), 2 * _y + 0.5, atol=1e-9, err_msg="apply gamma * normalised + beta")
+  _c = np.array([[3.0, 3.0, 3.0]])
+  assert np.all(np.isfinite(layer_norm(_c, np.ones(3), np.zeros(3)))), "a constant row has variance 0: add eps inside the square root"
+  _rng = np.random.default_rng(0)
+  for _T, _d in [(5, 8), (3, 4), (1, 6)]:
+      _p = {"g1": _rng.uniform(0.5, 1.5, _d), "b1": _rng.normal(0, 0.1, _d),
+            "g2": _rng.uniform(0.5, 1.5, _d), "b2": _rng.normal(0, 0.1, _d),
+            "Wq": _rng.normal(0, 0.5, (_d, _d)), "Wk": _rng.normal(0, 0.5, (_d, _d)),
+            "Wv": _rng.normal(0, 0.5, (_d, _d)), "Wo": _rng.normal(0, 0.5, (_d, _d)),
+            "W1": _rng.normal(0, 0.5, (_d, 4 * _d)), "c1": _rng.normal(0, 0.1, 4 * _d),
+            "W2": _rng.normal(0, 0.5, (4 * _d, _d)), "c2": _rng.normal(0, 0.1, _d)}
+      _X = _rng.normal(size=(_T, _d))
+      _out = block(_X, _p)
+      assert np.shape(_out) == (_T, _d), f"block should keep the shape ({_T}, {_d}), got {np.shape(_out)}"
+      np.testing.assert_allclose(_out, _block(_X, _p), atol=1e-9, err_msg=f"block output differs from the reference for T={_T}, d={_d}: check both residual additions and both layer norms")
+      if _T > 1:
+          _X2 = _X.copy(); _X2[-1] += 5.0
+          np.testing.assert_allclose(block(_X2, _p)[:-1], _out[:-1], atol=1e-9, err_msg="changing the last token must not change earlier outputs: the attention must stay causal")
+  _z = {k: np.zeros_like(v) for k, v in _p.items()}
+  np.testing.assert_allclose(block(_X, _z), _X, atol=1e-12, err_msg="with all-zero weights the block should return its input unchanged: did you keep the residual connections?")
+hints:
+  - "In layer_norm use X.mean(axis=-1, keepdims=True) and X.var(axis=-1, keepdims=True)."
+  - "Each sub-layer adds to X: X = X + ..., not X = ..."
+  - "The MLP is np.maximum(0, H @ W1 + c1) @ W2 + c2."
