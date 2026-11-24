@@ -1,0 +1,9 @@
+# Static Astro build. Node version comes from .nvmrc (24); Pyodide wheels are vendored during the build.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[headers]]
+  for = "/pyodide/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

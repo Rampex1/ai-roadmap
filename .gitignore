@@ -10,3 +10,6 @@ __pycache__/
 # Keep Research track content visible when local excludes hide directories named research.
 !/src/content/docs/research/
 !/src/content/quizzes/research/
+
+# Local Netlify folder
+.netlify

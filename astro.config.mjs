@@ -19,7 +19,7 @@ const hasContent = (slug) => {
 };
 
 export default defineConfig({
-  site: 'http://localhost:4321',
+  site: 'https://ai-roadmap-course.netlify.app',
   server: { port: 4321 },
   // The Pyodide worker is an ES module worker (it dynamic-imports /pyodide/pyodide.mjs).
   vite: { worker: { format: 'es' } },
