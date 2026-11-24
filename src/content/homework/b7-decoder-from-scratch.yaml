@@ -1,0 +1,22 @@
+id: b7-decoder-from-scratch
+module: b7
+kind: homework
+title: Build and test a tiny causal decoder
+brief: |-
+  Implement a framework-free decoder on small fixed tensors. Write down all dimensions before combining the exercises.
+
+  1. Compute scaled attention scores.
+  2. Prevent future positions from influencing a prefix.
+  3. Concatenate multiple heads in per-token order.
+  4. Check a pre-normalized residual block.
+  5. Compose and test a causal decoder block.
+
+  Change only the last input token and compare all previous outputs. Explain which part of the implementation would leak information if the causal mask were removed.
+notebook: /homework/b7-decoder-from-scratch.ipynb
+rubric:
+  - Scaling uses key width.
+  - Masking precedes normalization.
+  - Head concatenation keeps token order.
+  - Earlier decoder outputs are invariant to a changed suffix.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

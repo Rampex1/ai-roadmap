@@ -1,0 +1,45 @@
+---
+title: Combine attention heads along features
+module: b7
+order: 3
+estMinutes: 8
+objectives:
+  - Preserve token alignment during head concatenation
+  - Locate where a learned output projection mixes heads
+goDeeper: attention-is-all-you-need
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+<Term id="concatenate-attention-heads" cap /> splits learned query, key and value projections into several feature groups. Each head computes its own comparison and weighted values. One head can learn a different pattern from another, but a heatmap by itself does not establish a causal explanation of the model's predictions.
+
+After attention, concatenate features from all heads for each token, then apply an output projection. If two heads each produce T rows of width 2, the concatenation has T rows of width 4. Appending complete token lists instead would produce 2T rows of width 2 and scramble the time axis. An identity projection is useful for hand tests.
+
+The exercise takes already-computed head matrices. It validates that they have the same number of token rows. In a batched implementation preserve batch and sequence axes too.
+
+## Worked example
+
+The first row combines values from both first-token rows.
+
+```python
+def concatenate_heads(heads):
+    if not heads:
+        return []
+    count = len(heads[0])
+    if any(len(head)!=count for head in heads):
+        raise ValueError("different token counts")
+    return [[value for head in heads for value in head[t]] for t in range(count)]
+
+print(concatenate_heads([[[1],[2]],[[3,4],[5,6]]]))
+```
+
+```text title="Output"
+[[1, 3, 4], [2, 5, 6]]
+```
+
+Check shape and ordering before applying the output projection.
+
+## Try it
+
+<CodeExercise id="b7-concatenate-attention-heads-01" />

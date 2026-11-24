@@ -1,0 +1,4 @@
+term: "Scaled dot-product attention"
+short: "Computing attention weights from query–key dot products divided by the square root of key width."
+body: "Each query is compared with every key by dot product, the score is divided by √d_k, where d_k is the per-head key width, and a softmax over the key axis turns the row into weights for a sum of value vectors."
+related: ["attention","softmax"]

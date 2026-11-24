@@ -1,0 +1,92 @@
+items:
+  - id: b7-concatenate-attention-heads-01
+    type: mcq
+    prompt: Along which axis are heads concatenated?
+    explanation: Each position gets a wider representation.
+    options:
+      - text: Feature axis
+        why: Each position gets a wider representation.
+        correct: true
+      - text: Token axis
+        why: That would alter sequence positions.
+      - text: Batch axis
+        why: Heads are not independent examples.
+  - id: b7-concatenate-attention-heads-02
+    type: mcq
+    prompt: What follows concatenation in a standard block?
+    explanation: It combines head features into the block width.
+    options:
+      - text: A learned output projection
+        why: It combines head features into the block width.
+        correct: true
+      - text: A new target is generated for each head
+        why: The heads feed a shared representation.
+      - text: Automatic token reordering
+        why: Positions remain unchanged.
+  - id: b7-concatenate-attention-heads-03
+    type: mcq
+    prompt: What if one head has fewer tokens here?
+    explanation: Token alignment is required.
+    options:
+      - text: Reject it
+        why: Token alignment is required.
+        correct: true
+      - text: Silently discard extra rows
+        why: That hides misalignment.
+      - text: Append the shorter head as a later sequence
+        why: Heads describe the same positions.
+  - id: b7-concatenate-attention-heads-04
+    type: mcq
+    prompt: How wide are three concatenated heads of width two?
+    explanation: Widths add along features.
+    options:
+      - text: Six
+        why: Widths add along features.
+        correct: true
+      - text: Two
+        why: That is one head width.
+      - text: Three
+        why: That is the number of heads.
+  - id: b7-concatenate-attention-heads-05
+    type: multi
+    prompt: Which should a head concatenate check preserve?
+    explanation: Each position maps to one row. The projection expects a consistent layout.
+    options:
+      - text: Token count
+        why: Each position maps to one row.
+        correct: true
+      - text: Head order in feature layout
+        why: The projection expects a consistent layout.
+        correct: true
+      - text: A guarantee that each head has a unique linguistic role
+        why: That is not established by the architecture.
+  - id: b7-concatenate-attention-heads-06
+    type: cloze
+    prompt: The learned matrix after concatenation is the output ______.
+    accept:
+      - projection
+    explanation: It maps head features back to model width.
+  - id: b7-concatenate-attention-heads-07
+    type: order
+    prompt: Order the multi-head block.
+    items:
+      - Project input to queries keys and values
+      - Compute each head’s attention output
+      - Concatenate features per position
+      - Apply the output projection
+    explanation: Projection acts on the combined features.
+  - id: b7-concatenate-attention-heads-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def concatenate_heads(heads):
+          if not heads:
+              return []
+          count = len(heads[0])
+          if any(len(head)!=count for head in heads):
+              raise ValueError("different token counts")
+          return [[value for head in heads for value in head[t]] for t in range(count)]
+
+      print(concatenate_heads([[[1, 2]], [[3]], [[4]]]))
+    answer: "[[1, 2, 3, 4]]"
+    explanation: There is one token row with four features.

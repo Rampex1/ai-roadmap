@@ -4,5 +4,7 @@ title: "Transformers from scratch"
 order: 8
 prereqs: ["b6"]
 objectives:
-  - "Explain the core ideas of transformers from scratch"
-  - "Derive or implement the key methods of transformers from scratch"
+  - Derive scaled dot-product attention and implement a stable softmax
+  - Enforce causality and test prefix invariance
+  - Combine multiple attention heads and preserve axis order
+  - Build a pre-normalized decoder block and trace its residual paths

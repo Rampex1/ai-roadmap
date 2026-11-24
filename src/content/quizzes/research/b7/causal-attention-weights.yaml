@@ -1,0 +1,97 @@
+items:
+  - id: b7-causal-attention-weights-01
+    type: mcq
+    prompt: Which keys are allowed at position zero?
+    explanation: The diagonal is allowed in this convention.
+    options:
+      - text: Only key zero
+        why: The diagonal is allowed in this convention.
+        correct: true
+      - text: All keys with positive logits
+        why: Visibility depends on position.
+      - text: No keys at all
+        why: Self-visibility is included here.
+  - id: b7-causal-attention-weights-02
+    type: mcq
+    prompt: Why not replace forbidden logits with zero?
+    explanation: Zero in logit space is a finite score.
+    options:
+      - text: An unmasked zero logit receives positive softmax mass
+        why: Zero in logit space is a finite score.
+        correct: true
+      - text: It leaves all rows exactly unchanged
+        why: Forbidden keys may still compete.
+      - text: It makes score dtype invalid
+        why: Zero is a valid logit.
+  - id: b7-causal-attention-weights-03
+    type: mcq
+    prompt: Which maximum should be subtracted?
+    explanation: Forbidden logits should not affect stabilization.
+    options:
+      - text: The largest future score
+        why: That can underflow permitted values.
+      - text: The largest allowed score
+        why: Forbidden logits should not affect stabilization.
+        correct: true
+      - text: The smallest allowed score
+        why: This can leave very large exponentials.
+  - id: b7-causal-attention-weights-04
+    type: mcq
+    prompt: What exposes future leakage?
+    explanation: A valid causal prefix is invariant.
+    options:
+      - text: Change a suffix and compare earlier outputs
+        why: A valid causal prefix is invariant.
+        correct: true
+      - text: Change all prefix inputs too
+        why: Earlier outputs may then change legitimately.
+      - text: Inspect only output width
+        why: Shape alone does not test causality.
+  - id: b7-causal-attention-weights-05
+    type: multi
+    prompt: Which should hold for a causal row?
+    explanation: They carry the entire distribution. They cannot affect the weighted value.
+    options:
+      - text: Future entries are exactly zero
+        why: They cannot affect the weighted value.
+        correct: true
+      - text: Permitted entries sum to one
+        why: They carry the entire distribution.
+        correct: true
+      - text: The last token influences every earlier row
+        why: That would violate causality.
+  - id: b7-causal-attention-weights-06
+    type: cloze
+    prompt: An allowed diagonal lets each position attend to ______.
+    accept:
+      - itself
+      - self
+      - its own token
+      - the current token
+    explanation: The current input token is visible.
+  - id: b7-causal-attention-weights-07
+    type: order
+    prompt: Order a stable causal row.
+    items:
+      - Identify permitted positions
+      - Subtract the maximum among permitted scores
+      - Normalize permitted exponentials
+      - Return the normalized weights and zeros for excluded keys
+    explanation: Excluded scores do not enter stabilization.
+  - id: b7-causal-attention-weights-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def causal_weights(scores,position):
+          from math import exp
+          if not 0<=position<len(scores):
+              raise ValueError("query index outside score row")
+          allowed = scores[:position+1]
+          high = max(allowed)
+          mass = [exp(score-high) for score in allowed]
+          total = sum(mass)
+          return [value/total for value in mass]+[0.0]*(len(scores)-len(allowed))
+
+      print(causal_weights([4, 9, 2], 0))
+    answer: "[1.0, 0.0, 0.0]"
+    explanation: Only the first key is visible.

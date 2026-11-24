@@ -1,0 +1,32 @@
+id: b7-scaled-query-key-scores-01
+lesson: research/b7/scaled-query-key-scores
+title: Implement scaled query key scores
+prompt: Implement scaled_scores(query, keys). Reject an empty query or any mismatched key width. Return one scaled score per key, in input order.
+starter: |
+  def scaled_scores(query,keys):
+      raise NotImplementedError
+solution: |
+  def scaled_scores(query,keys):
+      from math import sqrt
+      if not query or any(len(key)!=len(query) for key in keys):
+          raise ValueError("key width must match the nonempty query")
+      scale = sqrt(len(query))
+      return [sum(q*k for q,k in zip(query,key))/scale for key in keys]
+tests: |
+  assert scaled_scores([1,0,0,0],[[2,0,0,0],[0,2,0,0]]) == [1,0]
+  assert scaled_scores([2],[[3],[-1]]) == [6,-2]
+  assert scaled_scores([1],[]) == []
+  try:
+      scaled_scores([1,2],[[1]])
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject incompatible key width")
+  try:
+      scaled_scores([],[])
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject an empty query")
+hints:
+  - Use feature width, not number of keys.

@@ -2,4 +2,4 @@ title: "Attention Is All You Need (Vaswani and others, 2017)"
 url: https://arxiv.org/abs/1706.03762
 kind: paper
 free: true
-modules: [f10]
+modules: [f10, b7]

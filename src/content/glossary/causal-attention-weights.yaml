@@ -1,0 +1,4 @@
+term: "Causal attention row"
+short: "A distribution over keys whose positions are at or before the associated query position."
+body: "Scores for keys after the query position are set to −∞ before the softmax. The diagonal stays visible, so the row sums to one over the current and earlier positions, and the future weights are exactly zero."
+related: ["causal-mask","scaled-query-key-scores"]

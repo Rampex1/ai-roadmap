@@ -1,0 +1,98 @@
+items:
+  - id: b7-pre-norm-decoder-block-01
+    type: mcq
+    prompt: What does normalizing across all sequence positions risk?
+    explanation: Earlier statistics could depend on later tokens.
+    options:
+      - text: Future-token leakage
+        why: Earlier statistics could depend on later tokens.
+        correct: true
+      - text: Increasing output head count
+        why: The normalization axis does not add heads.
+      - text: A deliberate zero derivative everywhere
+        why: That is not implied.
+  - id: b7-pre-norm-decoder-block-02
+    type: mcq
+    prompt: Which residual is used after attention?
+    explanation: Pre-normalization changes what enters the transform.
+    options:
+      - text: The unnormalized sublayer input
+        why: Pre-normalization changes what enters the transform.
+        correct: true
+      - text: Only the normalized row
+        why: That would change the residual path.
+      - text: Only the final token row
+        why: Every position has a residual path.
+  - id: b7-pre-norm-decoder-block-03
+    type: mcq
+    prompt: What does position-wise feed-forward imply?
+    explanation: It mixes features within a position.
+    options:
+      - text: The same network applies separately to each token row
+        why: It mixes features within a position.
+        correct: true
+      - text: It necessarily has no parameters
+        why: It can have learned layers.
+      - text: It pools every sequence position
+        why: That is an operation across tokens.
+  - id: b7-pre-norm-decoder-block-04
+    type: mcq
+    prompt: Why add epsilon?
+    explanation: A constant row has zero variance.
+    options:
+      - text: To keep the normalization denominator positive
+        why: A constant row has zero variance.
+        correct: true
+      - text: To encode token positions
+        why: It is a numerical constant.
+      - text: To mask future logits
+        why: Masking is separate.
+  - id: b7-pre-norm-decoder-block-05
+    type: multi
+    prompt: Which must preserve width for residual addition?
+    explanation: It must align with each input row. It must align with the updated stream.
+    options:
+      - text: Attention output after projection
+        why: It must align with each input row.
+        correct: true
+      - text: Feed-forward output after its final projection
+        why: It must align with the updated stream.
+        correct: true
+      - text: Key count must always equal model width
+        why: Sequence and feature axes are separate.
+  - id: b7-pre-norm-decoder-block-06
+    type: cloze
+    prompt: Before the sublayer, pre-norm applies token-wise ______.
+    accept:
+      - normalization
+      - normalisation
+      - layer normalization
+      - layer normalisation
+      - layer norm
+      - layernorm
+    explanation: It normalizes the feature dimension for each position.
+  - id: b7-pre-norm-decoder-block-07
+    type: order
+    prompt: Order a pre-norm block.
+    items:
+      - Normalize the input rows
+      - Apply causal attention and add the residual
+      - Normalize the updated rows
+      - Apply the feed-forward sublayer and add its residual
+    explanation: Each update is formed from a normalized view of the current residual.
+  - id: b7-pre-norm-decoder-block-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def normalize_token(row,epsilon=1e-5):
+          from math import sqrt
+          if not row or epsilon<=0:
+              raise ValueError("need a nonempty row and positive epsilon")
+          mean = sum(row)/len(row)
+          centered = [value-mean for value in row]
+          variance = sum(value*value for value in centered)/len(row)
+          return [value/sqrt(variance+epsilon) for value in centered]
+
+      print(normalize_token([5, 5, 5]))
+    answer: "[0.0, 0.0, 0.0]"
+    explanation: Centering a constant row yields all zeros.

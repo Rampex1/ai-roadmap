@@ -1,0 +1,4 @@
+term: "Multi-head attention"
+short: "Parallel attention maps whose per-position outputs are combined and projected."
+body: "The model is split into h heads of width d_model/h, each with its own Q, K and V projections. The head outputs are concatenated per token along the feature axis and mixed by a learned output projection W^O."
+related: ["attention","scaled-query-key-scores"]

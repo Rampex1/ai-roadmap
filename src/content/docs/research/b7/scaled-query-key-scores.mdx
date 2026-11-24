@@ -1,0 +1,44 @@
+---
+title: Derive scaled query–key scores
+module: b7
+order: 1
+estMinutes: 8
+objectives:
+  - Track query, key and value dimensions
+  - Explain why the dot product is scaled by key width
+goDeeper: attention-is-all-you-need
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A query and key both live in a space of width d. Compare them by dot product. Each key is paired with a value vector, whose width can differ; attention returns a weighted sum in value space. For a batch, write down the token axis and feature axis separately before multiplying.
+
+In <Term id="scaled-query-key-scores" />, divide each score by the square root of d. Under the simplifying assumption of independent, zero-mean, unit-variance query and key coordinates, a dot product has variance d. Scaling makes the variance one in that model and reduces needless softmax saturation. It does not imply trained coordinates satisfy those assumptions.
+
+The exercise computes one row of query–key scores. A row of weights comes from a softmax over keys, not over the coordinates of the query vector.
+
+## Worked example
+
+The width-four query gives a scale of two.
+
+```python
+def scaled_scores(query,keys):
+    from math import sqrt
+    if not query or any(len(key)!=len(query) for key in keys):
+        raise ValueError("key width must match the nonempty query")
+    scale = sqrt(len(query))
+    return [sum(q*k for q,k in zip(query,key))/scale for key in keys]
+
+print(scaled_scores([1,0,0,0], [[2,0,0,0], [0,2,0,0]]))
+```
+
+```text title="Output"
+[1.0, 0.0]
+```
+
+Draw the key axis explicitly before deciding where softmax goes.
+
+## Try it
+
+<CodeExercise id="b7-scaled-query-key-scores-01" />

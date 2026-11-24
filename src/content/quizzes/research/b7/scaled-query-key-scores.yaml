@@ -1,0 +1,91 @@
+items:
+  - id: b7-scaled-query-key-scores-01
+    type: mcq
+    prompt: What must match between a query and a key?
+    explanation: The dot product pairs feature coordinates.
+    options:
+      - text: Their feature width
+        why: The dot product pairs feature coordinates.
+        correct: true
+      - text: Their token index
+        why: Different tokens can be compared.
+      - text: Their vector values
+        why: The comparison can produce any score.
+  - id: b7-scaled-query-key-scores-02
+    type: mcq
+    prompt: What controls output feature width?
+    explanation: The weighted sum is in value space.
+    options:
+      - text: Value vector width
+        why: The weighted sum is in value space.
+        correct: true
+      - text: Number of heads regardless of value size
+        why: Single-head width already depends on values.
+      - text: Number of keys always
+        why: That determines the count of weights.
+  - id: b7-scaled-query-key-scores-03
+    type: mcq
+    prompt: What is the scale for key width 16?
+    explanation: The scale is the square root of width.
+    options:
+      - text: Sixteen
+        why: That is the untransformed width.
+      - text: Four
+        why: The scale is the square root of width.
+        correct: true
+      - text: The maximum dot product
+        why: Scaling is specified before seeing scores.
+  - id: b7-scaled-query-key-scores-04
+    type: mcq
+    prompt: Why use the scale?
+    explanation: It controls variance under the stated assumptions.
+    options:
+      - text: Guarantee uniform attention
+        why: Different logits can still differ greatly.
+      - text: Reduce growth of score magnitude with width
+        why: It controls variance under the stated assumptions.
+        correct: true
+      - text: Mask future tokens automatically
+        why: Masking is a separate operation.
+  - id: b7-scaled-query-key-scores-05
+    type: multi
+    prompt: Which axes matter for score normalization?
+    explanation: It gets a separate distribution. Softmax acts across keys.
+    options:
+      - text: A query row identifies one output position
+        why: It gets a separate distribution.
+        correct: true
+      - text: The keys in the row compete for mass
+        why: Softmax acts across keys.
+        correct: true
+      - text: Each key feature is a competing token
+        why: Features are summed inside the dot product.
+  - id: b7-scaled-query-key-scores-06
+    type: cloze
+    prompt: The score denominator is the square ______ of key width.
+    accept:
+      - root
+    explanation: That gives the chosen scale.
+  - id: b7-scaled-query-key-scores-07
+    type: order
+    prompt: Order the score calculation.
+    items:
+      - Choose one query
+      - Compute its dot product with each key
+      - Divide by the square root of width
+      - Pass the row to masking and normalization
+    explanation: Scores are formed before the probability row.
+  - id: b7-scaled-query-key-scores-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def scaled_scores(query,keys):
+          from math import sqrt
+          if not query or any(len(key)!=len(query) for key in keys):
+              raise ValueError("key width must match the nonempty query")
+          scale = sqrt(len(query))
+          return [sum(q*k for q,k in zip(query,key))/scale for key in keys]
+
+      print(scaled_scores([2], [[1], [0], [-1]]))
+    answer: "[2.0, 0.0, -2.0]"
+    explanation: A width-one query has scale one.

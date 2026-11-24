@@ -1,0 +1,47 @@
+---
+title: Mask future keys before softmax
+module: b7
+order: 2
+estMinutes: 8
+objectives:
+  - Compute stable causal attention rows
+  - Identify a prefix-invariance test
+goDeeper: attention-is-all-you-need
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+In a decoder, the representation at position t must not depend on any key at a later position. Build a <Term id="causal-attention-weights" /> by masking future logits before normalizing. The diagonal is visible because the hidden state at t predicts the next token. An architecture with a different target alignment must specify its visibility convention.
+
+Find the largest permitted score and subtract it before exponentiating. Filling forbidden positions with numeric zero before softmax would give them positive mass. Zeroing probabilities after an unrestricted softmax also changes the sum unless you renormalize; including a huge forbidden logit in the numerical maximum can lose all permitted mass.
+
+A direct correctness test compares outputs for a prefix by itself with the same prefix inside a longer sequence. Change the appended token values while holding prefix data and parameters fixed. Any earlier output change signals a causal or normalization bug.
+
+## Worked example
+
+The extreme future score does not enter the row.
+
+```python
+def causal_weights(scores,position):
+    from math import exp
+    if not 0<=position<len(scores):
+        raise ValueError("query index outside score row")
+    allowed = scores[:position+1]
+    high = max(allowed)
+    mass = [exp(score-high) for score in allowed]
+    total = sum(mass)
+    return [value/total for value in mass]+[0.0]*(len(scores)-len(allowed))
+
+print(causal_weights([1000,1000,5000],1))
+```
+
+```text title="Output"
+[0.5, 0.5, 0.0]
+```
+
+Test visibility independently from numerical stability.
+
+## Try it
+
+<CodeExercise id="b7-causal-attention-weights-01" />

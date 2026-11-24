@@ -1,0 +1,27 @@
+id: b7-concatenate-attention-heads-01
+lesson: research/b7/concatenate-attention-heads
+title: Implement concatenate attention heads
+prompt: Implement concatenate_heads(heads) for a list of token-by-feature lists. Concatenate within each token, preserving head order. Reject different token counts. An empty head list yields [].
+starter: |
+  def concatenate_heads(heads):
+      raise NotImplementedError
+solution: |
+  def concatenate_heads(heads):
+      if not heads:
+          return []
+      count = len(heads[0])
+      if any(len(head)!=count for head in heads):
+          raise ValueError("different token counts")
+      return [[value for head in heads for value in head[t]] for t in range(count)]
+tests: |
+  assert concatenate_heads([[[1],[2]],[[3,4],[5,6]]])==[[1,3,4],[2,5,6]]
+  assert concatenate_heads([])==[]
+  assert concatenate_heads([[],[]])==[]
+  try:
+      concatenate_heads([[[1]],[[1],[2]]])
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject token mismatch")
+hints:
+  - Index each head at the same token before appending values.

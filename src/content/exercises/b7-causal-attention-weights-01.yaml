@@ -1,0 +1,41 @@
+id: b7-causal-attention-weights-01
+lesson: research/b7/causal-attention-weights
+title: Implement causal attention weights
+prompt: Implement causal_weights(scores, position) for finite logits and integer position. Return probabilities with keys after position exactly zero. Reject indices outside the row.
+starter: |
+  def causal_weights(scores,position):
+      raise NotImplementedError
+solution: |
+  def causal_weights(scores,position):
+      from math import exp
+      if not 0<=position<len(scores):
+          raise ValueError("query index outside score row")
+      allowed = scores[:position+1]
+      high = max(allowed)
+      mass = [exp(score-high) for score in allowed]
+      total = sum(mass)
+      return [value/total for value in mass]+[0.0]*(len(scores)-len(allowed))
+tests: |
+  assert causal_weights([1000,1000,5000],1)==[0.5,0.5,0]
+  assert causal_weights([0,1],0)==[1,0]
+  assert causal_weights([0,0],1)==[0.5,0.5]
+  try:
+      causal_weights([],0)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject invalid query index")
+  try:
+      causal_weights([0,1],2)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject a query index past the row")
+  try:
+      causal_weights([0,1,2],-2)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject a negative query index")
+hints:
+  - Use the permitted prefix to compute the maximum.
