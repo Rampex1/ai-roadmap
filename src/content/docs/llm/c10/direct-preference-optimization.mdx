@@ -1,0 +1,44 @@
+---
+title: Score preference pairs with DPO
+module: c10
+order: 3
+estMinutes: 8
+objectives:
+  - Compute a reference-adjusted preference margin
+  - Distinguish preference data from demonstration data
+goDeeper: hf-dpo-trainer
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A preference pair uses one prompt, one chosen completion and one rejected completion. Keep the prompt identical for the two alternatives. This isolates a preference rather than mixing task difficulty with answer quality. A chosen answer may be preferred for accuracy or formatting. Label the reason consistently, and exclude pairs whose preference is ambiguous.
+
+<Term id="dpo" /> compares the policy log-probability margin for chosen versus rejected against the same margin from a frozen reference. Multiply their difference by beta, then apply negative log-sigmoid. A positive adjusted margin means the policy shifted toward the chosen answer relative to the reference. A zero margin yields ln(2) per pair.
+
+Use completion log probabilities in this formulation, summing the valid completion token log probabilities under the same prompt and masking setup. Keep reference and policy templates aligned. Preference datasets can reward incidental shortcuts, such as choosing longer answers whenever length and preferred label are correlated. Audit pairs and evaluate the trained result on independent tasks.
+
+The example takes four finite sequence log probabilities and uses a numerically stable softplus. The reference remains fixed while the policy is updated.
+
+## Worked example
+
+The policy margin is two and the reference margin is one, so the adjusted margin is positive.
+
+```python
+def preference_loss(chosen, rejected, ref_chosen, ref_rejected, beta):
+    from math import exp, log1p
+    adjusted = beta * ((chosen - rejected) - (ref_chosen - ref_rejected))
+    return max(0.0, -adjusted) + log1p(exp(-abs(adjusted)))
+
+print(round(preference_loss(-2, -4, -3, -4, 1), 4))
+```
+
+```text title="Output"
+0.3133
+```
+
+DPO compares a pair under both policy and reference. Inspect the data preference and held-out effect separately.
+
+## Try it
+
+<CodeExercise id="c10-direct-preference-optimization-01" />

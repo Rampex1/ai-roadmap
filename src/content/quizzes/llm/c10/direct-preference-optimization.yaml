@@ -1,0 +1,90 @@
+items:
+  - id: c10-direct-preference-optimization-01
+    type: mcq
+    prompt: What should paired alternatives share?
+    explanation: The pair compares completions conditioned on the same input.
+    options:
+      - text: The same chosen label
+        why: Chosen and rejected play different roles.
+      - text: The same prompt
+        why: The pair compares completions conditioned on the same input.
+        correct: true
+      - text: Only the number of tokens
+        why: Length does not establish the task.
+  - id: c10-direct-preference-optimization-02
+    type: mcq
+    prompt: What enters the reference-adjusted margin?
+    explanation: Both chosen-versus-rejected margins matter.
+    options:
+      - text: The policy difference minus the reference difference
+        why: Both chosen-versus-rejected margins matter.
+        correct: true
+      - text: Only the chosen answer’s raw log probability
+        why: That ignores the rejected answer and the reference.
+      - text: The reference’s new gradient
+        why: The reference is frozen.
+  - id: c10-direct-preference-optimization-03
+    type: mcq
+    prompt: What is the per-pair loss at zero adjusted margin?
+    explanation: The sigmoid of zero is one half.
+    options:
+      - text: ln(2)
+        why: The sigmoid of zero is one half.
+        correct: true
+      - text: Zero
+        why: The loss only approaches zero for a large positive margin.
+      - text: One exactly
+        why: Negative log one half is about 0.693.
+  - id: c10-direct-preference-optimization-04
+    type: mcq
+    prompt: Why audit lengths across preferences?
+    explanation: A shortcut can track the preferred label.
+    options:
+      - text: Every chosen answer must be shorter
+        why: Preference should reflect the rubric.
+      - text: DPO cannot accept different lengths
+        why: Pair completions can differ in length.
+      - text: The labels may inadvertently reward verbosity
+        why: A shortcut can track the preferred label.
+        correct: true
+  - id: c10-direct-preference-optimization-05
+    type: multi
+    prompt: What belongs in a preference example?
+    explanation: A rejected completion is the alternative the loss compares against the chosen one. A chosen completion represents the preferred alternative.
+    options:
+      - text: A chosen completion
+        why: It represents the preferred alternative.
+        correct: true
+      - text: A rejected completion
+        why: The loss compares it to the chosen one.
+        correct: true
+      - text: Two unrelated prompts as a single pair
+        why: The alternatives should share their prompt.
+  - id: c10-direct-preference-optimization-06
+    type: cloze
+    prompt: The comparison model held fixed during DPO is called the ______ policy.
+    accept:
+      - reference
+      - reference policy
+    explanation: It establishes a baseline margin for each pair.
+  - id: c10-direct-preference-optimization-07
+    type: order
+    prompt: Order the per-pair loss calculation.
+    items:
+      - Get completion log probabilities under policy and reference
+      - Compute chosen-minus-rejected margins
+      - Subtract reference margin from policy margin and scale
+      - Apply negative log-sigmoid
+    explanation: Both margins are calculated before the adjusted preference.
+  - id: c10-direct-preference-optimization-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def preference_loss(chosen, rejected, ref_chosen, ref_rejected, beta):
+          from math import exp, log1p
+          adjusted = beta * ((chosen - rejected) - (ref_chosen - ref_rejected))
+          return max(0.0, -adjusted) + log1p(exp(-abs(adjusted)))
+
+      print(round(preference_loss(-1, -3, -5, -7, 2), 3))
+    answer: "0.693"
+    explanation: Both margins are two, so the loss is ln(2), rounded to 0.693.

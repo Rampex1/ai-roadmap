@@ -1,0 +1,6 @@
+title: Hugging Face TRL DPO trainer
+url: https://huggingface.co/docs/trl/main/dpo_trainer
+kind: tool
+free: true
+modules:
+  - c10

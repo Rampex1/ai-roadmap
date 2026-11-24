@@ -1,0 +1,27 @@
+id: c10-evaluate-and-ship-an-adapter-01
+lesson: llm/c10/evaluate-and-ship-an-adapter
+title: Apply accuracy and critical-case gates
+prompt: Implement release_gate(before, after, critical, min_gain). Return (absolute success-rate gain, approved). Reject nonmatching or empty binary outcomes. Require gain at least min_gain and no before-pass to after-fail on a critical row.
+starter: |
+  def release_gate(before, after, critical, min_gain):
+      raise NotImplementedError
+solution: |
+  def release_gate(before, after, critical, min_gain):
+      if not before or len(before) != len(after) or len(before) != len(critical):
+          raise ValueError("need aligned, nonempty outcomes")
+      gain = (sum(after) - sum(before)) / len(before)
+      regression = any(flag and old and not new for old, new, flag in zip(before, after, critical))
+      return gain, gain >= min_gain and not regression
+tests: |
+  assert release_gate([1,0],[1,1],[True,False],0.5) == (0.5,True)
+  assert release_gate([1,0,0,0],[0,1,1,1],[True,False,False,False],0.25) == (0.5,False)
+  assert release_gate([0,1],[0,1],[False,True],0.01) == (0.0,False)
+  assert release_gate([0,0],[0,1],[True,False],0.5) == (0.5,True), "A critical row that already failed before is not a regression"
+  try:
+      release_gate([],[],[],0)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("Empty eval should not approve a release")
+hints:
+  - Look for any critical case that was correct before and is wrong after.

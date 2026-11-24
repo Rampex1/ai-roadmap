@@ -4,5 +4,7 @@ title: "Fine-tuning with LoRA and DPO"
 order: 10
 prereqs: ["c9", "f5"]
 objectives:
-  - "Explain the core ideas of fine-tuning with LoRA and DPO"
-  - "Build and evaluate an application using fine-tuning with LoRA and DPO"
+  - Prepare masked assistant targets and avoid evaluation leakage
+  - Compute and size a low-rank adapter update
+  - Compute a stable reference-adjusted DPO loss for preference pairs
+  - Evaluate a tuned model against base and retrieval baselines with explicit gates

@@ -1,0 +1,31 @@
+id: c10-supervised-response-training-01
+lesson: llm/c10/supervised-response-training
+title: Mask prompt and padding positions
+prompt: Given a token list, prompt length and real unpadded length, preserve exactly the assistant target span. Use -100 for prompt and padding labels and reject invalid boundaries.
+starter: |
+  def response_labels(tokens, prompt_length, real_length):
+      raise NotImplementedError
+solution: |
+  def response_labels(tokens, prompt_length, real_length):
+      if not 0 <= prompt_length <= real_length <= len(tokens):
+          raise ValueError("invalid token boundaries")
+      return [-100] * prompt_length + tokens[prompt_length:real_length] + [-100] * (len(tokens) - real_length)
+tests: |
+  assert response_labels([1,2,3,4,0,0],2,4) == [-100,-100,3,4,-100,-100]
+  assert response_labels([1,2],0,2) == [1,2]
+  assert response_labels([1,2],2,2) == [-100,-100]
+  try:
+      response_labels([1],1,2)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("Reject spans outside the input")
+  for args in [([1,2,3],3,1),([1,2],-1,2)]:
+      try:
+          response_labels(*args)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError("Reject a negative prompt length or a prompt longer than the real length")
+hints:
+  - Mask all positions outside the target span.

@@ -1,0 +1,91 @@
+items:
+  - id: c10-supervised-response-training-01
+    type: mcq
+    prompt: What remains available when prompt labels are masked?
+    explanation: Masking the training loss is not dropping input.
+    options:
+      - text: Nothing before the assistant reply
+        why: The model still conditions on the prompt.
+      - text: Only pad tokens
+        why: The whole context remains available.
+      - text: The prompt tokens as model input
+        why: Masking the training loss is not dropping input.
+        correct: true
+  - id: c10-supervised-response-training-02
+    type: mcq
+    prompt: What should be checked before starting a run?
+    explanation: Incorrect masking trains on unintended text.
+    options:
+      - text: The template and actual target spans
+        why: Incorrect masking trains on unintended text.
+        correct: true
+      - text: Only the final train loss
+        why: A low loss can target the wrong tokens.
+      - text: Only the number of notebook cells
+        why: Cell count does not identify targets.
+  - id: c10-supervised-response-training-03
+    type: mcq
+    prompt: Where should alternate versions of the same conversation go?
+    explanation: Family-level grouping prevents leakage.
+    options:
+      - text: Keep them in the same split
+        why: Family-level grouping prevents leakage.
+        correct: true
+      - text: Distribute them to every split
+        why: That makes evaluation less independent.
+      - text: Put them in the holdout after inspecting it to tune
+        why: That invalidates the holdout.
+  - id: c10-supervised-response-training-04
+    type: mcq
+    prompt: Which task is a strong reason to use retrieval?
+    explanation: Retrieval can supply a current source.
+    options:
+      - text: Answer from today’s updated policy
+        why: Retrieval can supply a current source.
+        correct: true
+      - text: Reduce trainable adapter parameters
+        why: That is a role for LoRA.
+      - text: Learn a stable response format
+        why: Examples can teach format.
+  - id: c10-supervised-response-training-05
+    type: multi
+    prompt: What should be ignored by response-only loss?
+    explanation: The model learns the completion targets. Padding is not content to predict.
+    options:
+      - text: Prompt labels
+        why: The model learns the completion targets.
+        correct: true
+      - text: Padding labels
+        why: Padding is not content to predict.
+        correct: true
+      - text: Every assistant target
+        why: Then no target remains to learn.
+  - id: c10-supervised-response-training-06
+    type: cloze
+    prompt: Updating a model from demonstrated answers is supervised ______.
+    accept:
+      - fine-tuning
+      - fine tuning
+      - finetuning
+    explanation: Supervised fine-tuning uses target completions.
+  - id: c10-supervised-response-training-07
+    type: order
+    prompt: Order a response-only dataset workflow.
+    items:
+      - Split by case family
+      - Render conversations in the training split
+      - Identify response target token spans
+      - Train with masked labels
+    explanation: Split first to avoid cross-set variants.
+  - id: c10-supervised-response-training-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def response_labels(tokens, prompt_length, real_length):
+          if not 0 <= prompt_length <= real_length <= len(tokens):
+              raise ValueError("invalid token boundaries")
+          return [-100] * prompt_length + tokens[prompt_length:real_length] + [-100] * (len(tokens) - real_length)
+
+      print(response_labels([4, 5, 6, 0], 1, 3))
+    answer: "[-100, 5, 6, -100]"
+    explanation: The first and last positions are masked.

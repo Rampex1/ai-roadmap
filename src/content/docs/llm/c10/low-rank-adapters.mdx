@@ -1,0 +1,46 @@
+---
+title: Compute a LoRA update
+module: c10
+order: 2
+estMinutes: 8
+objectives:
+  - Explain the low-rank factorization and scaling
+  - Count trainable parameters for a dense weight matrix
+goDeeper: hf-trl-peft
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A frozen linear map with weight W sends an input vector x to Wx. <Term id="lora" /> adds a learned update: output equals Wx plus (alpha divided by r) times B(Ax). For input width d, output width m and adapter rank r, A has shape r by d and B has shape m by r. The update uses r times (d plus m) trainable parameters instead of m times d for a full trainable matrix, ignoring bias.
+
+One common initialization makes B zero and A small and random. Then the initial update is zero, while B can still receive gradients through the nonzero Ax. If both factors start exactly zero, each factor's gradient through the product is initially zero. The base weights remain frozen, but the forward pass and intermediate activations still require memory.
+
+Rank is a capacity choice. Set a small baseline, specify which modules receive adapters and measure validation results before increasing rank. Alpha scales the adapter output in this lesson's convention. Check your library's scaling option if it uses a different variant.
+
+The fixture takes an already-computed base output and Ax, then adds the projected B(Ax). This illustrates the forward calculation independently of a training framework.
+
+## Worked example
+
+The rank-one adapter changes the two base coordinates in opposite directions.
+
+```python
+def add_adapter(base, ax, b, alpha):
+    if not ax or len(base) != len(b) or any(len(row) != len(ax) for row in b):
+        raise ValueError("incompatible adapter dimensions")
+    scale = alpha / len(ax)
+    return [old + scale * sum(weight * value for weight, value in zip(row, ax))
+            for old, row in zip(base, b)]
+
+print(add_adapter([2, 3], [4], [[0.5], [-1]], 2))
+```
+
+```text title="Output"
+[6.0, -5.0]
+```
+
+A smaller adapter reduces trainable weights and optimizer state. Measure actual activation and model memory as well.
+
+## Try it
+
+<CodeExercise id="c10-low-rank-adapters-01" />

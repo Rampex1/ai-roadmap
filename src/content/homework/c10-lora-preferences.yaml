@@ -1,0 +1,22 @@
+id: c10-lora-preferences
+module: c10
+kind: homework
+title: Train and evaluate a tiny adapter
+brief: |-
+  Start with offline checks for response-only labels, low-rank updates, preference loss and release gates. The final bonus lab uses PyTorch on a synthetic binary routing task to make the frozen base and training updates observable.
+
+  1. Mask targets outside the assistant completion.
+  2. Compute a LoRA update with explicit factor sizes.
+  3. Score a chosen/rejected response pair against a frozen reference.
+  4. Apply a predefined holdout and critical-case release gate.
+  5. Track preference loss and holdout release evidence separately.
+
+  Record when you would use prompt changes, RAG, supervised LoRA or preference tuning. Name a critical holdout case and explain how you would gather independent evidence for it. Record the base checkpoint, tokenizer/template revision, target modules, rank and alpha you would version.
+notebook: /homework/c10-lora-preferences.ipynb
+rubric:
+  - Target labels retain only the intended assistant span.
+  - Adapter shapes are checked and the scaling is correct.
+  - The preference loss stays finite for large margins.
+  - The release report uses paired evidence and documents the base and adapter settings.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Standard library for required tasks. Optional PyTorch lab runs on Colab CPU in under a minute. Allow 60 to 90 minutes overall.

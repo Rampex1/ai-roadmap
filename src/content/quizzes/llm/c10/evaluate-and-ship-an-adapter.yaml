@@ -1,0 +1,94 @@
+items:
+  - id: c10-evaluate-and-ship-an-adapter-01
+    type: mcq
+    prompt: What must match when loading an adapter?
+    explanation: The factors act on specific base weights.
+    options:
+      - text: The base checkpoint and compatible target modules
+        why: The factors act on specific base weights.
+        correct: true
+      - text: Only the dataset size
+        why: Dataset size does not identify target weights.
+      - text: Only the output folder name
+        why: Paths alone do not establish compatibility.
+  - id: c10-evaluate-and-ship-an-adapter-02
+    type: mcq
+    prompt: Which test is fair for comparing behaviour?
+    explanation: A shared benchmark isolates the change.
+    options:
+      - text: Tune the threshold after seeing the holdout
+        why: That reuses the holdout to make a decision.
+      - text: Compare train loss for one and holdout accuracy for the other
+        why: The metrics describe different things.
+      - text: Evaluate base and adapter on the same held-out prompts
+        why: A shared benchmark isolates the change.
+        correct: true
+  - id: c10-evaluate-and-ship-an-adapter-03
+    type: mcq
+    prompt: Can a candidate with a large aggregate gain still fail this gate?
+    explanation: Both requirements must pass.
+    options:
+      - text: Only if all flags are false
+        why: With no critical flags, this rule uses gain alone.
+      - text: No, a large enough gain overrides critical cases
+        why: The rule is conjunctive, so a critical regression fails the gate whatever the gain.
+      - text: Yes, any critical regression fails the gate
+        why: Both requirements must pass.
+        correct: true
+  - id: c10-evaluate-and-ship-an-adapter-04
+    type: mcq
+    prompt: Why retain the original adapter artifact?
+    explanation: A merge may otherwise obscure the original factorization.
+    options:
+      - text: It supports rollback and reproducibility
+        why: A merge may otherwise obscure the original factorization.
+        correct: true
+      - text: It proves the current answers are factual
+        why: Artifacts do not verify facts.
+      - text: It replaces the need for base weights
+        why: Adapter weights describe a delta.
+  - id: c10-evaluate-and-ship-an-adapter-05
+    type: multi
+    prompt: What should be versioned for deployment?
+    explanation: It identifies the model that receives the adapter. They determine how requests become inputs.
+    options:
+      - text: Only the number of printed responses
+        why: That does not reproduce the run.
+      - text: Tokenizer and template settings
+        why: They determine how requests become inputs.
+        correct: true
+      - text: Base checkpoint identity
+        why: It identifies the model that receives the adapter.
+        correct: true
+  - id: c10-evaluate-and-ship-an-adapter-06
+    type: cloze
+    prompt: A fused deployment copy should be checked for output ______ with the unmerged version.
+    accept:
+      - equivalence
+      - parity
+      - agreement
+      - consistency
+    explanation: Merging and precision can affect outputs, so compare them.
+  - id: c10-evaluate-and-ship-an-adapter-07
+    type: order
+    prompt: Order a release decision workflow.
+    items:
+      - Define the promotion gate
+      - Evaluate base and candidate on shared cases
+      - Check critical regressions and compatibility
+      - Promote or retain the base
+    explanation: Predefined gates avoid fitting the decision to the result.
+  - id: c10-evaluate-and-ship-an-adapter-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def release_gate(before, after, critical, min_gain):
+          if not before or len(before) != len(after) or len(before) != len(critical):
+              raise ValueError("need aligned, nonempty outcomes")
+          gain = (sum(after) - sum(before)) / len(before)
+          regression = any(flag and old and not new for old, new, flag in zip(before, after, critical))
+          return gain, gain >= min_gain and not regression
+
+      print(release_gate([0,1], [1,1], [False,True], 0.5))
+    answer: (0.5, True)
+    explanation: The gain meets the gate and the marked case still passes.

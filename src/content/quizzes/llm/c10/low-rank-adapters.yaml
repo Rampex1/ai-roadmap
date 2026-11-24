@@ -1,0 +1,91 @@
+items:
+  - id: c10-low-rank-adapters-01
+    type: mcq
+    prompt: Which weight stays frozen in this setup?
+    explanation: The low-rank factors learn the update.
+    options:
+      - text: Both A and B
+        why: These are trainable adapter factors.
+      - text: The base matrix W
+        why: The low-rank factors learn the update.
+        correct: true
+      - text: Only the loss scale
+        why: A scale is not the base matrix.
+  - id: c10-low-rank-adapters-02
+    type: mcq
+    prompt: How many trainable adapter weights are used for d=10, m=20, r=2?
+    explanation: Two times the sum of 10 and 20 is 60.
+    options:
+      - text: "60"
+        why: Two times the sum of 10 and 20 is 60.
+        correct: true
+      - text: "200"
+        why: That counts a full 20-by-10 matrix.
+      - text: "4"
+        why: Rank squared does not count both matrices.
+  - id: c10-low-rank-adapters-03
+    type: mcq
+    prompt: Why initialize one factor to zero?
+    explanation: The product initially vanishes.
+    options:
+      - text: The initial adapter update is zero
+        why: The product initially vanishes.
+        correct: true
+      - text: To make both factors unable to learn
+        why: The other factor may be nonzero.
+      - text: To make the base output zero
+        why: The frozen base still produces its output.
+  - id: c10-low-rank-adapters-04
+    type: mcq
+    prompt: What changes if rank increases with dimensions fixed?
+    explanation: The factor sizes grow proportionally with rank.
+    options:
+      - text: Base weight becomes smaller
+        why: Base shape stays fixed.
+      - text: There are more trainable adapter parameters
+        why: The factor sizes grow proportionally with rank.
+        correct: true
+      - text: No change to model capacity is possible
+        why: Rank changes the available update subspace.
+  - id: c10-low-rank-adapters-05
+    type: multi
+    prompt: Which affect LoRA training requirements?
+    explanation: Each target gets its own adapter. Rank controls factor dimensions.
+    options:
+      - text: The selected target modules
+        why: Each target gets its own adapter.
+        correct: true
+      - text: Only the filename extension
+        why: A filename does not affect model computation.
+      - text: The adapter rank
+        why: Rank controls factor dimensions.
+        correct: true
+  - id: c10-low-rank-adapters-06
+    type: cloze
+    prompt: LoRA constrains the update via a low-______ factorization.
+    accept:
+      - rank
+    explanation: A product of two thin factors has bounded rank.
+  - id: c10-low-rank-adapters-07
+    type: order
+    prompt: Order the decomposed forward calculation.
+    items:
+      - Apply A to the input
+      - Apply B to the rank-sized result
+      - Scale the adapter result
+      - Add it to the base output
+    explanation: The update follows B(Ax) before scaling and addition.
+  - id: c10-low-rank-adapters-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def add_adapter(base, ax, b, alpha):
+          if not ax or len(base) != len(b) or any(len(row) != len(ax) for row in b):
+              raise ValueError("incompatible adapter dimensions")
+          scale = alpha / len(ax)
+          return [old + scale * sum(weight * value for weight, value in zip(row, ax))
+                  for old, row in zip(base, b)]
+
+      print(add_adapter([1], [2, 3], [[1, -1]], 4))
+    answer: "[-1.0]"
+    explanation: The inner product is −1, scaled by two and added to one.

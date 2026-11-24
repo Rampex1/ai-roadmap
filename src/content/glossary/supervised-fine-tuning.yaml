@@ -1,0 +1,4 @@
+term: "Supervised fine-tuning"
+short: "Updating model parameters using inputs paired with desired outputs."
+body: "Fine-tuning on demonstration (prompt, response) pairs with next-token cross-entropy, usually counting loss only on the response tokens. It teaches format and behaviour, not reliably current facts."
+related: ["chat-template","held-out-set"]

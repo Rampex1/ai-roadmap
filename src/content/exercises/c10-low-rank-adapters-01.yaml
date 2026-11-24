@@ -1,0 +1,27 @@
+id: c10-low-rank-adapters-01
+lesson: llm/c10/low-rank-adapters
+title: Add a low-rank update
+prompt: Implement add_adapter(base, ax, b, alpha). Return base plus alpha/r times B times ax, with r = len(ax). Reject zero rank, different output dimensions and B rows with the wrong width.
+starter: |
+  def add_adapter(base, ax, b, alpha):
+      raise NotImplementedError
+solution: |
+  def add_adapter(base, ax, b, alpha):
+      if not ax or len(base) != len(b) or any(len(row) != len(ax) for row in b):
+          raise ValueError("incompatible adapter dimensions")
+      scale = alpha / len(ax)
+      return [old + scale * sum(weight * value for weight, value in zip(row, ax))
+              for old, row in zip(base, b)]
+tests: |
+  assert add_adapter([2,3],[4],[[0.5],[-1]],2) == [6.0,-5.0]
+  assert add_adapter([1],[2,3],[[4,5]],1) == [12.5]
+  assert add_adapter([5],[8],[[0]],4) == [5.0]
+  for base,ax,b in [([1],[],[[]]),([1,2],[1],[[1]]),([1],[2,3],[[1]])]:
+      try:
+          add_adapter(base,ax,b,1)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError("Reject incompatible sizes")
+hints:
+  - Multiply each row of B by ax using a dot product, then scale the result.

@@ -1,0 +1,44 @@
+---
+title: Train on assistant targets
+module: c10
+order: 1
+estMinutes: 8
+objectives:
+  - Construct response-only training labels
+  - Split conversational data before tuning or evaluation
+goDeeper: hf-trl-peft
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+<Term id="supervised-fine-tuning" /> teaches a model how to respond from demonstrations, such as formatting a library ticket or using an approved tone. In causal language-model training, each position predicts the next token. Use the same chat template at training and inference. Inspect a decoded sample before training so role boundaries and end-of-turn markers match your target format.
+
+For response-only loss, mask prompt tokens in the labels. They remain in the input so the assistant can attend to them. The target assistant completion, including the intended end token, contributes loss. Many causal-model training APIs handle the shift internally. Verify that rather than manually shifting labels twice. Padding tokens should not contribute to the loss.
+
+This fixture has one prompt prefix followed by assistant target tokens and trailing padding. A multi-turn trainer may need separate masks for multiple assistant spans. Avoid finding the boundary with a raw substring match on user text. Prefer a supported template mask or token spans derived from the renderer.
+
+Split by conversation or case family before adding paraphrases. Use validation to select settings and reserve the final holdout for the base-versus-adapter comparison. Fine-tuning affects behaviour; for updated facts, still supply a current source through retrieval.
+
+## Worked example
+
+Only the completion tokens 30 and 40 contribute to this training objective.
+
+```python
+def response_labels(tokens, prompt_length, real_length):
+    if not 0 <= prompt_length <= real_length <= len(tokens):
+        raise ValueError("invalid token boundaries")
+    return [-100] * prompt_length + tokens[prompt_length:real_length] + [-100] * (len(tokens) - real_length)
+
+print(response_labels([10, 20, 30, 40, 0], 2, 4))
+```
+
+```text title="Output"
+[-100, -100, 30, 40, -100]
+```
+
+Masked labels leave input context available. Inspect the real template and masking rules before training.
+
+## Try it
+
+<CodeExercise id="c10-supervised-response-training-01" />

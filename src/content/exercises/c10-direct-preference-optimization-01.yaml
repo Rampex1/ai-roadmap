@@ -1,0 +1,22 @@
+id: c10-direct-preference-optimization-01
+lesson: llm/c10/direct-preference-optimization
+title: Compute a stable DPO loss
+prompt: Implement preference_loss(chosen, rejected, ref_chosen, ref_rejected, beta). Compute softplus of the negative reference-adjusted margin. Inputs are finite log probabilities and a positive beta, and tests include large margins.
+starter: |
+  def preference_loss(chosen, rejected, ref_chosen, ref_rejected, beta):
+      raise NotImplementedError
+solution: |
+  def preference_loss(chosen, rejected, ref_chosen, ref_rejected, beta):
+      from math import exp, log1p
+      adjusted = beta * ((chosen - rejected) - (ref_chosen - ref_rejected))
+      return max(0.0, -adjusted) + log1p(exp(-abs(adjusted)))
+tests: |
+  from math import log
+  assert abs(preference_loss(-3,-4,-2,-3,1) - log(2)) < 1e-10
+  assert preference_loss(-2,-4,-3,-4,1) < log(2)
+  assert preference_loss(-4,-2,-4,-3,1) > log(2)
+  assert abs(preference_loss(-1000,0,0,0,1) - 1000) < 1e-8
+  assert preference_loss(0,-1000,0,0,1) < 1e-8
+  assert abs(preference_loss(-2,-4,-3,-4,0.5) - 0.4740769841801067) < 1e-9, "Apply beta to the margin"
+hints:
+  - Write softplus(x) as max(0, x) plus log1p(exp(-abs(x))).

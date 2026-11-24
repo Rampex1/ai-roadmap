@@ -1,0 +1,6 @@
+title: Hugging Face TRL and PEFT integration
+url: https://huggingface.co/docs/trl/peft_integration
+kind: tool
+free: true
+modules:
+  - c10

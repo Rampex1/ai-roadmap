@@ -1,0 +1,4 @@
+term: "Direct preference optimization"
+short: "Training that increases relative preference for chosen completions over rejected ones against a reference policy."
+body: "Minimises −log σ(β[(log πθ(y_w)−log πref(y_w))−(log πθ(y_l)−log πref(y_l))]) over preference pairs. The frozen reference πref anchors the policy, and β sets how far it may move. It needs no separate reward model or RL loop."
+related: ["supervised-fine-tuning","lora"]
