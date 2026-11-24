@@ -1,0 +1,112 @@
+---
+title: Evaluate retrieval and answer quality separately
+module: c5
+order: 4
+estMinutes: 13
+objectives:
+  - Compute recall@k, mean reciprocal rank and evidence recall on annotated questions
+  - Evaluate retrieval separately from answers, and use an oracle-context run to isolate the generator
+  - Locate the stage (indexing, retrieval, packing or generation) that caused a bad answer
+goDeeper: beir-benchmark
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A user reports a wrong answer. Was the passage never indexed? Indexed but not retrieved? Retrieved but dropped by the packer? Packed, and ignored or misread by the model? Each cause has a different fix, and judging only the final answer cannot tell them apart. This lesson measures each boundary on its own.
+
+## Build a small annotated set
+
+Start with 30 to 100 real questions. For each one, record:
+
+- the **supporting chunk IDs**, the passages a careful human would cite;
+- an **acceptable answer**, or the label **abstain** when the documents do not answer it;
+- optionally, a tag such as "exact code" or "paraphrase", so you can see which kind of query fails.
+
+Include unanswerable questions on purpose. Without them, a system that never abstains looks perfect.
+
+## Retrieval metrics
+
+Score the ranked list a retriever returns for question $q$, using the annotated relevant set $R_q$.
+
+**Recall@k** is the share of the relevant chunks that appear in the top $k$ results:
+
+$$
+\text{recall@}k(q) = \frac{|R_q \cap \text{top}_k(q)|}{|R_q|}
+$$
+
+Choose $k$ to match what happens next: if you rerank the top 50, recall@50 says whether the reranker had a chance at all.
+
+**Mean reciprocal rank (MRR)** rewards putting the first relevant chunk high. If the first relevant result for question $q$ is at rank $\text{rank}_q$ (counting from 1), its reciprocal rank is $1/\text{rank}_q$, or 0 if no relevant chunk was returned. Over $Q$ questions,
+
+$$
+\text{MRR} = \frac{1}{Q} \sum_{q=1}^{Q} \frac{1}{\text{rank}_q}.
+$$
+
+A first hit at rank 1 scores 1, rank 2 scores 0.5 and rank 4 scores 0.25. Recall@k ignores order inside the top $k$, while MRR cares only about the first hit, so report both.
+
+Compute these per retriever (lexical, dense, fused, reranked) on the same questions. This is how you decide whether hybrid search or a reranker earns its cost, without asking the model anything. Retrieval evaluation is fast and cheap, so you can rerun it after every chunking or index change.
+
+## Evidence recall at each boundary
+
+<Term id="evidence-recall" /> asks the same recall question at two points in the pipeline: what fraction of the annotated supporting IDs are among (a) the retrieved candidates and (b) the passages actually packed into the prompt. Comparing the two localises the loss:
+
+| Candidate recall | Packed recall | Answer | Most likely stage to fix |
+|---|---|---|---|
+| low | low | wrong | indexing or retrieval: check that the chunk exists, then the queries |
+| high | low | wrong | packing: budget too small, duplicates, a long chunk skipped |
+| high | high | wrong or unsupported | generation: instructions, prompt order, model choice |
+| high | high | correct | working; check that citations support the claims |
+
+A question with no annotated evidence has no denominator, so its evidence recall is undefined. Exclude it from the mean, report how many were excluded, and score those questions by whether the system abstained.
+
+A correct answer with low packed recall deserves suspicion, not celebration: the model answered from memory or guessed, and it will not keep up when the documents change.
+
+## Isolate the generator with an oracle run
+
+To test generation alone, run the same questions with an **oracle context**: the annotated supporting passages, packed directly, instead of whatever retrieval returned. If answers are still wrong with perfect evidence, retrieval improvements will not help; the prompt or model must change. If oracle answers are good but normal answers are not, the problem is upstream.
+
+Grade answers on two separate axes: is the answer **correct**, and is each claim **supported** by a cited passage that was actually supplied (the previous lesson's membership and support checks). Score abstention as its own row: correct abstentions on unanswerable questions, and wrong abstentions on answerable ones.
+
+:::tip
+Keep the question ID on every log record, from retrieval through packing to the answer. Then one join reconstructs the whole path of a failure, and you can rerun only the stage you changed.
+:::
+
+## Worked example
+
+Three questions, each with a ranked list from one retriever:
+
+```python
+def recall_at_k(relevant, ranked, k):
+    gold = set(relevant)
+    return len(gold.intersection(ranked[:k])) / len(gold)
+
+def reciprocal_rank(relevant, ranked):
+    for rank, chunk_id in enumerate(ranked, 1):
+        if chunk_id in relevant:
+            return 1 / rank
+    return 0.0
+
+runs = [
+    ({"a"}, ["c", "a", "d", "b"]),
+    ({"b", "e"}, ["b", "f", "g", "e"]),
+    ({"h"}, ["x", "y", "h", "w"]),
+]
+recalls = [recall_at_k(rel, ranked, 3) for rel, ranked in runs]
+rrs = [reciprocal_rank(rel, ranked) for rel, ranked in runs]
+print(recalls, round(sum(recalls) / 3, 3))
+print([round(r, 3) for r in rrs], round(sum(rrs) / 3, 3))
+```
+
+```text title="Output"
+[1.0, 0.5, 1.0] 0.833
+[0.5, 1.0, 0.333] 0.611
+```
+
+The second question finds `b` at rank 1 (reciprocal rank 1) but `e` only at rank 4, outside the top 3, so its recall@3 is 0.5. The third finds its only relevant chunk at rank 3: full recall@3, but a reciprocal rank of just 0.333. Neither number alone describes the list.
+
+## Try it
+
+<CodeExercise id="c5-diagnose-rag-failures-01" />
+
+<CodeExercise id="c5-diagnose-rag-failures-02" />

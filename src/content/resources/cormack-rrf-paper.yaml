@@ -1,0 +1,6 @@
+title: Reciprocal Rank Fusion outperforms Condorcet and individual Rank Learning Methods (Cormack, Clarke and Büttcher, 2009)
+url: https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf
+kind: paper
+free: true
+modules:
+  - c5

@@ -1,0 +1,5 @@
+term: "Retrieval-augmented generation"
+short: "A technique that retrieves external material at request time and supplies it to a generative model."
+body: |
+  Retrieval-augmented generation (RAG) answers a question in two halves. Offline, documents are split into chunks, encoded and stored with source metadata such as document ID, revision and offsets. Online, a retriever ranks chunks for the question, the best ones are packed into the prompt as labelled evidence, and the model answers with citations or abstains. Updating the documents updates what the system can answer, without retraining the model.
+related: ["embedding","metadata-filter","citation-grounding","evidence-recall"]

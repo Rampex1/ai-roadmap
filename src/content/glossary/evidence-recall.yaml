@@ -1,0 +1,5 @@
+term: "Evidence recall"
+short: "The fraction of annotated supporting passage IDs recovered by retrieval or context selection."
+body: |
+  Evidence recall is the number of distinct annotated supporting IDs found in a set of passages, divided by the number of distinct annotated IDs. In a RAG pipeline it is usually measured at two boundaries: over the retrieved candidates and over the passages packed into the prompt. A drop between the two points to packing or budgeting, while low candidate recall points to indexing or retrieval. It is undefined for questions with no required evidence, which are scored by whether the system abstains.
+related: ["recall","citation-grounding","retrieval-augmented-generation"]

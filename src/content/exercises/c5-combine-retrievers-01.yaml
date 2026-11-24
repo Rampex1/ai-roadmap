@@ -1,0 +1,32 @@
+id: c5-combine-retrievers-01
+lesson: llm/c5/combine-retrievers
+title: Fuse two candidate rankings
+prompt: |
+  Implement `fuse_ranks(rankings, constant=60)` using reciprocal rank fusion. Within each list, remove duplicate IDs first, then number the ranks from 1 for the top result. Each appearance adds `1 / (constant + rank)` to that ID's score. Return the IDs sorted by decreasing score, breaking ties by ascending ID. Raise `ValueError` for a constant that is zero or negative.
+starter: |
+  def fuse_ranks(rankings, constant=60):
+      raise NotImplementedError
+solution: |
+  def fuse_ranks(rankings, constant=60):
+      if constant <= 0:
+          raise ValueError("constant must be positive")
+      scores = {}
+      for ranking in rankings:
+          for rank, chunk_id in enumerate(dict.fromkeys(ranking), 1):
+              scores[chunk_id] = scores.get(chunk_id, 0.0) + 1 / (constant + rank)
+      return sorted(scores, key=lambda chunk_id: (-scores[chunk_id], chunk_id))
+tests: |
+  assert fuse_ranks([["x", "m"], ["z", "m"]], 2) == ["m", "x", "z"], "A chunk found by both lists should collect two contributions and rank first"
+  assert fuse_ranks([["a","b"],["c","b"]], 1) == ["b","a","c"], "Ranks start at 1"
+  assert fuse_ranks([["a","p","q","b"],["c","r","s","b"]], 1) == ["a","c","b","p","r","q","s"], "Use the constant argument"
+  assert fuse_ranks([["x", "x", "b"], ["b"]], 1) == ["b", "x"], "Deduplicate before assigning ranks"
+  assert fuse_ranks([[], []]) == [], "Empty lists fuse to an empty list"
+  try:
+      fuse_ranks([["x"]], 0)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("Reject nonpositive constant")
+hints:
+  - Track one accumulated score per chunk ID.
+  - enumerate takes a start argument, so the top result can get rank 1.

@@ -1,0 +1,31 @@
+id: c5-index-citeable-chunks-01
+lesson: llm/c5/index-citeable-chunks
+title: Chunk a token sequence
+prompt: Implement chunk_tokens(tokens, width, overlap). Return (start, exclusive_end, token_slice) tuples. Advance by width minus overlap and stop at the first window that reaches the last token. Reject nonpositive widths and overlap outside [0, width).
+starter: |
+  def chunk_tokens(tokens, width, overlap):
+      raise NotImplementedError
+solution: |
+  def chunk_tokens(tokens, width, overlap):
+      if width <= 0 or not 0 <= overlap < width:
+          raise ValueError("require 0 <= overlap < width")
+      chunks = []
+      for start in range(0, len(tokens), width - overlap):
+          end = min(start + width, len(tokens))
+          chunks.append((start, end, tokens[start:end]))
+          if end == len(tokens):
+              break
+      return chunks
+tests: |
+  assert chunk_tokens(list("abcdef"), 3, 1) == [(0, 3, list("abc")), (2, 5, list("cde")), (4, 6, list("ef"))], "With width 3 and overlap 1, windows start every 2 tokens"
+  assert chunk_tokens(list("abcd"), 4, 2) == [(0, 4, list("abcd"))], "Do not add a redundant final window"
+  assert chunk_tokens(list("abcde"), 2, 0) == [(0, 2, list("ab")), (2, 4, list("cd")), (4, 5, list("e"))], "Overlap 0 gives back-to-back windows and a short final window"
+  assert chunk_tokens([], 4, 1) == [], "An empty document has no chunks"
+  try:
+      chunk_tokens(["a"], 2, 2)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("Reject overlap equal to width")
+hints:
+  - The next start is width minus overlap tokens later.

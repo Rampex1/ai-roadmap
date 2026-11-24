@@ -1,0 +1,6 @@
+title: "BEIR: A Heterogenous Benchmark for Zero-shot Evaluation of Information Retrieval Models"
+url: https://arxiv.org/abs/2104.08663
+kind: paper
+free: true
+modules:
+  - c5

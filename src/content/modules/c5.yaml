@@ -4,5 +4,7 @@ title: "RAG"
 order: 5
 prereqs: ["c4"]
 objectives:
-  - "Explain the core ideas of RAG"
-  - "Build and evaluate an application using RAG"
+  - Separate document indexing, retrieval, context assembly and generation
+  - Chunk documents with stable citation IDs and preserve source provenance
+  - Fuse lexical and dense candidate rankings and pack evidence into a bounded context
+  - Evaluate retrieval with recall@k, MRR and evidence recall separately from answer correctness, citation support and abstention

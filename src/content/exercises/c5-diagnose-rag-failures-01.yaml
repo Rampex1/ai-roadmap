@@ -1,0 +1,19 @@
+id: c5-diagnose-rag-failures-01
+lesson: llm/c5/diagnose-rag-failures
+title: Measure evidence recall
+prompt: Implement evidence_recall(required, observed). Compute the distinct annotated IDs recovered by the observed list as a fraction of distinct required IDs. Return None when there are no required IDs.
+starter: |
+  def evidence_recall(required, observed):
+      raise NotImplementedError
+solution: |
+  def evidence_recall(required, observed):
+      gold = set(required)
+      return len(gold.intersection(observed)) / len(gold) if gold else None
+tests: |
+  assert evidence_recall(["a", "b"], ["a", "a", "c"]) == 0.5, "One of two required IDs was found, even though it appears twice"
+  assert evidence_recall(["a", "a"], ["a"]) == 1.0, "Count distinct required IDs, so a repeated annotation is one ID"
+  assert evidence_recall(["a"], []) == 0.0, "Nothing observed means recall 0 when evidence was required"
+  assert evidence_recall(["x", "y", "z"], ["z", "q", "x"]) == 2 / 3, "Two of three required IDs were found"
+  assert evidence_recall([], ["a"]) is None, "Return None when no evidence is required"
+hints:
+  - Set intersection ignores repeated IDs.

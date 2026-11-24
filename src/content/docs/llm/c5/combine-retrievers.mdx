@@ -1,0 +1,110 @@
+---
+title: Combine lexical and dense retrieval
+module: c5
+order: 2
+estMinutes: 12
+objectives:
+  - Explain which queries lexical search handles better than dense search, and the reverse
+  - Compute reciprocal rank fusion scores by hand and in code, and explain the role of the constant k
+  - Place a cross-encoder reranker in the pipeline and state what it costs and what it cannot fix
+goDeeper: cormack-rrf-paper
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+C4 gave you two ways to rank chunks for a query. Lexical search such as <Term id="bm25" text="BM25" /> scores exact term matches, weighting rare terms highly ([represent text](/llm/c4/represent-text/)). Dense search embeds the query and every chunk and ranks by similarity ([exact](/llm/c4/exact-vector-search/) and [approximate search](/llm/c4/approximate-search/)). Each fails where the other is strong, so production systems usually run both and merge the results. This is called **hybrid search**.
+
+## Where each retriever fails
+
+Take a support question about a printer: *"HX-200 shows error E417"*.
+
+- **Lexical search** looks for the strings `hx` `200` `e417`. These are rare in the corpus, so BM25 gives them high weight and ranks the HX-200 error-code page first. It would fail on *"my printer keeps eating paper"* if the manual says "paper jam": no shared words, no match.
+- **Dense search** maps the query to a point in embedding space. "Printer error" pulls it towards general troubleshooting pages, and an encoder does not represent `E417` as a precise identifier: to it, `E417` and `E471` are just similar-looking strings. It handles the paper-eating paraphrase well, but it may rank a generic FAQ above the exact error page.
+
+Model numbers, error codes, legal clause numbers, people's names and product SKUs favour lexical search. Paraphrases, synonyms and questions written in different words from the documents favour dense search. You rarely know in advance which kind of query you will get.
+
+## Why not add the scores?
+
+The obvious merge is to add the two scores. A BM25 score is an unbounded sum whose typical size depends on the query length and the corpus. A cosine similarity lies between $-1$ and $1$, and many encoders put most scores between 0.6 and 0.9. Adding them lets BM25 dominate. Rescaling each list to $[0, 1]$ helps, but one outlier score then squashes everything else. Score fusion can work, but it needs calibration data.
+
+Ranks avoid this problem. Position 1 means the same thing in every list.
+
+## Reciprocal rank fusion
+
+<Term id="reciprocal-rank-fusion" /> (RRF) gives every candidate $d$ the score
+
+$$
+\mathrm{RRF}(d) = \sum_{i} \frac{1}{k + r_i(d)}
+$$
+
+where:
+
+- $i$ runs over the ranked lists being fused (here, lexical and dense);
+- $r_i(d)$ is the rank of $d$ in list $i$, **starting at 1** for the top result;
+- $k$ is a positive constant;
+- a list that does not contain $d$ contributes nothing.
+
+Candidates are then sorted by decreasing score. Two things push a candidate up: a high position in any list, and appearing in several lists. The constant $k$ controls the balance. A small $k$ makes rank 1 worth much more than rank 4, so one list's top result wins. A large $k$ flattens the curve, so agreement between lists matters more than exact position.
+
+:::note
+$k = 60$ comes from Cormack, Clarke and Büttcher (2009), who introduced RRF. They fixed it during a pilot study, found it near-optimal but not critical, and RRF beat each individual system and more complex fusion methods on several TREC collections. Several search engines that offer RRF, Elasticsearch among them, use 60 as the default (as of late 2026). The code examples below sometimes use $k = 1$ or $2$ instead: on lists only three or four items long, a tiny $k$ makes the rank effect large enough to see.
+:::
+
+## A hand-computed example with k = 60
+
+Fuse the two lists for the printer query:
+
+| Candidate | Lexical rank | Dense rank | Lexical term | Dense term | RRF |
+|---|---|---|---|---|---|
+| hx200-errors | 1 | 2 | 1/61 = 0.01639 | 1/62 = 0.01613 | **0.03252** |
+| printer-faq | 3 | 1 | 1/63 = 0.01587 | 1/61 = 0.01639 | 0.03227 |
+| hx200-setup | 2 | absent | 1/62 = 0.01613 | 0 | 0.01613 |
+| scanner-errors | absent | 3 | 0 | 1/63 = 0.01587 | 0.01587 |
+
+The exact error page wins because both lists placed it high. Notice the shape of the numbers: at $k = 60$, ranks 1 and 3 differ by only about 3%, while appearing in a second list roughly doubles the score. That is the "agreement matters most" behaviour of a large $k$.
+
+## Worked example
+
+The function below implements RRF. It removes duplicates within a list before numbering, so a chunk cannot collect two contributions from one retriever, and it breaks ties by ID so the output is deterministic.
+
+```python
+def fuse_ranks(rankings, constant=60):
+    if constant <= 0:
+        raise ValueError("constant must be positive")
+    scores = {}
+    for ranking in rankings:
+        for rank, chunk_id in enumerate(dict.fromkeys(ranking), 1):
+            scores[chunk_id] = scores.get(chunk_id, 0.0) + 1 / (constant + rank)
+    return sorted(scores, key=lambda chunk_id: (-scores[chunk_id], chunk_id))
+
+lexical = ["hx200-errors", "hx200-setup", "printer-faq"]
+dense = ["printer-faq", "hx200-errors", "scanner-errors"]
+print(fuse_ranks([lexical, dense]))
+
+top_heavy = [["x", "p", "q", "y"], ["z", "r", "s", "y"]]
+print(fuse_ranks(top_heavy, 1))
+print(fuse_ranks(top_heavy, 60))
+```
+
+```text title="Output"
+['hx200-errors', 'printer-faq', 'hx200-setup', 'scanner-errors']
+['x', 'z', 'y', 'p', 'r', 'q', 's']
+['y', 'x', 'z', 'p', 'r', 'q', 's']
+```
+
+The first line reproduces the table. The other two show the constant at work. `y` sits at rank 4 in both lists, and `x` is first in one list only. With $k = 1$, `x` scores $1/2 = 0.5$ and `y` scores $2/5 = 0.4$, so the single top hit wins. With $k = 60$, `x` scores $1/61 \approx 0.0164$ and `y` scores $2/64 \approx 0.0313$, so agreement wins. The `enumerate(..., 1)` matters: starting ranks at 0 would give the top result $1/k$ instead of $1/(k+1)$. That shifts every contribution, and with a small $k$ it changes which candidate wins.
+
+## Rerank the fused shortlist
+
+Both C4 retrievers process the query and each chunk separately, so chunk representations (term statistics, embeddings) can be computed once in advance. A dense retriever built this way is called a **bi-encoder**. Precomputing is what makes search over millions of chunks fast, but the query never "sees" the passage.
+
+A **cross-encoder reranker** reads the query and one passage together as a single input and outputs a relevance score. Because every word of the query can attend to every word of the passage, it judges relevance far more accurately. The cost is that nothing can be precomputed: scoring 50 candidates means 50 transformer passes per question. That is affordable for a shortlist and impossible for a whole corpus.
+
+So the reranker sits after fusion: retrieve perhaps 20 to 50 candidates from each retriever, fuse, rerank the top 20 to 50, and pass the best few to packing. Two limits follow. A reranker can only reorder what it is given, so a passage that neither retriever found, or that approximate search missed, is gone for good. And reranking adds latency to every request, so measure whether it improves the metrics in the last lesson before you keep it.
+
+Keep the per-retriever ranks, the fused order and the reranked order in your logs. When an answer is wrong, they tell you whether both retrievers missed the source or fusion and reranking pushed it below the cut.
+
+## Try it
+
+<CodeExercise id="c5-combine-retrievers-01" />

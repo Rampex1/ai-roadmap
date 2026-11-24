@@ -1,0 +1,6 @@
+title: Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks
+url: https://arxiv.org/abs/2005.11401
+kind: paper
+free: true
+modules:
+  - c5

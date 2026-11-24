@@ -1,0 +1,24 @@
+id: c5-pack-evidence-and-cite-01
+lesson: llm/c5/pack-evidence-and-cite
+title: Fit unique evidence into the context
+prompt: Implement pack_evidence(candidates, budget) for (chunk ID, positive token cost) pairs and a nonnegative budget. Examine only the first occurrence of each ID, keep it if it fits, and continue scanning past oversized entries.
+starter: |
+  def pack_evidence(candidates, budget):
+      raise NotImplementedError
+solution: |
+  def pack_evidence(candidates, budget):
+      selected = []
+      seen = set()
+      for chunk_id, tokens in candidates:
+          if chunk_id not in seen and tokens <= budget:
+              selected.append(chunk_id)
+              budget -= tokens
+          seen.add(chunk_id)
+      return selected
+tests: |
+  assert pack_evidence([("p", 3), ("q", 9), ("p", 3), ("r", 4), ("s", 1)], 8) == ["p", "r", "s"], "Skip the duplicate p and the oversized q, then keep packing"
+  assert pack_evidence([("a", 5), ("a", 1), ("b", 1)], 2) == ["b"], "Use only the first occurrence"
+  assert pack_evidence([("a", 2), ("b", 2), ("c", 2)], 4) == ["a", "b"], "Stop adding once the budget is used up"
+  assert pack_evidence([("a", 1)], 0) == [], "Nothing fits a zero budget"
+hints:
+  - Track every ID encountered, including those too large to fit.

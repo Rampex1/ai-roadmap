@@ -1,0 +1,126 @@
+items:
+  - id: c5-combine-retrievers-01
+    type: mcq
+    prompt: In reciprocal rank fusion, what rank number does the top candidate in a list receive?
+    explanation: RRF ranks are positions counted from 1, so the top candidate contributes $1/(k+1)$. Using a Python index of 0 would give it $1/k$ instead, shifting every contribution and, for small $k$, changing which candidate wins.
+    options:
+      - text: Zero
+        why: Zero is where Python indexing starts, which is why the code passes a start of 1 to enumerate; a rank of 0 would turn the top term into 1/k.
+      - text: One
+        why: Ranks count from 1, so the top candidate contributes 1/(k + 1), the largest share any single list can give.
+        correct: true
+      - text: The rank constant
+        why: The constant k is added to the rank in the denominator; it is a separate smoothing parameter, not a position.
+  - id: c5-combine-retrievers-02
+    type: mcq
+    prompt: Which query favours an exact lexical match?
+    explanation: Rare exact strings such as model codes get a high weight in BM25 because few documents contain them, while an encoder tends to blur them into "similar-looking" text. Paraphrases go the other way.
+    options:
+      - text: A query containing a rare model code
+        why: A rare identifier like HX-200 appears in few documents, so lexical scoring weights it heavily and finds the exact page; dense search may treat it as a vague string.
+        correct: true
+      - text: A paraphrase using unrelated words
+        why: With no shared words, lexical search finds nothing; this is the case dense search is built for.
+      - text: An empty query
+        why: An empty query has no terms to match, so neither retriever has anything to work with.
+  - id: c5-combine-retrievers-03
+    type: mcq
+    prompt: Why fuse ranks instead of adding raw scores?
+    explanation: BM25 scores are unbounded sums whose size depends on the query and corpus, while cosine similarities sit in a narrow band. Adding them lets one scale dominate. Rank 1 means the same thing in every list, so rank-based fusion needs no calibration.
+    options:
+      - text: Rankers may use different score scales
+        why: An unbounded BM25 score and a cosine similarity are not on the same scale, so their sum mostly reflects whichever is larger; positions are directly comparable.
+        correct: true
+      - text: Fusion always produces the best human ranking
+        why: RRF is a strong baseline, not a guarantee; you still measure it against annotated relevance.
+      - text: Ranking reduces every score to a probability
+        why: A rank is just a position; neither ranks nor RRF scores are probabilities of relevance.
+  - id: c5-combine-retrievers-04
+    type: mcq
+    prompt: Can a reranker recover a chunk missing from every candidate list?
+    explanation: A cross-encoder scores only the query-passage pairs it is handed. Recall is fixed by the retrievers (and by approximate search), so a missed chunk must be fixed upstream, by better queries, chunking or a larger candidate pool.
+    options:
+      - text: Only if it is supplied that chunk by another stage
+        why: The reranker reorders whatever candidates it receives, so the chunk can only reappear if some stage adds it to the shortlist.
+        correct: true
+      - text: Yes, always
+        why: The reranker never sees chunks outside its input, so it has nothing to score.
+      - text: Yes, simply by increasing the rank constant
+        why: The constant only changes how fused candidates are ordered; it cannot add a chunk that no list contains.
+  - id: c5-combine-retrievers-05
+    type: multi
+    prompt: Which belong in a fusion debug record?
+    explanation: To explain a bad result you need both the inputs and the output of fusion. The source rank lists show whether any retriever found the chunk; the fused IDs show whether fusion then pushed it below the cut. The final answer alone hides both.
+    options:
+      - text: Each source rank list
+        why: Per-retriever ranks show whether lexical, dense or neither search found the supporting chunk.
+        correct: true
+      - text: The fused result IDs
+        why: The fused order shows where each candidate ended up, so you can see if fusion ranked a found chunk too low to be packed.
+        correct: true
+      - text: Only the final model answer
+        why: The answer shows the symptom but not whether the chunk was retrieved or where it landed after fusion.
+  - id: c5-combine-retrievers-06
+    type: cloze
+    prompt: RRF combines candidate ______ rather than raw similarity values.
+    accept:
+      - ranks
+      - rank
+      - positions
+      - position
+    explanation: Each list contributes $1/(k + r)$ where $r$ is the candidate's position, so raw scores never enter the formula. That is what makes lists with incomparable score scales easy to merge.
+  - id: c5-combine-retrievers-07
+    type: order
+    prompt: Order hybrid retrieval and answer preparation.
+    items:
+      - Run lexical and dense searches
+      - Fuse returned candidate IDs
+      - Rerank fused candidates if needed
+      - Pack selected evidence
+    explanation: Fusion needs both ranked lists first. The reranker is expensive, so it runs on the fused shortlist rather than the corpus. Packing comes last because it decides which of the final ordered candidates fit the context budget.
+  - id: c5-combine-retrievers-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def fuse_ranks(rankings, constant=60):
+          if constant <= 0:
+              raise ValueError("constant must be positive")
+          scores = {}
+          for ranking in rankings:
+              for rank, chunk_id in enumerate(dict.fromkeys(ranking), 1):
+                  scores[chunk_id] = scores.get(chunk_id, 0.0) + 1 / (constant + rank)
+          return sorted(scores, key=lambda chunk_id: (-scores[chunk_id], chunk_id))
+
+      print(fuse_ranks([["b"], ["a"]], 2))
+    answer: "['a', 'b']"
+    explanation: Each ID is first in exactly one list, so both score $1/(2+1) = 1/3$. The sort key is (negative score, ID), so the tie is broken alphabetically and `a` comes before `b`, even though `b`'s list was passed first.
+  - id: c5-combine-retrievers-09
+    type: numeric
+    prompt: With $k = 60$, a chunk is ranked 1st by lexical search and 3rd by dense search. What is its RRF score? Give at least four significant figures.
+    answer: 0.03227
+    rtol: 0.001
+    explanation: $\frac{1}{60+1} + \frac{1}{60+3} = 0.016393 + 0.015873 \approx 0.03227$. Compare a chunk ranked 1st in only one list, which scores 0.01639; appearing in both lists roughly doubles the score.
+  - id: c5-combine-retrievers-10
+    type: mcq
+    prompt: Why does a cross-encoder reranker run on a shortlist of fused candidates rather than on the whole corpus?
+    explanation: A cross-encoder reads the query and passage together, which is what makes it accurate, but it also means no passage score can be precomputed. Each candidate costs a full model pass per question, which is affordable for tens of candidates and not for millions.
+    options:
+      - text: It produces vectors that must be stored in the same index as the chunks
+        why: That describes a bi-encoder; a cross-encoder outputs a relevance score for a pair, not a reusable vector.
+      - text: It must read each query and passage together, so every candidate costs a model pass at question time
+        why: Because the query is part of the input, nothing can be computed ahead of time, so cost grows with the number of candidates scored.
+        correct: true
+      - text: It can only read passages that contain the exact query words
+        why: A cross-encoder is a neural model that reads any passage; it is not limited to lexical matches.
+  - id: c5-combine-retrievers-11
+    type: mcq
+    prompt: Chunk X is ranked 1st in one list and absent from the other. Chunk Y is ranked 4th in both lists. Which wins with $k = 60$?
+    explanation: X scores $1/61 \approx 0.0164$ and Y scores $2/64 \approx 0.0313$. With a large $k$ the difference between rank 1 and rank 4 is small, so appearing in both lists matters more. With $k = 1$ the result flips, because X scores 0.5 and Y scores 0.4.
+    options:
+      - text: X, because a first place always beats a fourth place
+        why: That holds for a single list, but here Y collects two contributions, and at k = 60 each is nearly as large as X's one.
+      - text: They tie, because RRF ignores how many lists contain a chunk
+        why: RRF sums over every list containing the chunk, so the number of lists is exactly what separates them.
+      - text: Y, because two contributions of 1/64 outweigh one of 1/61
+        why: 2/64 is about 0.031, nearly twice X's 0.016; a large k rewards agreement between lists.
+        correct: true

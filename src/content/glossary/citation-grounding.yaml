@@ -1,0 +1,5 @@
+term: "Citation grounding"
+short: "Connecting answer claims to identifiable evidence that supports them."
+body: |
+  A citation is grounded when two separate checks pass. Membership: the cited ID was among the passages actually supplied in that request, which code can check exactly. Support: the cited passage states what the claim says, which needs a human or a calibrated judge to read both. A valid ID with unsupportive text fails, and so does a correct answer that cites nothing it was given.
+related: ["retrieval-augmented-generation","evidence-recall","schema"]

@@ -1,0 +1,20 @@
+id: c5-policy-rag
+module: c5
+kind: homework
+title: Build a retrieval baseline for library policies
+brief: |-
+  Build a small, fully offline RAG retrieval pipeline over three library policy documents, one of which has two revisions. The lesson exercise solutions (`chunk_tokens`, `fuse_ranks`, `pack_evidence`, `evidence_recall`) are provided; your job is to wire them into a pipeline you can trace. Two toy retrievers stand in for BM25 and an embedding model, so no model, GPU or API key is needed.
+
+  1. Implement `make_chunk_id(doc, rev, start, end)` and `parse_chunk_id`, producing IDs such as `loan-policy@r2#12-28` and rejecting IDs that could not be parsed back.
+  2. Implement `build_index` over the real policy text: index only the latest revision of each document, with stable IDs and word offsets that point at the chunk text.
+  3. Implement `evidence_report`: fuse the lexical and dense rankings with RRF (k = 60), keep the fused IDs that have a cost entry as candidates, pack them into the budget, and report candidate recall (over fused IDs that have a cost entry) and packed recall.
+  4. Implement `run_query` and run the fixed query set: two answerable questions and one the policies do not cover, where the right outcome is abstention. A tight-budget run shows evidence lost at packing.
+  5. In the last cell, record the query, retrieved IDs, packed evidence and decision for one answered and one abstained case, and explain how you would tell whether a wrong answer came from indexing, retrieval, packing or generation.
+notebook: /homework/c5-policy-rag.ipynb
+rubric:
+  - Chunk IDs encode document, revision and word offsets, parse back to the same fields, and are identical when the index is rebuilt from documents in a different order.
+  - Only the latest revision of each document is indexed, and every chunk's offsets point at its text.
+  - Fusion and packing use stable IDs, respect the token budget, and candidate recall is computed over fused IDs that have a cost entry.
+  - The end-to-end run answers both answerable questions from the annotated chunks and abstains on the unanswerable one; all check cells pass after a restart and run-all.
+  - The interpretation quotes the supporting passage with its citation, explains the abstention, and names the stage to fix for the tight-budget case and for a stale-revision answer.
+compute: Any laptop or free Colab CPU. Python standard library only, no downloads. Allow 60 to 90 minutes.

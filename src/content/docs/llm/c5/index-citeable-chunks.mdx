@@ -1,0 +1,98 @@
+---
+title: Index documents as citeable chunks
+module: c5
+order: 1
+estMinutes: 11
+objectives:
+  - Name the offline and online stages of a RAG pipeline and what each one stores or returns
+  - Split a document into overlapping windows with stable, revision-aware chunk IDs
+  - Trace a retrieved passage back to the exact source revision and offsets
+goDeeper: lewis-rag-paper
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A language model only knows what was in its training data plus what you put in the prompt. A library's loan policy changes every year, and retraining a model each time is out of the question. <Term id="retrieval-augmented-generation" /> (RAG) solves this by looking up relevant passages at question time and placing them in the prompt as evidence. The model weights never change. Only the documents do.
+
+This module builds a RAG pipeline in four steps: this lesson indexes documents, the next one retrieves candidates, the third packs evidence and checks citations, and the last one measures where things went wrong.
+
+## Two halves of a RAG system
+
+A RAG system has an **offline** half that runs whenever documents change, and an **online** half that runs for every question.
+
+| Stage | When | Input | Output |
+|---|---|---|---|
+| Parse | offline | PDF, HTML, wiki page | plain text with headings and revision |
+| Chunk | offline | plain text | passages with IDs and offsets |
+| Encode and store | offline | passages | vectors, a lexical index, metadata |
+| Retrieve | online | question | ranked chunk IDs |
+| Pack | online | ranked IDs | an evidence block that fits the prompt |
+| Generate | online | instructions, evidence, question | an answer with citations, or an abstention |
+
+Encoding is the embedding step from [C4's text representation lesson](/llm/c4/represent-text/), and storage is the vector index from [exact](/llm/c4/exact-vector-search/) and [approximate search](/llm/c4/approximate-search/). This lesson is about the step in between, which decides what a single searchable unit is and how it is named.
+
+## Choose the unit a reader could cite
+
+A chunk is the smallest piece that retrieval can return. If it is too small, a passage like "this does not apply to children's cards" is retrieved without the rule it modifies. If it is too large, one chunk mixes three topics: its embedding becomes a blurred average, and it wastes prompt space on sentences the question never needed.
+
+A good starting point is the unit a person would quote: a heading together with its paragraph. When paragraphs vary wildly in length, fixed **token windows** make sizes predictable. A window of width $w$ tokens advances by a stride of $w - o$ tokens, where $o$ is the **overlap**, the number of tokens shared by neighbouring windows. For a document of $n$ tokens, the number of windows is roughly
+
+$$
+\left\lceil \frac{n - o}{w - o} \right\rceil .
+$$
+
+Overlap helps when a key sentence straddles a boundary: with $o > 0$ at least one window contains the whole boundary region. The price is repeated text. With $w = 200$ and $o = 50$, a 10,000-token manual becomes 67 windows holding 13,300 tokens in total: a third more to embed, store and possibly retrieve twice. Tune $w$ and $o$ on questions whose supporting passages you have annotated, not by intuition. The last lesson shows how to measure that.
+
+:::tip
+Prepend the section heading to each window's text before encoding ("Loans > Renewals: A loan may be renewed..."). A passage that says "this limit" is much easier to retrieve, and to judge, when the heading travels with it.
+:::
+
+## Name every chunk so it can be traced
+
+A citation is only useful if a reviewer can follow it back to the exact words. Give every chunk an ID built from facts that do not change between queries:
+
+- the **document ID** (`loan-policy`);
+- the **revision** (`r2`), so a citation from last year's policy is distinguishable from this year's;
+- the **start and end offsets** of the window in the tokenized document (or characters, which survive a tokenizer change).
+
+An ID such as `loan-policy@r2#16-32` meets all three. The retrieval rank, the similarity score and the position in a database table do not: they change from query to query or from one rebuild to the next. Keep the original text and any page number in the metadata, so the interface can show the reader the passage that was cited.
+
+## Swap revisions atomically
+
+When a policy changes, the old chunks must not linger. Suppose you delete revision 1 and then insert revision 2 one document at a time. A question that arrives halfway through can retrieve one passage saying "two renewals" and another saying "three renewals", and the model will try to reconcile two policies that never coexisted.
+
+The safe pattern is to build the complete new index beside the old one, check it, and then switch the name that queries use. Many search engines call that name an **alias**: a label such as `policies-current` that points to one physical index at a time. Repointing an alias is a single step, so every query sees either the old index or the new one, never a mix. If your store has no aliases, store a revision field and filter on the current revision for each document, as with the <Term id="metadata-filter" /> in C4.
+
+## Worked example
+
+The function below slices a token list into windows. It returns offsets with each slice, so a caller can build IDs. The example uses five tokens, a width of 3 and an overlap of 1.
+
+```python
+def chunk_tokens(tokens, width, overlap):
+    if width <= 0 or not 0 <= overlap < width:
+        raise ValueError("require 0 <= overlap < width")
+    chunks = []
+    for start in range(0, len(tokens), width - overlap):
+        end = min(start + width, len(tokens))
+        chunks.append((start, end, tokens[start:end]))
+        if end == len(tokens):
+            break
+    return chunks
+
+for start, end, words in chunk_tokens(["a", "b", "c", "d", "e"], 3, 1):
+    print(f"loan-policy@r2#{start}-{end}", words)
+```
+
+```text title="Output"
+loan-policy@r2#0-3 ['a', 'b', 'c']
+loan-policy@r2#2-5 ['c', 'd', 'e']
+```
+
+The stride is $3 - 1 = 2$, so the second window starts at offset 2 and repeats token `c`. The loop stops as soon as a window reaches the last token. Without that `break`, it would also emit a redundant window `(4, 5, ['e'])` that is wholly contained in the previous one. Overlap must be smaller than the width, because otherwise the stride is zero or negative and the loop never advances.
+
+Real ingestion receives text, not ready-made tokens. Use a tokenizer compatible with your encoder for windowing ([F10](/foundations/f10/tokens/) showed that token counts differ from word counts) and keep character offsets in the original text for display.
+
+## Try it
+
+<CodeExercise id="c5-index-citeable-chunks-01" />

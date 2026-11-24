@@ -1,0 +1,114 @@
+items:
+  - id: c5-diagnose-rag-failures-01
+    type: mcq
+    prompt: Candidates contain all support, but packed evidence omits it. Where should you look first?
+    explanation: High candidate recall with low packed recall means the evidence was found and then lost between retrieval and the prompt. Typical causes are a budget that is too small, a long chunk being skipped, or fusion ranking the passage below the cut.
+    options:
+      - text: The raw document scraper only
+        why: The supporting passage reached the candidate list, so it was parsed and indexed successfully.
+      - text: The context packer
+        why: The passage was present before packing and absent after it, so selection or budgeting dropped it.
+        correct: true
+      - text: The grader only
+        why: The missing passage is visible in the packed IDs themselves, before any grading.
+  - id: c5-diagnose-rag-failures-02
+    type: mcq
+    prompt: What does an oracle-context run provide?
+    explanation: An oracle run replaces retrieval with the annotated supporting passages. If answers are still wrong, the problem lies in the prompt or model, not in retrieval.
+    options:
+      - text: Annotated support instead of the retrieved context
+        why: Giving the generator the passages a human marked as sufficient tests generation with perfect retrieval.
+        correct: true
+      - text: Only retrieved IDs without text
+        why: The generator cannot use an ID it cannot read; it needs the passage text.
+      - text: Only the user question
+        why: That is a closed-book run; it tests what the model knows without evidence.
+  - id: c5-diagnose-rag-failures-03
+    type: mcq
+    prompt: How is an unanswerable case scored in this exercise’s evidence recall?
+    explanation: Evidence recall divides by the number of required IDs. An unanswerable question has none, so the ratio is undefined. It is excluded from the mean and scored instead on whether the system abstained.
+    options:
+      - text: One if the model cites something
+        why: Citing something does not create required evidence; for an unanswerable question a citation is itself suspicious.
+      - text: Its recall is undefined
+        why: With zero required IDs the denominator is zero, so the function returns None and the case is reported separately.
+        correct: true
+      - text: Zero by definition
+        why: Zero would mean required evidence existed and was missed, which would unfairly drag down the mean.
+  - id: c5-diagnose-rag-failures-04
+    type: mcq
+    prompt: What can a correct answer with unsupported citations fail?
+    explanation: Correctness and support are graded separately. A right answer whose cited passages do not state it was produced from memory or by luck, and will not track the documents when they change.
+    options:
+      - text: The grounding rubric
+        why: Grounding asks whether each claim is backed by a supplied, cited passage, which is exactly what is missing here.
+        correct: true
+      - text: Only the vector dimension check
+        why: Embedding dimension is a property of the encoder and has nothing to do with citations.
+      - text: Only the context-length limit
+        why: Fitting in the window says nothing about whether the cited passages support the claims.
+  - id: c5-diagnose-rag-failures-05
+    type: multi
+    prompt: Which labels help diagnose RAG?
+    explanation: Expected answers or an abstain label let you score generation, including correct refusals. Annotated supporting passages let you score retrieval and packing with evidence recall, independently of the answer.
+    options:
+      - text: Annotated supporting passages
+        why: They define the required IDs, so recall@k and evidence recall can be computed for retrieval and packing.
+        correct: true
+      - text: Expected answers or abstention
+        why: They let you grade the final reply, including whether the system correctly abstained on unanswerable questions.
+        correct: true
+      - text: Only the date the corpus was scraped
+        why: A date is useful metadata but cannot tell you whether an answer or retrieval was right.
+  - id: c5-diagnose-rag-failures-06
+    type: cloze
+    prompt: Substituting annotated evidence is known as an ______ context run.
+    accept:
+      - oracle
+      - oracle-context
+      - oracle context
+    explanation: The name comes from the "oracle" that knows the right evidence. By making retrieval perfect, the run shows the best the current prompt and model can do.
+  - id: c5-diagnose-rag-failures-07
+    type: order
+    prompt: Trace evidence from retrieval through packing to the final answer. Order the checks by the stage they diagnose, starting with the annotation that defines the required passages.
+    items:
+      - Identify the annotated required IDs
+      - Measure coverage of retrieved candidates
+      - Measure coverage of packed evidence
+      - Judge answer correctness and support
+    explanation: Every recall needs the required IDs first. The checks then follow the data through the pipeline, so the first one that drops shows where the evidence was lost.
+  - id: c5-diagnose-rag-failures-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def evidence_recall(required, observed):
+          gold = set(required)
+          return len(gold.intersection(observed)) / len(gold) if gold else None
+
+      print(evidence_recall(["a", "b", "c", "d"], ["d", "a", "a"]))
+    answer: "0.5"
+    explanation: The required set is {a, b, c, d}. The observed list contains `d` and `a`, with `a` repeated, but a set intersection counts it once. That gives $2/4 = 0.5$.
+  - id: c5-diagnose-rag-failures-09
+    type: numeric
+    prompt: A question has relevant chunks {p, q, r}. The retriever returns `[q, x, y, p, z, r]`. What is recall@3?
+    answer: 0.3333
+    rtol: 0.01
+    explanation: The top 3 results are q, x and y. Only q is relevant, so recall@3 is $1/3 \approx 0.333$. p and r are retrieved, but at ranks 4 and 6, outside the cut.
+  - id: c5-diagnose-rag-failures-10
+    type: numeric
+    prompt: Over four questions, the first relevant result appears at ranks 1, 2 and 4, and the fourth question returns no relevant result. What is the mean reciprocal rank?
+    answer: 0.4375
+    rtol: 0.001
+    explanation: The reciprocal ranks are 1, 0.5, 0.25 and 0 for the question with no hit. Their mean is $(1 + 0.5 + 0.25 + 0)/4 = 0.4375$.
+  - id: c5-diagnose-rag-failures-11
+    type: mcq
+    prompt: Why compute recall@k and MRR on retrieval output before looking at generated answers?
+    explanation: Retrieval metrics need only ranked IDs and annotations, so they are cheap, fast and repeatable. They tell you whether the evidence was available at all, which an answer-only score mixes up with prompt and model failures.
+    options:
+      - text: They show whether the right evidence was available, without the cost or noise of generating and grading answers
+        why: Separating retrieval from generation tells you which stage to change, and the metrics can be rerun after every index change.
+        correct: true
+      - text: A high recall@k guarantees correct answers
+        why: The model can still ignore or misread evidence it was given, which is why generation is graded separately.
+      - text: Generated answers cannot be evaluated at all
+        why: Answers can be graded for correctness and support; they are just a different, more expensive measurement.
