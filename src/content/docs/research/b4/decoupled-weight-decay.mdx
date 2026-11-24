@@ -1,0 +1,41 @@
+---
+title: Distinguish AdamW decay from L2 in Adam
+module: b4
+order: 3
+estMinutes: 8
+objectives:
+  - Compute a decoupled decay step
+  - Explain when adding L2 to the gradient gives a different update
+goDeeper: adamw-original-paper
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+An L2 penalty adds a term proportional to the parameter into the loss gradient. For plain SGD without momentum, this can match a direct shrink if coefficients and learning rate agree. In an adaptive optimizer that added gradient also enters the moment estimates and is scaled by the adaptive denominator. It generally no longer matches a separate shrink.
+
+<Term id="decoupled-weight-decay" cap /> applies the penalty directly to the old parameter while keeping the objective gradient separate. In this fixture, AdamW subtracts both rate times adaptive direction and rate times decay times the old value. If value is 4, rate is 0.1, decay is 0.2 and direction is zero, the result is 3.92.
+
+Decide which groups decay and document exemptions. Bias and normalization parameters are sometimes exempt in practice, but that choice depends on the model and study. Compare at matched data and training budgets rather than assuming a coefficient transfers unchanged across optimizers.
+
+## Worked example
+
+A zero task direction can still produce decay.
+
+```python
+def adamw_value(value,direction,rate,decay,apply_decay):
+    shrink = decay*value if apply_decay else 0
+    return value - rate*(direction+shrink)
+
+print(adamw_value(4,0,0.1,0.2,True))
+```
+
+```text title="Output"
+3.92
+```
+
+Record the optimizer and parameter-group rule, not just the numeric decay coefficient.
+
+## Try it
+
+<CodeExercise id="b4-decoupled-weight-decay-01" />

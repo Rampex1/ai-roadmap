@@ -1,0 +1,91 @@
+items:
+  - id: b4-adam-bias-correction-01
+    type: mcq
+    prompt: What does v average?
+    explanation: It is a raw second moment.
+    options:
+      - text: Squared gradients
+        why: It is a raw second moment.
+        correct: true
+      - text: Centered gradient variance
+        why: The mean is not subtracted.
+      - text: Parameter magnitudes
+        why: It tracks gradients.
+  - id: b4-adam-bias-correction-02
+    type: mcq
+    prompt: Why correct early estimates?
+    explanation: Their weights initially sum to less than one.
+    options:
+      - text: Zero initialization shrinks the raw averages
+        why: Their weights initially sum to less than one.
+        correct: true
+      - text: The true gradient must always be zero initially
+        why: The data gradient can be nonzero.
+      - text: It changes the training targets
+        why: It only changes the update.
+  - id: b4-adam-bias-correction-03
+    type: mcq
+    prompt: What step number is used at the first update?
+    explanation: Then the correction denominator is positive.
+    options:
+      - text: One
+        why: Then the correction denominator is positive.
+        correct: true
+      - text: The batch size
+        why: The counter tracks updates.
+      - text: Zero
+        why: That makes the correction divide by zero.
+  - id: b4-adam-bias-correction-04
+    type: mcq
+    prompt: Which moments are carried into the next update?
+    explanation: Correction is applied when producing a direction.
+    options:
+      - text: Raw exponential averages
+        why: Correction is applied when producing a direction.
+        correct: true
+      - text: Only the corrected direction
+        why: It cannot reconstruct both states.
+      - text: The corrected averages as the accumulator
+        why: That changes the recurrence.
+  - id: b4-adam-bias-correction-05
+    type: multi
+    prompt: Which affect the direction?
+    explanation: It changes averaged gradient. It changes normalization.
+    options:
+      - text: Second-moment decay
+        why: It changes normalization.
+        correct: true
+      - text: First-moment decay
+        why: It changes averaged gradient.
+        correct: true
+      - text: The checkpoint filename
+        why: It is unrelated to the computation.
+  - id: b4-adam-bias-correction-06
+    type: cloze
+    prompt: The corrected second moment enters through its square ______.
+    accept:
+      - root
+    explanation: This restores gradient units in the denominator.
+  - id: b4-adam-bias-correction-07
+    type: order
+    prompt: Order the Adam computation.
+    items:
+      - Observe the current gradient
+      - Update raw moments
+      - Bias-correct each moment
+      - Form the normalized direction
+    explanation: Correction precedes normalization.
+  - id: b4-adam-bias-correction-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def adam_direction(m,v,g,beta1,beta2,step,epsilon):
+          from math import sqrt
+          m = beta1*m+(1-beta1)*g
+          v = beta2*v+(1-beta2)*g*g
+          direction = (m/(1-beta1**step))/(sqrt(v/(1-beta2**step))+epsilon)
+          return m,v,direction
+
+      print(adam_direction(0, 0, 4, 0.5, 0.5, 1, 0)[1])
+    answer: "8.0"
+    explanation: The raw squared-gradient average is 0.5 times 16.

@@ -4,5 +4,7 @@ title: "Optimisers"
 order: 5
 prereqs: ["b3"]
 objectives:
-  - "Explain the core ideas of optimisers"
-  - "Derive or implement the key methods of optimisers"
+  - Reason about momentum and optimizer state
+  - Derive bias-corrected Adam updates
+  - Distinguish decoupled decay from L2 in adaptive optimizers
+  - Use global clipping and explain its limitations

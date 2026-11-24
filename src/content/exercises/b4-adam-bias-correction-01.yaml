@@ -1,0 +1,22 @@
+id: b4-adam-bias-correction-01
+lesson: research/b4/adam-bias-correction
+title: Implement adam bias correction
+prompt: Implement adam_direction with 0 <= beta values < 1, step >= 1, nonnegative v and epsilon, and a positive denominator. Return raw updated m and v, then the bias-corrected direction.
+starter: |
+  def adam_direction(m,v,g,beta1,beta2,step,epsilon):
+      raise NotImplementedError
+solution: |
+  def adam_direction(m,v,g,beta1,beta2,step,epsilon):
+      from math import sqrt
+      m = beta1*m+(1-beta1)*g
+      v = beta2*v+(1-beta2)*g*g
+      direction = (m/(1-beta1**step))/(sqrt(v/(1-beta2**step))+epsilon)
+      return m,v,direction
+tests: |
+  assert adam_direction(0,0,2,0.5,0.5,1,0) == (1,2,1)
+  assert adam_direction(1,2,2,0.5,0.5,2,0) == (1.5,3,1)
+  assert adam_direction(0,0,-2,0,0,1,0) == (-2,4,-1)
+  assert adam_direction(0,0,0,0.5,0.5,1,1e-8) == (0,0,0)
+  assert adam_direction(0,0,4,0.25,0.5,1,2) == (3,8,4/6)
+hints:
+  - Store uncorrected moment estimates for the next step.

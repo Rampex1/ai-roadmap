@@ -1,0 +1,4 @@
+term: "Global gradient clipping"
+short: "Scaling every gradient coordinate by one common factor when the norm exceeds a limit."
+body: "Compute the Euclidean norm ‖g‖ over all parameters together. Then multiply every coordinate by min(1, c/‖g‖). Large gradients are capped at norm c with their direction unchanged; smaller ones are left as they are."
+related: ["gradient","adam-bias-correction"]

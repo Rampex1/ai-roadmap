@@ -1,0 +1,30 @@
+id: b4-clip-gradient-norm-01
+lesson: research/b4/clip-gradient-norm
+title: Implement clip gradient norm
+prompt: Implement clip_global(values,cap) for finite gradients and a finite nonnegative cap. Keep small vectors unchanged. When above the limit, multiply every coordinate by the same factor. Reject a negative cap.
+starter: |
+  def clip_global(values,cap):
+      raise NotImplementedError
+solution: |
+  def clip_global(values,cap):
+      from math import hypot
+      if cap < 0:
+          raise ValueError("negative cap")
+      norm = hypot(*values)
+      scale = cap/norm if norm > cap else 1
+      return [value*scale for value in values]
+tests: |
+  assert clip_global([3,4],2.5)==[1.5,2]
+  assert clip_global([-3,4],5)==[-3,4]
+  assert clip_global([3,4],10)==[3,4]
+  assert clip_global([0,0],0)==[0,0]
+  assert clip_global([1,2],0)==[0,0]
+  assert clip_global([],1)==[]
+  try:
+      clip_global([1],-1)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject negative cap")
+hints:
+  - A zero vector never requires division.

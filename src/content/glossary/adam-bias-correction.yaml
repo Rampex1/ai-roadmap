@@ -1,0 +1,4 @@
+term: "Adam bias correction"
+short: "Rescaling moment estimates by one minus the corresponding decay raised to the step number."
+body: "Adam's moment estimates start at zero, so early on they are biased toward zero. At step t (counting from 1), the corrections m̂ = m/(1−β₁ᵗ) and v̂ = v/(1−β₂ᵗ) remove this bias. The update uses m̂/(√v̂ + ε), while the raw m and v are carried to the next step."
+related: ["momentum-recurrence","gradient"]

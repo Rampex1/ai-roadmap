@@ -1,0 +1,6 @@
+title: "Adam: A Method for Stochastic Optimization"
+url: https://arxiv.org/abs/1412.6980
+kind: paper
+free: true
+modules:
+  - b4

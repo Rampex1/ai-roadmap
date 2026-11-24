@@ -1,0 +1,18 @@
+id: b4-decoupled-weight-decay-01
+lesson: research/b4/decoupled-weight-decay
+title: Implement decoupled weight decay
+prompt: Implement adamw_value using the supplied adaptive direction. If apply_decay is true, add decay*old_value to the update direction after adaptation. Subtract rate times the resulting direction.
+starter: |
+  def adamw_value(value,direction,rate,decay,apply_decay):
+      raise NotImplementedError
+solution: |
+  def adamw_value(value,direction,rate,decay,apply_decay):
+      shrink = decay*value if apply_decay else 0
+      return value - rate*(direction+shrink)
+tests: |
+  assert abs(adamw_value(4,0,0.1,0.2,True)-3.92)<1e-12
+  assert adamw_value(4,2,0.25,0.5,True)==3
+  assert adamw_value(4,2,0.25,0.5,False)==3.5
+  assert adamw_value(-4,0,0.25,0.5,True)==-3.5
+hints:
+  - Use the old parameter for shrinkage.

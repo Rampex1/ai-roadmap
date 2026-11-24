@@ -1,0 +1,4 @@
+term: "Momentum state"
+short: "A running combination of gradients used to compute an optimizer update."
+body: "Optimiser state v updated each step as v ← βv + g (or the averaging form βv + (1−β)g). The parameter moves by −η·v. Persistent gradient components build up, by up to 1/(1−β) times in the first form, while alternating components partly cancel."
+related: ["gradient-descent","stochastic-gradient-descent"]

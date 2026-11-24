@@ -1,0 +1,4 @@
+term: "Decoupled weight decay"
+short: "A direct parameter shrink applied separately from the loss-gradient update."
+body: "Weight decay applied as a separate shrink θ ← θ − η(adaptive step + λθ), rather than adding λθ to the gradient. In adaptive optimisers like Adam the two give different updates; in plain SGD they match. This is the AdamW rule from Loshchilov & Hutter (2019)."
+related: ["adam-bias-correction","regularisation"]

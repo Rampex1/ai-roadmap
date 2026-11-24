@@ -1,0 +1,92 @@
+items:
+  - id: b4-momentum-recurrence-01
+    type: mcq
+    prompt: What does beta retain?
+    explanation: It is the coefficient on optimizer state.
+    options:
+      - text: The number of examples
+        why: Beta is a smoothing parameter.
+      - text: The old parameter value instead
+        why: The recurrence acts on velocity.
+      - text: A fraction of the old velocity
+        why: It is the coefficient on optimizer state.
+        correct: true
+  - id: b4-momentum-recurrence-02
+    type: mcq
+    prompt: With beta zero, the step is equivalent to what?
+    explanation: The old velocity contributes nothing.
+    options:
+      - text: Ordinary gradient descent on the supplied gradient
+        why: The old velocity contributes nothing.
+        correct: true
+      - text: No update
+        why: The current gradient still contributes.
+      - text: A full state reset after each example is required
+        why: The formula already ignores state.
+  - id: b4-momentum-recurrence-03
+    type: mcq
+    prompt: What can opposing gradients do?
+    explanation: The vectors have opposite signs.
+    options:
+      - text: Cancel some accumulated velocity
+        why: The vectors have opposite signs.
+        correct: true
+      - text: Change the derivative definition
+        why: Only the update rule changes.
+      - text: Always double velocity magnitude
+        why: Opposite signs can reduce the sum.
+  - id: b4-momentum-recurrence-04
+    type: mcq
+    prompt: Why record the recurrence convention?
+    explanation: EMA and unscaled accumulation differ by a factor.
+    options:
+      - text: The same rate can yield different step sizes
+        why: EMA and unscaled accumulation differ by a factor.
+        correct: true
+      - text: Both always give identical updates
+        why: Their gradient weights differ.
+      - text: It determines the dataset labels
+        why: Labels are independent of the update.
+  - id: b4-momentum-recurrence-05
+    type: multi
+    prompt: Which help reproduce a momentum run?
+    explanation: They set the update. It changes future steps.
+    options:
+      - text: Record the coefficient and rate
+        why: They set the update.
+        correct: true
+      - text: Save the velocity state
+        why: It changes future steps.
+        correct: true
+      - text: Keep only the final loss
+        why: Loss does not reconstruct the state.
+  - id: b4-momentum-recurrence-06
+    type: cloze
+    prompt: The running gradient state in this recurrence is ______.
+    accept:
+      - velocity
+      - momentum
+      - momentum state
+      - velocity state
+      - momentum buffer
+    explanation: The update uses accumulated gradient information.
+  - id: b4-momentum-recurrence-07
+    type: order
+    prompt: Order one step.
+    items:
+      - Read the old velocity
+      - Combine it with the gradient
+      - Scale the new velocity by the rate
+      - Subtract the step from the parameter
+    explanation: The parameter uses the updated state.
+  - id: b4-momentum-recurrence-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def momentum_step(value, velocity, gradient, beta, rate):
+          next_velocity = beta*velocity + gradient
+          return value-rate*next_velocity,next_velocity
+
+      print(momentum_step(4, 2, 0, 0.5, 1))
+    answer: (3.0, 1.0)
+    explanation: Old velocity still contributes one even with zero current gradient.

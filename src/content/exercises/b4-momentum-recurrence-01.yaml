@@ -1,0 +1,17 @@
+id: b4-momentum-recurrence-01
+lesson: research/b4/momentum-recurrence
+title: Implement momentum recurrence
+prompt: Implement momentum_step. Return (updated value, updated velocity). Use v_new = beta*v + gradient and move the parameter by minus rate times that updated velocity.
+starter: |
+  def momentum_step(value, velocity, gradient, beta, rate):
+      raise NotImplementedError
+solution: |
+  def momentum_step(value, velocity, gradient, beta, rate):
+      next_velocity = beta*velocity + gradient
+      return value-rate*next_velocity,next_velocity
+tests: |
+  assert momentum_step(3,2,1,0.5,0.25) == (2.5,2)
+  assert momentum_step(0,2,1,0,1) == (-1,1)
+  assert momentum_step(3,2,-1,0.5,0.25) == (3,0)
+hints:
+  - Use the new velocity to update the parameter.

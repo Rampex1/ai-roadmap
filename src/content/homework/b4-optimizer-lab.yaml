@@ -1,0 +1,22 @@
+id: b4-optimizer-lab
+module: b4
+kind: homework
+title: Compare optimizer steps on controlled objectives
+brief: |-
+  Implement optimizer updates and check their state on deterministic gradient sequences.
+
+  1. Trace momentum on a scalar path.
+  2. Compute Adam bias correction.
+  3. Apply decoupled weight decay.
+  4. Clip an accumulated gradient.
+  5. Trace clipped AdamW on a two-axis quadratic.
+
+  Plot or tabulate several updates on a quadratic. Define what you would hold fixed when comparing convergence across methods.
+notebook: /homework/b4-optimizer-lab.ipynb
+rubric:
+  - Velocity is preserved between steps.
+  - Raw and corrected moments remain distinct.
+  - Decay is applied to the old parameter.
+  - Global clipping preserves direction.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

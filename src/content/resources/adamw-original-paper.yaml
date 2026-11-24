@@ -1,0 +1,6 @@
+title: Decoupled Weight Decay Regularization
+url: https://arxiv.org/abs/1711.05101
+kind: paper
+free: true
+modules:
+  - b4

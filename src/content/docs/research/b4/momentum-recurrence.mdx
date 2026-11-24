@@ -1,0 +1,39 @@
+---
+title: Momentum on a quadratic
+module: b4
+order: 1
+estMinutes: 8
+objectives:
+  - Trace the velocity and parameter updates
+  - Distinguish persistent from alternating gradient components
+goDeeper: adam-original-paper
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Consider a quadratic with one steep and one shallow axis. Ordinary gradient descent can zigzag across the steep axis while moving slowly in the shallow direction. <Term id="momentum-recurrence" cap /> combines past and current gradients. In the convention used here, velocity becomes βv + g, then the parameter decreases by the learning rate times the new velocity. A persistent gradient builds velocity, while alternating signs tend to cancel.
+
+An exponential-average convention instead uses βv + (1−β)g. This changes the scale at a fixed learning rate. Specify which convention is used when translating an experiment. Momentum still needs a stable learning rate and can overshoot. Resetting its state midway changes the training run even when weights are restored exactly.
+
+## Worked example
+
+The inherited velocity contributes one unit.
+
+```python
+def momentum_step(value, velocity, gradient, beta, rate):
+    next_velocity = beta*velocity + gradient
+    return value-rate*next_velocity,next_velocity
+
+print(momentum_step(3,2,1,0.5,0.25))
+```
+
+```text title="Output"
+(2.5, 2.0)
+```
+
+A training checkpoint should preserve optimizer state if it will be resumed.
+
+## Try it
+
+<CodeExercise id="b4-momentum-recurrence-01" />

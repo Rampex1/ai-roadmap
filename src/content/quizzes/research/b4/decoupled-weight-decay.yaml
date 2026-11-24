@@ -1,0 +1,88 @@
+items:
+  - id: b4-decoupled-weight-decay-01
+    type: mcq
+    prompt: Where is shrinkage applied in AdamW here?
+    explanation: It is separate from moment estimation.
+    options:
+      - text: Directly to the old parameter
+        why: It is separate from moment estimation.
+        correct: true
+      - text: Only to validation losses
+        why: It changes parameters.
+      - text: Inside the second-moment accumulator
+        why: That would couple it to adaptation.
+  - id: b4-decoupled-weight-decay-02
+    type: mcq
+    prompt: When can simple L2 match direct shrinkage?
+    explanation: A linear unadapted update can combine both terms.
+    options:
+      - text: Plain SGD with matching coefficients
+        why: A linear unadapted update can combine both terms.
+        correct: true
+      - text: Every Adam configuration
+        why: Adaptive scaling generally changes the result.
+      - text: Only when new weights equal old ones
+        why: A nonzero shrink can still be equivalent.
+  - id: b4-decoupled-weight-decay-03
+    type: mcq
+    prompt: What happens with zero direction and enabled decay?
+    explanation: Decay acts independently.
+    options:
+      - text: The parameter must stay fixed
+        why: Its old value can induce shrinkage.
+      - text: The parameter can move toward zero
+        why: Decay acts independently.
+        correct: true
+      - text: The moment must be nonzero
+        why: Decay need not depend on moment values.
+  - id: b4-decoupled-weight-decay-04
+    type: mcq
+    prompt: Why name excluded parameter groups?
+    explanation: This affects reproducibility.
+    options:
+      - text: Groups determine target labels
+        why: They control updates.
+      - text: The exclusion always improves every model
+        why: That must be measured.
+      - text: They change which weights are regularized
+        why: This affects reproducibility.
+        correct: true
+  - id: b4-decoupled-weight-decay-05
+    type: multi
+    prompt: Which remain separate in an AdamW description?
+    explanation: It comes from gradient moments. It depends on the old parameter and coefficient.
+    options:
+      - text: Adaptive task direction
+        why: It comes from gradient moments.
+        correct: true
+      - text: Direct shrink term
+        why: It depends on the old parameter and coefficient.
+        correct: true
+      - text: The value of the evaluation label inserted into the shrink
+        why: Labels are not a direct shrink input.
+  - id: b4-decoupled-weight-decay-06
+    type: cloze
+    prompt: AdamW uses ______ weight decay.
+    accept:
+      - decoupled
+    explanation: The shrink does not enter adaptive moments.
+  - id: b4-decoupled-weight-decay-07
+    type: order
+    prompt: Order this AdamW update, starting with the old parameter and computing the adaptive direction before the shrink term.
+    items:
+      - Read the pre-update parameter
+      - Compute the adaptive gradient direction
+      - Compute eligible direct shrink from that old parameter
+      - Apply the combined step
+    explanation: Both terms use the same pre-update state.
+  - id: b4-decoupled-weight-decay-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def adamw_value(value,direction,rate,decay,apply_decay):
+          shrink = decay*value if apply_decay else 0
+          return value - rate*(direction+shrink)
+
+      print(adamw_value(8, 0, 0.5, 0.25, True))
+    answer: "7.0"
+    explanation: The direct shrink is 0.5 times 0.25 times eight.

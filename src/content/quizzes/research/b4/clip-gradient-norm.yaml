@@ -1,0 +1,92 @@
+items:
+  - id: b4-clip-gradient-norm-01
+    type: mcq
+    prompt: Why use one multiplier?
+    explanation: All coordinates are rescaled equally.
+    options:
+      - text: It preserves gradient direction
+        why: All coordinates are rescaled equally.
+        correct: true
+      - text: It turns the vector into a one-hot index
+        why: The coordinates remain numeric values.
+      - text: It changes every sign
+        why: Nonnegative scaling does not reverse directions.
+  - id: b4-clip-gradient-norm-02
+    type: mcq
+    prompt: What if norm is already below cap?
+    explanation: Clipping only constrains large norms.
+    options:
+      - text: Keep the gradient unchanged
+        why: Clipping only constrains large norms.
+        correct: true
+      - text: Scale it up to the cap
+        why: That is normalization rather than clipping.
+      - text: Replace it with zero
+        why: No clipping is required.
+  - id: b4-clip-gradient-norm-03
+    type: mcq
+    prompt: What norm should mixed precision compare to the intended cap?
+    explanation: A loss-scale multiplier changes the observed norm.
+    options:
+      - text: The unscaled gradient norm
+        why: A loss-scale multiplier changes the observed norm.
+        correct: true
+      - text: Only input norms
+        why: The cap applies to gradients.
+      - text: The scaled norm with no adjustment
+        why: It would change the effective bound.
+  - id: b4-clip-gradient-norm-04
+    type: mcq
+    prompt: Does clipping guarantee every adaptive update is bounded by the same cap?
+    explanation: Optimizer state and scaling can change the resulting step.
+    options:
+      - text: Only if every layer has the same width
+        why: Width does not establish the claim.
+      - text: Yes for every optimizer
+        why: The subsequent algorithm matters.
+      - text: No, it bounds the input gradient
+        why: Optimizer state and scaling can change the resulting step.
+        correct: true
+  - id: b4-clip-gradient-norm-05
+    type: multi
+    prompt: Which are useful clipping diagnostics?
+    explanation: It reveals spikes or sustained large values. It shows how often the rule activates.
+    options:
+      - text: Raw norm distribution
+        why: It reveals spikes or sustained large values.
+        correct: true
+      - text: Clipped fraction
+        why: It shows how often the rule activates.
+        correct: true
+      - text: Only the number of evaluation charts
+        why: That does not explain the updates.
+  - id: b4-clip-gradient-norm-06
+    type: cloze
+    prompt: Global clipping preserves vector ______ for positive scaling.
+    accept:
+      - direction
+    explanation: A shared positive multiplier does not change direction.
+  - id: b4-clip-gradient-norm-07
+    type: order
+    prompt: Order one clipping operation.
+    items:
+      - Collect the gradient coordinates
+      - Calculate the global norm
+      - Compute a shared factor if needed
+      - Scale and pass gradients to the optimizer
+    explanation: The factor depends on the complete norm.
+  - id: b4-clip-gradient-norm-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def clip_global(values,cap):
+          from math import hypot
+          if cap < 0:
+              raise ValueError("negative cap")
+          norm = hypot(*values)
+          scale = cap/norm if norm > cap else 1
+          return [value*scale for value in values]
+
+      print(clip_global([3, 4], 10))
+    answer: "[3, 4]"
+    explanation: The norm is five, below the cap.
