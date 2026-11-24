@@ -1,0 +1,92 @@
+id: a1-designing-the-ml-system-01
+lesson: mle/a1/designing-the-ml-system
+title: Point-in-time correct features
+prompt: |
+  Write `features_at(preds, history)`.
+
+  - `preds` has columns `customer` and `time`: one row per prediction, in any order.
+  - `history` has columns `customer`, `time` and `value`: each row says the customer's value changed at that time.
+
+  Return a **copy of `preds`, in its original row order and with its original index**, with a new column
+  `value`: the most recent `value` for that customer recorded **strictly before** the prediction time.
+  If there is none, the value is `NaN`.
+
+  For the example, the answer is `[40, 500, nan, 100]`: at 15 March customer `a` last changed to 40 (the
+  900 is in the future), `b` to 500; customer `c` has no history; at 2 March `a` had 100.
+
+  `pd.merge_asof` does the matching, but it needs both tables sorted by `time` and returns rows in that
+  sorted order, so you must restore the original order.
+starter: |
+  import numpy as np
+  import pandas as pd
+
+  history = pd.DataFrame({
+      "customer": ["a", "a", "a", "b", "b"],
+      "time": pd.to_datetime(["2026-03-01", "2026-03-10", "2026-03-20", "2026-03-05", "2026-03-25"]),
+      "value": [100.0, 40.0, 900.0, 500.0, 20.0],
+  })
+  preds = pd.DataFrame({
+      "customer": ["a", "b", "c", "a"],
+      "time": pd.to_datetime(["2026-03-15", "2026-03-15", "2026-03-15", "2026-03-02"]),
+  })
+
+  def features_at(preds, history):
+      # Wrong on purpose: uses the latest value, even if it is in the future.
+      latest = history.sort_values("time").groupby("customer")["value"].last()
+      return preds.assign(value=preds["customer"].map(latest))
+
+  print(features_at(preds, history))
+solution: |
+  import numpy as np
+  import pandas as pd
+
+  history = pd.DataFrame({
+      "customer": ["a", "a", "a", "b", "b"],
+      "time": pd.to_datetime(["2026-03-01", "2026-03-10", "2026-03-20", "2026-03-05", "2026-03-25"]),
+      "value": [100.0, 40.0, 900.0, 500.0, 20.0],
+  })
+  preds = pd.DataFrame({
+      "customer": ["a", "b", "c", "a"],
+      "time": pd.to_datetime(["2026-03-15", "2026-03-15", "2026-03-15", "2026-03-02"]),
+  })
+
+  def features_at(preds, history):
+      left = preds.reset_index().rename(columns={"index": "_row"}).sort_values("time")
+      right = history[["customer", "time", "value"]].sort_values("time")
+      out = pd.merge_asof(left, right, on="time", by="customer", allow_exact_matches=False)
+      out = out.set_index("_row").loc[preds.index]
+      out.index.name = preds.index.name
+      return preds.assign(value=out["value"].to_numpy())
+
+  print(features_at(preds, history))
+tests: |
+  import numpy as np
+  import pandas as pd
+  def _ref(_p, _h):
+      _vals = []
+      for _c, _t in zip(_p["customer"], _p["time"]):
+          _m = _h[(_h["customer"] == _c) & (_h["time"] < _t)].sort_values("time")
+          _vals.append(_m["value"].iloc[-1] if len(_m) else np.nan)
+      return np.array(_vals, dtype=float)
+  def _check(_p, _h, _label):
+      _p0 = _p.copy()
+      _got = features_at(_p, _h)
+      assert isinstance(_got, pd.DataFrame) and "value" in _got.columns, f"{_label}: return a DataFrame with a value column"
+      assert list(_got.index) == list(_p0.index), f"{_label}: keep the original index and row order {list(_p0.index)}, got {list(_got.index)}"
+      assert list(_got["customer"]) == list(_p0["customer"]), f"{_label}: rows are out of order: restore the order of preds"
+      np.testing.assert_allclose(_got["value"].to_numpy(dtype=float), _ref(_p0, _h), err_msg=f"{_label}: wrong values (use only history strictly before each prediction time)")
+      assert _p.equals(_p0), f"{_label}: do not modify preds in place; return a copy"
+  _check(preds, history, "example")
+  _h2 = pd.DataFrame({"customer": [1, 2, 1, 2, 1], "time": pd.to_datetime(["2026-01-01", "2026-01-02", "2026-01-05", "2026-01-05", "2026-01-09"]), "value": [1.0, 2.0, 3.0, 4.0, 5.0]})
+  _p2 = pd.DataFrame({"customer": [1, 2, 1, 2, 1], "time": pd.to_datetime(["2026-01-09", "2026-01-05", "2026-01-01", "2026-01-30", "2026-01-06"])}, index=[10, 7, 3, 99, 0])
+  _check(_p2, _h2, "second table (with exact-time ties and a custom index)")
+  _rng = np.random.default_rng(4)
+  _h3 = pd.DataFrame({"customer": _rng.integers(0, 5, 60), "time": pd.Timestamp("2026-01-01") + pd.to_timedelta(_rng.permutation(60), unit="h"), "value": _rng.normal(size=60)})
+  _p3 = pd.DataFrame({"customer": _rng.integers(0, 6, 25), "time": pd.Timestamp("2026-01-01") + pd.to_timedelta(_rng.integers(0, 70, 25) + 0.5, unit="h")})
+  _h3["time"] = _h3["time"].astype("datetime64[ns]")
+  _p3["time"] = _p3["time"].astype("datetime64[ns]")
+  _check(_p3, _h3, "random table")
+hints:
+  - "Remember the original row positions first, for example with preds.reset_index(), then sort both tables by time."
+  - "pd.merge_asof(left, right, on=\"time\", by=\"customer\", allow_exact_matches=False) takes the last earlier row per customer."
+  - "Put the rows back in the original order, then attach the values with preds.assign(value=...)."

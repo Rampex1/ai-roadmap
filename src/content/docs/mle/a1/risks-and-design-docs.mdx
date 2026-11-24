@@ -1,0 +1,164 @@
+---
+title: "Risks, requirements and the one-page ML design doc"
+module: a1
+order: 5
+estMinutes: 12
+objectives:
+  - "Turn latency, cost, privacy, fairness and explainability concerns into checkable requirements"
+  - "List an ML system's failure modes and give each a fallback or a detection plan"
+  - "Write a one-page ML design doc that a colleague can review before any model is built"
+goDeeper: made-with-ml-design
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+The previous lessons produced a framing, metrics, baselines and a system sketch. Before building,
+collect the **constraints**: what the system must do besides being accurate, and what happens when it
+goes wrong. Then put everything on one page that other people can review. Problems found on a page cost
+minutes to fix; the same problems found in production cost weeks, money or trust.
+
+## Requirements are numbers with owners
+
+"It should be fast and fair" is not a requirement. A requirement says what is measured, the limit, and
+who agreed to it. The usual categories:
+
+### Latency and throughput
+
+Online systems have a latency budget: a card payment network might give the fraud check a small slice
+of the total time for a payment. Describe latency with **percentiles**, not the mean, because users
+feel the slow tail:
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(3)
+# 10,000 measured request latencies in milliseconds: mostly fast, with a slow tail.
+latency = np.concatenate([rng.normal(40, 8, 9_800), rng.normal(400, 100, 200)])
+print(f"mean {latency.mean():.0f} ms")
+for q in [50, 95, 99]:
+    print(f"p{q}  {np.percentile(latency, q):.0f} ms")
+```
+
+```text title="Output"
+mean 47 ms
+p50  40 ms
+p95  55 ms
+p99  394 ms
+```
+
+The mean of 47 ms looks fine; one request in a hundred takes about 400 ms. If the budget is "p99 under
+100 ms", this system fails. Throughput (requests per second at peak, from lesson 4) completes the
+picture.
+
+### Cost
+
+Count all of it: compute for training and serving, storage, labelling (human reviewers are often the
+largest item), and the engineers who maintain the system. Express it per prediction or per month and
+compare with the value estimate from lesson 1. A model that is 1% better but needs a GPU per request
+may not pay.
+
+### Privacy
+
+From [F11 privacy](/foundations/f11/privacy/): use only the data the task needs (data minimisation),
+check you have a lawful basis and consent for this use, know where personal data flows and how long it
+is kept, and remember that models can memorise training examples. Removing names is not anonymisation.
+Write down which personal fields the model uses and why each is needed.
+
+### Fairness
+
+From [F11 measuring fairness](/foundations/f11/measuring-fairness/): decide which groups to check,
+which metric matters for this decision (for a fraud block, the false positive rate per group is the
+harm to legitimate customers; for a loan, approval rates and error rates), and the largest acceptable
+gap. Proxies matter: a model without a protected attribute can still use postcode or device type as a
+<Term id="proxy-variable" text="proxy" />. And the impossibility results in
+[F11 calibration and trade-offs](/foundations/f11/calibration-and-trade-offs/) mean you must *choose*
+which criterion to prioritise; write down the choice and the reason.
+
+### Explainability
+
+Who needs an explanation, and of what? A reviewer wants to know *why this case was flagged* ("new
+device, amount ten times the usual"). A customer refused credit may be legally entitled to the main
+reasons; rules on this vary by country and sector, so involve legal or compliance experts early (as of
+late 2026, the EU AI Act, GDPR and US credit regulations all contain relevant provisions). Requirements
+here can rule out model types, or require per-prediction reason codes, before any modelling starts.
+
+## Failure modes and fallbacks
+
+List how the system can fail and what happens then. A starter table for the fraud system:
+
+| Failure | How you notice | What happens meanwhile |
+|---|---|---|
+| Model service down or too slow | health checks, latency alerts | fall back to the rule; never block all payments |
+| Missing or malformed input | input validation | default values or the rule, and an alert |
+| Upstream data change (a field renamed, units changed) | data quality checks | block deployment; page the data owner |
+| Gradual drift (new fraud patterns) | drift and prediction-distribution monitors | scheduled retraining; review threshold |
+| Adversaries adapt to the model | rising losses in a segment | rules for the new pattern; faster retraining |
+| Feedback loop starves labels | label volume per segment | random holdout keeps labels arriving |
+| Unfair errors for a group | per-group metrics in monitoring | threshold review; escalation owner |
+
+Two principles fall out of this table. **Always have a fallback** that does something sensible without
+the model: usually the rule from lesson 1, which is one more reason to build it first. And **fail
+safe**: decide in advance whether an outage should block or allow (for fraud, usually allow small
+payments and hold large ones), instead of discovering the behaviour during the outage.
+
+:::tip[Human review as a safety valve]
+Sending uncertain or high-stakes cases to a person reduces the cost of model errors. It also produces
+labels. Its limits are capacity (the precision@k metric from lesson 3) and automation bias: reviewers
+tend to agree with the model, so measure how often they overturn it.
+:::
+
+## The one-page ML design doc
+
+A design doc is a short document, written before building, that lets colleagues spot problems early.
+For an ML system, one page (or two) with these headings is enough:
+
+1. **Problem and objective.** The business goal and the metric that should move.
+2. **Decision and users.** What decision the predictions drive, who acts on them, and the capacity.
+3. **ML task.** Prediction target, unit of prediction, prediction time, label definition, label delay,
+   and known proxy gaps.
+4. **Data.** Sources, owners, volumes, which personal data, how labels are obtained.
+5. **Metrics and success criteria.** Offline metric that matches the decision, online metrics and
+   guardrails, and the success threshold agreed in advance.
+6. **Baselines.** Trivial, heuristic and simple model, with their numbers.
+7. **System sketch.** Batch or online, features and their freshness, training cadence, feedback and
+   logging, monitoring layers.
+8. **Risks and requirements.** Latency, cost, privacy, fairness, explainability, and the failure-mode
+   table with fallbacks.
+9. **Rollout plan.** Shadow mode (the model runs but its decisions aren't applied), then an A/B test,
+   then gradual rollout, with the criteria to stop.
+10. **Open questions.** What you don't know yet and who will answer it.
+
+Here is a compressed example for the fraud system:
+
+> **Objective:** cut card fraud losses (currently about £2.7 million a month on 1 million transactions) without raising complaints.
+> **Decision:** at payment time, approve, or hold and send an SMS check. Reviewer capacity is not
+> needed for SMS holds. **Task:** per transaction, P(fraud), label = confirmed dispute within 90 days
+> (median delay 20 days; 99th percentile under 90). Proxy gap: undisputed fraud is labelled legitimate.
+> **Data:** transactions, device, account history; no protected attributes; postcode excluded pending a
+> proxy check. **Metrics:** offline expected cost with £150 per missed fraud and £5 per hold, on the
+> latest month with matured labels; online loss per £1,000 transacted, with guardrails of hold rate
+> ≤ 2% of legitimate payments and p99 latency ≤ 100 ms. **Success:** at least 20% lower expected cost
+> than the current rule. **Baselines:** flag nothing £27.0k, rule £22.2k, logistic regression
+> £16.6k per 10,000 transactions. **System:** online scoring, hourly batch account features plus
+> real-time amount and device features; weekly retraining; 1% random holdout. **Risks:** service
+> outage falls back to the rule; hold-rate gap between age bands ≤ 1 percentage point; reason codes
+> for every hold. **Rollout:** two weeks shadow, then A/B on 10% of traffic. **Open:** can disputes
+> be labelled faster from customer SMS replies?
+
+Notice that nothing in it depends on which algorithm you pick. That is the point: the doc settles what
+must be true of *any* model, so the modelling work that follows has a target.
+
+## Try it
+
+<CodeExercise id="a1-risks-and-design-docs-01" />
+
+## Summary
+
+- Requirements are measurable limits with owners: latency percentiles and throughput, cost per
+  prediction, privacy, per-group fairness gaps, and explainability needs.
+- Describe latency with percentiles; the mean hides the tail users feel.
+- List failure modes with how you detect each and the fallback; the rule-based baseline is the natural
+  fallback, and outages should fail safe.
+- A one-page ML design doc (problem, decision, task, data, metrics, baselines, system, risks, rollout,
+  open questions) is written before modelling and reviewed by others. The homework asks you to write
+  one, with a working baseline and a cost-based threshold.

@@ -1,0 +1,8 @@
+term: "Training-serving skew"
+short: "A difference between the inputs a model saw in training and the inputs it receives in production."
+body: |
+  It often comes from computing the same feature with two different pieces of code (time zones, missing-value
+  handling, window lengths) or from training features that accidentally used information from after the
+  prediction time. The model then receives inputs it was never trained on. Sharing one feature implementation
+  between training and serving, and testing that they agree, prevents most of it.
+related: ["data-leakage", "distribution-shift"]

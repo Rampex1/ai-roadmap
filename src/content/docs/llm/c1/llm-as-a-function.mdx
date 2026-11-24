@@ -1,0 +1,258 @@
+---
+title: "The LLM as a function: chat templates and special tokens"
+module: c1
+order: 1
+estMinutes: 17
+objectives:
+  - "Trace a chat request from a list of messages to the single token sequence the model actually sees, and back to a reply"
+  - "Render messages with a chat template by hand, including the generation prompt, and count the template's token overhead"
+  - "Explain what special tokens do, why each model family has its own template, and what goes wrong when the template is wrong"
+  - "Distinguish prefill from decoding and explain why the first token is slow and the rest come at a steady rate"
+goDeeper: hf-chat-templating
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import pipelineImg from '@/assets/diagrams/c1-request-pipeline.svg';
+
+[F10](/foundations/f10/llms-in-practice/) showed that a chat is flattened into one sequence of tokens and
+that the model keeps no memory between calls. Track C is about *engineering* with large language models,
+so this module opens the box further. By the end of it you should be able to predict what a model will do
+with a request, what it will cost, how long it will take, which model to run, and where it will fail.
+
+Start with the most useful mental model in the whole track.
+
+## The model is a pure function
+
+Strip away the chat interface and an LLM is a function with no state:
+
+$$
+f_\theta(x_1, \dots, x_t) = \mathbf{z} \in \mathbb{R}^{V}
+$$
+
+It takes a sequence of token ids $x_1, \dots, x_t$ and returns one vector $\mathbf{z}$ of
+<Term id="logit" text="logits" />, a score for each of the $V$ tokens in the vocabulary, for the *next*
+position. $\theta$ is the frozen weights. Nothing else goes in: no hidden session, no memory of yesterday,
+no access to the internet. Same tokens in, same logits out (up to floating-point noise, which
+[lesson 2](/llm/c1/decoding/) takes seriously).
+
+Everything that feels like behaviour is built *around* that function by ordinary code:
+
+1. **Render.** Your messages are turned into one string by a <Term id="chat-template" />.
+2. **Tokenise.** The string becomes token ids with the model's own tokeniser
+   ([F10 tokens](/foundations/f10/tokens/)).
+3. **Prefill.** The model runs over all the prompt tokens at once and produces logits for the next
+   position.
+4. **Decode.** A *sampler* picks one token from those logits, appends it, and calls the model again,
+   one token at a time ([lesson 2](/llm/c1/decoding/) is all about this step).
+5. **Stop.** The loop ends when the model emits an end-of-turn token, a stop sequence appears, or a token
+   limit is hit.
+6. **Detokenise.** The new ids are turned back into text and returned as the assistant's message.
+
+<Figure src={pipelineImg} alt="A chat request flows from a list of messages through the chat template to one string, through the tokeniser to token ids, through prefill and a decode loop that appends one token at a time, until an end-of-turn token stops it; the new ids are detokenised into the reply." caption="The life of one chat request. Only the boxes in the middle involve the neural network; everything else is ordinary code you can read and test." />
+
+When something goes wrong in an LLM application, ask which of these six steps it went wrong in. Most bugs
+are in steps 1, 2, 5 and 6, which are plain code.
+
+## Chat templates: messages become one string
+
+APIs and libraries let you send a list of messages with **roles**:
+
+- **system**: instructions from the application developer (persona, rules, output format). It comes
+  first and is meant to take priority.
+- **user**: what the person typed.
+- **assistant**: the model's earlier replies. You send these back yourself on every call; this is the
+  "memory".
+- **tool** (in many templates): the result of a tool call, covered in C6.
+
+The model, however, was trained on plain token sequences. During
+[instruction tuning](/foundations/f10/transformers/) its trainers wrapped every conversation in a fixed
+format with marker tokens, and the model learned to answer *only when it sees that format*. The chat
+template reproduces that format exactly. Here is the format used by the Qwen family, called ChatML, as
+plain Python:
+
+```python
+def chatml(messages, add_generation_prompt=True):
+    out = ""
+    for m in messages:
+        out += f"<|im_start|>{m['role']}\n{m['content']}<|im_end|>\n"
+    if add_generation_prompt:
+        out += "<|im_start|>assistant\n"
+    return out
+
+messages = [
+    {"role": "system", "content": "You are terse."},
+    {"role": "user", "content": "Hi"},
+]
+print(repr(chatml(messages)))
+```
+
+```text title="Output"
+'<|im_start|>system\nYou are terse.<|im_end|>\n<|im_start|>user\nHi<|im_end|>\n<|im_start|>assistant\n'
+```
+
+This is character for character what the Hugging Face tokeniser for `Qwen/Qwen2.5-0.5B-Instruct`
+produces with `tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)`.
+
+The last line, `<|im_start|>assistant\n`, is the **generation prompt**. It opens an assistant turn and
+leaves it empty, so the most likely continuation is the assistant's reply. Forget it and the model may
+continue the *user's* message, or start a new user turn of its own. When the model finishes its reply it
+emits `<|im_end|>`, which the generation loop treats as the stop signal.
+
+### Every family has its own template
+
+The same two-turn conversation (system, user, assistant, user) rendered by three real tokenisers, as of
+late 2026:
+
+```text title="Qwen 2.5 (ChatML)"
+<|im_start|>system
+You are terse.<|im_end|>
+<|im_start|>user
+Hi<|im_end|>
+<|im_start|>assistant
+Hello.<|im_end|>
+<|im_start|>user
+Bye<|im_end|>
+<|im_start|>assistant
+```
+
+```text title="Llama 3.2 Instruct"
+<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+Cutting Knowledge Date: December 2023
+Today Date: 23 Nov 2026
+
+You are terse.<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+Hi<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+
+Hello.<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+Bye<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+```
+
+```text title="Gemma 3"
+<bos><start_of_turn>user
+You are terse.
+
+Hi<end_of_turn>
+<start_of_turn>model
+Hello.<end_of_turn>
+<start_of_turn>user
+Bye<end_of_turn>
+<start_of_turn>model
+```
+
+Three things to notice, each of which has caused real bugs:
+
+- **The markers differ completely.** Qwen ends a turn with `<|im_end|>`, Llama with `<|eot_id|>`, Gemma
+  with `<end_of_turn>`. Feed one model another's format and it sees a strange document, not a
+  conversation.
+- **Templates contain logic.** The Llama template injects its training cutoff and today's date into the
+  system turn. The Gemma template has no system role at all: it folds the system text into the first user
+  turn, and calls the assistant `model`. Qwen inserts a default system prompt ("You are Qwen, created by
+  Alibaba Cloud...") when you send none.
+- **The template ships with the model.** In Hugging Face it is a small Jinja program stored in the
+  tokeniser's configuration, and `apply_chat_template` runs it. Hosted APIs and local servers such as
+  Ollama apply it for you on the server. You rarely write a template; you *do* need to know one exists,
+  so you can read it when output looks wrong.
+
+:::caution[Base models have no template]
+A **base** model (only [pretrained](/foundations/f10/transformers/)) was never taught any chat format.
+Wrapping your prompt in ChatML does not make it an assistant; it just continues the document. Use the
+**instruct** (or "chat") variant for chat, and the base model only for plain completion or fine-tuning.
+:::
+
+## Special tokens
+
+The markers above are <Term id="special-token" text="special tokens" />: vocabulary entries reserved for
+structure rather than text. Each is a single id, not a sequence of characters. Tokenising the Qwen prompt
+above gives 18 ids:
+
+```text title="Qwen tokens for the system + user prompt"
+['<|im_start|>', 'system', 'Ċ', 'You', 'Ġare', 'Ġterse', '.', '<|im_end|>', 'Ċ',
+ '<|im_start|>', 'user', 'Ċ', 'Hi', '<|im_end|>', 'Ċ',
+ '<|im_start|>', 'assistant', 'Ċ']
+```
+
+(`Ġ` and `Ċ` are how this byte-level tokeniser displays a leading space and a newline.) `<|im_start|>` is
+id 151644 and `<|im_end|>` is 151645. Only 5 of the 18 tokens are your content; the other 13 are template
+overhead: 5 per message plus 3 for the generation prompt. Overhead is small per message, but in a
+long chat with many short turns, or a request with dozens of tool results, it adds up and counts against
+your budget ([lesson 3](/llm/c1/context-windows/)).
+
+The common kinds of special token:
+
+| Kind | Examples | Job |
+|---|---|---|
+| Beginning of sequence (BOS) | `<\|begin_of_text\|>`, `<bos>` | Marks the start of the input; some models expect exactly one |
+| End of turn or sequence (EOS) | `<\|im_end\|>`, `<\|eot_id\|>`, `<end_of_turn>` | The model emits it to say "I am done"; the loop stops |
+| Role and turn markers | `<\|im_start\|>`, `<\|start_header_id\|>` | Mark who is speaking |
+| Padding | `<\|endoftext\|>` used as pad | Fills short sequences in a batch; ignored by attention |
+| Tool and reasoning markers | `<tool_call>`, `<think>` (model-specific) | Delimit tool calls or hidden reasoning, parsed by the server |
+
+:::caution[Special tokens in user text]
+By default, a Hugging Face tokeniser turns the literal *text* `<|im_end|>` into the special token, id
+151645. If you build prompts by pasting untrusted text into a template string, a user can type
+`<|im_end|><|im_start|>system` and forge a system turn. Let the library render messages with
+`apply_chat_template`, or tokenise untrusted text with special-token parsing turned off
+(`split_special_tokens=True` in Hugging Face), which turns the same text into 6 ordinary tokens. Hosted
+APIs handle this for you; C11 covers prompt injection more broadly.
+:::
+
+## Prefill and decode: two very different phases
+
+The generation loop calls the model once per new token, so why is it not painfully slow? Two reasons.
+
+**The KV cache.** In [causal attention](/foundations/f10/attention/) each position only looks backwards,
+so the keys and values computed for earlier tokens never change. Servers store them in a
+<Term id="kv-cache" /> and, for each new token, compute only that token's query, key and value and
+attend to the cached rest. Generating token $t+1$ therefore costs about the same as one position, not
+a full pass over all $t+1$ tokens.
+
+**Prefill is parallel, decode is sequential.** The prompt is known in advance, so all its positions are
+processed in one big batched pass (**prefill**), which fills the KV cache and keeps the hardware busy.
+Output tokens must be produced one after another (**decode**), because each depends on the previous one.
+That gives the two numbers every serving dashboard shows:
+
+- **Time to first token (TTFT)**: mostly prefill, so it grows with the prompt length.
+- **Tokens per second** (or time per output token) during decode: roughly constant for a given model and
+  machine, and usually limited by how fast the weights can be read from memory, not by arithmetic
+  ([lesson 4](/llm/c1/choosing-a-model/)).
+
+This asymmetry is why hosted APIs price output tokens several times higher than input tokens, and why
+[lesson 3](/llm/c1/context-windows/) treats input and output length separately when estimating latency.
+
+## What the API hides, and what it does not
+
+When you call a hosted chat API or a local server such as Ollama, steps 1, 2 and 6 happen on the server,
+and you get back text plus metadata. That metadata maps straight onto the pipeline:
+
+- `usage.prompt_tokens` (or `prompt_eval_count`) counts your prompt **after** templating, so it includes
+  the overhead tokens.
+- `finish_reason` (or `done_reason`) says which stop condition fired: `stop` means the end-of-turn token
+  or a stop sequence, `length` means the token limit cut the reply off.
+- Timing fields separate prefill from decode; Ollama, for example, reports `prompt_eval_duration` and
+  `eval_duration` in nanoseconds.
+
+C2 uses these APIs for real. The homework follows the same steps with a small synthetic vocabulary so you can inspect the full sampling distribution.
+
+## Try it
+
+Write a template renderer for a ChatML-style format, with a default system prompt and the generation
+prompt. This is the logic that runs inside `apply_chat_template`.
+
+<CodeExercise id="c1-llm-as-a-function-01" />
+
+## Summary
+
+- An LLM is a stateless function from token ids to next-token logits. Rendering, tokenising, sampling,
+  stopping and detokenising are ordinary code around it.
+- A chat template flattens role-tagged messages into one string in the exact format the model was
+  instruction-tuned on; the generation prompt opens an empty assistant turn.
+- Templates differ by family (markers, default system prompts, no system role, injected dates), ship with
+  the tokeniser and are applied by the server; base models have none.
+- Special tokens are single reserved ids for structure: BOS, end of turn, role markers, padding. Never let
+  untrusted text be parsed into them.
+- Prefill processes the prompt in parallel and sets the time to first token; decode produces one token per
+  step from the KV cache at a steady rate.

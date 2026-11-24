@@ -1,0 +1,55 @@
+id: a1-when-to-use-ml-02
+lesson: mle/a1/when-to-use-ml
+title: Is the model worth building?
+prompt: |
+  Write `monthly_value(n, base_rate, recall, precision, value_tp, cost_fp)` that returns the expected
+  monthly value of a flagging system, as in the lesson:
+
+  $$TP = n \cdot b \cdot r, \qquad FP = TP \cdot \frac{1 - p}{p}, \qquad \text{value} = v_{TP} \cdot TP - c_{FP} \cdot FP$$
+
+  If `precision` or `recall` is `0`, the system flags nothing useful: return `0.0`.
+
+  Then set `incremental` to the value of the **model** minus the value of the **rule**, both at
+  `n = 1_000_000`, `base_rate = 0.018`, `value_tp = 150` and `cost_fp = 5`:
+
+  - rule: recall `0.188`, precision `0.224`
+  - model: recall `0.5`, precision `0.3`
+
+  It should be about 796,000.
+starter: |
+  def monthly_value(n, base_rate, recall, precision, value_tp, cost_fp):
+      return 0.0
+
+  incremental = 0.0
+  print(round(incremental))
+solution: |
+  def monthly_value(n, base_rate, recall, precision, value_tp, cost_fp):
+      if precision == 0 or recall == 0:
+          return 0.0
+      tp = n * base_rate * recall
+      fp = tp * (1 - precision) / precision
+      return value_tp * tp - cost_fp * fp
+
+  rule = monthly_value(1_000_000, 0.018, 0.188, 0.224, 150, 5)
+  model = monthly_value(1_000_000, 0.018, 0.5, 0.3, 150, 5)
+  incremental = model - rule
+  print(round(incremental))
+tests: |
+  import math
+  def _ref(n, b, r, p, v, c):
+      if p == 0 or r == 0:
+          return 0.0
+      tp = n * b * r
+      return v * tp - c * tp * (1 - p) / p
+  assert math.isclose(monthly_value(1_000_000, 0.018, 0.5, 0.3, 150, 5), 1_245_000, rel_tol=1e-9), f"The model example should be worth 1,245,000, got {monthly_value(1_000_000, 0.018, 0.5, 0.3, 150, 5)}"
+  for _args in [(10_000, 0.05, 0.6, 0.5, 100, 20), (500, 0.2, 0.9, 0.1, 30, 4), (1e6, 0.001, 0.3, 0.8, 1000, 50)]:
+      _got = monthly_value(*_args)
+      assert math.isclose(_got, _ref(*_args), rel_tol=1e-9), f"monthly_value{_args} should be {_ref(*_args):.2f}, got {_got}"
+  assert monthly_value(1000, 0.1, 0.5, 0, 100, 5) == 0, "With precision 0 return 0.0 (and avoid dividing by zero)"
+  assert monthly_value(1000, 0.1, 0, 0.5, 100, 5) == 0, "With recall 0 return 0.0"
+  assert monthly_value(1000, 0.1, 0.5, 0.05, 10, 5) < 0, "A very imprecise system can have negative value: do not clip it at zero"
+  assert math.isclose(incremental, 1_245_000 - _ref(1_000_000, 0.018, 0.188, 0.224, 150, 5), rel_tol=1e-9), f"incremental should be the model value minus the rule value (about 796,016), got {incremental}"
+hints:
+  - "Compute tp first, then fp from tp and precision."
+  - "Return early with 0.0 when precision or recall is 0."
+  - "Call the function twice, once for the rule and once for the model, and subtract."

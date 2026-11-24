@@ -1,0 +1,58 @@
+id: b0-convex-optimisation-01
+lesson: research/b0/convex-optimisation
+title: Jensen's inequality, numerically
+prompt: |
+  Write `jensen_gap(f, x, p=None)` that returns $\mathbb{E}[f(X)] - f(\mathbb{E}[X])$ for a discrete random variable
+  taking the values in the array `x` with probabilities `p`. If `p` is `None`, treat every value as equally likely
+  (so `x` can be a sample). `f` works elementwise on arrays.
+
+  Jensen says the gap is $\ge 0$ for convex `f`, $\le 0$ for concave `f`, and $= 0$ for linear `f`. Then set:
+
+  - `gap_square`: the gap for `f = np.square` on `x = [1, 2, 6]`, `p = [0.5, 0.3, 0.2]`. It should equal the
+    variance of $X$.
+  - `gap_log`: the gap for `f = np.log` on the same distribution (a negative number).
+starter: |
+  import numpy as np
+
+  def jensen_gap(f, x, p=None):
+      x = np.asarray(x, dtype=float)
+      return f(np.mean(x)) - np.mean(f(x))
+
+  gap_square = None
+  gap_log = None
+solution: |
+  import numpy as np
+
+  def jensen_gap(f, x, p=None):
+      x = np.asarray(x, dtype=float)
+      if p is None:
+          p = np.full(len(x), 1 / len(x))
+      p = np.asarray(p, dtype=float)
+      return float(p @ f(x) - f(p @ x))
+
+  gap_square = jensen_gap(np.square, [1, 2, 6], [0.5, 0.3, 0.2])
+  gap_log = jensen_gap(np.log, [1, 2, 6], [0.5, 0.3, 0.2])
+tests: |
+  import math
+  import numpy as np
+  _x = np.array([1.0, 2.0, 6.0]); _p = np.array([0.5, 0.3, 0.2])
+  _m = _p @ _x
+  assert gap_square is not None and gap_log is not None, "Set gap_square and gap_log using your function"
+  assert math.isclose(gap_square, _p @ (_x - _m) ** 2, rel_tol=1e-9), f"gap_square should be the variance of X, {_p @ (_x - _m) ** 2:.4f}, got {gap_square!r}"
+  assert math.isclose(gap_log, _p @ np.log(_x) - np.log(_m), rel_tol=1e-9), f"gap_log should be E[log X] - log E[X] = {_p @ np.log(_x) - np.log(_m):.4f}, got {gap_log!r}"
+  _rng = np.random.default_rng(5)
+  for _ in range(5):
+      _v = _rng.uniform(0.1, 5, size=7)
+      _w = _rng.dirichlet(np.ones(7))
+      _g = jensen_gap(np.exp, _v, _w)
+      assert math.isclose(_g, _w @ np.exp(_v) - np.exp(_w @ _v), rel_tol=1e-9), "jensen_gap with probabilities p is wrong: it should be sum(p * f(x)) - f(sum(p * x))"
+      assert _g >= 0, "The gap for a convex f must be non-negative"
+      assert jensen_gap(np.sqrt, _v, _w) <= 1e-12, "The gap for a concave f (sqrt) must be non-positive"
+      assert abs(jensen_gap(lambda t: 3 * t + 1, _v, _w)) < 1e-9, "The gap for a linear f must be zero"
+  _s = _rng.normal(size=1000)
+  assert math.isclose(jensen_gap(np.square, _s), np.var(_s), rel_tol=1e-9), "With p=None every value is equally likely, so the gap for np.square is np.var(x)"
+  assert abs(jensen_gap(np.exp, [2.0, 2.0, 2.0])) < 1e-12, "A constant random variable has zero gap"
+hints:
+  - "With p = None, use p = np.full(len(x), 1 / len(x))."
+  - "E[f(X)] is p @ f(x) and E[X] is p @ x."
+  - "gap_square = jensen_gap(np.square, [1, 2, 6], [0.5, 0.3, 0.2])"

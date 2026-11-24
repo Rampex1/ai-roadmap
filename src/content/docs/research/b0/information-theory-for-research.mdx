@@ -1,0 +1,288 @@
+---
+title: "Information theory for research: mutual information, KL and the ELBO"
+module: b0
+order: 5
+estMinutes: 21
+objectives:
+  - "Compute joint and conditional entropy and the mutual information of a discrete joint distribution, three equivalent ways"
+  - "Prove KL ≥ 0 with Jensen's inequality, and explain the practical difference between forward and reverse KL"
+  - "Show that maximum likelihood minimises the cross-entropy, and so the forward KL, from the data distribution to the model"
+  - "Derive the evidence lower bound (ELBO) with Jensen and identify its gap as a KL divergence"
+goDeeper: mackay-itila
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+[F5](/foundations/f5/information-theory/) defined <Term id="entropy" />, <Term id="cross-entropy" /> and the
+<Term id="kl-divergence" />, and showed that the classification loss is a cross-entropy. Research papers go
+further: representation-learning objectives maximise mutual information, generative models are compared by which
+KL they minimise, and variational methods optimise a bound derived in three lines with Jensen's inequality. This
+lesson covers those steps. Logs are natural (nats) unless a code block says `log2`.
+
+## Joint entropy, conditional entropy and mutual information
+
+For two discrete random variables with joint distribution $p(x, y)$:
+
+- **Joint entropy** $H(X, Y) = -\sum_{x, y} p(x, y)\log p(x, y)$: the uncertainty of the pair.
+- **Conditional entropy** $H(X \mid Y) = -\sum_{x, y} p(x, y)\log p(x \mid y) = H(X, Y) - H(Y)$: the uncertainty left
+  in $X$ once you know $Y$, averaged over $Y$. The second form is the **chain rule** for entropy.
+- **Mutual information** is how much knowing one variable reduces uncertainty about the other:
+
+$$
+I(X; Y) = H(X) - H(X \mid Y) = H(X) + H(Y) - H(X, Y)
+$$
+
+The most useful form for research is a KL divergence, between the joint and the product of the marginals:
+
+$$
+I(X; Y) = D_{\mathrm{KL}}\big(p(x, y) \,\|\, p(x)\,p(y)\big) = \sum_{x, y} p(x, y)\log\frac{p(x, y)}{p(x)\,p(y)}
+$$
+
+So <Term id="mutual-information" /> measures how far the pair is from being
+[independent](/foundations/f5/conditional-probability/). It is symmetric, $I(X; Y) = I(Y; X)$; non-negative; and
+zero **exactly** when $X$ and $Y$ are independent. Unlike correlation, it detects any kind of dependence, not just
+linear.
+
+A small example in bits: rain and umbrellas.
+
+```python
+import numpy as np
+
+def H(p):
+    p = np.asarray(p, dtype=float).ravel()
+    p = p[p > 0]
+    return -np.sum(p * np.log2(p))
+
+P = np.array([[0.30, 0.10],     # rows: X = rain / no rain
+              [0.10, 0.50]])    # columns: Y = umbrella / no umbrella
+px, py = P.sum(axis=1), P.sum(axis=0)
+print(px, py)
+print(round(H(px), 4), round(H(py), 4), round(H(P), 4))
+mi = H(px) + H(py) - H(P)
+mi_kl = np.sum(P * np.log2(P / np.outer(px, py)))
+print(round(mi, 4), round(mi_kl, 4), round(H(P) - H(py), 4))
+print(round(H(np.outer(px, py)) - H(px) - H(py), 12))
+```
+
+```text title="Output"
+[0.4 0.6] [0.4 0.6]
+0.971 0.971 1.6855
+0.2564 0.2564 0.7145
+0.0
+```
+
+- The marginals come from summing rows and columns.
+- Each variable alone carries 0.971 bits; the pair carries 1.6855, less than $2 \times 0.971$ because they overlap.
+- The overlap, 0.2564 bits, is the mutual information, and the KL form gives the same number. $H(X \mid Y) = 0.7145$:
+  knowing about the umbrella cuts uncertainty about rain from 0.971 to 0.7145 bits.
+- For the independent table `np.outer(px, py)` the joint entropy is exactly the sum of the marginals: zero mutual
+  information.
+
+:::note[Mutual information in papers]
+Contrastive representation learning (for example the InfoNCE loss) is motivated as maximising a lower bound on the
+mutual information between two views of the same input. The information bottleneck trades off $I(X; Z)$ against
+$I(Z; Y)$ for a representation $Z$. Estimating mutual information between continuous high-dimensional variables
+is hard, which is why papers work with bounds rather than the quantity itself.
+:::
+
+## Why KL is never negative: Gibbs' inequality
+
+F5 stated $D_{\mathrm{KL}}(p \,\|\, q) \ge 0$. The proof is Jensen's inequality for the concave $\log$
+([lesson 3](/research/b0/convex-optimisation/)), $\mathbb{E}[\log Y] \le \log\mathbb{E}[Y]$, applied to
+$Y = q(x)/p(x)$ with $x \sim p$:
+
+$$
+-D_{\mathrm{KL}}(p \,\|\, q) = \mathbb{E}_{x \sim p}\left[\log\frac{q(x)}{p(x)}\right]
+\le \log \mathbb{E}_{x \sim p}\left[\frac{q(x)}{p(x)}\right]
+= \log \sum_{x:\,p(x) > 0} q(x) \le \log 1 = 0
+$$
+
+Equality in Jensen needs $q(x)/p(x)$ to be constant, which with both summing to 1 means $q = p$. This one argument
+gives a family of results: $H(p, q) \ge H(p)$, $I(X; Y) \ge 0$ (it is a KL), and conditioning never increases
+entropy on average, $H(X \mid Y) \le H(X)$.
+
+Other properties worth knowing:
+
+- **Not symmetric**, and it does not satisfy the triangle inequality, so it is not a metric.
+- **Additive for independent pairs:** the KL between two product distributions is the sum of the KLs of the factors.
+  That is why the KL between diagonal Gaussians is a sum over dimensions.
+- **Closed form for Gaussians.** For one dimension, in nats,
+
+$$
+D_{\mathrm{KL}}\big(\mathcal{N}(\mu_1, \sigma_1^2) \,\|\, \mathcal{N}(\mu_2, \sigma_2^2)\big)
+= \log\frac{\sigma_2}{\sigma_1} + \frac{\sigma_1^2 + (\mu_1 - \mu_2)^2}{2\sigma_2^2} - \frac{1}{2}
+$$
+
+and for $d$-dimensional Gaussians
+$\tfrac{1}{2}\big[\operatorname{tr}(\Sigma_2^{-1}\Sigma_1) + (\boldsymbol{\mu}_2 - \boldsymbol{\mu}_1)^\top\Sigma_2^{-1}(\boldsymbol{\mu}_2 - \boldsymbol{\mu}_1) - d + \log\frac{\det\Sigma_2}{\det\Sigma_1}\big]$.
+The VAE loss uses this with $\mathcal{N}(\mathbf{0}, I)$ as the second Gaussian.
+
+Because a KL is an expectation under $p$, it can also be estimated by [Monte Carlo](/research/b0/gaussians-and-monte-carlo/)
+whenever you can sample from $p$ and evaluate both log-densities, which is how it is computed when there is no
+closed form:
+
+```python
+from scipy import stats
+
+def kl_gauss(m1, s1, m2, s2):
+    """KL( N(m1, s1^2) || N(m2, s2^2) ) in nats."""
+    return np.log(s2 / s1) + (s1**2 + (m1 - m2)**2) / (2 * s2**2) - 0.5
+
+rng = np.random.default_rng(0)
+x = rng.normal(0.0, 1.0, size=200_000)          # samples from p = N(0, 1)
+log_ratio = stats.norm(0, 1).logpdf(x) - stats.norm(1, 2).logpdf(x)
+print(round(kl_gauss(0, 1, 1, 2), 4), round(log_ratio.mean(), 4), "+/-", round(1.96 * log_ratio.std(ddof=1) / np.sqrt(len(x)), 4))
+print(round(kl_gauss(1, 2, 0, 1), 4))
+```
+
+```text title="Output"
+0.4431 0.4422 +/- 0.0026
+1.3069
+```
+
+The Monte Carlo estimate agrees with the closed form within its error bar. Swapping the arguments gives 1.3069, a
+different number: the asymmetry is large here.
+
+### Forward and reverse KL
+
+The asymmetry matters when you fit a simple model $q$ to a complicated $p$, because the two directions punish
+different mistakes:
+
+- **Forward KL**, $D_{\mathrm{KL}}(p \,\|\, q) = \mathbb{E}_p[\log p - \log q]$, averages over where $p$ has mass.
+  If $q$ is tiny anywhere $p$ is not, the cost is huge. So $q$ spreads out to **cover every mode** of $p$, even if
+  that puts mass where $p$ has none.
+- **Reverse KL**, $D_{\mathrm{KL}}(q \,\|\, p) = \mathbb{E}_q[\log q - \log p]$, averages over where $q$ has mass.
+  Putting mass where $p$ is tiny is what costs. So $q$ tends to **lock onto one mode** and ignore the others.
+
+Fit a single Gaussian to a mixture of two bumps at $\pm 2$ (standard deviation 0.6), by grid search over its mean
+and standard deviation, computing each KL by numerical integration:
+
+```python
+xs = np.linspace(-8, 8, 4001)
+dx = xs[1] - xs[0]
+p = 0.5 * stats.norm(-2, 0.6).pdf(xs) + 0.5 * stats.norm(2, 0.6).pdf(xs)   # two bumps
+
+def kl_grid(a, b):
+    m = a > 1e-300
+    return np.sum(a[m] * (np.log(a[m]) - np.log(np.maximum(b[m], 1e-300)))) * dx
+
+best_fwd = best_rev = (np.inf, None)
+for m in np.linspace(-3, 3, 61):
+    for s in np.linspace(0.3, 3, 28):
+        q = stats.norm(m, s).pdf(xs)
+        best_fwd = min(best_fwd, (kl_grid(p, q), (round(float(m), 2), round(float(s), 2))))
+        best_rev = min(best_rev, (kl_grid(q, p), (round(float(m), 2), round(float(s), 2))))
+print("forward KL(p||q) best (mean, sd):", best_fwd[1])
+print("reverse KL(q||p) best (mean, sd):", best_rev[1])
+```
+
+```text title="Output"
+forward KL(p||q) best (mean, sd): (0.0, 2.1)
+reverse KL(q||p) best (mean, sd): (-2.0, 0.6)
+```
+
+Forward KL picks a broad Gaussian centred between the bumps, matching the mixture's mean and variance
+(standard deviation $\sqrt{0.6^2 + 2^2} \approx 2.09$) and putting most of its mass in the valley where $p$ has little.
+Reverse KL picks one bump exactly (the left one here; the right one is equally good). Maximum likelihood is
+forward KL (next section); variational inference, including VAEs, minimises a reverse KL.
+
+## Cross-entropy and maximum likelihood are the same thing
+
+Let $p_{\text{data}}$ be the distribution the data come from and $q_\theta$ a model. Expand the forward KL:
+
+$$
+D_{\mathrm{KL}}(p_{\text{data}} \,\|\, q_\theta) = \underbrace{\mathbb{E}_{x \sim p_{\text{data}}}[-\log q_\theta(x)]}_{H(p_{\text{data}},\, q_\theta)} - H(p_{\text{data}})
+$$
+
+The entropy of the data does not depend on $\theta$, so minimising the KL over $\theta$ is the same as minimising
+the cross-entropy. You cannot compute an expectation under $p_{\text{data}}$, but with $n$
+<Term id="iid" text="i.i.d." /> samples you can estimate it by Monte Carlo:
+
+$$
+H(p_{\text{data}}, q_\theta) \approx -\frac{1}{n}\sum_{i=1}^{n}\log q_\theta(x_i)
+$$
+
+which is the average negative log-likelihood. Minimising it is
+[maximum likelihood](/foundations/f5/maximum-likelihood/). So these are one statement in three vocabularies:
+
+> maximise likelihood = minimise average negative log-likelihood = minimise cross-entropy to the empirical
+> distribution = minimise forward KL from the data to the model.
+
+That is why maximum-likelihood models are "mode-covering": they are heavily penalised for giving near-zero
+probability to anything that occurs in the data. It is also why a language model's per-token loss can never go
+below the entropy of the text itself; the excess is the KL.
+
+## The ELBO: a lower bound from Jensen
+
+Latent-variable models explain data $x$ with unobserved $z$: $p_\theta(x) = \sum_z p_\theta(x, z)$ (or an integral).
+For anything interesting this sum is intractable, so you cannot maximise $\log p_\theta(x)$ directly. The trick
+that variational autoencoders (B9) rely on: pick **any** distribution $q(z)$ that is positive wherever
+$p_\theta(x, z)$ is, and multiply and divide by it:
+
+$$
+\log p_\theta(x) = \log \sum_z q(z)\,\frac{p_\theta(x, z)}{q(z)} = \log \mathbb{E}_{z \sim q}\left[\frac{p_\theta(x, z)}{q(z)}\right]
+\ge \mathbb{E}_{z \sim q}\left[\log\frac{p_\theta(x, z)}{q(z)}\right]
+$$
+
+The inequality is Jensen for the concave $\log$. The right-hand side is the
+<Term id="elbo" text="evidence lower bound (ELBO)" />. It is an expectation under $q$, so it can be estimated by
+sampling $z \sim q$, and it can be maximised by gradient ascent. How loose is it? A few lines of algebra (write
+$p_\theta(x, z) = p_\theta(z \mid x)\,p_\theta(x)$) give the exact gap:
+
+$$
+\log p_\theta(x) - \text{ELBO}(q) = D_{\mathrm{KL}}\big(q(z) \,\|\, p_\theta(z \mid x)\big)
+$$
+
+So maximising the ELBO over $q$ pushes $q$ towards the true posterior (a reverse KL), and the bound is tight
+exactly when $q$ is the posterior. Check it on a model with three latent values:
+
+```python
+prior = np.array([0.5, 0.3, 0.2])               # p(z) for z = 0, 1, 2
+lik = np.array([0.10, 0.60, 0.30])              # p(x | z) for the one observed x
+joint = prior * lik                             # p(x, z)
+log_px = np.log(joint.sum())                    # log evidence
+post = joint / joint.sum()                      # p(z | x)
+
+def elbo(q):
+    return np.sum(q * (np.log(joint) - np.log(q)))
+
+def kl(q, r):
+    return np.sum(q * np.log(q / r))
+
+for name, q in [("prior", prior), ("uniform", np.full(3, 1 / 3)), ("posterior", post)]:
+    print(f"{name:9s} ELBO {elbo(q):.4f}  log p(x) {log_px:.4f}  gap {round(log_px - elbo(q), 4) + 0.0:.4f}  KL(q || posterior) {round(kl(q, post), 4) + 0.0:.4f}")
+```
+
+```text title="Output"
+prior     ELBO -1.5453  log p(x) -1.2379  gap 0.3075  KL(q || posterior) 0.3075
+uniform   ELBO -1.4094  log p(x) -1.2379  gap 0.1715  KL(q || posterior) 0.1715
+posterior ELBO -1.2379  log p(x) -1.2379  gap 0.0000  KL(q || posterior) 0.0000
+```
+
+Every $q$ gives a lower bound; the gap is exactly the KL to the posterior; with $q$ equal to the posterior the
+bound is exact. (`+ 0.0` after rounding just turns a printed `-0.0000` into `0.0000`.) Rearranging the ELBO gives
+the form you will see in the VAE paper:
+
+$$
+\text{ELBO} = \mathbb{E}_{z \sim q}[\log p_\theta(x \mid z)] - D_{\mathrm{KL}}\big(q(z) \,\|\, p(z)\big)
+$$
+
+a reconstruction term minus a KL that keeps $q$ close to the prior. In a VAE, $q$ depends on $x$ through an encoder
+network, $p_\theta(x \mid z)$ is a decoder, and the KL term is the closed-form Gaussian KL above.
+
+## Try it
+
+<CodeExercise id="b0-information-theory-for-research-01" />
+
+<CodeExercise id="b0-information-theory-for-research-02" />
+
+## Summary
+
+- $H(X \mid Y) = H(X, Y) - H(Y)$. Mutual information $I(X; Y) = H(X) + H(Y) - H(X, Y) = D_{\mathrm{KL}}(p(x, y) \,\|\, p(x)p(y))$:
+  symmetric, $\ge 0$, zero exactly under independence.
+- KL $\ge 0$ follows from Jensen for $\log$. KL is asymmetric, additive over independent factors, and has a
+  closed form between Gaussians; it can be estimated by Monte Carlo as $\mathbb{E}_p[\log p - \log q]$.
+- Forward KL $D(p \,\|\, q)$ makes $q$ cover all modes; reverse KL $D(q \,\|\, p)$ makes it pick one.
+- Maximum likelihood = minimum cross-entropy to the data = minimum forward KL from data to model.
+- ELBO: $\log p(x) \ge \mathbb{E}_q[\log p(x, z) - \log q(z)]$, with gap $D_{\mathrm{KL}}(q \,\|\, p(z \mid x))$;
+  equivalently reconstruction minus $D_{\mathrm{KL}}(q \,\|\, \text{prior})$.

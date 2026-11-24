@@ -1,0 +1,138 @@
+items:
+  - id: b0-reading-math-in-papers-01
+    type: mcq
+    prompt: |
+      What is the difference between $\min_\theta L(\theta)$ and $\arg\min_\theta L(\theta)$?
+    options:
+      - text: "min is over a set, argmin over a sequence"
+        why: "Both range over the same set of parameters."
+      - text: "None: they are two spellings of the same thing"
+        why: "One is a loss value, the other a parameter value."
+      - text: "argmin is the smallest gradient"
+        why: "argmin returns an argument of the function, not a gradient."
+      - text: "min is the smallest loss value; argmin is the parameter value that achieves it"
+        correct: true
+        why: "θ* = argmin L is the best parameters, and L(θ*) = min L is the best loss."
+    explanation: "min returns a value of the function; argmin returns where it happens (strictly, the set of such points)."
+  - id: b0-reading-math-in-papers-02
+    type: multi
+    prompt: "f(θ) > 0 for all θ. Which transformations leave argmax over θ of f(θ) unchanged?"
+    options:
+      - text: "Taking log f(θ)"
+        correct: true
+        why: "log is strictly increasing on positive numbers, so it preserves the ordering."
+      - text: "Multiplying by a positive constant that does not depend on θ"
+        correct: true
+        why: "This is why the normaliser hidden by ∝ can be ignored for MAP."
+      - text: "Multiplying by −1"
+        why: "That turns the argmax into the argmin."
+      - text: "Adding a constant that does not depend on θ"
+        correct: true
+        why: "Every value shifts by the same amount."
+      - text: "Multiplying by a positive function of θ"
+        why: "That changes the shape of the function and can move the maximum."
+    explanation: "Strictly increasing transformations and θ-free positive constants preserve the argmax."
+  - id: b0-reading-math-in-papers-03
+    type: mcq
+    prompt: |
+      A loss is $\mathbb{E}_{z \sim q_\phi(z \mid x)}[f(z)]$. Why can you not simply move $\nabla_\phi$ inside the expectation?
+    options:
+      - text: "Because the distribution being averaged over itself depends on φ"
+        correct: true
+        why: "Changing φ changes which z are drawn; this is what the reparameterisation trick addresses."
+      - text: "You can, always"
+        why: "Only when the sampling distribution does not depend on the parameters, as with the data distribution and θ."
+      - text: "Because expectations are not linear"
+        why: "Expectations are linear; linearity is not the problem."
+      - text: "Because f does not depend on φ, so the gradient is zero"
+        why: "The loss depends on φ through the distribution the samples come from."
+    explanation: "Contrast the data expectation: p_D does not depend on θ, so a mini-batch gradient is an unbiased estimate of the full gradient."
+  - id: b0-reading-math-in-papers-04
+    type: mcq
+    prompt: |
+      In $p(\theta \mid \mathcal{D}) \propto p(\mathcal{D} \mid \theta)\,p(\theta)$, what does the $\propto$ hide?
+    options:
+      - text: "Nothing: ∝ means approximately equal"
+        why: "∝ means equal up to a constant factor, not approximately equal."
+      - text: "The prior"
+        why: "The prior is written explicitly on the right."
+      - text: "A factor that depends on θ but is usually small"
+        why: "Anything hidden by ∝ must not depend on the variable of interest."
+      - text: "The evidence p(D), which does not depend on θ"
+        correct: true
+        why: "Bayes' denominator is a constant in θ; you recover it by normalising."
+    explanation: "∝ hides a constant in θ. For an argmax you can ignore it; for probabilities you must normalise, ideally with logsumexp."
+  - id: b0-reading-math-in-papers-05
+    type: numeric
+    prompt: |
+      Gaussian noise with $\sigma = 0.5$ and a Gaussian prior $\mathbf{w} \sim \mathcal{N}(\mathbf{0}, \tau^2 I)$ with $\tau = 0.25$. The MAP estimate is ridge regression, minimising $\lVert\mathbf{y} - X\mathbf{w}\rVert^2 + \lambda\lVert\mathbf{w}\rVert^2$. What is $\lambda$?
+    answer: 4
+    tol: 0.001
+    explanation: "λ = σ²/τ² = 0.25/0.0625 = 4. A tight prior relative to the noise means strong regularisation."
+  - id: b0-reading-math-in-papers-06
+    type: mcq
+    prompt: "What does the i.i.d. assumption buy in a likelihood?"
+    options:
+      - text: "The likelihood becomes a product over examples, so the log-likelihood is a sum"
+        correct: true
+        why: "Independence gives the product; identical distribution means every factor uses the same model."
+      - text: "It removes the need for a prior"
+        why: "i.i.d. is about the data; priors are a separate modelling choice."
+      - text: "The model becomes convex"
+        why: "Convexity depends on the model and loss, not on how the data were sampled."
+      - text: "The likelihood no longer depends on the parameters"
+        why: "It still does; i.i.d. is about the data."
+    explanation: "i.i.d. data give p(D | θ) = Π p(x_i | θ), hence a sum of logs that a mini-batch can estimate."
+  - id: b0-reading-math-in-papers-07
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      from scipy.special import logsumexp
+      a = np.array([-1000.0, -1000.0 + np.log(3)])
+      print(np.round(np.exp(a - logsumexp(a)), 2))
+    answer: "[0.25 0.75]"
+    explanation: "The unnormalised probabilities are in ratio 1 : 3. Computing np.exp(a) directly would underflow to 0 and give 0/0; subtracting logsumexp first keeps everything finite."
+  - id: b0-reading-math-in-papers-08
+    type: numeric
+    prompt: "A coin has a uniform prior on its bias θ (Beta(1, 1)). It lands heads 3 times in 4 flips. What is the MAP estimate of θ?"
+    answer: 0.75
+    tol: 0.001
+    explanation: "With a flat prior the posterior is proportional to the likelihood θ³(1 − θ), which peaks at 3/4: the MAP equals the maximum-likelihood estimate."
+  - id: b0-reading-math-in-papers-09
+    type: mcq
+    prompt: "Paper A minimises the sum of per-example losses; paper B minimises their mean. Everything else is the same. What changes?"
+    options:
+      - text: "Nothing at all"
+        why: "The gradient is scaled by 1/n, which changes the effective learning rate and the relative strength of any regulariser."
+      - text: "The minimiser"
+        why: "Dividing by the constant n does not move the argmin."
+      - text: "Whether the loss is convex"
+        why: "Scaling by a positive constant preserves convexity."
+      - text: "The gradient's scale, and so the effective learning rate and regularisation strength"
+        correct: true
+        why: "Same argmin of the data term, but a learning rate or λ tuned for one is wrong for the other."
+    explanation: "Sum versus mean is a common silent convention; check it before copying hyperparameters."
+  - id: b0-reading-math-in-papers-10
+    type: order
+    prompt: "Put the lesson's procedure for working through a derivation in order."
+    items:
+      - "List every symbol with its type and shape"
+      - "Mark what is random and what depends on what"
+      - "Redo each step, naming the rule it uses"
+      - "Check special cases and verify the result numerically"
+    explanation: "Know the symbols, then the dependencies, then justify each step, then test the result against special cases and numbers."
+  - id: b0-reading-math-in-papers-11
+    type: mcq
+    prompt: "In the MAP derivation with a Gaussian prior of variance τ², what happens as τ → ∞?"
+    options:
+      - text: "The estimate becomes undefined"
+        why: "With X of full column rank, least squares has a unique solution."
+      - text: "The estimate shrinks to zero"
+        why: "That is the τ → 0 limit, where the prior insists on w = 0."
+      - text: "The estimate becomes the least-squares (maximum-likelihood) solution"
+        correct: true
+        why: "λ = σ²/τ² → 0, so the penalty vanishes: a flat prior adds nothing."
+      - text: "The noise variance σ² grows"
+        why: "σ² is fixed; only the prior changes."
+    explanation: "Checking limits like this is step 4 of the procedure: the result should reduce to something you already know."

@@ -1,0 +1,8 @@
+term: "Monte Carlo estimation"
+short: "Approximating an expectation E[f(X)] by the average of f over independent samples of X."
+body: |
+  The estimate is unbiased and its standard error is $\sigma_f/\sqrt{N}$, whatever the dimension of $X$, so 100
+  times more samples give 10 times more accuracy. Report it with an error bar, such as $\pm 1.96$ standard errors,
+  and distrust the error bar when $f(X)$ has a heavy tail. Mini-batch gradients and ELBO estimates are Monte Carlo
+  estimates.
+related: ["expected-value", "standard-error", "law-of-large-numbers", "central-limit-theorem"]

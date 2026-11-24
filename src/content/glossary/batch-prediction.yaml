@@ -1,0 +1,7 @@
+term: "Batch prediction"
+short: "Making predictions for many cases at once on a schedule and storing them to be looked up later."
+body: |
+  For example, scoring every customer for churn each night and writing the scores to a table. It is simpler and
+  cheaper than online prediction and has no tight latency budget, but predictions are only as fresh as the last
+  run and cannot use information that appears between runs.
+related: ["online-prediction"]

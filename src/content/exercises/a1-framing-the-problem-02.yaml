@@ -1,0 +1,77 @@
+id: a1-framing-the-problem-02
+lesson: mle/a1/framing-the-problem
+title: Label delay statistics and the maturity cutoff
+prompt: |
+  Each row of `frauds` is a confirmed fraud, with the transaction time `tx_time` and the time the fraud
+  was reported `label_time`. Write two functions.
+
+  1. `delay_stats(frauds, k)` returns a dict with the delay in whole days (use `.dt.days`):
+     `"median"`, `"p90"` (the 90th percentile, `.quantile(0.9)`), and `"within_k"`, the share of
+     frauds reported within `k` days (delay `<= k`).
+  2. `latest_mature_date(frauds, today, q)` returns the latest transaction date you should train on: `today`
+     minus the `q` quantile of the delay, rounded **up** to whole days (`math.ceil`). For example, if the
+     0.95 quantile is 40.2 days and today is 2026-06-30, the answer is 41 days earlier, 2026-05-20.
+starter: |
+  import math
+  import pandas as pd
+
+  frauds = pd.DataFrame({
+      "tx_time": pd.to_datetime(["2026-01-01", "2026-01-05", "2026-01-10", "2026-01-12", "2026-02-01"]),
+      "label_time": pd.to_datetime(["2026-01-11", "2026-02-04", "2026-01-15", "2026-03-03", "2026-02-21"]),
+  })
+
+  def delay_stats(frauds, k):
+      pass
+
+  def latest_mature_date(frauds, today, q):
+      pass
+
+  print(delay_stats(frauds, 30))
+  print(latest_mature_date(frauds, pd.Timestamp("2026-06-30"), 0.95))
+solution: |
+  import math
+  import pandas as pd
+
+  frauds = pd.DataFrame({
+      "tx_time": pd.to_datetime(["2026-01-01", "2026-01-05", "2026-01-10", "2026-01-12", "2026-02-01"]),
+      "label_time": pd.to_datetime(["2026-01-11", "2026-02-04", "2026-01-15", "2026-03-03", "2026-02-21"]),
+  })
+
+  def delay_stats(frauds, k):
+      d = (frauds["label_time"] - frauds["tx_time"]).dt.days
+      return {"median": float(d.median()), "p90": float(d.quantile(0.9)), "within_k": float((d <= k).mean())}
+
+  def latest_mature_date(frauds, today, q):
+      d = (frauds["label_time"] - frauds["tx_time"]).dt.days
+      return today - pd.Timedelta(days=math.ceil(d.quantile(q)))
+
+  print(delay_stats(frauds, 30))
+  print(latest_mature_date(frauds, pd.Timestamp("2026-06-30"), 0.95))
+tests: |
+  import math
+  import numpy as np
+  import pandas as pd
+  _s = delay_stats(frauds, 30)
+  assert isinstance(_s, dict), "delay_stats should return a dict"
+  for _k, _v in {"median": 20.0, "p90": 42.0, "within_k": 0.8}.items():
+      assert _k in _s, f"The dict needs the key {_k!r}"
+      assert math.isclose(_s[_k], _v, rel_tol=1e-9), f"For the example table (delays 10, 30, 5, 50, 20 days) {_k} should be {_v}, got {_s[_k]}"
+  assert math.isclose(delay_stats(frauds, 29)["within_k"], 0.6), "A delay of exactly k days counts as within k (use <=)"
+  _rng = np.random.default_rng(5)
+  _tx = pd.Timestamp("2026-01-01") + pd.to_timedelta(_rng.integers(0, 60, 200), unit="D")
+  _dl = _rng.integers(0, 90, 200)
+  _f = pd.DataFrame({"tx_time": _tx, "label_time": _tx + pd.to_timedelta(_dl, unit="D")})
+  _ds = pd.Series(_dl)
+  _s = delay_stats(_f, 45)
+  assert math.isclose(_s["median"], _ds.median()) and math.isclose(_s["p90"], _ds.quantile(0.9)) and math.isclose(_s["within_k"], (_ds <= 45).mean()), f"Wrong statistics on a random table of 200 frauds: got {_s}"
+  _m = latest_mature_date(frauds, pd.Timestamp("2026-06-30"), 0.95)
+  assert _m == pd.Timestamp("2026-06-30") - pd.Timedelta(days=46), f"The 0.95 quantile of the example delays is 46.0 days, so expect 2026-05-15, got {_m}"
+  _m = latest_mature_date(frauds, pd.Timestamp("2026-06-30"), 0.5)
+  assert _m == pd.Timestamp("2026-06-10"), f"The median delay is 20 days, so with q=0.5 expect 2026-06-10, got {_m}"
+  _q = _ds.quantile(0.99)
+  _m = latest_mature_date(_f, pd.Timestamp("2026-12-01"), 0.99)
+  assert _m == pd.Timestamp("2026-12-01") - pd.Timedelta(days=math.ceil(_q)), f"q=0.99 on the random table: quantile {_q}, expected {pd.Timestamp('2026-12-01') - pd.Timedelta(days=math.ceil(_q))}, got {_m}"
+hints:
+  - "The delay in days is (frauds[\"label_time\"] - frauds[\"tx_time\"]).dt.days."
+  - "The share within k days is the mean of a boolean Series."
+  - "Subtract pd.Timedelta(days=math.ceil(quantile)) from today."

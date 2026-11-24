@@ -1,0 +1,8 @@
+term: "Label delay"
+short: "The time between making a prediction and being able to know its true label."
+body: |
+  Click labels arrive in seconds, churn labels after the churn window (for example 30 days), fraud labels when
+  disputes come in (weeks), loan defaults after months or years. Label delay means the freshest training rows are
+  always somewhat old, model quality can only be measured late, and rows whose labels have not yet matured must be
+  left out of training and evaluation.
+related: ["label", "distribution-shift"]

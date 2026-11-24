@@ -1,0 +1,8 @@
+term: "Hessian"
+short: "The square matrix of second partial derivatives of a scalar function, H_ij = ∂²f/∂x_i∂x_j; it describes curvature."
+body: |
+  For smooth functions it is symmetric, and it is the Jacobian of the gradient. It is the matrix in the
+  second-order Taylor expansion $f(\mathbf{x} + \mathbf{h}) \approx f + \nabla f^\top\mathbf{h} + \tfrac{1}{2}\mathbf{h}^\top H\mathbf{h}$.
+  At a stationary point, all-positive eigenvalues mean a minimum, all-negative a maximum, and mixed signs a saddle.
+  Newton's method uses it to scale the step.
+related: ["gradient", "jacobian", "eigenvector", "condition-number", "newtons-method"]

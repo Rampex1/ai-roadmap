@@ -1,0 +1,56 @@
+id: b0-reading-math-in-papers-02
+lesson: research/b0/reading-math-in-papers
+title: Translate a log-likelihood into NumPy
+prompt: |
+  A paper models $n$ i.i.d. data points $\mathbf{x}_i \in \mathbb{R}^d$ as $\mathcal{N}(\boldsymbol{\mu}, \Sigma)$ and
+  writes the log-likelihood as
+
+  $$\log p(\mathcal{D} \mid \boldsymbol{\mu}, \Sigma) = -\frac{n}{2}\big(d\log 2\pi + \log\det\Sigma\big) - \frac{1}{2}\sum_{i=1}^{n}(\mathbf{x}_i - \boldsymbol{\mu})^\top\Sigma^{-1}(\mathbf{x}_i - \boldsymbol{\mu})$$
+
+  Write `gaussian_loglik(X, mu, Sigma)` where `X` has shape `(n, d)` with the data points as **rows**. Use
+  `np.linalg.slogdet` for the log-determinant and `np.linalg.solve` instead of an inverse. No Python loop over the
+  rows is needed (but one is allowed).
+
+  The tests compare with `scipy.stats.multivariate_normal` and check a fact a paper might state without proof:
+  the log-likelihood is largest at the sample mean and the sample covariance with divisor $n$.
+starter: |
+  import numpy as np
+
+  def gaussian_loglik(X, mu, Sigma):
+      n, d = X.shape
+      diff = X - mu
+      return -0.5 * np.sum(diff ** 2)
+solution: |
+  import numpy as np
+
+  def gaussian_loglik(X, mu, Sigma):
+      X = np.asarray(X, dtype=float)
+      n, d = X.shape
+      diff = X - mu                                   # (n, d), row i is x_i - mu
+      sol = np.linalg.solve(Sigma, diff.T)            # (d, n), column i is Sigma^-1 (x_i - mu)
+      maha = np.sum(diff.T * sol)                     # sum over i of the quadratic forms
+      _, logdet = np.linalg.slogdet(Sigma)
+      return float(-0.5 * n * (d * np.log(2 * np.pi) + logdet) - 0.5 * maha)
+tests: |
+  import math
+  import numpy as np
+  from scipy import stats
+  _rng = np.random.default_rng(8)
+  for _n, _d in ((1, 2), (40, 2), (25, 3)):
+      _mu = _rng.normal(size=_d)
+      _M = _rng.normal(size=(_d, _d)); _S = _M @ _M.T + 0.5 * np.eye(_d) + 0.3 * np.ones((_d, _d))
+      _X = _rng.multivariate_normal(_mu, _S, size=_n)
+      _got = gaussian_loglik(_X, _mu, _S)
+      _want = float(stats.multivariate_normal(_mu, _S).logpdf(_X).sum())
+      assert _got is not None and math.isclose(_got, _want, rel_tol=1e-9), f"For n={_n}, d={_d} expected {_want:.6f}, got {_got!r}. Check the n/2 factor on the constant and log-det terms, and use Sigma^-1 in the quadratic form"
+  _X = _rng.normal(size=(60, 2)) @ np.array([[1.0, 0.0], [0.7, 0.5]]) + [3.0, -1.0]
+  _mu_hat = _X.mean(axis=0); _S_hat = np.cov(_X, rowvar=False, bias=True)
+  _best = gaussian_loglik(_X, _mu_hat, _S_hat)
+  for _ in range(10):
+      _dm = 0.05 * _rng.normal(size=2); _E = 0.02 * _rng.normal(size=(2, 2)); _E = _E + _E.T
+      assert gaussian_loglik(_X, _mu_hat + _dm, _S_hat) < _best, "Moving mu away from the sample mean should lower the log-likelihood"
+      assert gaussian_loglik(_X, _mu_hat, _S_hat + _E) < _best, "Changing Sigma away from the sample covariance (divisor n) should lower the log-likelihood"
+hints:
+  - "diff = X - mu has the residuals as rows; np.linalg.solve(Sigma, diff.T) gives Sigma^-1 (x_i - mu) as columns."
+  - "The sum of quadratic forms is np.sum(diff.T * sol)."
+  - "The constant and log-determinant terms appear once per data point, hence the factor n."

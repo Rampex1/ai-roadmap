@@ -1,0 +1,139 @@
+items:
+  - id: a1-risks-and-design-docs-01
+    type: mcq
+    prompt: "A fraud check's measured latencies have a mean of 47 ms and a p99 of 394 ms. The design doc requires p99 under 100 ms. What do you conclude?"
+    options:
+      - text: "It cannot be judged without knowing the median"
+        why: "The p99 alone settles a p99 requirement."
+      - text: "It passes, because the mean is well under 100 ms"
+        why: "The requirement is on the p99, and the mean hides the slow tail."
+      - text: "It passes, because 99% of requests are fast"
+        why: "p99 means 1% of requests take 394 ms or more, which breaks the stated budget."
+      - text: "It fails: one request in a hundred takes about 400 ms, far above the budget"
+        correct: true
+        why: "The requirement is stated on the tail, so the tail decides."
+    explanation: "Describe latency with percentiles. Users feel the tail, and the requirement should say which percentile it constrains."
+  - id: a1-risks-and-design-docs-02
+    type: numeric
+    prompt: "A model makes 2 million predictions a month at £0.0004 of compute each, and human labelling of a review sample costs £3,000 a month. What is the monthly running cost in pounds (ignoring staff)?"
+    answer: 3800
+    tol: 0.5
+    explanation: "$2{,}000{,}000 \\times 0.0004 = £800$ for compute, plus £3,000 for labelling, is £3,800. Labelling is often the larger item."
+  - id: a1-risks-and-design-docs-03
+    type: multi
+    prompt: "Which of these are well-formed requirements for a design doc? Select all that apply."
+    options:
+      - text: "p99 latency under 100 ms at 300 requests per second"
+        correct: true
+        why: "Measurable, with a limit and the load it applies at."
+      - text: "The model should be fast"
+        why: "Not measurable: fast by which percentile, under what load?"
+      - text: "The model should be fair"
+        why: "Fair by which metric, for which groups, with what tolerance?"
+      - text: "The false positive rate for each age band differs by at most 1 percentage point from the overall rate"
+        correct: true
+        why: "Names the groups, the metric and the acceptable gap."
+    explanation: "A requirement says what is measured, the limit, and the conditions; the doc also names who owns it."
+  - id: a1-risks-and-design-docs-04
+    type: mcq
+    prompt: "The fraud model's service goes down during peak shopping hours. What should the design doc have specified?"
+    options:
+      - text: "Fall back to the rule-based baseline, with a pre-agreed fail-safe policy such as holding only large payments"
+        correct: true
+        why: "The rule still catches some fraud, and the outage behaviour was decided calmly in advance."
+      - text: "Retry the model until it responds, however long that takes"
+        why: "Payments have a latency budget; waiting indefinitely is not an option."
+      - text: "Approve all payments with no checks until the model is back"
+        why: "Possible for tiny amounts, but leaving all payments unchecked invites losses; a fallback can do better."
+      - text: "Block all payments until the model is back, to be safe"
+        why: "That stops the business and harms every legitimate customer."
+    explanation: "Always have a fallback that works without the model (usually the baseline rule) and decide in advance how the system should fail."
+  - id: a1-risks-and-design-docs-05
+    type: mcq
+    prompt: "A fraud model uses no protected attributes, yet holds payments from one postcode area far more often, and that area's residents are mostly from one ethnic group. What is the most likely explanation?"
+    options:
+      - text: "The postcode has higher latency"
+        why: "Latency does not affect which payments the model flags."
+      - text: "This cannot happen if protected attributes are excluded"
+        why: "It can and does: that is the proxy problem."
+      - text: "Postcode, or features correlated with it, acts as a proxy for the protected attribute"
+        correct: true
+        why: "Removing a column does not remove its information when other features are correlated with it (F11)."
+      - text: "The model is broken and should output random scores for that area"
+        why: "Random scores would destroy the model's usefulness without addressing the cause."
+    explanation: "Check per-group outcomes even when protected attributes are excluded; proxies can carry the same information."
+  - id: a1-risks-and-design-docs-06
+    type: mcq
+    prompt: "In a rollout plan, what is shadow mode?"
+    options:
+      - text: "The model is trained on a hidden copy of the data"
+        why: "Shadow mode is about serving, not training."
+      - text: "The model runs on live traffic and its predictions are logged, but its decisions are not applied"
+        correct: true
+        why: "This tests the system on real inputs with no risk to customers, and lets you compare against the current process."
+      - text: "The model is deployed for 1% of customers chosen at random"
+        why: "That is a small A/B test or canary, where decisions are applied."
+      - text: "The model runs only at night when traffic is low"
+        why: "Shadow mode runs alongside normal traffic."
+    explanation: "Shadow mode checks latency, input handling and prediction quality on real traffic before any decision depends on the model."
+  - id: a1-risks-and-design-docs-07
+    type: order
+    prompt: "Put these steps for launching a new fraud model in a sensible order."
+    items:
+      - "Write the design doc and have it reviewed"
+      - "Run the model in shadow mode on live traffic"
+      - "A/B test on 10% of traffic"
+      - "Gradually roll out to all traffic, watching guardrails"
+    explanation: "Settle the plan on paper first, then test on real traffic without consequences, then measure the effect on a small randomised share, then expand."
+  - id: a1-risks-and-design-docs-08
+    type: multi
+    prompt: "Which of these belong in a one-page ML design doc written before modelling? Select all that apply."
+    options:
+      - text: "The failure modes and their fallbacks"
+        correct: true
+        why: "Part of risks and requirements."
+      - text: "The label definition and its delay"
+        correct: true
+        why: "Part of the ML task section; it shapes data, evaluation and monitoring."
+      - text: "The final tuned hyperparameter values"
+        why: "These don't exist yet, and the doc should hold for any model choice."
+      - text: "The success threshold, agreed in advance"
+        correct: true
+        why: "So that results are judged against a fixed bar."
+    explanation: "The design doc settles what must be true of any model: problem, decision, task, data, metrics, baselines, system, risks, rollout and open questions."
+  - id: a1-risks-and-design-docs-09
+    type: mcq
+    prompt: "A lender plans to use a model to refuse some credit applications. When should explainability requirements be settled?"
+    options:
+      - text: "At the start, with legal or compliance experts, since they can require per-decision reasons and rule out model types"
+        correct: true
+        why: "Explainability needs are constraints on the design, like latency."
+      - text: "After the most accurate model has been chosen"
+        why: "By then the requirement may rule out the chosen model, wasting the work."
+      - text: "Never: credit models are exempt from explanation rules"
+        why: "Credit decisions are among the most regulated uses."
+      - text: "Only if a regulator complains"
+        why: "Refused applicants may be entitled to reasons; reacting afterwards is costly and risky."
+    explanation: "Who needs an explanation, and of what, is a requirement to settle early. Rules vary by country and sector, so involve experts."
+  - id: a1-risks-and-design-docs-10
+    type: mcq
+    prompt: "Uncertain fraud cases go to human reviewers. After launch, reviewers agree with the model on 99.5% of cases. What should you check?"
+    options:
+      - text: "Whether the reviewers can be replaced by the model immediately"
+        why: "Premature: the agreement may reflect deference, not model quality."
+      - text: "Whether reviewers are rubber-stamping the model (automation bias), for example by including some cases without showing the score"
+        correct: true
+        why: "Measuring how often reviewers overturn the model, and auditing blind, tests whether review is a real safety valve."
+      - text: "Whether the p99 latency is under budget"
+        why: "Important elsewhere, but unrelated to review quality."
+      - text: "Nothing: this proves the model is nearly perfect"
+        why: "High agreement can also mean reviewers defer to the model."
+    explanation: "Human review reduces the cost of errors only if reviewers think independently. Automation bias makes people agree with the machine."
+  - id: a1-risks-and-design-docs-11
+    type: output
+    prompt: "Ten measured latencies in milliseconds, one of them a slow outlier. What does this print?"
+    code: |
+      lat = sorted([20, 25, 30, 35, 40, 45, 50, 55, 60, 900])
+      print(sum(lat) / len(lat), lat[len(lat) // 2])
+    answer: "126.0 45"
+    explanation: "The mean is $1260/10 = 126$, pulled up by one slow request; the element at index 5 of the sorted list is 45 (with ten values the textbook median would average 40 and 45). A single outlier makes the mean nearly three times the typical value, which is why latency is described with percentiles."

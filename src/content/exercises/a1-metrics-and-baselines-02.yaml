@@ -1,0 +1,79 @@
+id: a1-metrics-and-baselines-02
+lesson: mle/a1/metrics-and-baselines
+title: Pick the threshold that minimises business cost
+prompt: |
+  Write `best_threshold(y, p, c_fp, c_fn)` that returns a tuple `(t, cost)`: the threshold with the
+  lowest total cost and that cost.
+
+  - Try as candidates every distinct value in `p` (flag `p >= t`), plus `np.inf` (flag nothing).
+  - If several thresholds tie for the lowest cost, return the **largest** one (it flags the fewest cases).
+
+  `total_cost` from the previous exercise is provided. With the example data and costs 5 and 150 the
+  answer is `(0.15, 15)`: flagging the six cases with `p >= 0.15` catches all three frauds at the price
+  of three false alarms.
+
+  In a real project, run this on **validation** data (or out-of-fold predictions), never on the test set.
+starter: |
+  import numpy as np
+
+  y = np.array([1, 0, 0, 1, 0, 1, 0, 0, 0, 0])
+  p = np.array([0.9, 0.6, 0.2, 0.3, 0.1, 0.15, 0.05, 0.02, 0.4, 0.01])
+
+  def total_cost(y, p, t, c_fp, c_fn):
+      y = np.asarray(y).astype(bool)
+      flags = np.asarray(p) >= t
+      return c_fp * np.sum(flags & ~y) + c_fn * np.sum(~flags & y)
+
+  def best_threshold(y, p, c_fp, c_fn):
+      return 0.5, total_cost(y, p, 0.5, c_fp, c_fn)
+
+  print(best_threshold(y, p, 5, 150))
+solution: |
+  import numpy as np
+
+  y = np.array([1, 0, 0, 1, 0, 1, 0, 0, 0, 0])
+  p = np.array([0.9, 0.6, 0.2, 0.3, 0.1, 0.15, 0.05, 0.02, 0.4, 0.01])
+
+  def total_cost(y, p, t, c_fp, c_fn):
+      y = np.asarray(y).astype(bool)
+      flags = np.asarray(p) >= t
+      return c_fp * np.sum(flags & ~y) + c_fn * np.sum(~flags & y)
+
+  def best_threshold(y, p, c_fp, c_fn):
+      best_t, best_c = np.inf, total_cost(y, p, np.inf, c_fp, c_fn)
+      for t in np.unique(p)[::-1]:          # from largest to smallest
+          c = total_cost(y, p, t, c_fp, c_fn)
+          if c < best_c:                    # strictly lower keeps the larger t on ties
+              best_t, best_c = t, c
+      return float(best_t), best_c
+
+  print(best_threshold(y, p, 5, 150))
+tests: |
+  import math
+  import numpy as np
+  def _ref(_y, _p, _a, _b):
+      _cands = list(np.unique(_p)) + [np.inf]
+      _costs = [total_cost(_y, _p, _t, _a, _b) for _t in _cands]
+      _m = min(_costs)
+      return max(_t for _t, _c in zip(_cands, _costs) if _c == _m), _m
+  def _check(_y, _p, _a, _b):
+      _got = best_threshold(_y, _p, _a, _b)
+      _want = _ref(_y, _p, _a, _b)
+      assert isinstance(_got, tuple) and len(_got) == 2, f"Return a tuple (t, cost), got {_got!r}"
+      assert _got[1] == _want[1], f"costs c_fp={_a}, c_fn={_b}: the lowest cost is {_want[1]}, got {_got[1]}"
+      assert _got[0] == _want[0], f"costs c_fp={_a}, c_fn={_b}: expected threshold {_want[0]}, got {_got[0]} (on ties choose the largest threshold)"
+  _check(y, p, 5, 150)
+  _check(y, p, 50, 60)
+  _check(y, p, 100, 1)
+  _r = best_threshold(np.array([0, 1, 0]), np.array([0.9, 0.5, 0.2]), 100, 1)
+  assert _r[0] == np.inf and _r[1] == 1, f"Here every useful threshold also raises an expensive false alarm, so flagging nothing (np.inf, cost 1) is best; got {_r}"
+  _rng = np.random.default_rng(1)
+  for _seed in range(3):
+      _y = _rng.random(400) < 0.05
+      _p = np.round(np.clip(0.25 * _y + _rng.beta(1, 6, 400), 0, 1), 3)
+      _check(_y, _p, 5, 150)
+      _check(_y, _p, 1, 4)
+hints:
+  - "Loop over np.unique(p), compute total_cost for each, and keep the cheapest."
+  - "Start with t = np.inf and its cost (flag nothing), so that option is always considered."
+  - "Visit thresholds from largest to smallest and only replace the best when the cost is strictly lower: that keeps the largest threshold on ties."

@@ -1,0 +1,75 @@
+id: b0-matrix-calculus-01
+lesson: research/b0/matrix-calculus
+title: A gradient checker for any shape
+prompt: |
+  Write two functions.
+
+  1. `num_grad(f, x, eps=1e-6)`: the central-difference gradient of a scalar function `f` at `x`, where `x` can be
+     a scalar array, a vector or a matrix. Return an array with the same shape as `x`. Entry `idx` is
+     `(f(x + eps e) - f(x - eps e)) / (2 eps)`, where `e` is 1 at `idx` and 0 elsewhere. **Do not change the
+     caller's `x`**: work on a float copy.
+  2. `grad_quadratic(A, x)`: the exact gradient of $f(\mathbf{x}) = \mathbf{x}^\top A\mathbf{x}$ for any square
+     `A`, symmetric or not.
+
+  The tests compare your `num_grad` with known gradients on vectors and matrices, and your `grad_quadratic` with
+  numerical gradients for non-symmetric matrices.
+starter: |
+  import numpy as np
+
+  def num_grad(f, x, eps=1e-6):
+      x = np.array(x, dtype=float)
+      g = np.zeros_like(x)
+      # TODO: loop over every index with np.ndindex(x.shape)
+      return g
+
+  def grad_quadratic(A, x):
+      return 2 * A @ x
+solution: |
+  import numpy as np
+
+  def num_grad(f, x, eps=1e-6):
+      x = np.array(x, dtype=float)
+      g = np.zeros_like(x)
+      for idx in np.ndindex(x.shape):
+          old = x[idx]
+          x[idx] = old + eps
+          f_plus = f(x)
+          x[idx] = old - eps
+          f_minus = f(x)
+          x[idx] = old
+          g[idx] = (f_plus - f_minus) / (2 * eps)
+      return g
+
+  def grad_quadratic(A, x):
+      return (A + A.T) @ x
+tests: |
+  import numpy as np
+  _rng = np.random.default_rng(42)
+  _a = _rng.normal(size=5)
+  _x = _rng.normal(size=5)
+  _x_before = _x.copy()
+  _g = num_grad(lambda v: _a @ v, _x)
+  assert _g is not None, "num_grad returned None: did you forget the return statement?"
+  assert np.shape(_g) == (5,), f"num_grad should return an array shaped like x, (5,), got shape {np.shape(_g)}"
+  np.testing.assert_allclose(_g, _a, rtol=1e-6, atol=1e-8, err_msg="num_grad of a @ x should be a")
+  np.testing.assert_array_equal(_x, _x_before, err_msg="num_grad changed the caller's x: work on a copy")
+  np.testing.assert_allclose(num_grad(lambda v: np.sum(np.sin(v)), _x), np.cos(_x), rtol=1e-6, atol=1e-8, err_msg="num_grad of sum(sin(x)) should be cos(x)")
+  _M = _rng.normal(size=(3, 4))
+  _C = _rng.normal(size=(3, 4))
+  _gm = num_grad(lambda W: np.sum(_C * W ** 2), _M)
+  assert np.shape(_gm) == (3, 4), f"For a 3 x 4 matrix input, num_grad should return shape (3, 4), got {np.shape(_gm)}"
+  np.testing.assert_allclose(_gm, 2 * _C * _M, rtol=1e-6, atol=1e-8, err_msg="num_grad on a matrix input is wrong: check every index is visited")
+  for _n in (2, 4, 6):
+      _A = _rng.normal(size=(_n, _n))
+      _v = _rng.normal(size=_n)
+      _want = num_grad(lambda u: u @ _A @ u, _v)
+      _got = grad_quadratic(_A, _v)
+      assert np.shape(_got) == (_n,), f"grad_quadratic should return a vector of length {_n}, got shape {np.shape(_got)}"
+      np.testing.assert_allclose(_got, _want, rtol=1e-6, atol=1e-8, err_msg="grad_quadratic is wrong for a non-symmetric A: x appears twice in x^T A x, so both A and A^T show up")
+  _S = _rng.normal(size=(3, 3)); _S = _S + _S.T
+  _v = _rng.normal(size=3)
+  np.testing.assert_allclose(grad_quadratic(_S, _v), 2 * _S @ _v, rtol=1e-10, err_msg="For a symmetric A the answer should reduce to 2 A x")
+hints:
+  - "for idx in np.ndindex(x.shape) visits every index of an array of any shape, including matrices."
+  - "Save the old value, set x[idx] to old + eps and old - eps in turn, then restore it."
+  - "Differentiate the double sum of x_i A_ij x_j by x_k: one term comes from i = k and one from j = k."

@@ -1,0 +1,39 @@
+id: a1-ml-design-doc
+module: a1
+kind: homework
+title: "An ML design doc for appointment no-shows, with a working baseline"
+brief: |
+  A community health clinic loses about one appointment in six to no-shows, and asks whether ML can help.
+  Receptionists can phone patients two days ahead; a call costs £8 and, in a pilot, cut the chance of a
+  no-show by about 30%. A wasted slot is worth £120. You play the ML engineer and produce everything this
+  module taught, in one notebook. The notebook generates a synthetic year of 12,000 appointments from a fixed
+  seed, so it runs offline and everyone gets the same numbers. Download it and open it in local Jupyter or
+  [Google Colab](https://colab.research.google.com/) (File > Upload notebook).
+
+  Each coding task has `TODO` cells and a check cell that prints `OK`; the written tasks have *Your answer*
+  cells.
+
+  1. **Frame the problem:** fill in the framing table (objective, decision, prediction, unit, prediction
+     time, label, proxy gap), measure the label delay, choose the allowed features and find the leaky column.
+  2. **Split by time:** train on January to August, validate on September and October, test on November and
+     December.
+  3. **Turn the scenario into costs:** derive $c_{FP}$, $c_{FN}$ and the cost-based threshold, and write a
+     policy cost function and a "saving per 1,000 appointments" metric.
+  4. **Baselines, then a model:** call nobody, call everyone, the receptionists' heuristic, and a logistic
+     regression pipeline.
+  5. **Threshold and test:** scan thresholds on validation, plot the saving curve, then check the
+     pre-agreed success criterion once on the test months.
+  6. **Risks:** call rate and recall per deprivation band, plus short answers on fairness, batch versus
+     online serving, feedback loops, failure modes and personal data.
+  7. **Design doc:** fill in a one-page ML design doc with your own numbers.
+
+  Stretch tasks cover a daily call capacity (precision@k), calibration and sensitivity to the assumed call effect.
+notebook: /homework/a1-ml-design-doc.ipynb
+rubric:
+  - "Every check cell prints OK after restarting the kernel and running all cells"
+  - "The framing table states a decision, a unit of prediction, a prediction time and a precise label definition, and names at least one proxy gap"
+  - "minutes_late and outcome_recorded_on are excluded from the features, and answer 1c explains why prior_no_shows must only count outcomes recorded before the prediction time"
+  - "The threshold was chosen on validation data, the plot marks both T_STAR and the chosen threshold, and the test set was used once, against a success criterion fixed in advance"
+  - "The risk answers cover fairness (including the double-booking case), batch versus online, the feedback loop once calls start, and two failure modes with fallbacks"
+  - "The design doc fits on about one page, uses the notebook's numbers, and could be reviewed by someone who has not seen the code"
+compute: "Any laptop or free Colab (CPU); all cells run in a few seconds. Allow 2 to 3 hours including the writing"

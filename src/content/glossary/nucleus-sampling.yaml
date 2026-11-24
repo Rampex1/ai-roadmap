@@ -1,0 +1,7 @@
+term: "Nucleus sampling"
+short: "Top-p sampling: draw the next token only from the smallest set of most probable tokens whose probabilities add up to at least p."
+body: |
+  The kept set adapts to the model's confidence: one token when the model is sure, many when it is not.
+  It removes the long tail of unlikely tokens that can derail generation. Introduced in "The Curious
+  Case of Neural Text Degeneration" (2019).
+related: ["temperature", "greedy-decoding", "softmax"]

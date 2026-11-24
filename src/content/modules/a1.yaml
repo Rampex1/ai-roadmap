@@ -4,5 +4,8 @@ title: "Problem framing"
 order: 1
 prereqs: ["f8", "f10", "f11"]
 objectives:
-  - "Explain the core ideas of problem framing"
-  - "Apply problem framing to a working ML project"
+  - "Decide whether an ML model is appropriate and define a non-ML baseline"
+  - "Specify the decision, prediction unit, prediction time and label, and identify leakage risks"
+  - "Choose a metric and a decision threshold using the costs of acting and missing an outcome"
+  - "Choose batch or online inference and describe how to monitor feedback and failure modes"
+  - "Write a design document with a validation plan and a measurable success criterion"

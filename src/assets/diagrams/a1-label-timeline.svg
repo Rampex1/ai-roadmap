@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 270" width="680" height="270" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Two timelines. Top: one prediction. Features are computed from data before the prediction time t; the label window runs from t to t plus 30 days; the label is known only at the end of the window. Bottom: today's training data. Predictions made more than 30 days before today have known labels and can be used for training. Predictions made in the last 30 days are still inside their label window, so their labels are unknown and they must not be used.</title>
+  <text x="20" y="28" font-size="15" font-weight="700" fill="#64748b">One prediction</text>
+  <line x1="40" y1="80" x2="640" y2="80" stroke="#64748b" stroke-width="2"/>
+  <polygon points="640,74 652,80 640,86" fill="#64748b"/>
+  <text x="652" y="104" font-size="13" fill="#64748b" text-anchor="end">time</text>
+  <rect x="60" y="56" width="240" height="48" rx="8" fill="#0f766e"/>
+  <text x="180" y="85" font-size="14" fill="#ffffff" text-anchor="middle">features: data before t</text>
+  <rect x="304" y="56" width="240" height="48" rx="8" fill="#4f46e5"/>
+  <text x="424" y="85" font-size="14" fill="#ffffff" text-anchor="middle">label window: (t, t + 30 days]</text>
+  <line x1="302" y1="44" x2="302" y2="116" stroke="#d97706" stroke-width="3"/>
+  <text x="302" y="134" font-size="14" font-weight="700" fill="#d97706" text-anchor="middle">t (prediction time)</text>
+  <line x1="546" y1="44" x2="546" y2="116" stroke="#64748b" stroke-width="2" stroke-dasharray="4 3"/>
+  <text x="546" y="134" font-size="13" fill="#64748b" text-anchor="middle">label known</text>
+
+  <text x="20" y="172" font-size="15" font-weight="700" fill="#64748b">Training data, as of today</text>
+  <line x1="40" y1="216" x2="640" y2="216" stroke="#64748b" stroke-width="2"/>
+  <polygon points="640,210 652,216 640,222" fill="#64748b"/>
+  <rect x="60" y="192" width="364" height="48" rx="8" fill="#0f766e"/>
+  <text x="242" y="221" font-size="14" fill="#ffffff" text-anchor="middle">predictions with known labels: usable</text>
+  <rect x="428" y="192" width="176" height="48" rx="8" fill="#d97706"/>
+  <text x="516" y="214" font-size="13" fill="#ffffff" text-anchor="middle">last 30 days:</text>
+  <text x="516" y="230" font-size="13" fill="#ffffff" text-anchor="middle">labels not known yet</text>
+  <line x1="606" y1="182" x2="606" y2="250" stroke="#64748b" stroke-width="3"/>
+  <text x="606" y="264" font-size="13" font-weight="700" fill="#64748b" text-anchor="middle">today</text>
+</svg>

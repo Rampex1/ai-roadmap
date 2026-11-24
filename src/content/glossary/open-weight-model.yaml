@@ -1,0 +1,7 @@
+term: "Open-weight model"
+short: "A model whose trained weights are published for anyone to download and run, as opposed to one available only through a provider's API."
+body: |
+  Open weights allow local use, privacy, pinning an exact version, quantisation and fine-tuning. They
+  are not the same as open source: training data and code are often not released, and licences range
+  from permissive to restrictive.
+related: ["large-language-model", "quantisation"]

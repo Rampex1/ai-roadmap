@@ -1,0 +1,123 @@
+items:
+  - id: c1-context-windows-01
+    type: numeric
+    prompt: A model has a 16,384-token window. You reserve 2,048 tokens for the reply, and the system prompt (with its template overhead) takes 500. How many tokens are left for history, documents and the new message?
+    answer: 13836
+    tol: 0
+    explanation: 16,384 − 2,048 − 500 = 13,836. Reserve the output first, then fit the prompt.
+  - id: c1-context-windows-02
+    type: mcq
+    prompt: Why is "about 4 characters per token" a poor way to enforce a hard context limit?
+    explanation: The ratio holds roughly for English prose but varies widely for code, numbers, JSON and other languages, and between tokenisers. Count with the model's own tokeniser.
+    options:
+      - text: The ratio varies a lot with the kind of text and the tokeniser, so count with the model's tokeniser
+        correct: true
+        why: Code, numbers and many languages need far more tokens per character.
+      - text: Tokens are always exactly one word
+        why: Tokens are subword pieces.
+      - text: The ratio is exact but only for code
+        why: It is a rough rule for English prose.
+      - text: Characters do not count towards the window
+        why: Everything is counted in tokens, which come from characters.
+  - id: c1-context-windows-03
+    type: output
+    prompt: What does this print?
+    code: |
+      def truncate_middle(tokens, budget, marker="[...]"):
+          if len(tokens) <= budget:
+              return tokens
+          head = (budget - 1) // 2
+          tail = budget - 1 - head
+          return tokens[:head] + [marker] + tokens[len(tokens) - tail:]
+
+      print(truncate_middle(list(range(10)), 5))
+    answer: "[0, 1, '[...]', 8, 9]"
+    explanation: One of the 5 slots goes to the marker; head = 2 and tail = 2 keep the first two and last two items.
+  - id: c1-context-windows-04
+    type: multi
+    prompt: When a chat no longer fits, which must your truncation policy always keep (or fail loudly if it cannot)?
+    explanation: The system prompt carries your instructions and rules, and the latest user message is the thing being answered. Older turns can be dropped or summarised.
+    options:
+      - text: The latest user message
+        correct: true
+        why: Without it there is nothing to answer.
+      - text: Every assistant reply
+        why: Old replies are the usual candidates for dropping.
+      - text: The very first user message
+        why: It can be dropped or summarised like other old turns.
+      - text: The system prompt
+        correct: true
+        why: Dropping it silently removes your instructions and safety rules.
+  - id: c1-context-windows-05
+    type: mcq
+    prompt: The key document for a question sits at position 10 of 20 retrieved documents. What does the "lost in the middle" finding suggest?
+    explanation: Models used information at the start and end of long contexts better than in the middle, so move the most relevant material to an edge and cut irrelevant documents.
+    options:
+      - text: Nothing; a document inside the window is always used equally well
+        why: Fitting is not the same as being used.
+      - text: Duplicate every document to fill the window
+        why: Irrelevant or repeated text is a distraction.
+      - text: Put it exactly in the middle, where attention is strongest
+        why: The middle was the weakest position.
+      - text: Move the most relevant document to the start or end, and send fewer, more relevant documents
+        correct: true
+        why: Accuracy was highest with the answer at the edges.
+  - id: c1-context-windows-06
+    type: numeric
+    prompt: Using TTFT = input ÷ prefill rate and total = TTFT + output ÷ decode rate, how many seconds does a request with 6,000 input tokens and 300 output tokens take, at 3,000 tokens/s prefill and 60 tokens/s decode?
+    answer: 7
+    tol: 0.01
+    explanation: TTFT = 6,000 / 3,000 = 2 s; decode = 300 / 60 = 5 s; total 7 s.
+  - id: c1-context-windows-07
+    type: mcq
+    prompt: You want to make an assistant feel faster. Which change usually helps most?
+    explanation: Decode is sequential and slow, so output length dominates total latency; asking for shorter or structured answers and streaming helps most.
+    options:
+      - text: Remove 100 tokens from a 2,000-token prompt
+        why: Prefill is fast; this saves very little.
+      - text: Raise the temperature
+        why: Sampling settings barely change speed.
+      - text: Ask for shorter, structured answers and stream the reply
+        correct: true
+        why: Each output token costs a full decode step.
+      - text: Increase the context window setting
+        why: A larger window does not speed anything up.
+  - id: c1-context-windows-08
+    type: output
+    prompt: What does this print? (GB here means 10⁹ bytes.)
+    code: |
+      def kv_cache_gb(tokens, layers, kv_heads, head_dim, bytes_per=2):
+          return 2 * layers * kv_heads * head_dim * bytes_per * tokens / 1e9
+
+      print(round(kv_cache_gb(4096, 32, 8, 128), 2))
+    answer: "0.54"
+    explanation: 2 × 32 × 8 × 128 × 2 = 131,072 bytes per token; times 4,096 tokens is about 0.537 GB.
+  - id: c1-context-windows-09
+    type: mcq
+    prompt: Your system prompt begins with the current time to the second, followed by 6,000 tokens of fixed instructions and tools. Why does prompt caching barely help?
+    explanation: Caching reuses an exact prefix. A value that changes on every request at the very start makes every prefix different, so nothing after it can be reused.
+    options:
+      - text: Caching only works for prompts under 1,000 tokens
+        why: Long stable prefixes are exactly what caching is for.
+      - text: The changing timestamp at the start makes every prefix different
+        correct: true
+        why: Put stable content first and changing content last.
+      - text: Caching only reduces output cost
+        why: It reduces input cost and time to first token.
+      - text: Tool definitions can never be cached
+        why: They can, if they come in the same position every time.
+  - id: c1-context-windows-10
+    type: numeric
+    prompt: Each of 1,000 requests has a cached 10,000-token prefix billed at 0.30 dollars per million, 500 fresh input tokens at 3 dollars per million and 200 output tokens at 15 dollars per million. What is the total cost in dollars?
+    answer: 7.5
+    tol: 0.001
+    explanation: Per request 0.003 + 0.0015 + 0.003 = 0.0075 dollars; times 1,000 is 7.50.
+  - id: c1-context-windows-11
+    type: order
+    prompt: Order these prompt parts for the best prompt-cache reuse, from first to last.
+    explanation: Most stable first, so the longest possible prefix is identical across requests; the new message always changes.
+    items:
+      - Fixed instructions and tool definitions
+      - Fixed reference documents
+      - Conversation history so far
+      - The new user message

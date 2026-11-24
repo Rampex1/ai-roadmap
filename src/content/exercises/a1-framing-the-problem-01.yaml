@@ -1,0 +1,61 @@
+id: a1-framing-the-problem-01
+lesson: mle/a1/framing-the-problem
+title: Compute churn labels for a snapshot date
+prompt: |
+  Write `churn_labels(logins, customers, snapshot, window_days)`.
+
+  - `logins` is a DataFrame with columns `customer` and `date` (datetimes).
+  - `customers` is a list of customer ids: the population on the snapshot date. Some may have no logins at all.
+  - `snapshot` is a `pd.Timestamp`, the prediction time.
+
+  Return a boolean `pd.Series` indexed by customer id (in the order of `customers`) that is `True`
+  (churned) when the customer has **no** login in the window $(\text{snapshot}, \text{snapshot} + \text{window\_days}]$:
+  strictly after the snapshot, up to and including the last day.
+
+  With the data below and a 30-day window, `a` is active (logins on 2 and 31 March), `b` only logged in
+  before the snapshot, `c` only after the window, and `d` never: so the result is
+  `a: False, b: True, c: True, d: True`.
+starter: |
+  import pandas as pd
+
+  logins = pd.DataFrame({
+      "customer": ["a", "a", "b", "c"],
+      "date": pd.to_datetime(["2026-03-02", "2026-03-31", "2026-03-01", "2026-04-02"]),
+  })
+
+  def churn_labels(logins, customers, snapshot, window_days):
+      pass
+
+  print(churn_labels(logins, ["a", "b", "c", "d"], pd.Timestamp("2026-03-01"), 30))
+solution: |
+  import pandas as pd
+
+  logins = pd.DataFrame({
+      "customer": ["a", "a", "b", "c"],
+      "date": pd.to_datetime(["2026-03-02", "2026-03-31", "2026-03-01", "2026-04-02"]),
+  })
+
+  def churn_labels(logins, customers, snapshot, window_days):
+      end = snapshot + pd.Timedelta(days=window_days)
+      active = logins.loc[(logins["date"] > snapshot) & (logins["date"] <= end), "customer"]
+      return pd.Series([c not in set(active) for c in customers], index=customers)
+
+  print(churn_labels(logins, ["a", "b", "c", "d"], pd.Timestamp("2026-03-01"), 30))
+tests: |
+  import pandas as pd
+  def _check(_logins, _cust, _snap, _w, _want):
+      _got = churn_labels(_logins, _cust, pd.Timestamp(_snap), _w)
+      assert isinstance(_got, pd.Series), f"Return a pandas Series, got {type(_got).__name__}"
+      assert list(_got.index) == list(_cust), f"The Series should be indexed by customer in the given order {_cust}, got {list(_got.index)}"
+      assert [bool(v) for v in _got] == _want, f"snapshot={_snap}, window={_w}: expected {dict(zip(_cust, _want))}, got {dict(zip(_cust, [bool(v) for v in _got]))}"
+  _check(logins, ["a", "b", "c", "d"], "2026-03-01", 30, [False, True, True, True])
+  _check(logins, ["d", "c", "a"], "2026-03-01", 32, [True, False, False])
+  _check(logins, ["a", "b"], "2026-03-01", 1, [False, True])
+  _check(logins, ["a", "b"], "2026-02-28", 1, [True, False])
+  _l = pd.DataFrame({"customer": [1, 2, 2, 3], "date": pd.to_datetime(["2026-05-10", "2026-05-01", "2026-05-08", "2026-05-15"])})
+  _check(_l, [1, 2, 3], "2026-05-01", 7, [True, False, True])
+  _check(_l, [1, 2, 3], "2026-05-01", 14, [False, False, False])
+hints:
+  - "The window end is snapshot + pd.Timedelta(days=window_days)."
+  - "Filter logins with (date > snapshot) & (date <= end), then collect the customer ids that remain."
+  - "Build the result with pd.Series([...], index=customers) so customers with no logins are included."

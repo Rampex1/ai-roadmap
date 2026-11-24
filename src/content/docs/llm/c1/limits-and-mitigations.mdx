@@ -1,0 +1,164 @@
+---
+title: "What LLMs cannot do reliably, and what engineers do about it"
+module: c1
+order: 5
+estMinutes: 18
+objectives:
+  - "Explain the mechanisms behind hallucination, arithmetic and spelling failures, knowledge-cutoff errors and sensitivity to phrasing"
+  - "Match each failure mode to an engineering mitigation: grounding, tools, structured output, sampling and voting, or evaluation"
+  - "Implement self-consistency voting with abstention and explain when it helps"
+goDeeper: why-language-models-hallucinate
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+[F10](/foundations/f10/llms-in-practice/) listed the ways LLMs fail. An engineer needs two more things:
+the **mechanism** behind each failure, so you can predict when it will bite, and the **mitigation**, so
+you can design around it. The rest of Track C is largely a catalogue of mitigations; this lesson maps
+them out.
+
+All the examples below are real, greedy outputs from `Qwen2.5-0.5B-Instruct`, a deliberately small model
+that fails often enough to study. Large models fail less often, in the same ways.
+
+## Hallucination: why it happens
+
+Asked "Who wrote the 2019 novel The Glass Orchard? Answer in one sentence." (no such novel exists), the
+model said:
+
+```text title="Real output"
+The Glass Orchard was written by the British author Jhumpa Lahiri.
+```
+
+Four mechanisms combine:
+
+1. **The objective rewards plausibility.** Pretraining maximises the probability of real text. "X was
+   written by [a well-known author]" is exactly the shape of a correct answer, so the model produces it.
+2. **Rare facts are learned weakly.** Facts seen thousands of times in training (the capital of France)
+   are recalled reliably; facts seen once or twice, or never, are blurred into "something plausible".
+   Hallucination is most common on the long tail: obscure people, specific numbers, exact citations,
+   recent events.
+3. **Commitment snowballs.** Generation never goes back. The logprobs from
+   [lesson 2](/llm/c1/decoding/) showed the model gave the first letter, " J", only 3.6% probability;
+   but once chosen, "humpa Lahiri" followed with near certainty. Each token is conditioned to be
+   *consistent with* the earlier ones, not to be *true*, so a single guess grows into a confident
+   sentence.
+4. **Training and evaluation reward guessing.** If benchmarks score a wrong answer and "I don't know"
+   both as zero, a model tuned to score well learns to guess. A 2025 OpenAI paper, *Why Language Models
+   Hallucinate*, argues this is a main reason hallucinations survive post-training, and that evaluations
+   should give credit for appropriate abstention.
+
+None of this involves intent, and none of it is fixed by asking the model to "be accurate". It is
+reduced by giving the model the facts, letting it look them up, and checking what comes out.
+
+## Arithmetic and spelling: tokenisation quirks
+
+Asked "What is 4837 * 291? Answer with just the number.":
+
+```text title="Real output"
+129007
+```
+
+The answer is 1,407,567; the model is wrong by more than a factor of ten and has the wrong number of
+digits. Two structural reasons, beyond the small model size:
+
+- **The model writes the most significant digit first,** but multiplication's carries flow from the
+  least significant digit. To get the first digit right, the model must effectively finish the whole
+  calculation before writing anything, with no scratch paper.
+- **Numbers are tokenised inconsistently.** The tokenisers from [lesson 1](/llm/c1/llm-as-a-function/)
+  split the same number differently:
+
+  ```text title="How ' 12345678' is tokenised"
+  Qwen 2.5   ['Ġ', '1', '2', '3', '4', '5', '6', '7', '8']    one token per digit
+  Gemma 3    ['▁', '1', '2', '3', '4', '5', '6', '7', '8']    one token per digit
+  Llama 3.2  ['Ġ', '123', '456', '78']                           groups of up to three, from the left
+  ```
+
+  With left-to-right groups of three, the same digit position lands in different tokens depending on the
+  number's length, so place value is harder to learn.
+
+Spelling fails for the same reason [F10](/foundations/f10/tokens/) gave: the model sees tokens, not
+letters. In Qwen's tokeniser "strawberry" is `['str', 'aw', 'berry']` at the start of a text but the
+single token `' strawberry'` after a space, so the same word reaches the model in two unrelated forms.
+
+Reasoning models, which write intermediate steps before answering, do much better on arithmetic because
+the steps act as the scratch paper. But the engineering answer is simpler: **do not ask a language model
+to be a calculator.** Give it a tool that runs `4837 * 291` in Python (C6), and use its strength,
+deciding *what* to calculate.
+
+## Knowledge cutoff: not knowing what you do not know
+
+Asked "Who won the 2026 FIFA World Cup?", the 2024-era model said:
+
+```text title="Real output"
+The 2026 FIFA World Cup was won by the South Korean team, the South Korea national football team. The
+team defeated the United States in the final, winning the tournament for the third time.
+```
+
+The tournament was after the model's <Term id="knowledge-cutoff" />, so this is invented, down to a
+fictional "third time". The deeper problem is that nothing told the model what today's date is or that
+its knowledge ended. Some templates now inject this: the Llama 3.2 template in lesson 1 adds "Cutting
+Knowledge Date: December 2023" and today's date to every system prompt, which gives the model a chance
+to say "that is after my training data".
+
+Mitigations: put the current date in the system prompt; retrieve current information (search, your own
+documents) into the context; and for anything time-sensitive, prefer a tool call over the model's memory.
+
+## Sensitivity to phrasing and format
+
+Small changes that should not matter can change the answer: the order of multiple-choice options, the
+order of few-shot examples, "Answer:" versus "The answer is", a trailing space, or switching from
+Markdown to JSON. Mechanically, each variant is a different token sequence, so it lands the model at a
+different point in a space it learned from imperfect data, and any near tie between answers (lesson 2)
+can flip.
+
+Mitigations: evaluate on **many inputs and paraphrases**, not one impressive example (C9); fix the
+prompt and its format once it passes; ask for **structured output** (a JSON schema the server enforces)
+so parsing does not depend on wording (C3); and sample several times when the stakes justify it.
+
+## The mitigation toolkit
+
+| Failure | Mechanism | Mitigation | Where in Track C |
+|---|---|---|---|
+| Hallucinated facts and citations | Plausibility objective, weak long-tail recall, snowballing | **Grounding**: retrieve sources into the prompt and require answers to cite them | C4 Embeddings, C5 RAG |
+| Arithmetic, counting, dates, exact lookups | Tokens, single-pass computation | **Tools**: a calculator, code execution, a database or an API | C6 Tool use, C7 Agents, C8 MCP |
+| Stale knowledge | Training data ends at the cutoff | Date in the prompt; retrieval and search tools | C3, C5, C6 |
+| Phrasing sensitivity, format drift | Different token sequences, near ties | Structured output, fixed tested prompts, several samples | C3 Prompt and context engineering |
+| Random errors on hard reasoning | Sampling noise, single-pass reasoning | Reasoning models; sample $n$ answers and vote | This lesson, C3 |
+| "It looked fine in the demo" | One example is not evidence | **Evals**: test sets, automatic checks, LLM judges, regression runs | C9 Evals |
+| Wrong style or format for a narrow task | General post-training | Fine-tuning on examples (for behaviour, not new facts) | C10 Fine-tuning |
+| Prompt injection, unsafe output, cost blow-ups | Text instructions are just tokens | Guardrails, permissions, monitoring | C11 LLMOps, security and safety |
+
+Two principles run through the table. **Move facts and computation out of the weights**: weights are a
+lossy, frozen memory and a poor calculator, so retrieval and tools supply what they lack. And **measure,
+do not hope**: every mitigation is itself unreliable, so an eval suite tells you whether it worked. The
+Track C capstone combines both: a retrieval-augmented agent with tools served over MCP, checked by an
+eval suite.
+
+### Self-consistency: sample, then vote
+
+For questions with a short, checkable answer, sampling several reasoning paths at moderate temperature and
+taking the **most common final answer** is more accurate than a single greedy answer on many reasoning
+benchmarks; this is *self-consistency* (Wang and colleagues, 2022). The agreement rate is also a cheap
+confidence signal: if five samples give five different answers, the model is guessing, and the right
+move is to **abstain** (say "I'm not sure", escalate to a person, or call a tool) rather than pick one.
+
+The costs are real: $n$ samples cost $n$ times the tokens, and voting only works when answers can be
+compared (a number, a label, a short string), not for free-form essays. The exercise implements the vote
+with normalisation and an abstention threshold.
+
+## Try it
+
+<CodeExercise id="c1-limits-and-mitigations-01" />
+
+## Summary
+
+- Hallucination comes from a plausibility objective, weakly learned long-tail facts, generation that
+  commits token by token, and training that rewards guessing; ground answers in retrieved sources.
+- Arithmetic and spelling fail because models see tokens, compute in one pass and write the most
+  significant digit first; give them tools instead.
+- Models do not know what happened after their cutoff, or even today's date, unless you tell them; put
+  the date and fresh facts in the context.
+- Phrasing and format sensitivity is real; test on many paraphrases, fix the prompt and use structured
+  output.
+- Move facts and computation out of the weights, sample and vote where answers are short and checkable,
+  abstain when agreement is low, and measure everything with evals. C3 to C11 build these tools.

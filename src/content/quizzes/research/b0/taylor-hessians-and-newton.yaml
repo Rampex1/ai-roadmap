@@ -1,0 +1,118 @@
+items:
+  - id: b0-taylor-hessians-and-newton-01
+    type: mcq
+    prompt: "At a point where the gradient is zero, the Hessian has eigenvalues 3 and −1. What kind of point is it?"
+    options:
+      - text: "A local minimum"
+        why: "A minimum needs every eigenvalue positive; the −1 direction curves down."
+      - text: "Cannot tell without the gradient"
+        why: "The gradient is zero by assumption, so the Hessian alone decides."
+      - text: "A saddle point"
+        correct: true
+        why: "The function curves up along one eigenvector and down along the other."
+      - text: "A local maximum"
+        why: "A maximum needs every eigenvalue negative; the 3 direction curves up."
+    explanation: "Mixed signs mean a saddle: like x² − y² at the origin, it is a minimum in one direction and a maximum in another."
+  - id: b0-taylor-hessians-and-newton-02
+    type: numeric
+    prompt: |
+      What is the condition number of the Hessian of $f(x, y) = x^2 + 3xy + 5y^2$?
+    answer: 11
+    rtol: 0.001
+    explanation: "The Hessian is [[2, 3], [3, 10]], with eigenvalues 6 ± 5, that is 1 and 11. The condition number is 11 / 1 = 11. The 3xy term contributes 3 to both off-diagonal entries."
+  - id: b0-taylor-hessians-and-newton-03
+    type: mcq
+    prompt: |
+      $f(\mathbf{x}) = \tfrac{1}{2}\mathbf{x}^\top A\mathbf{x} - \mathbf{b}^\top\mathbf{x}$ with $A$ symmetric positive definite. Where does one Newton step from any starting point land?
+    options:
+      - text: "It depends on the learning rate"
+        why: "Pure Newton has no learning rate: the step is −H⁻¹∇f."
+      - text: "Partway to the minimum, by a factor set by the condition number"
+        why: "That describes gradient descent. Newton's step does not depend on the condition number here."
+      - text: "At b"
+        why: "The minimum satisfies Ax = b, so it is A⁻¹b, which equals b only when A = I."
+      - text: "At x = A⁻¹b, the exact minimum"
+        correct: true
+        why: "The quadratic model is the function itself, so jumping to the model's minimum solves the problem."
+    explanation: "x − A⁻¹(Ax − b) = A⁻¹b for every x. That is why Newton is immune to ill-conditioning on quadratics."
+  - id: b0-taylor-hessians-and-newton-04
+    type: numeric
+    prompt: |
+      Take one Newton step to minimise $f(x) = x^4$, starting from $x = 1$. What is the new $x$?
+    answer: 0.6667
+    tol: 0.001
+    explanation: "x − f′(x)/f″(x) = 1 − 4/12 = 2/3. On x⁴ the Hessian vanishes at the minimum, so Newton only converges linearly here (each step multiplies x by 2/3), not quadratically."
+  - id: b0-taylor-hessians-and-newton-05
+    type: multi
+    prompt: "Which are real reasons that plain Newton's method is rarely used to train large neural networks?"
+    options:
+      - text: "Second derivatives of neural networks cannot be computed by autodiff"
+        why: "They can; Hessian-vector products are routinely computed, for example to measure sharpness."
+      - text: "When the Hessian has negative eigenvalues, the step can head for a saddle or a maximum"
+        correct: true
+        why: "Newton finds a stationary point of the model, which need not be a minimum on a non-convex loss."
+      - text: "The Hessian has n² entries and solving with it costs about n³ operations for n parameters"
+        correct: true
+        why: "With 10⁸ parameters the Hessian alone would need 10¹⁶ numbers."
+      - text: "Mini-batch estimates of curvature are noisy"
+        correct: true
+        why: "Stochastic gradients are noisy, and second-order estimates from small batches are noisier still."
+    explanation: "Cost, non-convexity and noise. Practical methods approximate curvature cheaply (Adam's scaling, L-BFGS, damped Newton)."
+  - id: b0-taylor-hessians-and-newton-06
+    type: output
+    prompt: "What does this print?"
+    code: |
+      import numpy as np
+      print(np.linalg.eigvalsh(np.array([[3.0, 2.0], [2.0, 3.0]])))
+    answer: "[1. 5.]"
+    explanation: "eigvalsh returns the eigenvalues of a symmetric matrix in increasing order. Both are positive, so this Hessian describes a bowl, with the flattest direction along (1, −1)/√2."
+  - id: b0-taylor-hessians-and-newton-07
+    type: mcq
+    prompt: "You halve the step size h in a second-order Taylor approximation of a smooth function. Roughly how much smaller does its error get?"
+    options:
+      - text: "2 times"
+        why: "That would be an error proportional to h."
+      - text: "8 times"
+        correct: true
+        why: "The second-order error is proportional to h³, and 2³ = 8."
+      - text: "4 times"
+        why: "That is the first-order (tangent plane) approximation, with error proportional to h²."
+      - text: "It does not change"
+        why: "Taylor errors shrink as the step shrinks."
+    explanation: "Including the Hessian term leaves an error of order h³. In the lesson, a 10× smaller step cut it by 1,000."
+  - id: b0-taylor-hessians-and-newton-08
+    type: cloze
+    prompt: "On a quadratic, gradient descent with a safe learning rate needs a number of steps roughly proportional to the Hessian's ____ number."
+    accept: [ "condition" ]
+    explanation: "The condition number λmax/λmin: the steepest direction caps the learning rate and the flattest then crawls. The lesson's run showed about 10× more steps for each 10× in the condition number."
+  - id: b0-taylor-hessians-and-newton-09
+    type: mcq
+    prompt: |
+      Gradient descent with learning rate $1/400$ minimises $\tfrac{1}{2}(x^2 + 400y^2)$. Which coordinate converges slowly?
+    options:
+      - text: "Both equally"
+        why: "The two directions have very different curvatures, so they shrink at different rates."
+      - text: "Neither: it diverges"
+        why: "lr = 1/400 is below the stability limit 2/400."
+      - text: "y, where the curvature is 400"
+        why: "With lr = 1/400, y is multiplied by 1 − 400/400 = 0 and is solved in one step."
+      - text: "x, where the curvature is 1"
+        correct: true
+        why: "Each step multiplies x by 1 − 1/400, so x shrinks very slowly."
+    explanation: "The steep direction sets the safe learning rate, and the flat direction then takes about κ = 400 times longer."
+  - id: b0-taylor-hessians-and-newton-10
+    type: multi
+    prompt: "Which statements about the Hessian are true?"
+    options:
+      - text: "It is symmetric for any function with continuous second derivatives"
+        correct: true
+        why: "The order of differentiation does not matter for such functions."
+      - text: "If every diagonal entry is positive, the stationary point is a minimum"
+        why: "[[1, 2], [2, 1]] has positive diagonal but eigenvalues −1 and 3: a saddle. Use eigenvalues."
+      - text: "For the loss (1/n)‖Xw − y‖² it is (2/n)XᵀX, the same at every w"
+        correct: true
+        why: "The loss is quadratic in w, so its curvature is constant."
+      - text: "It is the Jacobian of the gradient"
+        correct: true
+        why: "Row i is the gradient of ∂f/∂x_i, which is how a numerical Hessian is computed."
+    explanation: "Read curvature from eigenvalues, not entries. The Hessian is symmetric, is the Jacobian of the gradient, and is constant for quadratics."

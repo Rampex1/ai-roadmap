@@ -1,0 +1,94 @@
+items:
+  - id: c1-choosing-a-model-01
+    type: numeric
+    prompt: How many decimal GB do 8 billion weights occupy at exactly 4 bits each?
+    answer: 4
+    tol: 0.001
+    explanation: Multiply 8 billion by 4, then divide by 8 bits per byte.
+  - id: c1-choosing-a-model-02
+    type: numeric
+    prompt: An 8-billion-parameter model averages 5 bits per weight. How many decimal GB of weight memory does it need?
+    answer: 5
+    tol: 0.001
+    explanation: The effective bit rate includes quantisation overhead. 8 billion times 5 bits is 5 billion bytes.
+  - id: c1-choosing-a-model-03
+    type: numeric
+    prompt: A device reads 80 GB/s and decoding reads 2 GB of weights per token. What is the idealised bandwidth ceiling in tokens per second?
+    answer: 40
+    tol: 0.001
+    explanation: Divide bandwidth by weight traffic per token. Actual performance can be lower.
+  - id: c1-choosing-a-model-04
+    type: mcq
+    prompt: Your workload must run offline. Which deployment meets this constraint?
+    explanation: A local runtime can infer without contacting a hosted endpoint.
+    options:
+      - text: Call an API through a VPN
+        why: A VPN still requires network access.
+      - text: Serve compatible weights locally
+        correct: true
+        why: A local runtime can infer without contacting a hosted endpoint.
+      - text: Cache an API token
+        why: An API token authorises requests but does not execute inference.
+  - id: c1-choosing-a-model-05
+    type: mcq
+    prompt: What still needs memory after the weights are loaded?
+    explanation: Inference keeps attention state and working buffers in memory.
+    options:
+      - text: The KV cache and runtime buffers
+        correct: true
+        why: Inference keeps attention state and working buffers in memory.
+      - text: Only the final string
+        why: The decoder holds intermediate state.
+      - text: Only the tokenizer vocabulary
+        why: The vocabulary does not account for attention state.
+  - id: c1-choosing-a-model-06
+    type: mcq
+    prompt: What happens if you double sequence length, with batch size and model fixed?
+    explanation: The cache stores a key and value for each token at each layer.
+    options:
+      - text: The KV cache is reduced by half
+        why: More tokens require more cached states.
+      - text: The KV cache grows approximately twofold
+        correct: true
+        why: The cache stores a key and value for each token at each layer.
+      - text: The weights double in size
+        why: The same parameters serve every token.
+  - id: c1-choosing-a-model-07
+    type: mcq
+    prompt: A quantised model fits your budget. How should you decide if its quality is sufficient?
+    explanation: Quality changes depend on the model, quantisation and task.
+    options:
+      - text: Run a representative task evaluation
+        correct: true
+        why: Quality changes depend on the model, quantisation and task.
+      - text: Measure only peak memory
+        why: Memory establishes feasibility but cannot measure task quality.
+      - text: Assume equivalent quality for all 4-bit models
+        why: Equal weight precision does not imply equal capability.
+  - id: c1-choosing-a-model-08
+    type: mcq
+    prompt: Why can a mixture-of-experts model need more storage than its active parameter count suggests?
+    explanation: The active count describes a token’s computation, while the set of available experts must be stored.
+    options:
+      - text: Different tokens can route to different experts
+        correct: true
+        why: The active count describes a token’s computation, while the set of available experts must be stored.
+      - text: All experts are run on every token
+        why: Sparse routing selects a subset.
+      - text: Inactive experts are recreated by the tokenizer
+        why: The tokenizer maps text to IDs and does not regenerate weights.
+  - id: c1-choosing-a-model-09
+    type: output
+    prompt: What does this print about a model that uses 4 GB for weights?
+    code: |
+      weights_gb = 4
+      cache_gb = 0.75
+      overhead_gb = 0.5
+      print(weights_gb + cache_gb + overhead_gb <= 5)
+    answer: "False"
+    explanation: The total is 5.25 GB, above the 5 GB budget.
+  - id: c1-choosing-a-model-10
+    type: cloze
+    prompt: Weights represented with fewer bits through rounding and scaling undergo ______.
+    accept: [ "quantisation", "quantization", "weight quantisation", "weight quantization" ]
+    explanation: Weight quantisation approximates weights with lower-precision values and a scale.

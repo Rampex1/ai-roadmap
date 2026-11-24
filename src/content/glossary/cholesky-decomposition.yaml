@@ -1,0 +1,8 @@
+term: "Cholesky decomposition"
+short: "Writes a positive definite matrix as Σ = LLᵀ with L lower triangular; used to sample Gaussians and solve systems."
+body: |
+  If $\mathbf{z} \sim \mathcal{N}(\mathbf{0}, I)$ then $\boldsymbol{\mu} + L\mathbf{z} \sim \mathcal{N}(\boldsymbol{\mu}, \Sigma)$,
+  the basis of Gaussian sampling and of the reparameterisation trick. It is about twice as fast as a general
+  factorisation and fails exactly when the matrix is not positive definite, so it doubles as a test.
+  `np.linalg.cholesky(S)` returns $L$.
+related: ["covariance-matrix", "normal-distribution", "matrix"]

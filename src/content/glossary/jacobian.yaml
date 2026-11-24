@@ -1,0 +1,8 @@
+term: "Jacobian"
+short: "The matrix of all first partial derivatives of a vector-valued function: entry (i, j) is ∂f_i/∂x_j."
+body: |
+  For $\mathbf{f}: \mathbb{R}^n \to \mathbb{R}^m$ the Jacobian $J$ is $m \times n$ in numerator layout (outputs ×
+  inputs), the convention used in this course; some sources use the transpose. It is the matrix of the best linear
+  approximation, $\mathbf{f}(\mathbf{x} + \mathbf{h}) \approx \mathbf{f}(\mathbf{x}) + J\mathbf{h}$, and the chain
+  rule multiplies Jacobians. Backpropagation computes products $J^\top\mathbf{v}$ without forming $J$.
+related: ["gradient", "partial-derivative", "chain-rule", "hessian"]

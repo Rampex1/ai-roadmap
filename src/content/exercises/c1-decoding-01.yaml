@@ -1,0 +1,94 @@
+id: c1-decoding-01
+lesson: llm/c1/decoding
+title: Top-p (nucleus) sampling with a seeded generator
+prompt: |
+  Implement nucleus sampling for one step of generation.
+
+  1. `top_p_probs(logits, p, temperature=1.0)` returns a probability array the same length as `logits`:
+     - divide the logits by `temperature` and take the softmax (subtract the maximum first);
+     - sort the tokens from most to least probable;
+     - keep the **smallest** set of most probable tokens whose probabilities add up to at least `p`
+       (always keep at least one token);
+     - set every other token's probability to 0 and renormalise the kept ones to sum to 1.
+  2. `sample_top_p(logits, p, rng, temperature=1.0)` computes those probabilities `q` and returns
+     **exactly** `int(rng.choice(len(q), p=q))`, so a seeded `np.random.default_rng` gives the same
+     draws as the reference.
+
+  You may assume `temperature > 0`, `0 < p <= 1`, and no ties between probabilities at the cut.
+
+  Example: for logits `[4.0, 2.5, 2.0, 1.5, 1.0, -2.0]` the probabilities are about
+  `[0.67, 0.149, 0.091, 0.055, 0.033, 0.002]`, so with `p = 0.8` only the first two survive, giving about
+  `[0.818, 0.182, 0, 0, 0, 0]`.
+starter: |
+  import numpy as np
+
+  def top_p_probs(logits, p, temperature=1.0):
+      z = np.asarray(logits, dtype=float) / temperature
+      e = np.exp(z - z.max())
+      return e / e.sum()
+
+  def sample_top_p(logits, p, rng, temperature=1.0):
+      return int(np.argmax(logits))
+
+  print(np.round(top_p_probs([4.0, 2.5, 2.0, 1.5, 1.0, -2.0], 0.8), 3))
+solution: |
+  import numpy as np
+
+  def top_p_probs(logits, p, temperature=1.0):
+      z = np.asarray(logits, dtype=float) / temperature
+      e = np.exp(z - z.max())
+      probs = e / e.sum()
+      order = np.argsort(-probs)
+      cum = np.cumsum(probs[order])
+      n_keep = min(int(np.searchsorted(cum, p)) + 1, len(probs))
+      out = np.zeros_like(probs)
+      keep = order[:n_keep]
+      out[keep] = probs[keep]
+      return out / out.sum()
+
+  def sample_top_p(logits, p, rng, temperature=1.0):
+      q = top_p_probs(logits, p, temperature)
+      return int(rng.choice(len(q), p=q))
+
+  print(np.round(top_p_probs([4.0, 2.5, 2.0, 1.5, 1.0, -2.0], 0.8), 3))
+tests: |
+  import numpy as np
+
+  def _ref(logits, p, temperature=1.0):
+      z = np.asarray(logits, dtype=float) / temperature
+      e = np.exp(z - z.max())
+      probs = e / e.sum()
+      order = np.argsort(-probs)
+      cum = np.cumsum(probs[order])
+      n_keep = min(int(np.searchsorted(cum, p)) + 1, len(probs))
+      out = np.zeros_like(probs)
+      out[order[:n_keep]] = probs[order[:n_keep]]
+      return out / out.sum()
+
+  L = np.array([4.0, 2.5, 2.0, 1.5, 1.0, -2.0])
+  got = np.asarray(top_p_probs(L, 0.8), dtype=float)
+  assert got.shape == L.shape, f"return one probability per token, shape {L.shape}, got {got.shape}"
+  np.testing.assert_allclose(got, _ref(L, 0.8), atol=1e-9, err_msg="p = 0.8 should keep the two most likely tokens and renormalise them")
+  np.testing.assert_allclose(top_p_probs(L, 0.95), _ref(L, 0.95), atol=1e-9, err_msg="p = 0.95 should keep four tokens")
+  np.testing.assert_allclose(top_p_probs(L, 0.3), [1, 0, 0, 0, 0, 0], atol=1e-9, err_msg="when the top token alone reaches p, keep only it")
+  np.testing.assert_allclose(top_p_probs(L, 1.0), _ref(L, 1.0), atol=1e-9, err_msg="p = 1 keeps every token")
+  shuffled = np.array([1.0, -2.0, 4.0, 2.0, 2.5, 1.5])
+  np.testing.assert_allclose(top_p_probs(shuffled, 0.8), _ref(shuffled, 0.8), atol=1e-9, err_msg="the logits are not sorted: keep the most PROBABLE tokens, in their original positions")
+  np.testing.assert_allclose(top_p_probs(L, 0.8, temperature=2.0), _ref(L, 0.8, 2.0), atol=1e-9, err_msg="apply the temperature before the softmax: a higher temperature flattens, so more tokens are kept")
+  np.testing.assert_allclose(top_p_probs(L, 0.8, temperature=0.3), _ref(L, 0.8, 0.3), atol=1e-9, err_msg="a low temperature sharpens the distribution")
+  big = np.random.default_rng(3).normal(size=50) * 3
+  for p in (0.5, 0.9):
+      np.testing.assert_allclose(top_p_probs(big, p), _ref(big, p), atol=1e-9, err_msg=f"wrong result on 50 random logits with p = {p}")
+  assert abs(float(np.sum(top_p_probs(big, 0.9))) - 1) < 1e-9, "the probabilities must sum to 1"
+  for seed in (0, 7):
+      rng, ref_rng = np.random.default_rng(seed), np.random.default_rng(seed)
+      mine = [sample_top_p(big, 0.9, rng, 0.8) for _ in range(30)]
+      want = [int(ref_rng.choice(50, p=_ref(big, 0.9, 0.8))) for _ in range(30)]
+      assert mine == want, f"with seed {seed} your 30 draws differ from the reference: call rng.choice(len(q), p=q) once per sample"
+  rng = np.random.default_rng(1)
+  draws = {sample_top_p(L, 0.8, rng) for _ in range(200)}
+  assert draws <= {0, 1}, f"with p = 0.8 only tokens 0 and 1 may be drawn, got {sorted(draws)}"
+hints:
+  - "np.argsort(-probs) lists token indices from most to least probable."
+  - "np.searchsorted(cum, p) gives the first position where the running total reaches p, so keep that many tokens plus one."
+  - "Build a zero array, copy in the kept probabilities at their original indices, then divide by the sum."

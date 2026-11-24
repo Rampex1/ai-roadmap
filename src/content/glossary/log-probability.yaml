@@ -1,0 +1,7 @@
+term: "Log probability"
+short: "The natural log of a probability; LLM APIs report a logprob for each generated token, where 0 means certainty and more negative means less likely."
+body: |
+  Summing token logprobs gives the log-probability of a whole completion, and exp of minus their mean
+  gives its perplexity. Logprobs show where a model was unsure, but a high probability does not mean
+  the text is true.
+related: ["perplexity", "softmax", "cross-entropy"]

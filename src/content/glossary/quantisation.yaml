@@ -1,0 +1,7 @@
+term: "Quantisation"
+short: "Storing a model's weights with fewer bits, such as 8 or 4 instead of 16, as small integers plus scale factors."
+body: |
+  Weight memory is parameters × bits ÷ 8 bytes, so 4-bit quantisation cuts memory to a quarter of
+  16-bit and speeds up memory-bound decoding. A separate scale for each small group of weights limits
+  the damage from outliers. 8-bit is usually near lossless; 4-bit costs a little quality.
+related: ["open-weight-model", "floating-point"]

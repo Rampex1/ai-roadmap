@@ -1,0 +1,7 @@
+term: "Lagrange multiplier"
+short: "A number ν attached to a constraint h(x) = 0; at a constrained optimum ∇f + ν∇h = 0, so ∇f is parallel to ∇h."
+body: |
+  The conditions are the stationary points of the Lagrangian $\mathcal{L}(\mathbf{x}, \nu) = f(\mathbf{x}) + \nu h(\mathbf{x})$.
+  Geometrically, at the optimum the constraint surface is tangent to a level set of $f$. The multiplier measures
+  how fast the optimal value changes as the constraint is loosened (a "shadow price").
+related: ["gradient", "kkt-conditions", "convex-function"]

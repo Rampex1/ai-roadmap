@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 540" width="560" height="540" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title>The life of one chat request. Messages go through the chat template to one string, through the tokeniser to token ids, then prefill fills the KV cache and gives the first logits. A decode loop samples a token, appends it and runs the model again until an end-of-turn token, a stop sequence or the token limit. The new ids are detokenised into the assistant reply.</title>
+<defs><marker id="c1p-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#8b93b8"/></marker></defs>
+<g font-size="14">
+<rect x="130" y="10" width="300" height="44" rx="8" fill="none" stroke="#8b93b8" stroke-width="1.5"/>
+<text x="280" y="30" text-anchor="middle" fill="#8b93b8" font-weight="700">messages</text>
+<text x="280" y="46" text-anchor="middle" fill="#8b93b8" font-size="12">system, user, assistant, ...</text>
+<line x1="280" y1="54" x2="280" y2="80" stroke="#8b93b8" stroke-width="1.5" marker-end="url(#c1p-a)"/>
+<text x="292" y="72" fill="#8b93b8" font-size="12">1. chat template</text>
+<rect x="130" y="82" width="300" height="44" rx="8" fill="none" stroke="#8b93b8" stroke-width="1.5"/>
+<text x="280" y="102" text-anchor="middle" fill="#8b93b8" font-weight="700">one prompt string</text>
+<text x="280" y="118" text-anchor="middle" fill="#8b93b8" font-size="12">&lt;|im_start|&gt;user ... &lt;|im_start|&gt;assistant</text>
+<line x1="280" y1="126" x2="280" y2="152" stroke="#8b93b8" stroke-width="1.5" marker-end="url(#c1p-a)"/>
+<text x="292" y="144" fill="#8b93b8" font-size="12">2. tokeniser</text>
+<rect x="130" y="154" width="300" height="44" rx="8" fill="none" stroke="#8b93b8" stroke-width="1.5"/>
+<text x="280" y="174" text-anchor="middle" fill="#8b93b8" font-weight="700">token ids</text>
+<text x="280" y="190" text-anchor="middle" fill="#8b93b8" font-size="12">[151644, 872, 198, ...]</text>
+<line x1="280" y1="198" x2="280" y2="224" stroke="#8b93b8" stroke-width="1.5" marker-end="url(#c1p-a)"/>
+<rect x="60" y="226" width="440" height="200" rx="14" fill="none" stroke="#0f766e" stroke-width="1.5" stroke-dasharray="6 5"/>
+<text x="76" y="246" fill="#0f766e" font-size="12" font-weight="700">the neural network</text>
+<rect x="130" y="254" width="300" height="44" rx="8" fill="none" stroke="#0f766e" stroke-width="2"/>
+<text x="280" y="274" text-anchor="middle" fill="#0f766e" font-weight="700">3. prefill</text>
+<text x="280" y="290" text-anchor="middle" fill="#0f766e" font-size="12">all prompt tokens at once; fills the KV cache</text>
+<line x1="280" y1="298" x2="280" y2="324" stroke="#0f766e" stroke-width="1.5" marker-end="url(#c1p-a)"/>
+<rect x="130" y="326" width="300" height="60" rx="8" fill="none" stroke="#0f766e" stroke-width="2"/>
+<text x="280" y="346" text-anchor="middle" fill="#0f766e" font-weight="700">4. decode loop</text>
+<text x="280" y="362" text-anchor="middle" fill="#0f766e" font-size="12">logits → sampler → one new token,</text>
+<text x="280" y="377" text-anchor="middle" fill="#0f766e" font-size="12">append it, run the model again</text>
+<path d="M430 340 C 480 340, 480 372, 432 372" fill="none" stroke="#0f766e" stroke-width="1.5" marker-end="url(#c1p-a)"/>
+<text x="76" y="414" fill="#0f766e" font-size="12">5. stop: end-of-turn token, stop sequence or max tokens</text>
+<line x1="280" y1="426" x2="280" y2="458" stroke="#8b93b8" stroke-width="1.5" marker-end="url(#c1p-a)"/>
+<text x="292" y="448" fill="#8b93b8" font-size="12">6. detokenise</text>
+<rect x="130" y="460" width="300" height="44" rx="8" fill="none" stroke="#8b93b8" stroke-width="1.5"/>
+<text x="280" y="480" text-anchor="middle" fill="#8b93b8" font-weight="700">assistant reply</text>
+<text x="280" y="496" text-anchor="middle" fill="#8b93b8" font-size="12">text + finish reason + token counts</text>
+<text x="280" y="530" text-anchor="middle" fill="#8b93b8" font-size="12">Steps 1, 2, 5 and 6 are ordinary code.</text>
+</g>
+</svg>

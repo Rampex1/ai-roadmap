@@ -1,0 +1,331 @@
+---
+title: "Probability for research: multivariate Gaussians, change of variables and Monte Carlo"
+module: b0
+order: 4
+estMinutes: 22
+objectives:
+  - "Evaluate a multivariate Gaussian log-density and read its covariance through the eigendecomposition"
+  - "Sample a multivariate Gaussian with a Cholesky factor, and compute its marginals and conditionals in closed form"
+  - "Apply the change-of-variables formula for densities, including inverse-CDF sampling"
+  - "Estimate an expectation by Monte Carlo with an honest error bar, and recognise when the error bar cannot be trusted"
+goDeeper: cs229-lecture-notes
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+[F5](/foundations/f5/continuous-distributions/) gave you the one-dimensional
+<Term id="normal-distribution" />, expectations and the standard error. Research models live in many
+dimensions: a VAE's latent code is a vector with a Gaussian prior, a diffusion model adds Gaussian noise to every
+pixel at once, Gaussian processes put a Gaussian over whole functions. This lesson covers the multivariate
+Gaussian in the depth papers assume, then two tools you will use constantly: transforming densities, and
+estimating expectations by sampling.
+
+## The multivariate Gaussian
+
+A random vector $\mathbf{x} \in \mathbb{R}^d$ is Gaussian with mean $\boldsymbol{\mu}$ and covariance $\Sigma$,
+written $\mathbf{x} \sim \mathcal{N}(\boldsymbol{\mu}, \Sigma)$, if its density is
+
+$$
+p(\mathbf{x}) = \frac{1}{(2\pi)^{d/2}\,(\det\Sigma)^{1/2}}
+\exp\!\Big(-\tfrac{1}{2}(\mathbf{x} - \boldsymbol{\mu})^\top \Sigma^{-1} (\mathbf{x} - \boldsymbol{\mu})\Big)
+$$
+
+The <Term id="covariance-matrix" /> $\Sigma = \mathbb{E}[(\mathbf{x} - \boldsymbol{\mu})(\mathbf{x} - \boldsymbol{\mu})^\top]$
+holds the variances on its diagonal and the covariances $\operatorname{Cov}(x_i, x_j)$ off it. It is symmetric and
+positive semidefinite; for the density to exist it must be positive definite (no direction with zero variance).
+
+Three pieces to read in that formula:
+
+- $(\mathbf{x} - \boldsymbol{\mu})^\top \Sigma^{-1} (\mathbf{x} - \boldsymbol{\mu})$ is the squared **Mahalanobis
+  distance**: distance from the mean measured in units of the spread in each direction. Its level sets, the
+  contours of the density, are ellipses (ellipsoids in $d > 2$).
+- $(\det\Sigma)^{1/2}$ normalises: a more spread-out Gaussian has lower peak density.
+- With $d = 1$ and $\Sigma = \sigma^2$ it is exactly F5's normal density.
+
+In practice always work with the **log**-density, which avoids underflow and turns the formula into a sum. Never
+invert $\Sigma$ explicitly; solve, and use `slogdet` for the determinant:
+
+```python
+import numpy as np
+from scipy import stats
+
+def gaussian_logpdf(x, mu, Sigma):
+    d = len(mu)
+    diff = x - mu
+    maha = diff @ np.linalg.solve(Sigma, diff)          # (x - mu)^T Sigma^-1 (x - mu)
+    _, logdet = np.linalg.slogdet(Sigma)
+    return -0.5 * (d * np.log(2 * np.pi) + logdet + maha)
+
+mu = np.array([1.0, -1.0])
+Sigma = np.array([[2.0, 1.2],
+                  [1.2, 1.0]])
+x = np.array([2.0, 0.5])
+print(round(gaussian_logpdf(x, mu, Sigma), 6))
+print(round(stats.multivariate_normal(mu, Sigma).logpdf(x), 6))
+```
+
+```text title="Output"
+-3.244396
+-3.244396
+```
+
+### The shape of a Gaussian: eigendecomposition of the covariance
+
+Being symmetric, $\Sigma = Q\Lambda Q^\top$ with orthonormal eigenvectors in $Q$ and eigenvalues $\lambda_i$ in
+$\Lambda$ ([F3](/foundations/f3/eigenvectors/)). In the rotated coordinates $\mathbf{u} = Q^\top(\mathbf{x} - \boldsymbol{\mu})$
+the coordinates are independent, with variances $\lambda_i$. So the density's contour ellipses have their axes
+along the eigenvectors, with half-lengths proportional to $\sqrt{\lambda_i}$, the standard deviation in each
+direction. This is exactly what PCA finds ([F3](/foundations/f3/svd-and-pca/)): the principal components are
+the eigenvectors of the data's covariance.
+
+```python
+lam, Q = np.linalg.eigh(Sigma)
+print(np.round(lam, 4))
+print(np.round(Q, 4))
+print(np.round(np.sqrt(lam), 4))
+```
+
+```text title="Output"
+[0.2 2.8]
+[[ 0.5547 -0.8321]
+ [-0.8321 -0.5547]]
+[0.4472 1.6733]
+```
+
+The long axis (variance 2.8, standard deviation about 1.67) points along $\pm(0.83, 0.55)$, up and to the right,
+because $x_1$ and $x_2$ are positively correlated. The short axis has standard deviation about 0.45. The ratio of
+eigenvalues, 14, is the condition number of $\Sigma$ ([lesson 2](/research/b0/taylor-hessians-and-newton/)); in
+fact $-\log p$ is a quadratic with Hessian $\Sigma^{-1}$.
+
+## Sampling with a Cholesky factor
+
+The key fact about Gaussians and linear maps: if $\mathbf{z} \sim \mathcal{N}(\mathbf{0}, I)$ then
+
+$$
+\mathbf{x} = \boldsymbol{\mu} + L\mathbf{z} \;\sim\; \mathcal{N}(\boldsymbol{\mu}, LL^\top)
+$$
+
+because $\operatorname{Cov}(L\mathbf{z}) = L\operatorname{Cov}(\mathbf{z})L^\top = LL^\top$. So to sample
+$\mathcal{N}(\boldsymbol{\mu}, \Sigma)$ you need any $L$ with $LL^\top = \Sigma$. The standard choice is the
+<Term id="cholesky-decomposition" />, the unique lower-triangular $L$ with positive diagonal; it is cheap and
+numerically stable. ($Q\Lambda^{1/2}$ from the eigendecomposition also works.)
+
+```python
+rng = np.random.default_rng(0)
+L = np.linalg.cholesky(Sigma)           # lower triangular, L @ L.T == Sigma
+print(np.round(L, 4))
+Z = rng.standard_normal((100_000, 2))   # rows are independent N(0, I) draws
+X = mu + Z @ L.T                        # each row is mu + L z
+print(np.round(X.mean(axis=0), 3))
+print(np.round(np.cov(X, rowvar=False), 3))
+```
+
+```text title="Output"
+[[1.4142 0.    ]
+ [0.8485 0.5292]]
+[ 1.003 -0.999]
+[[2.009 1.201]
+ [1.201 0.998]]
+```
+
+With samples in rows, $\mathbf{x}_i^\top = \boldsymbol{\mu}^\top + \mathbf{z}_i^\top L^\top$, hence `Z @ L.T`. The
+sample mean and covariance match $\boldsymbol{\mu}$ and $\Sigma$ to within sampling error.
+`rng.multivariate_normal` does the same job, but writing it yourself is worth it once: the same
+$\boldsymbol{\mu} + L\mathbf{z}$ form is the **reparameterisation trick** of VAEs (B9). Because the randomness is
+in $\mathbf{z}$, which does not depend on $\boldsymbol{\mu}$ or $L$, gradients of a loss can flow back through
+the sample into the parameters.
+
+`np.linalg.cholesky` raises `LinAlgError` if the matrix is not positive definite, which also makes it a quick test
+for that property. Covariances estimated from data can be singular or just barely not positive definite from
+rounding; adding a small "jitter" $\epsilon I$ (say $10^{-6}$ times the average variance) is the usual fix.
+
+## Marginals and conditionals
+
+Split $\mathbf{x}$ into two blocks, $\mathbf{x} = (\mathbf{x}_1, \mathbf{x}_2)$, with matching blocks of the mean
+and covariance:
+
+$$
+\boldsymbol{\mu} = \begin{pmatrix}\boldsymbol{\mu}_1 \\ \boldsymbol{\mu}_2\end{pmatrix}, \qquad
+\Sigma = \begin{pmatrix}\Sigma_{11} & \Sigma_{12} \\ \Sigma_{21} & \Sigma_{22}\end{pmatrix}
+$$
+
+Two facts make Gaussians the workhorse of probabilistic ML:
+
+- **Marginal:** $\mathbf{x}_1 \sim \mathcal{N}(\boldsymbol{\mu}_1, \Sigma_{11})$. Just drop the other block.
+- **Conditional:** given $\mathbf{x}_2$, the block $\mathbf{x}_1$ is still Gaussian, with
+
+$$
+\boldsymbol{\mu}_{1|2} = \boldsymbol{\mu}_1 + \Sigma_{12}\Sigma_{22}^{-1}(\mathbf{x}_2 - \boldsymbol{\mu}_2), \qquad
+\Sigma_{1|2} = \Sigma_{11} - \Sigma_{12}\Sigma_{22}^{-1}\Sigma_{21}
+$$
+
+Read them: the conditional mean shifts linearly with how far $\mathbf{x}_2$ is from its mean (that is linear
+regression of $\mathbf{x}_1$ on $\mathbf{x}_2$), and the conditional covariance shrinks by an amount that does not
+depend on the observed value: learning $\mathbf{x}_2$ always reduces uncertainty about a correlated $\mathbf{x}_1$.
+Gaussian process regression is these two formulas applied to a large covariance matrix.
+
+For our 2D example, observe $x_2 = 0.5$, then check against the samples whose $x_2$ happens to be close to 0.5:
+
+```python
+x2 = 0.5
+mu_c = mu[0] + Sigma[0, 1] / Sigma[1, 1] * (x2 - mu[1])
+var_c = Sigma[0, 0] - Sigma[0, 1] ** 2 / Sigma[1, 1]
+print(round(mu_c, 4), round(var_c, 4))
+near = X[np.abs(X[:, 1] - x2) < 0.05, 0]     # samples whose x2 is close to 0.5
+print(len(near), round(near.mean(), 3), round(near.var(), 3))
+```
+
+```text title="Output"
+2.8 0.56
+1363 2.796 0.573
+```
+
+Observing $x_2$ moved the mean of $x_1$ from 1 to 2.8 and shrank its variance from 2 to 0.56.
+
+## Change of variables
+
+If $x$ has density $p_X$ and $y = g(x)$ for an invertible, differentiable $g$, what is the density of $y$?
+Probability is conserved: the mass in a small interval around $x$ ends up in the image interval around $y$, which
+is stretched by $\lvert g'(x)\rvert$. Density is mass per length, so it is divided by that stretch:
+
+$$
+p_Y(y) = p_X\big(g^{-1}(y)\big)\,\left\lvert \frac{d g^{-1}}{dy}(y) \right\rvert
+$$
+
+In $d$ dimensions the stretch factor of a small volume is the absolute determinant of the Jacobian
+([lesson 1](/research/b0/matrix-calculus/)):
+
+$$
+p_Y(\mathbf{y}) = p_X\big(g^{-1}(\mathbf{y})\big)\,\big\lvert \det J_{g^{-1}}(\mathbf{y}) \big\rvert
+$$
+
+The classic mistake is to forget the Jacobian factor; then the "density" does not integrate to 1.
+
+**Example: the log-normal.** Let $x \sim \mathcal{N}(0, 1)$ and $y = e^x$. Then $g^{-1}(y) = \ln y$ with derivative
+$1/y$, so $p_Y(y) = \varphi(\ln y)/y$, where $\varphi$ is the standard normal density. Compare with a histogram
+estimate from samples and with scipy's log-normal:
+
+```python
+z = rng.standard_normal(200_000)
+y = np.exp(z)
+
+def p_y(y):
+    return stats.norm.pdf(np.log(y)) / y       # p_X(g^-1(y)) * |d g^-1 / dy|
+
+for a in [0.5, 1.0, 2.0]:
+    h = 0.05
+    frac = np.mean((y > a - h) & (y < a + h)) / (2 * h)   # histogram estimate of the density
+    print(a, round(p_y(a), 4), round(frac, 4), round(stats.lognorm(s=1).pdf(a), 4))
+```
+
+```text title="Output"
+0.5 0.6275 0.6245 0.6275
+1.0 0.3989 0.3966 0.3989
+2.0 0.1569 0.1612 0.1569
+```
+
+**Inverse-CDF sampling** is the same formula run backwards. If $u \sim \text{Uniform}(0, 1)$ and $F$ is a
+continuous CDF, then $F^{-1}(u)$ has CDF $F$. For an exponential distribution with rate $\lambda$,
+$F(y) = 1 - e^{-\lambda y}$, so $F^{-1}(u) = -\ln(1 - u)/\lambda$, and since $1 - u$ is also uniform you can use
+$-\ln(u)/\lambda$:
+
+```python
+u = rng.uniform(size=100_000)
+e = -np.log(u) / 2.0                     # inverse CDF of Exponential(rate 2)
+print(round(e.mean(), 4), round(e.var(), 4))
+```
+
+```text title="Output"
+0.4983 0.2489
+```
+
+The exact mean and variance are $1/\lambda = 0.5$ and $1/\lambda^2 = 0.25$. **Normalising flows** (a family of
+generative models) are built on the multivariate formula: a chain of invertible maps with cheap Jacobian
+determinants turns a Gaussian into a complex distribution whose density can still be evaluated exactly.
+
+## Monte Carlo estimation
+
+Most expectations in research have no closed form: the expected loss over a data distribution, an expected reward,
+the ELBO of a VAE. <Term id="monte-carlo-estimation" text="Monte Carlo estimation" /> replaces the expectation
+by an average over samples:
+
+$$
+\mathbb{E}_{x \sim p}[f(x)] \approx \hat{\mu}_N = \frac{1}{N}\sum_{i=1}^{N} f(x_i), \qquad x_i \sim p \text{ independently}
+$$
+
+Its properties come straight from F5's [sampling lesson](/foundations/f5/sampling-and-the-clt/):
+
+- **Unbiased:** $\mathbb{E}[\hat{\mu}_N] = \mathbb{E}[f(x)]$ for every $N$.
+- **Variance** $\operatorname{Var}(f(x))/N$, so the <Term id="standard-error" /> is $\sigma_f/\sqrt{N}$, estimated by the
+  sample standard deviation of the $f(x_i)$ over $\sqrt{N}$.
+- **Dimension-free rate:** the error shrinks like $1/\sqrt{N}$ whatever the dimension of $x$, which is why sampling
+  beats grids (whose cost explodes with dimension) for high-dimensional integrals. The price: 10 times more
+  accuracy costs 100 times more samples.
+
+**Always report an error bar.** By the CLT, $\hat{\mu}_N \pm 1.96\,\widehat{\text{SE}}$ is an approximate 95%
+confidence interval. Estimate $\mathbb{E}[e^X]$ for $X \sim \mathcal{N}(0, 1)$, whose exact value is
+$e^{1/2} \approx 1.6487$:
+
+```python
+true = np.exp(0.5)
+for n in [100, 10_000, 1_000_000]:
+    fx = np.exp(rng.standard_normal(n))
+    est = fx.mean()
+    se = fx.std(ddof=1) / np.sqrt(n)
+    print(f"n = {n:>9,}: {est:.4f} +/- {1.96 * se:.4f}   (true {true:.4f})")
+```
+
+```text title="Output"
+n =       100: 1.7798 +/- 0.3431   (true 1.6487)
+n =    10,000: 1.6573 +/- 0.0445   (true 1.6487)
+n = 1,000,000: 1.6472 +/- 0.0042   (true 1.6487)
+```
+
+Every 100× more samples makes the error bar 10× narrower, and each interval contains the truth.
+
+:::caution[When the error bar lies]
+The error bar is itself estimated from the samples. If $f(x)$ has a heavy tail, rare huge values dominate the
+mean and the variance, and a typical sample has not seen enough of them: both the estimate and its error bar come
+out too small. Estimate $\mathbb{E}[e^{3X}] = e^{4.5} \approx 90.02$ with 10,000 samples, four times:
+
+```python
+true = np.exp(4.5)
+for seed in range(4):
+    fx = np.exp(3 * np.random.default_rng(seed).standard_normal(10_000))
+    print(f"estimate {fx.mean():7.2f} +/- {1.96 * fx.std(ddof=1) / 100:6.2f}   (true {true:.2f})")
+```
+
+```text title="Output"
+estimate   56.56 +/-  10.89   (true 90.02)
+estimate   96.90 +/-  36.71   (true 90.02)
+estimate   75.33 +/-  20.85   (true 90.02)
+estimate   92.32 +/-  44.74   (true 90.02)
+```
+
+The first run is confidently wrong: its interval, 45.7 to 67.5, excludes the truth. Warning signs are error bars
+that jump around between seeds and a mean dominated by a few samples. Importance weights in off-policy RL and
+in some ELBO estimators have exactly this problem.
+:::
+
+Ways to reduce variance, which you will meet in papers: use more samples; use a **control variate** (subtract
+something with known mean that is correlated with $f$); use **importance sampling** (draw from a better proposal
+$q$ and reweight by $p/q$); or use the reparameterisation trick, which in practice often gives lower-variance
+gradient estimates than the alternative score-function estimator.
+
+## Try it
+
+<CodeExercise id="b0-gaussians-and-monte-carlo-01" />
+
+<CodeExercise id="b0-gaussians-and-monte-carlo-02" />
+
+## Summary
+
+- $\mathcal{N}(\boldsymbol{\mu}, \Sigma)$: log-density $-\tfrac{1}{2}\big(d\log 2\pi + \log\det\Sigma + (\mathbf{x} - \boldsymbol{\mu})^\top\Sigma^{-1}(\mathbf{x} - \boldsymbol{\mu})\big)$;
+  compute it with `solve` and `slogdet`.
+- Eigenvectors of $\Sigma$ are the axes of the contour ellipses; $\sqrt{\lambda_i}$ are the standard deviations along them.
+- Sample with $\mathbf{x} = \boldsymbol{\mu} + L\mathbf{z}$, $LL^\top = \Sigma$ (Cholesky); rows: `mu + Z @ L.T`.
+  This is the reparameterisation trick.
+- Marginal: drop blocks. Conditional: $\boldsymbol{\mu}_1 + \Sigma_{12}\Sigma_{22}^{-1}(\mathbf{x}_2 - \boldsymbol{\mu}_2)$,
+  covariance $\Sigma_{11} - \Sigma_{12}\Sigma_{22}^{-1}\Sigma_{21}$.
+- Change of variables: $p_Y(\mathbf{y}) = p_X(g^{-1}(\mathbf{y}))\,\lvert\det J_{g^{-1}}(\mathbf{y})\rvert$; inverse-CDF sampling.
+- Monte Carlo: unbiased, standard error $\sigma_f/\sqrt{N}$; report $\pm 1.96$ SE, and distrust it for heavy tails.

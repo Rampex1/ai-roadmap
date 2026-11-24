@@ -1,0 +1,6 @@
+term: "Online prediction"
+short: "Making a prediction on request, for one case, at the moment it is needed, usually behind an API."
+body: |
+  Needed when the decision depends on information that only exists at request time, such as a card payment being
+  made now. It uses the freshest features but needs an always-on service that meets a latency budget at peak load.
+related: ["batch-prediction", "training-serving-skew"]

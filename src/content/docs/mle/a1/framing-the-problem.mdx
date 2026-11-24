@@ -1,0 +1,228 @@
+---
+title: "Framing a business problem as an ML task"
+module: a1
+order: 2
+estMinutes: 17
+objectives:
+  - "Trace a business goal to the decision it changes, the prediction that drives the decision, and the label"
+  - "Choose the unit of prediction and the prediction time, and write a precise label definition"
+  - "Measure label delay and explain how it limits training data, evaluation and monitoring"
+goDeeper: google-ml-problem-framing
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import timelineImg from '@/assets/diagrams/a1-label-timeline.svg';
+
+"Use ML to reduce churn" is a wish, not a task. A model needs a table: one row per *something*, features
+known at *some moment*, and a <Term id="label" /> defined *precisely*. Framing is the work of turning the
+wish into that table, and it decides more about the project's success than the choice of algorithm.
+
+## Start from the decision
+
+Work backwards through four links:
+
+1. **Business objective.** What number should move? "Reduce monthly revenue lost to cancellations."
+2. **Decision.** What will someone (or something) *do* differently? "Each week, choose which customers
+   get a retention call." If no decision changes, a prediction has no value, however accurate.
+3. **Prediction.** What would make that decision better? "For each active customer, the probability
+   that they cancel in the next 30 days."
+4. **Label.** What recorded fact tells us, afterwards, whether the prediction was right? "The account
+   was closed within 30 days of the prediction date."
+
+Writing the chain out exposes mismatches. Here, the decision is *who to call*, but the prediction is
+*who will cancel*. Those are not the same: a customer who will cancel whatever you do is a wasted call,
+and so is one who would have stayed anyway. What you really want is the customers whose behaviour
+**the call changes**. Predicting that effect directly is called *uplift modelling*, and it needs data
+from experiments (some customers called at random). A churn model is a reasonable first step, but the
+framing should say out loud that it is a proxy.
+
+:::caution[The target is a value judgement]
+In [F11](/foundations/f11/why-responsible-ai/) you met a health algorithm that predicted *costs* as a
+stand-in for *needs*, and so under-served patients who had received less care. The model fitted its
+target well; the target was wrong. Always ask whether the thing you can label is the thing you care
+about, and for whom it differs.
+:::
+
+## The unit of prediction
+
+The **unit of prediction** is what one row, and one prediction, is about:
+
+| Problem | Unit | One row means |
+|---|---|---|
+| Card fraud | transaction | "is this payment fraudulent?" |
+| Churn | customer × week | "will this customer cancel in the 30 days after this Monday?" |
+| Recommendations | user × item | "will this user click this item if shown?" |
+| Demand forecasting | store × product × day | "how many units will sell?" |
+
+The choice matters in three ways:
+
+- **It sets the decision granularity.** A per-customer score cannot tell you which of their
+  transactions to block.
+- **It decides what counts as independent.** In the churn table the same customer appears every week.
+  If one week of customer 17 lands in training and the next in test, the model is partly tested on a
+  customer it has already seen. Split by customer or, better for forecasting, by time. This is the
+  <Term id="data-leakage" /> problem from [F7](/foundations/f7/preprocessing-and-pipelines/), in its
+  most common real-world form.
+- **It decides how metrics are counted.** Precision per transaction and precision per customer can tell
+  different stories when a few customers make most transactions.
+
+## Prediction time and the feature cutoff
+
+Every prediction happens at a moment, the **prediction time** $t$. Features may only use information
+that was available *before* $t$; the label describes what happened *after* $t$. For churn with a 30-day
+window:
+
+- features: everything known up to the snapshot date $t$ (logins, payments, support tickets);
+- label: did the customer cancel in $(t, t + 30\text{ days}]$?
+
+Getting this wrong is the most common way to build a model that looks brilliant offline and fails in
+production. A column like "number of support tickets in the last 30 days", computed *today* for a
+snapshot taken two months ago, quietly includes tickets from after the snapshot, including the angry
+"please cancel my account" ticket. Lesson 4 shows how to compute features at the right moment.
+
+## Writing the label definition
+
+A label definition must be precise enough that two engineers would compute the same column. Here is
+the churn label computed from a login log, for one snapshot date:
+
+```python
+import pandas as pd
+
+logins = pd.DataFrame({
+    "customer": ["a", "a", "b", "c", "c", "c"],
+    "date": pd.to_datetime(["2026-03-02", "2026-03-20", "2026-02-25", "2026-02-27", "2026-04-15", "2026-04-29"]),
+})
+snapshot = pd.Timestamp("2026-03-01")   # the moment we make the prediction
+window_end = snapshot + pd.Timedelta(days=30)
+
+in_window = logins[(logins["date"] > snapshot) & (logins["date"] <= window_end)]
+customers = pd.Series(sorted(logins["customer"].unique()), name="customer")
+labels = pd.DataFrame({"customer": customers,
+                       "churned": ~customers.isin(in_window["customer"])})
+print(labels)
+print("labels can be computed from:", window_end.date())
+```
+
+```text title="Output"
+  customer  churned
+0        a    False
+1        b     True
+2        c     True
+labels can be computed from: 2026-03-31
+```
+
+Look at customer `c`: no login in March, so they are labelled as churned, yet they came back on
+15 April. Is that churn? It depends on the business: for a streaming service, a month away may really
+be lost revenue; for an annual tax tool, it is normal. Edge cases like this must be decided and written
+down:
+
+- Which events count as "active" (a login? a payment? any app open)?
+- What about paused accounts, downgrades, refunds, customers who join mid-window?
+- Who is in the population at all (only customers active on the snapshot date)?
+- How long is the window, and why that length (it should match how far ahead the decision needs to act)?
+
+## Label delay
+
+The <Term id="label-delay" /> is the time between making a prediction and being able to know the true
+label. It is often longer than people expect:
+
+- **Click prediction:** seconds to minutes.
+- **Churn with a 30-day window:** at least 30 days, by definition.
+- **Card fraud:** a fraud label usually arrives when the cardholder disputes the payment, which can take
+  weeks or months.
+- **Loan default:** months to years.
+
+<Figure src={timelineImg} alt="A timeline. Features come from before the prediction time t. The label window runs from t to t plus 30 days. Labels for predictions made in the last 30 days are not known yet, so the newest training example must have a prediction time at least 30 days before today." caption="With a 30-day label window, the newest rows you can train or evaluate on are at least 30 days old." />
+
+Label delay has three consequences:
+
+1. **Training data are always somewhat stale.** With a 30-day window, the freshest labelled rows are a
+   month old. Including newer rows with a "not churned yet" label would be wrong: they simply haven't
+   had time to churn.
+2. **You can't see performance quickly.** If the model degrades today, accuracy-based monitoring
+   notices weeks later. Teams watch faster *proxy* signals in the meantime, such as the distribution of
+   inputs and predictions (A10 Monitoring and drift covers this).
+3. **It limits how fast you can iterate.** An A/B test of a churn intervention needs to run at least as
+   long as the label window, plus the time to collect enough customers.
+
+When labels trickle in, as with fraud disputes, measure the delay distribution rather than guess it.
+Here are 500 synthetic fraud cases with the transaction time and the time the fraud was reported:
+
+```python
+import numpy as np
+import pandas as pd
+
+rng = np.random.default_rng(1)
+n = 500
+tx_time = pd.Timestamp("2026-01-01") + pd.to_timedelta(rng.integers(0, 90, n), unit="D")
+delay_days = rng.gamma(shape=2.0, scale=12.0, size=n).round()   # most chargebacks arrive in weeks
+frauds = pd.DataFrame({"tx_time": tx_time, "label_time": tx_time + pd.to_timedelta(delay_days, unit="D")})
+
+delay = (frauds["label_time"] - frauds["tx_time"]).dt.days
+print(f"median delay: {delay.median():.0f} days")
+print(f"90th percentile: {delay.quantile(0.9):.0f} days")
+print(f"known within 30 days: {(delay <= 30).mean():.0%}")
+print(f"known within 60 days: {(delay <= 60).mean():.0%}")
+```
+
+```text title="Output"
+median delay: 20 days
+90th percentile: 44 days
+known within 30 days: 72%
+known within 60 days: 97%
+```
+
+Even for transactions exactly 30 days old, about 28% of the frauds have not been reported yet; for last
+week's transactions, most have not. If you trained on recent rows, those frauds would be labelled
+legitimate. The model would learn that some fraud patterns are fine, and evaluation would understate
+recall. A common rule: only use rows whose labels are "mature", for example older than the 95th or 99th
+percentile of the delay.
+
+## Choosing the task type
+
+Once target, unit and label are fixed, the ML task type usually follows:
+
+- **Binary classification:** churn in 30 days, fraud, default.
+- **Regression:** next month's spend, delivery time, units sold.
+- **Ranking:** which 10 items to show, which 200 cases to review today. Often built from a classifier's
+  scores, but evaluated on the top of the list (lesson 3).
+- **No supervised task at all:** if there are no labels, you may start with
+  <Term id="unsupervised-learning" text="unsupervised" /> methods (clustering, anomaly scores) and a
+  labelling plan.
+
+Sometimes the same goal can be framed several ways. "How long until this customer leaves?" can be a
+regression, a set of classifiers (30, 60, 90 days) or a survival model. Pick the framing whose output
+plugs most directly into the decision.
+
+## A framing checklist
+
+Before writing any modelling code, you should be able to fill in:
+
+| Item | Churn example |
+|---|---|
+| Business objective | reduce revenue lost to cancellations |
+| Decision driven | weekly list of customers to call (capacity: 500 calls) |
+| Prediction | P(cancel within 30 days), per customer, every Monday |
+| Unit of prediction | customer × week, active customers only |
+| Label definition | account closed in $(t, t + 30\text{d}]$; pauses don't count |
+| Label delay | 30 days (by definition) |
+| Features allowed | anything known before Monday 00:00 |
+| Known proxy gap | predicts churn, not "persuadable by a call" |
+
+## Try it
+
+<CodeExercise id="a1-framing-the-problem-01" />
+
+<CodeExercise id="a1-framing-the-problem-02" />
+
+## Summary
+
+- Work backwards: business objective → decision → prediction → label. If no decision changes, stop.
+- The unit of prediction is what one row is about; it fixes the decision granularity, how to split
+  without leakage and how metrics are counted.
+- Features come from before the prediction time; the label from a window after it.
+- Write the label definition precisely, including edge cases, and check whether it is a proxy for what
+  you really care about.
+- Label delay makes training data stale, slows monitoring and experiments. Measure its distribution and
+  only train on rows whose labels have matured.

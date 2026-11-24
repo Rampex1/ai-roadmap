@@ -1,0 +1,125 @@
+items:
+  - id: c1-llm-as-a-function-01
+    type: mcq
+    prompt: Ignoring floating-point noise, what does one call of the model function $f_\theta$ take and return?
+    explanation: The network maps a sequence of token ids to one logit vector for the next position. Chat roles, memory and sampling all live in the code around it.
+    options:
+      - text: A list of messages in, a reply string out
+        why: Rendering messages and decoding text are done by ordinary code before and after the model.
+      - text: Token ids in, a complete reply out
+        why: Each call yields logits for one position; a loop produces the reply token by token.
+      - text: Token ids in, one vector of next-token logits out
+        correct: true
+        why: That is the whole interface; everything else is built around it.
+      - text: A session id and a message in, a reply out
+        why: The model has no sessions; the application re-sends history.
+  - id: c1-llm-as-a-function-02
+    type: order
+    prompt: Put the steps of serving one chat request in order.
+    explanation: Messages are rendered with the chat template, tokenised, prefilled, decoded token by token until a stop condition, then detokenised.
+    items:
+      - Render the messages with the chat template
+      - Tokenise the prompt string
+      - Prefill all prompt tokens
+      - Decode one token at a time
+      - Stop at an end-of-turn token or limit
+      - Detokenise the new ids into the reply
+  - id: c1-llm-as-a-function-03
+    type: output
+    prompt: What does this print?
+    code: |
+      def chatml(messages, add_generation_prompt=True):
+          out = ""
+          for m in messages:
+              out += f"<|im_start|>{m['role']}\n{m['content']}<|im_end|>\n"
+          if add_generation_prompt:
+              out += "<|im_start|>assistant\n"
+          return out
+
+      s = chatml([{"role": "user", "content": "Hi"}])
+      print(s.count("<|im_start|>"), s.endswith("assistant\n"))
+    answer: "2 True"
+    explanation: One user turn plus the generation prompt gives two start markers, and the string ends with the open assistant turn.
+  - id: c1-llm-as-a-function-04
+    type: mcq
+    prompt: You render a prompt with a chat template but forget the generation prompt (the final `<|im_start|>assistant` line). What is the most likely problem?
+    explanation: Without an open assistant turn the most likely continuation is not the assistant's reply; the model may continue the user's text or start a new turn.
+    options:
+      - text: The model forgets the system prompt
+        why: The system turn is still in the prompt; the problem is at the end.
+      - text: The reply will be identical, just slightly slower
+        why: The prompt is a different token sequence, so the behaviour changes.
+      - text: The tokeniser raises an error
+        why: Any string can be tokenised; nothing checks the structure.
+      - text: The model may continue the user's message or start another turn instead of answering
+        correct: true
+        why: The generation prompt is what makes "the assistant's reply" the likely continuation.
+  - id: c1-llm-as-a-function-05
+    type: multi
+    prompt: Which statements about chat templates are true?
+    explanation: Templates differ by family, can contain logic (defaults, folded system turns, dates) and ship with the tokeniser. Base models were never trained on one.
+    options:
+      - text: Wrapping a base model's prompt in ChatML turns it into an assistant
+        why: Only instruction tuning teaches the format; a base model just continues the document.
+      - text: Some templates have no system role and fold system text into the first user turn
+        correct: true
+        why: The Gemma 3 template does this.
+      - text: A template can insert text you did not send, such as a default system prompt or today's date
+        correct: true
+        why: Qwen adds a default system prompt; Llama 3.2 adds its cutoff and the date.
+      - text: Different model families use different marker tokens
+        correct: true
+        why: For example im_end for Qwen, eot_id for Llama, end_of_turn for Gemma.
+  - id: c1-llm-as-a-function-06
+    type: numeric
+    prompt: In the ChatML template each message costs 5 overhead tokens and the generation prompt costs 3. A request has a system message and 10 further messages. How many overhead tokens does the template add?
+    answer: 58
+    tol: 0
+    explanation: 11 messages × 5 = 55, plus 3 for the generation prompt, gives 58 tokens that are not your content.
+  - id: c1-llm-as-a-function-07
+    type: mcq
+    prompt: An app builds prompts with an f-string, pasting user text between ChatML markers, and tokenises the result with default settings. Why is this risky?
+    explanation: Literal marker text in user input is parsed into real special tokens, so a user can close their turn and forge a system turn.
+    options:
+      - text: The model will refuse to answer
+        why: The model happily follows forged turns, which is the danger.
+      - text: A user can type marker text that becomes real special tokens and forge a system turn
+        correct: true
+        why: By default the tokeniser maps the literal text of a special token to its id.
+      - text: It makes every prompt one token longer
+        why: Length is not the concern; structure injection is.
+      - text: f-strings cannot contain the pipe character
+        why: They can; that is not the issue.
+  - id: c1-llm-as-a-function-08
+    type: mcq
+    prompt: Why does generating each new token not require re-running attention over the whole sequence from scratch?
+    explanation: Causal attention never changes earlier positions, so their keys and values are stored in the KV cache and only the new token is computed.
+    options:
+      - text: Earlier tokens' keys and values do not change, so they are cached and reused
+        correct: true
+        why: This is the KV cache.
+      - text: The model only looks at the last token
+        why: Attention still reads all earlier positions, from the cache.
+      - text: The tokeniser merges the new token into the previous one
+        why: Tokenisation is unrelated to this.
+      - text: The weights are updated after each token
+        why: Weights are frozen during generation.
+  - id: c1-llm-as-a-function-09
+    type: mcq
+    prompt: A request's prompt grows from 1,000 to 10,000 tokens while the reply stays 100 tokens. Which latency number grows most?
+    explanation: The prompt is processed in prefill, so time to first token grows with prompt length; decode speed per output token stays roughly constant.
+    options:
+      - text: Time per output token during decode
+        why: It changes only a little with context length.
+      - text: The tokeniser's time, which dominates
+        why: Tokenising is tiny compared with running the model.
+      - text: Time to first token
+        correct: true
+        why: Prefill handles the prompt before the first output token.
+      - text: Neither; latency depends only on output length
+        why: Prefill time grows with input length.
+  - id: c1-llm-as-a-function-10
+    type: cloze
+    prompt: An API response says the reply ended with finish reason ______, meaning the token limit cut it off rather than the model choosing to stop.
+    accept: [ "length", "\"length\"", "`length`" ]
+    explanation: "`stop` means an end-of-turn token or stop sequence; `length` means max tokens was reached."

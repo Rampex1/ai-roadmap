@@ -1,0 +1,56 @@
+id: c1-choosing-a-model-01
+lesson: llm/c1/choosing-a-model
+title: Will it fit? A model memory calculator
+prompt: |
+  Write three functions. Use 1 GB = 10⁹ bytes throughout.
+
+  1. `weights_gb(params, bits)` returns the weight memory in GB: `params × bits / 8` bytes.
+  2. `kv_cache_gb(tokens, layers, kv_heads, head_dim, bytes_per=2)` returns the KV-cache memory in GB:
+     `2 × layers × kv_heads × head_dim × bytes_per × tokens` bytes (the 2 is for keys and values).
+  3. `best_bits(params, budget_gb, kv_gb=0.0, overhead=1.2, options=(16, 8, 4))` returns the **largest**
+     number of bits from `options` for which `weights_gb(params, bits) × overhead + kv_gb` is at most
+     `budget_gb`, or `None` if none fits. Do not assume `options` is sorted.
+
+  Example: an 8B model in a 4.5 GB budget with 0.5 GB of KV cache. At 8 bits it needs 8 × 1.2 + 0.5 =
+  10.1 GB; at 4 bits 4 × 1.2 + 0.5 = 5.3 GB. Neither fits, so the answer is `None`. A 3B model in the same
+  budget fits at 8 bits (3 × 1.2 + 0.5 = 4.1 GB) but not at 16 (7.7 GB), so its answer is 8.
+starter: |
+  def weights_gb(params, bits):
+      return params * bits
+
+  def kv_cache_gb(tokens, layers, kv_heads, head_dim, bytes_per=2):
+      return 0.0
+
+  def best_bits(params, budget_gb, kv_gb=0.0, overhead=1.2, options=(16, 8, 4)):
+      return options[0]
+solution: |
+  def weights_gb(params, bits):
+      return params * bits / 8 / 1e9
+
+  def kv_cache_gb(tokens, layers, kv_heads, head_dim, bytes_per=2):
+      return 2 * layers * kv_heads * head_dim * bytes_per * tokens / 1e9
+
+  def best_bits(params, budget_gb, kv_gb=0.0, overhead=1.2, options=(16, 8, 4)):
+      for bits in sorted(options, reverse=True):
+          if weights_gb(params, bits) * overhead + kv_gb <= budget_gb:
+              return bits
+      return None
+tests: |
+  import math
+  assert math.isclose(weights_gb(8e9, 16), 16.0), f"8B parameters at 16 bits are 16 GB, got {weights_gb(8e9, 16)}"
+  assert math.isclose(weights_gb(3e9, 4), 1.5), f"3B at 4 bits is 1.5 GB, got {weights_gb(3e9, 4)}"
+  assert math.isclose(weights_gb(0.5e9, 32), 2.0), "0.5B at 32 bits is 2 GB"
+  assert math.isclose(weights_gb(7e9, 4.8), 4.2), "bits need not be whole numbers: 7B at 4.8 bits is 4.2 GB"
+  assert math.isclose(kv_cache_gb(131_072, 32, 8, 128), 17.179869184), f"an 8B Llama-style model at 128k tokens needs about 17.18 GB, got {kv_cache_gb(131_072, 32, 8, 128)}"
+  assert math.isclose(kv_cache_gb(32_768, 24, 2, 64), 0.402653184), "Qwen2.5-0.5B at its full window needs about 0.40 GB"
+  assert math.isclose(kv_cache_gb(1000, 10, 4, 64, bytes_per=1), 5.12e-3), "bytes_per scales the result (an 8-bit KV cache)"
+  assert best_bits(8e9, 4.5, kv_gb=0.5) is None, "an 8B model needs 5.3 GB even at 4 bits: return None"
+  assert best_bits(3e9, 4.5, kv_gb=0.5) == 8, f"3B fits at 8 bits (4.1 GB) but not 16 (7.7 GB), got {best_bits(3e9, 4.5, kv_gb=0.5)}"
+  assert best_bits(3e9, 3.0, kv_gb=0.5) == 4, "with 3 GB only 4 bits fits (2.3 GB)"
+  assert best_bits(0.5e9, 4.5) == 16, "a 0.5B model fits at 16 bits"
+  assert best_bits(3e9, 4.5, kv_gb=0.5, options=(4, 16, 8)) == 8, "options may come in any order: return the largest that fits"
+  assert best_bits(1e9, 1.2, overhead=1.2, options=(8,)) == 8, "a total exactly equal to the budget fits"
+  assert best_bits(1e9, 1.0, overhead=1.0, options=(16, 8)) == 8, "overhead=1.0 means weights only"
+hints:
+  - "Divide by 8 to turn bits into bytes, then by 1e9 for GB."
+  - "Loop over sorted(options, reverse=True) and return the first number of bits that fits."

@@ -1,0 +1,126 @@
+items:
+  - id: c1-decoding-01
+    type: mcq
+    prompt: "Token probabilities, sorted, are 0.5, 0.25, 0.15, 0.06 and 0.04. How many tokens does top-p with $p = 0.85$ keep?"
+    explanation: Running totals are 0.5, 0.75, 0.90. The smallest prefix reaching 0.85 has three tokens.
+    options:
+      - text: "2"
+        why: 0.75 is below 0.85.
+      - text: "3"
+        correct: true
+        why: 0.5 + 0.25 + 0.15 = 0.90 is the first total at least 0.85.
+      - text: "4"
+        why: Three tokens already reach 0.85.
+      - text: "5"
+        why: Top-p drops the tail once the total is reached.
+  - id: c1-decoding-02
+    type: mcq
+    prompt: What does top-p do that top-k does not?
+    explanation: Top-p's kept set adapts to the distribution, one token when the model is confident and many when it is unsure; top-k always keeps k.
+    options:
+      - text: It keeps fewer tokens when the model is confident and more when it is unsure
+        correct: true
+        why: The cut depends on cumulative probability, not a fixed count.
+      - text: It raises the probability of rare tokens
+        why: It removes rare tokens.
+      - text: It makes sampling deterministic
+        why: It still draws at random among the kept tokens.
+      - text: It replaces the softmax
+        why: It works on the softmax probabilities.
+  - id: c1-decoding-03
+    type: output
+    prompt: What does this print? (The repetition penalty divides positive logits by $\theta$ and multiplies negative ones by $\theta$.)
+    code: |
+      def repetition_penalty(logits, seen, theta):
+          out = list(logits)
+          for i in set(seen):
+              out[i] = out[i] / theta if out[i] > 0 else out[i] * theta
+          return out
+
+      print(repetition_penalty([3.0, -1.0, 2.0], [0, 1, 1], 2.0))
+    answer: "[1.5, -2.0, 2.0]"
+    explanation: Token 0 (positive) is halved to 1.5; token 1 (negative) is doubled to -2.0; token 2 was not seen. Repeats in seen do not apply the penalty twice because of set().
+  - id: c1-decoding-04
+    type: multi
+    prompt: You call a hosted API twice with temperature 0 and the same seed and get different replies. Which are plausible causes?
+    explanation: Batching changes summation order, floating-point addition is not associative, near ties flip and differences snowball, and the model behind a name can be updated.
+    options:
+      - text: The provider updated the model behind the same name
+        correct: true
+        why: Pin dated versions where possible.
+      - text: Temperature 0 means maximum randomness
+        why: Temperature 0 means greedy.
+      - text: Your request was batched differently, changing the order of floating-point sums
+        correct: true
+        why: Kernel choices depend on batch shapes.
+      - text: Two tokens were nearly tied, and tiny numeric differences flipped the choice
+        correct: true
+        why: One different token changes everything after it.
+  - id: c1-decoding-05
+    type: mcq
+    prompt: Your code parses a JSON object from the reply. The finish reason is `length`. What should it do?
+    explanation: A `length` finish means truncation, so the JSON is very likely incomplete. Treat it as an error and retry with a bigger limit or shorter input.
+    options:
+      - text: Append a closing brace and parse it
+        why: Fields may be missing or cut mid-value.
+      - text: Lower the temperature and parse it
+        why: Temperature does not fix truncation.
+      - text: Parse it normally; length just reports the reply's size
+        why: It reports that the limit stopped generation.
+      - text: Treat it as an error and retry with a larger max tokens or a shorter prompt
+        correct: true
+        why: The output was cut off.
+  - id: c1-decoding-06
+    type: numeric
+    prompt: A three-token completion has logprobs $-0.2$, $-1.0$ and $-0.3$. What is its perplexity? Give two decimals.
+    answer: 1.65
+    tol: 0.01
+    explanation: The mean logprob is -0.5, so perplexity is exp(0.5) ≈ 1.65.
+  - id: c1-decoding-07
+    type: mcq
+    prompt: In the Glass Orchard example the token " J" had probability 0.036 and the rest of the author's name was near certain. What does this best show?
+    explanation: The model guessed at one token, then the continuation was consistent with the guess. Logprobs reveal the doubt that greedy decoding hides.
+    options:
+      - text: The completion's total probability was high
+        why: The sum of logprobs is dominated by the low tokens.
+      - text: The model knew the answer was correct
+        why: High probability for later tokens reflects consistency, not truth.
+      - text: The guess was made at one token; later tokens were confidently consistent with it
+        correct: true
+        why: Generation commits to earlier tokens.
+      - text: Logprobs are useless for spotting hallucination
+        why: They located the guess here, though they are not a guarantee.
+  - id: c1-decoding-08
+    type: mcq
+    prompt: Which settings fit extracting a date field from an email?
+    explanation: Extraction has one right answer, so greedy or a very low temperature is the natural choice.
+    options:
+      - text: A strong repetition penalty
+        why: Dates and formats need repeated characters.
+      - text: Greedy, or temperature near 0
+        correct: true
+        why: Variety only adds errors here.
+      - text: Temperature 1.5 with no top-p
+        why: That is how you get gibberish.
+      - text: Temperature 1.0 and several samples averaged as text
+        why: Text cannot be averaged, and variety is unwanted.
+  - id: c1-decoding-09
+    type: multi
+    prompt: Which are good reasons to use a stop sequence?
+    explanation: Stop sequences end generation at a known string; they are handy with few-shot or base-model prompts to stop the model inventing the next item.
+    options:
+      - text: Stopping a few-shot prompt before the model writes the next question
+        correct: true
+        why: Stop at the string that starts the next example.
+      - text: Ending output at a known delimiter so it does not need trimming
+        correct: true
+        why: The stop string itself is not included.
+      - text: Guaranteeing valid JSON
+        why: That needs structured output or validation.
+      - text: Making the model's answer more accurate
+        why: It controls where text ends, not its correctness.
+  - id: c1-decoding-10
+    type: cloze
+    prompt: Always choosing the single most probable next token is called ______ decoding.
+    accept: [ "greedy" ]
+    explanation: Greedy decoding is the temperature-to-zero limit of sampling.

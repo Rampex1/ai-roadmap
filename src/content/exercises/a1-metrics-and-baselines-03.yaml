@@ -1,0 +1,58 @@
+id: a1-metrics-and-baselines-03
+lesson: mle/a1/metrics-and-baselines
+title: Precision at k against a random baseline
+prompt: |
+  Reviewers can check `k` cases a day, so the offline metric is precision in the top `k`.
+
+  1. Write `precision_at_k(y, scores, k)`: sort cases by `scores`, highest first, take the top `k`, and
+     return the share of them that are positive. (You can assume no ties in `scores`.)
+  2. Write `random_baseline(y)`: the **expected** precision@k of reviewing `k` cases picked at random,
+     which is simply the base rate (the share of positives in `y`).
+
+  For the example, the top 4 scores (0.9, 0.6, 0.4, 0.3) contain 2 positives, so precision@4 is `0.5`,
+  and the random baseline is `0.3`.
+starter: |
+  import numpy as np
+
+  y = np.array([1, 0, 0, 1, 0, 1, 0, 0, 0, 0])
+  scores = np.array([0.9, 0.6, 0.2, 0.3, 0.1, 0.15, 0.05, 0.02, 0.4, 0.01])
+
+  def precision_at_k(y, scores, k):
+      pass
+
+  def random_baseline(y):
+      pass
+
+  print(precision_at_k(y, scores, 4), random_baseline(y))
+solution: |
+  import numpy as np
+
+  y = np.array([1, 0, 0, 1, 0, 1, 0, 0, 0, 0])
+  scores = np.array([0.9, 0.6, 0.2, 0.3, 0.1, 0.15, 0.05, 0.02, 0.4, 0.01])
+
+  def precision_at_k(y, scores, k):
+      top = np.argsort(scores)[::-1][:k]
+      return float(np.mean(np.asarray(y)[top]))
+
+  def random_baseline(y):
+      return float(np.mean(y))
+
+  print(precision_at_k(y, scores, 4), random_baseline(y))
+tests: |
+  import math
+  import numpy as np
+  for _k, _want in [(4, 0.5), (1, 1.0), (3, 1 / 3), (6, 0.5), (10, 0.3)]:
+      _got = precision_at_k(y, scores, _k)
+      assert _got is not None and math.isclose(_got, _want), f"precision_at_k with k={_k} should be {_want:.3f} for the example, got {_got}"
+  assert random_baseline(y) is not None and math.isclose(random_baseline(y), 0.3), f"The base rate of the example is 0.3, got {random_baseline(y)}"
+  _rng = np.random.default_rng(2)
+  _y = (_rng.random(500) < 0.04).astype(int)
+  _s = _rng.permutation(500) + 0.5 * _y * 300
+  for _k in (10, 50, 200):
+      _want = _y[np.argsort(-_s)[:_k]].mean()
+      assert math.isclose(precision_at_k(_y, _s, _k), _want), f"Random data, k={_k}: expected {_want}, got {precision_at_k(_y, _s, _k)}. Sort by score from highest to lowest."
+  assert math.isclose(random_baseline(_y), _y.mean()), f"Random data: the base rate is {_y.mean()}, got {random_baseline(_y)}"
+  assert math.isclose(random_baseline([True, False, False, False]), 0.25), "random_baseline should also accept a list of booleans"
+hints:
+  - "np.argsort(scores) sorts ascending; reverse it with [::-1] and take the first k indices."
+  - "The mean of 0/1 labels is the share of positives."

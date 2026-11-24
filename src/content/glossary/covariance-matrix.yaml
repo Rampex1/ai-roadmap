@@ -1,0 +1,8 @@
+term: "Covariance matrix"
+short: "Σ = E[(x − μ)(x − μ)ᵀ]: variances on the diagonal, covariances between pairs of components off it."
+body: |
+  It is symmetric and positive semidefinite. Its eigenvectors are the directions of the principal components and
+  the axes of a Gaussian's contour ellipses; its eigenvalues are the variances along them. A linear map $A$ turns
+  covariance $\Sigma$ into $A\Sigma A^\top$. In NumPy, `np.cov(X, rowvar=False)` estimates it from data with
+  examples in rows.
+related: ["variance", "normal-distribution", "eigenvector", "pca", "cholesky-decomposition"]

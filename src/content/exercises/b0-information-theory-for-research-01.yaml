@@ -1,0 +1,65 @@
+id: b0-information-theory-for-research-01
+lesson: research/b0/information-theory-for-research
+title: Mutual information of a joint table
+prompt: |
+  Write `mutual_information(P, base=2)` for a 2D array `P` holding a joint distribution $p(x, y)$ (rows are values
+  of $X$, columns values of $Y$, entries sum to 1). Return
+
+  $$I(X; Y) = \sum_{x, y} p(x, y)\log\frac{p(x, y)}{p(x)\,p(y)}$$
+
+  in the given log base. Cells with $p(x, y) = 0$ contribute 0 (skip them, so no `nan`). Then set `mi_rain` to
+  the mutual information, in bits, of the lesson's table `[[0.30, 0.10], [0.10, 0.50]]` (about 0.2564).
+
+  The tests try independent tables (the answer must be 0), a table where $Y$ is a copy of $X$ (the answer is
+  $H(X)$), tables with zero cells, and natural logs.
+starter: |
+  import numpy as np
+
+  def mutual_information(P, base=2):
+      P = np.asarray(P, dtype=float)
+      px = P.sum(axis=1)
+      py = P.sum(axis=0)
+      return np.sum(P * np.log(P / (px * py))) / np.log(base)
+
+  mi_rain = None
+solution: |
+  import numpy as np
+
+  def mutual_information(P, base=2):
+      P = np.asarray(P, dtype=float)
+      px = P.sum(axis=1)
+      py = P.sum(axis=0)
+      indep = np.outer(px, py)
+      m = P > 0
+      return float(np.sum(P[m] * np.log(P[m] / indep[m])) / np.log(base))
+
+  mi_rain = mutual_information([[0.30, 0.10], [0.10, 0.50]])
+tests: |
+  import math
+  import warnings
+  import numpy as np
+  warnings.simplefilter("ignore")
+  assert mi_rain is not None, "Set mi_rain using your function"
+  assert math.isclose(mi_rain, 0.256425, abs_tol=1e-5), f"mi_rain should be about 0.2564 bits, got {mi_rain!r}"
+  def _H(p):
+      p = np.asarray(p, dtype=float).ravel(); p = p[p > 0]
+      return float(-np.sum(p * np.log(p)))
+  _rng = np.random.default_rng(2)
+  for _ in range(3):
+      _a = _rng.dirichlet(np.ones(3)); _b = _rng.dirichlet(np.ones(4))
+      _I = mutual_information(np.outer(_a, _b))
+      assert abs(_I) < 1e-10, f"An independent table (outer product of its marginals) has zero mutual information, got {_I!r}. The denominator should be the outer product of the row sums and column sums"
+      _P = _rng.dirichlet(np.ones(12)).reshape(3, 4)
+      _want = (_H(_P.sum(1)) + _H(_P.sum(0)) - _H(_P)) / math.log(2)
+      assert math.isclose(mutual_information(_P), _want, rel_tol=1e-9), "mutual_information disagrees with H(X) + H(Y) - H(X, Y) on a random 3 x 4 table"
+      assert math.isclose(mutual_information(_P), mutual_information(_P.T), rel_tol=1e-9), "Mutual information is symmetric: I(X;Y) = I(Y;X)"
+      assert math.isclose(mutual_information(_P, base=math.e), _want * math.log(2), rel_tol=1e-9), "With base=e the answer should be in nats"
+  _copy = np.diag([0.2, 0.3, 0.5])
+  _Ic = mutual_information(_copy)
+  assert not math.isnan(_Ic), "Got nan: skip the cells where P is 0"
+  assert math.isclose(_Ic, _H([0.2, 0.3, 0.5]) / math.log(2), rel_tol=1e-9), "When Y is a copy of X, I(X;Y) = H(X)"
+  assert math.isclose(mutual_information([[0.5, 0.0], [0.0, 0.5]]), 1.0, rel_tol=1e-12), "A fair bit and its copy share exactly 1 bit"
+hints:
+  - "The independent table is np.outer(px, py), where px and py are the row and column sums."
+  - "Use a mask m = P > 0 and sum only over P[m]."
+  - "Divide the natural-log answer by np.log(base) to change units."

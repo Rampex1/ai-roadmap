@@ -1,0 +1,7 @@
+term: "KV cache"
+short: "Stored attention keys and values for the tokens already processed, so each new token needs only its own computation during generation."
+body: |
+  Because causal attention never changes earlier positions, their keys and values can be reused. The
+  cache makes decoding fast but grows with every token: 2 × layers × KV heads × head size × bytes per
+  number for each token, which can exceed the size of the weights at long context lengths.
+related: ["attention", "causal-mask", "context-window"]

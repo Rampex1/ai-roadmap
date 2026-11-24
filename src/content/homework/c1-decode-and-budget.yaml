@@ -1,0 +1,21 @@
+id: c1-decode-and-budget
+module: c1
+kind: homework
+title: Decode and budget a chat request
+brief: |
+  Work through a chat request with a small synthetic vocabulary. Open the notebook in local Jupyter
+  or Colab. The required tasks need only NumPy and no model download.
+
+  1. Render a ChatML-style prompt and append the assistant generation prompt.
+  2. Implement temperature scaling and top-p sampling, then compare greedy, moderate and high-temperature settings.
+  3. Budget weights, cache and runtime memory for two context sizes.
+  4. Implement a voting rule that abstains on ties or weak agreement.
+  5. Explain the results. Optionally repeat the decoding comparison on a local model and report throughput.
+notebook: /homework/c1-decode-and-budget.ipynb
+rubric:
+  - The renderer emits the exact delimiters and assistant prefix for both fixtures.
+  - The sampler keeps the crossing token and returns normalised probabilities in vocabulary order.
+  - The comparison explains the observed tail draws using the two sampling distributions.
+  - The memory estimate separates weights and cache and identifies the context that fits the budget.
+  - The vote handles ties and insufficient agreement, and the write-up explains why agreement does not verify facts.
+compute: Any laptop or free Colab CPU. Allow 60 to 90 minutes for the required work.

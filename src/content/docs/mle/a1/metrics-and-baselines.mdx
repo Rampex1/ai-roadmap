@@ -1,0 +1,215 @@
+---
+title: "Metrics, success criteria and baselines"
+module: a1
+order: 3
+estMinutes: 20
+objectives:
+  - "Connect a business objective to online product metrics, guardrails and an offline metric that matches the decision"
+  - "Compute the expected cost of a decision threshold from a cost matrix and choose the cheapest threshold"
+  - "Set a success threshold before modelling and compare against trivial, heuristic and simple-model baselines"
+goDeeper: rules-of-ml
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+In [F7](/foundations/f7/classification-metrics/) you learned *how* to compute precision, recall and
+ROC AUC. This lesson is about *which* number to optimise, what "good enough" means, and what to compare
+against. Zinkevich's Rule #2 is "First, design and implement metrics": decide how you will measure
+success before you build the thing you will measure.
+
+## Three layers of metrics
+
+Think of metrics in three layers, from what the business cares about to what you can compute on a
+laptop:
+
+1. **Business objective.** The number leadership watches: monthly fraud losses, revenue retained,
+   support cost. It moves slowly and is affected by many things besides your model.
+2. **Online (product) metrics.** Measured on live traffic, usually in an experiment: fraud loss per
+   £1,000 of transactions, the share of legitimate payments blocked, how many cases reviewers handle
+   per hour, time to resolution. Alongside the metric you want to improve, track **guardrail metrics**
+   that must not get worse: latency, complaint rate, the share of good customers inconvenienced.
+3. **Offline metrics.** Computed on held-out historical data before launch: precision and recall at
+   the chosen threshold, expected cost, precision in the top $k$, log loss. They are fast and cheap,
+   so they drive day-to-day modelling. Their only job is to **predict** the online result.
+
+The gap between layers is where projects go wrong. A model can improve offline AUC and not change
+losses at all, because the threshold is in the wrong place, because reviewers can only look at 200
+cases a day, or because fraudsters move. Offline metrics are a <Term id="proxy-metric" />: useful only
+as long as they track the thing you care about.
+
+:::note[Online measurement in one paragraph]
+The standard way to measure the online effect is an <Term id="a-b-test" />: randomly send some traffic to
+the new system and some to the old, then compare the online metrics. Randomisation makes the groups
+comparable, so a difference can be attributed to the system. Designing and reading such tests properly
+(sample size, duration, many metrics at once) belongs to A5 Evaluation.
+:::
+
+## Choose the offline metric from the decision
+
+The decision from lesson 2 tells you which offline metric to use:
+
+| How predictions are used | Offline metric that matches |
+|---|---|
+| Act on everything above a threshold; errors have known costs | expected cost (or value) at the chosen threshold |
+| A fixed capacity, for example reviewers check 200 cases a day | precision in the top $k$ (precision@k), recall in the top $k$ |
+| A requirement such as "catch at least 80% of fraud" | precision at the threshold that reaches 80% recall |
+| The probability itself is used (pricing, expected loss) | log loss, and <Term id="calibration" /> checks |
+| Ranking many items for a user | ranking metrics on the top of the list |
+
+ROC AUC summarises ranking quality over *all* thresholds, which makes it a handy model-comparison number
+early on. But you never deploy all thresholds; you deploy one. Report the metric at the operating point.
+
+## Costs, the cost matrix and the threshold
+
+When different errors have different costs, write them in a <Term id="cost-matrix" />. For fraud, say a
+missed fraud (false negative) costs on average $c_{FN} = £150$ and a false alarm (false positive) costs
+$c_{FP} = £5$ in call-centre time and annoyed customers. Correct decisions cost nothing extra:
+
+| | predicted fraud | predicted legitimate |
+|---|---|---|
+| **actually fraud** | 0 | $c_{FN} = 150$ |
+| **actually legitimate** | $c_{FP} = 5$ | 0 |
+
+The total cost of flagging at threshold $t$ is
+
+$$
+\text{cost}(t) = c_{FP} \cdot FP(t) + c_{FN} \cdot FN(t)
+$$
+
+where $FP(t)$ and $FN(t)$ are the numbers of false positives and false negatives when everything with
+predicted probability $\ge t$ is flagged.
+
+There is a neat theoretical answer for the threshold. For one transaction with predicted fraud
+probability $p$, flagging costs $c_{FP}(1 - p)$ in expectation (it's a false alarm with probability
+$1 - p$), and not flagging costs $c_{FN} \cdot p$. Flag when the first is smaller:
+
+$$
+c_{FP}(1 - p) < c_{FN} \cdot p \quad\Longleftrightarrow\quad p > t^* = \frac{c_{FP}}{c_{FP} + c_{FN}}
+$$
+
+With £5 and £150, $t^* = 5/155 \approx 0.032$: flag anything with more than a 3.2% chance of being
+fraud. That is a long way from the default 0.5. The formula assumes the probabilities are
+**calibrated**; if they are not, choose the threshold by scanning candidates on validation data and
+picking the cheapest, which you will do in the exercises.
+
+## Baselines
+
+A score only means something next to a <Term id="baseline-model" />. Use three kinds:
+
+1. **Trivial:** do nothing, do everything, or predict the majority class. For fraud, "flag nothing"
+   costs $c_{FN}$ times the number of frauds, and "flag everything" costs $c_{FP}$ times the number of
+   legitimate transactions.
+2. **Heuristic:** the current rule or process (lesson 1's rule). This is the real competitor.
+3. **Simple model:** a <Term id="logistic-regression" /> or a small tree ensemble on a few obvious
+   features. If a complex model barely beats it, ship the simple one.
+
+Here are all of them on the synthetic fraud data from lesson 1, scored by total cost on a held-out half:
+
+```python
+import numpy as np
+import pandas as pd
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+
+rng = np.random.default_rng(0)
+n = 20_000
+df = pd.DataFrame({
+    "amount": rng.lognormal(mean=4, sigma=1, size=n).round(2),
+    "new_device": rng.random(n) < 0.1,
+    "foreign": rng.random(n) < 0.05,
+})
+logit = -7.5 + 0.7 * np.log(df["amount"]) + 2.0 * df["new_device"] + 1.5 * df["foreign"]
+df["fraud"] = rng.random(n) < 1 / (1 + np.exp(-logit))
+
+X = np.column_stack([np.log(df["amount"]), df["new_device"], df["foreign"]])
+y = df["fraud"].to_numpy()
+X_tr, X_te, y_tr, y_te, df_tr, df_te = train_test_split(X, y, df, test_size=0.5, random_state=0, stratify=y)
+
+C_FP, C_FN = 5, 150   # a false alarm costs £5, a missed fraud £150
+
+def cost(y_true, flags):
+    fp = np.sum(flags & ~y_true)
+    fn = np.sum(~flags & y_true)
+    return C_FP * fp + C_FN * fn
+
+p = LogisticRegression().fit(X_tr, y_tr).predict_proba(X_te)[:, 1]
+rule = ((df_te["amount"] > 200) & (df_te["new_device"] | df_te["foreign"])).to_numpy()
+policies = {
+    "flag nothing": np.zeros_like(y_te),
+    "flag everything": np.ones_like(y_te),
+    "rule": rule,
+    "model, t = 0.5": p >= 0.5,
+    "model, t = 0.032": p >= C_FP / (C_FP + C_FN),
+}
+for name, flags in policies.items():
+    print(f"{name:17s} flags {flags.mean():6.1%}   cost £{cost(y_te, flags):>7,}")
+```
+
+```text title="Output"
+flag nothing      flags   0.0%   cost £ 27,000
+flag everything   flags 100.0%   cost £ 49,100
+rule              flags   1.6%   cost £ 22,220
+model, t = 0.5    flags   0.0%   cost £ 27,005
+model, t = 0.032  flags  12.4%   cost £ 16,615
+```
+
+Three lessons in five lines:
+
+- **The model at the default threshold is useless.** With fraud this rare, almost no transaction gets
+  a fraud probability above 0.5, so at $t = 0.5$ the model flags a single transaction, a false alarm
+  (hence £27,005). The model is identical to the one on the last line, with the same ROC AUC (about
+  0.80); only the decision rule differs.
+- **The rule is a real competitor.** It saves £4,780 over doing nothing.
+- **The model at the cost-based threshold wins,** saving £10,385 over doing nothing and £5,605 (about
+  25%) over the rule, even though it flags 12% of transactions. Whether reviewers can handle that many
+  flags is a separate question, a capacity constraint the framing must state.
+
+## Setting a success threshold
+
+Agree on what "success" means **before** you see model results, so that the bar isn't quietly moved to
+wherever the model lands. A good success criterion:
+
+- names the offline metric and the data it is computed on ("expected cost on the most recent full month,
+  with matured labels");
+- compares with the baseline ("at least 20% lower cost than the current rule");
+- includes guardrails ("blocks no more than 2% of legitimate transactions; p99 latency under 100 ms");
+- says what happens online ("then a two-week A/B test on 10% of traffic; launch if fraud loss per
+  £1,000 falls and complaints don't rise").
+
+:::caution[Goodhart's law]
+"When a measure becomes a target, it ceases to be a good measure." Optimise only precision and the
+model flags almost nothing; optimise reviewer throughput and reviewers rush. Pair every target metric
+with guardrails that catch the obvious way to game it.
+:::
+
+## Estimating a baseline before you have a model
+
+Some baselines can be computed with no model at all, which is useful when deciding whether a project is
+worth starting:
+
+- A **random** ranking has expected precision@k equal to the base rate: if 2% of cases are fraud,
+  reviewing 200 random cases finds about 4.
+- "Flag nothing" and "flag everything" costs follow directly from the class counts.
+- The current process's metrics usually exist in logs; if not, measure them on a labelled sample.
+
+If the best you can hope for (say, perfect recall at the capacity limit) is barely better than the
+baseline, no model will rescue the project.
+
+## Try it
+
+<CodeExercise id="a1-metrics-and-baselines-01" />
+
+<CodeExercise id="a1-metrics-and-baselines-02" />
+
+<CodeExercise id="a1-metrics-and-baselines-03" />
+
+## Summary
+
+- Metrics come in layers: business objective, online product metrics with guardrails, and offline
+  metrics whose job is to predict the online result.
+- Pick the offline metric from the decision: expected cost at a threshold, precision@k under capacity,
+  log loss when probabilities are used directly.
+- With a cost matrix, flag when $p > c_{FP}/(c_{FP} + c_{FN})$ for calibrated probabilities, or scan
+  thresholds on validation data and take the cheapest.
+- Compare against trivial, heuristic and simple-model baselines; the heuristic is usually the one to beat.
+- Write the success threshold, with guardrails, before seeing model results.

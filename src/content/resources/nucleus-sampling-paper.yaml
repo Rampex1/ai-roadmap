@@ -1,0 +1,5 @@
+title: "The Curious Case of Neural Text Degeneration (Holtzman et al., nucleus sampling)"
+url: https://arxiv.org/abs/1904.09751
+kind: paper
+free: true
+modules: [c1]

@@ -1,0 +1,104 @@
+items:
+  - id: c1-limits-and-mitigations-01
+    type: mcq
+    prompt: A support bot invents a plausible policy citation. Which change directly helps verify it?
+    explanation: Check the citation and whether the passage supports the statement.
+    options:
+      - text: Raise the temperature
+        why: Sampling more broadly does not provide evidence.
+      - text: Retrieve the policy and require a citation to a supplied passage
+        correct: true
+        why: Check the citation and whether the passage supports the statement.
+      - text: Increase the maximum reply length
+        why: Extra tokens do not supply a verified source.
+  - id: c1-limits-and-mitigations-02
+    type: mcq
+    prompt: Which mitigation is best for exact invoice arithmetic?
+    explanation: A calculator computes the required operation on the supplied values.
+    options:
+      - text: Ask for a more confident reply
+        why: Confidence cannot substitute for calculation.
+      - text: Sample a more fluent explanation
+        why: Fluency does not establish arithmetic correctness.
+      - text: Calculate from validated inputs with deterministic code
+        correct: true
+        why: A calculator computes the required operation on the supplied values.
+  - id: c1-limits-and-mitigations-03
+    type: mcq
+    prompt: What should supply the facts when answering a question about a policy revised yesterday?
+    explanation: A current source can contain changes absent from training data.
+    options:
+      - text: The revision date by itself
+        why: The date does not include the actual changes.
+      - text: An up-to-date policy source retrieved at request time
+        correct: true
+        why: A current source can contain changes absent from training data.
+      - text: A larger output budget
+        why: Additional generation cannot establish current facts.
+  - id: c1-limits-and-mitigations-04
+    type: mcq
+    prompt: You need machine-readable output. Which approach addresses both generation and consumption?
+    explanation: A schema guides structure and validation handles failures at the boundary.
+    options:
+      - text: Parse the output without checking it
+        why: The reply may be malformed or missing fields.
+      - text: Change the model after each malformed reply
+        why: Switching models does not make output handling reliable.
+      - text: Constrain generation with a schema and validate before use
+        correct: true
+        why: A schema guides structure and validation handles failures at the boundary.
+  - id: c1-limits-and-mitigations-05
+    type: numeric
+    prompt: Five samples give A, C, A, B and A. What fraction support the plurality answer?
+    answer: 0.6
+    tol: 0.001
+    explanation: A occurs three times across five samples.
+  - id: c1-limits-and-mitigations-06
+    type: mcq
+    prompt: A voting policy requires at least four agreeing answers out of five. You get three votes for A and two for B. What should happen?
+    explanation: The plurality falls below the configured threshold.
+    options:
+      - text: Return B because it is less frequent
+        why: A minority result also fails the threshold.
+      - text: Abstain or escalate
+        correct: true
+        why: The plurality falls below the configured threshold.
+      - text: Return A as verified
+        why: A has only three votes and agreement would not independently verify it.
+  - id: c1-limits-and-mitigations-07
+    type: mcq
+    prompt: What is a useful test for sensitivity to phrasing?
+    explanation: Holding task meaning fixed isolates changes associated with wording.
+    options:
+      - text: Use one exact prompt and inspect its first reply
+        why: One prompt cannot reveal sensitivity to paraphrasing.
+      - text: Run equivalent paraphrases and compare scored outputs
+        correct: true
+        why: Holding task meaning fixed isolates changes associated with wording.
+      - text: Change both the question and the grading rubric
+        why: Changing both obscures which factor drove the result.
+  - id: c1-limits-and-mitigations-08
+    type: mcq
+    prompt: All five samples repeat a false answer. What does this show?
+    explanation: Samples from the same model can share an unsupported belief.
+    options:
+      - text: Agreement can coexist with a shared systematic error
+        correct: true
+        why: Samples from the same model can share an unsupported belief.
+      - text: Unanimity proves correctness
+        why: A vote is evidence of agreement only.
+      - text: Each sample checked a different source
+        why: Sampling alone does not retrieve sources.
+  - id: c1-limits-and-mitigations-09
+    type: output
+    prompt: What does this print when exact checking requires a unanimous vote?
+    code: |
+      answers = ["22", "22", "21"]
+      print(answers[0] if len(set(answers)) == 1 else "abstain")
+    answer: "abstain"
+    explanation: The set has two unique values, so the rule abstains.
+  - id: c1-limits-and-mitigations-10
+    type: cloze
+    prompt: Supplying source passages and requiring the model to base its answer on them is called ______.
+    accept: [ "grounding", "source grounding", "retrieval grounding" ]
+    explanation: Grounding ties the generated answer to supplied evidence.

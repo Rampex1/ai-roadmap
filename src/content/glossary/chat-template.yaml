@@ -1,0 +1,8 @@
+term: "Chat template"
+short: "The model-specific format that turns a list of role-tagged chat messages into the single string of text and special tokens the model was trained on."
+body: |
+  Each model family has its own markers (for example ChatML's `<|im_start|>` and `<|im_end|>`), and some
+  templates add logic such as a default system prompt or today's date. The template ships with the
+  tokeniser and is usually applied by the library or server. A generation prompt at the end opens an
+  empty assistant turn for the model to fill.
+related: ["special-token", "token", "large-language-model"]

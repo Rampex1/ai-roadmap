@@ -1,0 +1,140 @@
+items:
+  - id: a1-designing-the-ml-system-01
+    type: mcq
+    prompt: "A telecom company's retention team calls up to 500 at-risk customers every Monday. How should churn predictions be served?"
+    options:
+      - text: "Streaming: rescore each customer after every event"
+        why: "Fresher scores than the weekly decision can use."
+      - text: "No serving is needed; the model only needs to be trained"
+        why: "Predictions must still reach the retention team somehow."
+      - text: "Online, behind an API with a 50 ms latency budget"
+        why: "Nothing in the decision needs real-time answers; an always-on service adds cost and complexity for no gain."
+      - text: "Batch: score all customers on Sunday night and store the ranked list"
+        correct: true
+        why: "The decision happens weekly, so a weekly (or nightly) batch job is simpler, cheaper and easy to retry."
+    explanation: "Prefer batch prediction unless the decision needs information that only exists at request time."
+  - id: a1-designing-the-ml-system-02
+    type: mcq
+    prompt: "A card issuer wants to decide, while the customer waits at the till, whether to approve a payment. Why can this not be done with batch prediction alone?"
+    options:
+      - text: "Batch prediction cannot use machine learning models"
+        why: "Batch jobs run the same models; the issue is timing."
+      - text: "Batch prediction is too expensive for millions of cases"
+        why: "Batch is usually the cheaper option per prediction."
+      - text: "The payment did not exist when the last batch ran, so it needs an online prediction"
+        correct: true
+        why: "The case itself and some key features (amount, merchant, device) only appear at request time."
+      - text: "Batch jobs are always less accurate"
+        why: "Accuracy depends on the model and features, not the serving pattern."
+    explanation: "Online prediction is required when the decision depends on information available only at request time. Slow-changing features can still be precomputed in batch."
+  - id: a1-designing-the-ml-system-03
+    type: numeric
+    prompt: "A fraud service receives 8.64 million requests a day. What is the average load in requests per second?"
+    answer: 100
+    tol: 0.5
+    explanation: "$8{,}640{,}000 / 86{,}400 = 100$ requests per second on average. Peaks can be several times higher, and capacity must cover the peak."
+  - id: a1-designing-the-ml-system-04
+    type: mcq
+    prompt: "In training, \"average spend over the last 7 days\" is computed in SQL using UTC days. The serving code recomputes it in Python using the customer's local time zone. Model quality in production is worse than offline. What is this called, and what is the best fix?"
+    options:
+      - text: "Overfitting; add regularisation"
+        why: "The model is fine; it is fed different inputs in production."
+      - text: "Label delay; wait for labels to mature"
+        why: "Label delay is about outcomes, not feature computation."
+      - text: "Training-serving skew; use one shared feature implementation for both, and test that they agree"
+        correct: true
+        why: "One definition of each feature, used by both pipelines, removes the source of the mismatch."
+      - text: "Concept drift; retrain more often"
+        why: "Nothing changed in the world; two implementations disagree."
+    explanation: "Training-serving skew means the model receives inputs in production that differ from what it was trained on, usually because a feature was implemented twice."
+  - id: a1-designing-the-ml-system-05
+    type: mcq
+    prompt: "A fraud model blocks payments it scores as risky. Blocked payments never get a fraud label, because the fraud never happens. What is the standard defence?"
+    options:
+      - text: "Keep a small random holdout where the model's decision is not applied, or is checked by a person, so unbiased labels keep arriving"
+        correct: true
+        why: "This breaks the feedback loop at a small, controlled cost."
+      - text: "Drop the cases with the highest scores from training"
+        why: "That makes the model learn even less about the riskiest patterns."
+      - text: "Label every blocked payment as fraud"
+        why: "Many blocked payments are legitimate; this bakes the model's errors into the next training set."
+      - text: "Retrain more often on the payments that went through"
+        why: "That data is filtered by the old model's decisions; retraining on it more often does not remove the bias."
+    explanation: "When a model decides what gets observed, its future data are filtered by its past predictions (F11's feedback loops). A random holdout keeps some labels independent of the model."
+  - id: a1-designing-the-ml-system-06
+    type: order
+    prompt: "Order these monitoring layers from the fastest signal to the slowest, for a fraud model whose labels take weeks to arrive."
+    items:
+      - "System health: errors and latency"
+      - "Data quality: missing or out-of-range inputs"
+      - "Drift in inputs and predictions"
+      - "Model quality: precision and recall on matured labels"
+      - "Business outcome: monthly fraud losses"
+    explanation: "Health is visible in seconds, data quality in minutes to hours, drift in hours to days, model quality only once labels mature, and business outcomes over months."
+  - id: a1-designing-the-ml-system-07
+    type: multi
+    prompt: "Which of these should be logged for every prediction a production fraud model makes? Select all that apply."
+    options:
+      - text: "The feature values used"
+        correct: true
+        why: "Lets you debug skew and train later models on exactly what was seen at prediction time."
+      - text: "The model version"
+        correct: true
+        why: "You must know exactly which model made each prediction."
+      - text: "The score and the decision taken"
+        correct: true
+        why: "Needed to evaluate the model and to rebuild what happened."
+      - text: "A full copy of the training dataset"
+        why: "The training data are versioned once per model, not copied per prediction."
+    explanation: "You cannot fix later what you did not log: score, decision, model version and features, joined later to the outcome."
+  - id: a1-designing-the-ml-system-08
+    type: mcq
+    prompt: "A churn model with a 30-day label window is retrained every day. Which statement is true?"
+    options:
+      - text: "Each retrained model can be deployed without evaluation, since the code did not change"
+        why: "The data changed; every new model must pass the evaluation gate."
+      - text: "Daily retraining removes the effect of label delay"
+        why: "It cannot: the labels simply do not exist yet."
+      - text: "The newest labelled examples are still at least 30 days old"
+        correct: true
+        why: "Label delay sets a floor on how fresh training data can be, whatever the cadence."
+      - text: "Each new model learns from yesterday's outcomes"
+        why: "Yesterday's predictions have no labels yet: their windows are still open."
+    explanation: "Training cadence and label delay interact: retraining more often than labels mature adds cost without adding fresher labels."
+  - id: a1-designing-the-ml-system-09
+    type: mcq
+    prompt: "A customer's balance changed to £100 on 1 March, £40 on 10 March and £900 on 20 March. For a prediction made on 15 March, which balance should the training feature use?"
+    options:
+      - text: "£40, the last value known before 15 March"
+        correct: true
+        why: "Point-in-time correctness: the feature is what would have been known at prediction time."
+      - text: "£100, the first value recorded"
+        why: "Outdated: a later value was known by 15 March."
+      - text: "The average of all three, £346.67"
+        why: "Mixes past and future values."
+      - text: "£900, the latest value in the table"
+        why: "That change happened five days after the prediction: using it leaks the future."
+    explanation: "Training features must be computed as of the prediction time. `pd.merge_asof` with `by` and `allow_exact_matches=False` does this for a table of changes."
+  - id: a1-designing-the-ml-system-10
+    type: mcq
+    prompt: "A team's pipeline retrains the fraud model every week and deploys it automatically. Which safeguard matters most to add?"
+    options:
+      - text: "Retrain daily instead of weekly"
+        why: "More frequent deployment without checks increases the risk."
+      - text: "Remove monitoring, since the model is always fresh"
+        why: "Fresh models can still be broken by bad data."
+      - text: "Train with more epochs each week"
+        why: "More training does not guarantee a better model."
+      - text: "A gate: deploy only if the new model beats the current model and the baseline on recent matured data"
+        correct: true
+        why: "Without a gate, \"automatic retraining\" can silently become \"automatic regression\"."
+    explanation: "Every retrained model must pass the same evaluation as the first one before it replaces the current model."
+  - id: a1-designing-the-ml-system-11
+    type: output
+    prompt: "A back-of-envelope load estimate. What does this print?"
+    code: |
+      daily = 4_320_000
+      avg = daily / 86_400
+      print(avg, avg * 3)
+    answer: "50.0 150.0"
+    explanation: "4.32 million requests over 86,400 seconds is 50 per second on average; a peak three times the average is 150 per second. Division in Python returns a float, hence the `.0`."

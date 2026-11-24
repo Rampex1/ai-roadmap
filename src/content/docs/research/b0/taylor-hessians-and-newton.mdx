@@ -1,0 +1,277 @@
+---
+title: "Taylor expansions, Hessians and Newton's method"
+module: b0
+order: 2
+estMinutes: 18
+objectives:
+  - "Write the second-order Taylor expansion of a function of many variables and compute its Hessian"
+  - "Classify a stationary point as a minimum, maximum or saddle from the Hessian's eigenvalues, and relate the condition number to gradient descent's speed"
+  - "Derive the Newton step from the quadratic model, and explain why it converges in one step on a quadratic but is rarely used for large neural networks"
+goDeeper: mml-book
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Gradient descent uses one piece of local information: the slope. In [F6](/foundations/f6/gradient-descent/)
+you saw what it cannot see: in a long, narrow valley it zigzags across and crawls along, and the ratio of the two
+curvatures, the condition number, decides how slowly. This lesson makes "curvature" precise. The tool is the
+second-order Taylor expansion, its matrix is the Hessian, and the optimiser that uses it is Newton's method.
+Papers lean on all three, even when they never compute a Hessian, to explain why an optimiser, a normalisation
+layer or a learning-rate rule works.
+
+## Taylor expansions: a polynomial that fits locally
+
+In one variable, a smooth function near $x$ looks like a polynomial in the step $h$:
+
+$$
+f(x + h) \approx f(x) + f'(x)\,h + \tfrac{1}{2} f''(x)\,h^2
+$$
+
+The first two terms are the tangent line from [F4](/foundations/f4/the-derivative/). The third adds curvature:
+$f''(x) > 0$ bends the curve up, $f''(x) < 0$ bends it down. The error of the first-order version shrinks like
+$h^2$; with the second-order term it shrinks like $h^3$.
+
+In $n$ variables, with a step vector $\mathbf{h}$, the same expansion reads
+
+$$
+f(\mathbf{x} + \mathbf{h}) \approx f(\mathbf{x}) + \nabla f(\mathbf{x})^\top \mathbf{h} + \tfrac{1}{2}\,\mathbf{h}^\top H(\mathbf{x})\,\mathbf{h}
+$$
+
+where $H$ is the <Term id="hessian" />, the $n \times n$ matrix of second partial derivatives:
+
+$$
+H_{ij} = \frac{\partial^2 f}{\partial x_i\,\partial x_j}
+$$
+
+Three facts to keep:
+
+- **It is symmetric** for any function with continuous second derivatives, because the order of differentiation
+  does not matter ($\partial^2 f / \partial x_i \partial x_j = \partial^2 f / \partial x_j \partial x_i$).
+- **It is the Jacobian of the gradient.** Row $i$ of $H$ is the gradient of $\partial f / \partial x_i$. So you can
+  compute a numerical Hessian by applying [lesson 1's](/research/b0/matrix-calculus/) numerical Jacobian to the
+  gradient function.
+- **The term $\mathbf{h}^\top H\mathbf{h}$ is the curvature in direction $\mathbf{h}$.** Along a unit vector
+  $\mathbf{u}$, the function's second derivative is $\mathbf{u}^\top H\mathbf{u}$.
+
+A worked check on $f(x, y) = e^x \sin y$, whose Hessian is
+$\begin{pmatrix} e^x \sin y & e^x \cos y \\ e^x \cos y & -e^x \sin y \end{pmatrix}$. Shrink the step by 10 and
+watch the errors:
+
+```python
+import numpy as np
+
+def f(p):
+    x, y = p
+    return np.exp(x) * np.sin(y)
+
+def grad(p):
+    x, y = p
+    return np.array([np.exp(x) * np.sin(y), np.exp(x) * np.cos(y)])
+
+def hess(p):
+    x, y = p
+    return np.array([[np.exp(x) * np.sin(y),  np.exp(x) * np.cos(y)],
+                     [np.exp(x) * np.cos(y), -np.exp(x) * np.sin(y)]])
+
+p = np.array([0.5, 1.0])
+direction = np.array([1.0, -2.0])
+for t in [0.1, 0.01, 0.001]:
+    h = t * direction
+    first = f(p) + grad(p) @ h
+    second = first + 0.5 * h @ hess(p) @ h
+    print(f"step {t:<6} first-order error {abs(f(p + h) - first):.1e}   second-order error {abs(f(p + h) - second):.1e}")
+```
+
+```text title="Output"
+step 0.1    first-order error 4.1e-02   second-order error 2.2e-03
+step 0.01   first-order error 3.9e-04   second-order error 2.2e-06
+step 0.001  first-order error 3.9e-06   second-order error 2.2e-09
+```
+
+Each 10× smaller step cuts the first-order error by 100 ($h^2$) and the second-order error by 1,000 ($h^3$).
+That pattern is also a good test of a hand-derived Hessian: a wrong one leaves the second-order error shrinking
+like $h^2$.
+
+### Two Hessians you should know
+
+- **A quadratic** $f(\mathbf{x}) = \tfrac{1}{2}\mathbf{x}^\top A\mathbf{x} - \mathbf{b}^\top\mathbf{x}$ with symmetric
+  $A$ has gradient $A\mathbf{x} - \mathbf{b}$ (lesson 1) and Hessian $A$, the same everywhere. Its Taylor
+  expansion is exact.
+- **Least squares** $L(\mathbf{w}) = \frac{1}{n}\lVert X\mathbf{w} - \mathbf{y}\rVert^2$ has Hessian
+  $\frac{2}{n}X^\top X$, which [F6](/foundations/f6/practical-optimisation/) used to explain feature scaling. Near
+  any minimum, every smooth loss looks like a quadratic, which is why quadratics are the model problem for
+  optimisation theory.
+
+## Curvature, eigenvalues and saddle points
+
+At a stationary point, $\nabla f = \mathbf{0}$, the expansion is $f(\mathbf{x} + \mathbf{h}) \approx f(\mathbf{x}) + \tfrac{1}{2}\mathbf{h}^\top H\mathbf{h}$,
+so the Hessian alone decides what happens nearby. Being symmetric, it has real eigenvalues and orthogonal
+eigenvectors ([F3](/foundations/f3/eigenvectors/)): $H = Q\Lambda Q^\top$. Along the unit
+<Term id="eigenvector" /> $\mathbf{q}_i$ the curvature is exactly $\lambda_i$, and every other direction mixes
+these. So:
+
+| Eigenvalues of $H$ | Shape | Name |
+|---|---|---|
+| all $> 0$ | curves up in every direction | local minimum ($H$ is *positive definite*) |
+| all $< 0$ | curves down in every direction | local maximum |
+| some $> 0$, some $< 0$ | up in some directions, down in others | saddle point |
+| some $= 0$ | flat in some direction | the second-order test is inconclusive |
+
+A matrix with all eigenvalues $\ge 0$ is **positive semidefinite**, written $H \succeq 0$; with all $> 0$ it is
+**positive definite**, $H \succ 0$. Equivalently, $\mathbf{h}^\top H\mathbf{h} \ge 0$ (or $> 0$) for every
+non-zero $\mathbf{h}$.
+
+```python
+for name, H in [("bowl", np.array([[2.0, 0.0], [0.0, 20.0]])),
+                ("saddle", np.array([[2.0, 0.0], [0.0, -2.0]])),
+                ("tilted", np.array([[3.0, 2.0], [2.0, 3.0]]))]:
+    lam, Q = np.linalg.eigh(H)
+    print(name, lam, np.round(Q[:, 0], 3))
+```
+
+```text title="Output"
+bowl [ 2. 20.] [1. 0.]
+saddle [-2.  2.] [0. 1.]
+tilted [1. 5.] [-0.707  0.707]
+```
+
+`eigh` returns eigenvalues in increasing order, with the matching eigenvectors as columns. The bowl is
+$x^2 + 10y^2$ from F6. The saddle, $x^2 - y^2$, curves down along the $y$ axis. The tilted Hessian has no
+zero entries but is still a bowl, with its flattest direction along $(-1, 1)/\sqrt{2}$; reading curvature from
+individual entries would mislead you, the eigenvalues do not.
+
+:::note[Saddles in deep learning]
+In high dimensions saddle points are much more common than bad local minima: for a random symmetric matrix, having
+all of many eigenvalues positive is unlikely. Much of the theory of why gradient descent works on neural networks
+is about escaping saddles, which noise from SGD helps with. Treat this as intuition; precise statements need
+careful assumptions.
+:::
+
+### The condition number
+
+For a positive definite Hessian, the <Term id="condition-number" /> is
+
+$$
+\kappa = \frac{\lambda_{\max}}{\lambda_{\min}}
+$$
+
+the ratio of the steepest to the flattest curvature. F6 showed that gradient descent must use
+$\eta < 2/\lambda_{\max}$ to stay stable, and that the flattest direction then shrinks by only about
+$1 - \eta\lambda_{\min} \approx 1 - 1/\kappa$ per step. So the number of steps grows roughly in proportion to
+$\kappa$, which the next experiment confirms.
+
+## Newton's method: jump to the bottom of the model
+
+Gradient descent steps a fixed fraction of the slope. <Term id="newtons-method" text="Newton's method" /> instead
+takes the second-order Taylor model at the current point and jumps straight to its minimum. Set the gradient of
+the model with respect to $\mathbf{h}$ to zero:
+
+$$
+\nabla f(\mathbf{x}) + H(\mathbf{x})\,\mathbf{h} = \mathbf{0}
+\quad\Longrightarrow\quad
+\mathbf{h} = -H(\mathbf{x})^{-1}\,\nabla f(\mathbf{x})
+$$
+
+and update $\mathbf{x} \leftarrow \mathbf{x} + \mathbf{h}$. In one dimension this is $x \leftarrow x - f'(x)/f''(x)$:
+divide the slope by the curvature, so steep-and-narrow directions get small steps and flat-and-wide directions get
+big ones. In code, never form $H^{-1}$; solve the linear system $H\mathbf{h} = -\nabla f$ with
+`np.linalg.solve`, which is faster and more accurate ([F3](/foundations/f3/linear-systems/)).
+
+On a quadratic the model **is** the function, so one Newton step lands exactly on the minimum, whatever the
+condition number. Gradient descent, with the largest comfortable learning rate $1/\lambda_{\max}$, needs a
+number of steps that grows with $\kappa$:
+
+```python
+def solve_quadratic(A, b, x0, method, lr=None, tol=1e-6, max_steps=100_000):
+    """Minimise 0.5 x^T A x - b^T x; return the number of steps to get within tol of the minimum."""
+    x_star = np.linalg.solve(A, b)
+    x = np.array(x0, dtype=float)
+    for step in range(1, max_steps + 1):
+        g = A @ x - b                       # gradient
+        if method == "gd":
+            x = x - lr * g
+        else:
+            x = x - np.linalg.solve(A, g)   # Newton: H = A
+        if np.linalg.norm(x - x_star) < tol:
+            return step
+    return None
+
+b = np.array([1.0, 1.0])
+for kappa in [1, 10, 100, 1000]:
+    A = np.diag([1.0, float(kappa)])
+    lr = 1 / kappa                          # 1 / lambda_max, safely below 2 / lambda_max
+    print(f"condition number {kappa:5}: gradient descent {solve_quadratic(A, b, [0, 0], 'gd', lr):6} steps, Newton {solve_quadratic(A, b, [0, 0], 'newton')} step")
+```
+
+```text title="Output"
+condition number     1: gradient descent      1 steps, Newton 1 step
+condition number    10: gradient descent    132 steps, Newton 1 step
+condition number   100: gradient descent   1375 steps, Newton 1 step
+condition number  1000: gradient descent  13809 steps, Newton 1 step
+```
+
+Ten times the condition number, about ten times the steps for gradient descent; Newton does not care. Another way
+to see it: Newton's method is gradient descent after a change of coordinates that makes the valley perfectly
+round, which is the ideal version of the feature scaling in F6.
+
+On a non-quadratic function Newton is not exact, but near a minimum with $H \succ 0$ it converges
+**quadratically**: the number of correct digits roughly doubles each step. Minimise $f(x) = e^x - 2x$, whose
+minimum is at $x = \ln 2$, starting from $x = 2$:
+
+```python
+x = 2.0
+for i in range(6):
+    print(i, f"{x:.12f}", f"error {abs(x - np.log(2)):.1e}")
+    x = x - (np.exp(x) - 2) / np.exp(x)     # x - f'(x) / f''(x)
+```
+
+```text title="Output"
+0 2.000000000000 error 1.3e+00
+1 1.270670566473 error 5.8e-01
+2 0.831957303740 error 1.4e-01
+3 0.702350584017 error 9.2e-03
+4 0.693189402251 error 4.2e-05
+5 0.693147181451 error 8.9e-10
+```
+
+The error goes $10^{-2} \to 10^{-5} \to 10^{-9}$: squaring (up to a constant) each step. Statistics packages fit logistic regression
+this way, and the CS229 notes present it as "another algorithm for maximizing $\ell(\theta)$", the log-likelihood.
+
+### Why deep learning does not use it directly
+
+- **Cost.** With $n$ parameters, $H$ has $n^2$ entries and solving with it costs about $n^3$ operations. For a
+  model with $10^8$ parameters, $H$ alone would need $10^{16}$ numbers.
+- **Non-convexity.** If $H$ has negative eigenvalues, the Newton step moves towards the stationary point of the
+  model, which may be a saddle or a maximum: it can go uphill. Practical second-order methods add damping,
+  $\mathbf{h} = -(H + \mu I)^{-1}\nabla f$, or a trust region.
+- **Noise.** With mini-batches, curvature estimates are noisy as well as gradients.
+
+So practice uses cheap approximations of curvature. Adam's per-parameter scaling (F6) divides by a running
+estimate of squared gradients, a crude diagonal stand-in for curvature (it is not the Hessian diagonal, but it
+plays a similar role). Quasi-Newton methods such as L-BFGS build a low-rank curvature estimate from recent
+gradients; `scipy.optimize.minimize` defaults to BFGS (a quasi-Newton method) for unconstrained problems and to L-BFGS-B when there are only bounds. Hessian-vector
+products $H\mathbf{v}$ can be computed by autodiff without ever forming $H$, which research code uses to measure
+sharpness (the largest Hessian eigenvalue) of a trained network.
+
+:::caution[The learning-rate limit is a curvature statement]
+When a paper says "the training is stable when $\eta < 2/\lambda_{\max}$" or reports "sharpness", it is applying
+the quadratic model of this lesson to the loss near the current weights. It is a local statement and only as good
+as that model.
+:::
+
+## Try it
+
+<CodeExercise id="b0-taylor-hessians-and-newton-01" />
+
+<CodeExercise id="b0-taylor-hessians-and-newton-02" />
+
+## Summary
+
+- Second-order Taylor: $f(\mathbf{x} + \mathbf{h}) \approx f + \nabla f^\top\mathbf{h} + \tfrac{1}{2}\mathbf{h}^\top H\mathbf{h}$,
+  error $O(\lVert\mathbf{h}\rVert^3)$.
+- The Hessian $H_{ij} = \partial^2 f / \partial x_i \partial x_j$ is symmetric and is the Jacobian of the gradient.
+  Quadratic $\tfrac{1}{2}\mathbf{x}^\top A\mathbf{x} - \mathbf{b}^\top\mathbf{x}$: $H = A$.
+- At a stationary point, eigenvalues of $H$ all positive: minimum; all negative: maximum; mixed: saddle.
+- Condition number $\kappa = \lambda_{\max}/\lambda_{\min}$; gradient descent needs about $\kappa$ times more steps.
+- Newton: solve $H\mathbf{h} = -\nabla f$. One step on a quadratic, quadratic convergence near a minimum, but
+  $O(n^3)$ cost and unsafe when $H$ is indefinite.

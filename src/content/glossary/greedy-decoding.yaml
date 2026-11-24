@@ -1,0 +1,7 @@
+term: "Greedy decoding"
+short: "Generating text by always choosing the single most probable next token."
+body: |
+  Greedy decoding is deterministic in principle and suits tasks with one right answer, but on open-ended
+  text it tends to be bland and can fall into repetitive loops. It is the limit of sampling as the
+  temperature goes to 0.
+related: ["temperature", "nucleus-sampling", "language-model"]

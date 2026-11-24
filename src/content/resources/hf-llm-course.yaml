@@ -2,4 +2,4 @@ title: "Hugging Face LLM Course"
 url: https://huggingface.co/learn/llm-course/chapter1/1
 kind: course
 free: true
-modules: [f10]
+modules: [f10, c1]

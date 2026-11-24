@@ -1,0 +1,8 @@
+term: "Newton's method"
+short: "An optimiser that jumps to the minimum of the local quadratic (second-order Taylor) model: x ← x − H⁻¹∇f."
+body: |
+  On a quadratic it reaches the minimum in one step, whatever the condition number, and near a minimum it converges
+  quadratically (correct digits roughly double each step). Each step needs the Hessian and a linear solve, which
+  costs about $n^3$ operations for $n$ parameters, and it can head for a saddle when the Hessian is not positive
+  definite. Quasi-Newton methods such as L-BFGS approximate it cheaply.
+related: ["hessian", "gradient-descent", "condition-number"]

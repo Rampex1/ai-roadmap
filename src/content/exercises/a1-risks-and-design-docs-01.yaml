@@ -1,0 +1,73 @@
+id: a1-risks-and-design-docs-01
+lesson: mle/a1/risks-and-design-docs
+title: Check latency and fairness requirements
+prompt: |
+  A design doc says: **p99 latency under 100 ms**, and **the gap in recall between groups at most 0.1**.
+  Write `check_requirements(latency_ms, y, flags, group, p99_budget, max_gap)` that returns a dict:
+
+  - `"p99"`: the 99th percentile of `latency_ms` (`np.percentile`);
+  - `"recall_gap"`: the largest recall minus the smallest recall across groups, where each group's
+    recall is its true positives divided by its positives. Skip groups with no positives;
+  - `"passes"`: `True` only if `p99 < p99_budget` **and** `recall_gap <= max_gap`.
+
+  All inputs are numpy arrays of the same length (except `latency_ms`, which has its own length).
+  For the example, group A has recall 2/3 and group B recall 1/2, so the gap is about 0.167 and the
+  check fails even though the latency is fine.
+starter: |
+  import numpy as np
+
+  latency_ms = np.array([30, 35, 40, 42, 45, 50, 55, 60, 70, 90])
+  y      = np.array([1, 1, 1, 0, 0, 1, 1, 0, 0, 0])
+  flags  = np.array([1, 1, 0, 1, 0, 1, 0, 0, 0, 0])
+  group  = np.array(["A", "A", "A", "A", "A", "B", "B", "B", "B", "B"])
+
+  def check_requirements(latency_ms, y, flags, group, p99_budget, max_gap):
+      pass
+
+  print(check_requirements(latency_ms, y, flags, group, 100, 0.1))
+solution: |
+  import numpy as np
+
+  latency_ms = np.array([30, 35, 40, 42, 45, 50, 55, 60, 70, 90])
+  y      = np.array([1, 1, 1, 0, 0, 1, 1, 0, 0, 0])
+  flags  = np.array([1, 1, 0, 1, 0, 1, 0, 0, 0, 0])
+  group  = np.array(["A", "A", "A", "A", "A", "B", "B", "B", "B", "B"])
+
+  def check_requirements(latency_ms, y, flags, group, p99_budget, max_gap):
+      y = np.asarray(y).astype(bool)
+      flags = np.asarray(flags).astype(bool)
+      group = np.asarray(group)
+      p99 = float(np.percentile(latency_ms, 99))
+      recalls = []
+      for g in np.unique(group):
+          pos = y & (group == g)
+          if pos.sum() > 0:
+              recalls.append(np.sum(pos & flags) / pos.sum())
+      gap = float(max(recalls) - min(recalls))
+      return {"p99": p99, "recall_gap": gap, "passes": bool(p99 < p99_budget and gap <= max_gap)}
+
+  print(check_requirements(latency_ms, y, flags, group, 100, 0.1))
+tests: |
+  import math
+  import numpy as np
+  _r = check_requirements(latency_ms, y, flags, group, 100, 0.1)
+  assert isinstance(_r, dict), "Return a dict with keys p99, recall_gap and passes"
+  for _k in ("p99", "recall_gap", "passes"):
+      assert _k in _r, f"The dict needs the key {_k!r}"
+  assert math.isclose(_r["p99"], np.percentile(latency_ms, 99)), f"p99 should be {np.percentile(latency_ms, 99)}, got {_r['p99']}"
+  assert math.isclose(_r["recall_gap"], 2 / 3 - 1 / 2), f"Recall is 2/3 in A and 1/2 in B, so the gap is {2/3 - 1/2:.4f}, got {_r['recall_gap']}"
+  assert bool(_r["passes"]) is False, "The recall gap 0.167 exceeds 0.1, so passes should be False"
+  assert bool(check_requirements(latency_ms, y, flags, group, 100, 0.2)["passes"]) is True, "With max_gap=0.2 and p99 under 100 ms the check should pass"
+  assert bool(check_requirements(latency_ms, y, flags, group, 80, 0.2)["passes"]) is False, "With a p99 budget of 80 ms the latency requirement fails (p99 is about 88 ms)"
+  _y = np.array([1, 0, 1, 1, 0, 0, 1])
+  _f = np.array([1, 1, 1, 0, 0, 1, 0])
+  _g = np.array(["x", "x", "y", "y", "z", "z", "w"])
+  _r = check_requirements(np.arange(1, 201), _y, _f, _g, 300, 1.0)
+  assert math.isclose(_r["recall_gap"], 1.0), f"Groups x (recall 1), y (recall 0.5), w (recall 0); z has no positives and is skipped: gap 1.0, got {_r['recall_gap']}"
+  assert math.isclose(_r["p99"], np.percentile(np.arange(1, 201), 99)), "Compute p99 with np.percentile(latency_ms, 99)"
+  _r = check_requirements(np.array([10.0, 20.0]), _y[:4], _f[:4], np.array(["x", "x", "y", "y"]), 15, 1.0)
+  assert bool(_r["passes"]) is False, f"p99 of [10, 20] is 19.9, which is not under a 15 ms budget, got {_r}"
+hints:
+  - "np.percentile(latency_ms, 99) gives the p99."
+  - "For each group g in np.unique(group), the positives are y & (group == g); skip the group if there are none."
+  - "Wrap the final comparison in bool() so passes is a plain True or False."

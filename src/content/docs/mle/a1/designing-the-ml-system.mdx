@@ -1,0 +1,188 @@
+---
+title: "Designing the ML system end to end"
+module: a1
+order: 4
+estMinutes: 13
+objectives:
+  - "Sketch the components of a production ML system and name which Track A module covers each"
+  - "Choose between batch and online prediction from latency, freshness and cost requirements"
+  - "Compute point-in-time correct features and explain training-serving skew"
+  - "Plan a training cadence, a defence against feedback loops and the layers of monitoring"
+goDeeper: dmls-book
+---
+import Term from '@/components/Term.astro';
+import Figure from '@/components/Figure.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import mapImg from '@/assets/diagrams/a1-system-map.svg';
+
+A well-known 2015 Google paper, "Hidden Technical Debt in Machine Learning Systems" (Sculley and
+colleagues), has a figure in which the ML model is a tiny black box surrounded by much larger boxes:
+data collection, feature extraction, configuration, serving infrastructure, monitoring. The point
+stands: in a production system, the model is a small part of the code and a smaller part of the work.
+This lesson is a map of the whole system, and of the rest of Track A.
+
+## The map
+
+<Figure src={mapImg} alt="A loop of boxes. Data sources feed a feature pipeline. Features go to a training pipeline, which produces a versioned model, and to serving. Serving, either batch or online, returns predictions to the product, which makes a decision. Outcomes of decisions are logged and become new labels in the data sources. Monitoring watches the data, the predictions and the outcomes." caption="An ML system is a loop. Predictions drive decisions, decisions create the next round of data." />
+
+Walk round the loop, with the fraud system as the example:
+
+1. **Data sources.** Transaction records, device and account data, past disputes (the labels). Who owns
+   each source, how fresh is it, and can its format change without warning? *(A3 Data management.)*
+2. **Feature pipeline.** Turns raw records into model inputs: "number of transactions on this card in
+   the last hour", "amount relative to the customer's average". Must compute the same values in
+   training and in serving (more below).
+3. **Training pipeline.** Selects matured labels, builds the training table, trains, evaluates against
+   the baseline and the success threshold, and records everything so a result can be reproduced.
+   *(A2 Deep learning practice and transfer learning, A4 Experiment tracking and tuning, A5 Evaluation.)*
+4. **Model artefact.** A versioned file plus its metadata: data version, code version, metrics, a
+   <Term id="model-card" />. You must be able to say exactly which model made a given prediction.
+5. **Serving.** Gets features, runs the model, returns a score, batch or online. *(A8 Serving with
+   FastAPI, Docker and ONNX; A11 Scaling.)*
+6. **Decision.** The product turns the score into an action: block, send to review, approve. Thresholds
+   and business rules often live here, outside the model.
+7. **Feedback.** Outcomes (disputes, reviewer verdicts) are logged and joined back to predictions,
+   becoming the next training labels.
+8. **Monitoring.** Watches every step: is data arriving, has it shifted, are predictions sensible, are
+   outcomes as good as expected? *(A10 Monitoring and drift.)*
+
+Around the loop sit engineering practices: code that is structured and reviewed (A6 Software
+engineering for ML), tests for data, features and models (A7 Testing), automatic checks and deployment
+on every change (A9 CI/CD), and the people and processes that decide what ships (A12 Teams and
+responsible deployment). The Track A capstone builds a small version of this whole loop.
+
+## Serving: batch or online?
+
+The biggest early design choice is *when* predictions are made.
+
+| | Batch prediction | Online prediction |
+|---|---|---|
+| When | on a schedule, for everyone (nightly, weekly) | on request, for one case, when needed |
+| Output | a table of scores, stored and looked up | a response to an API call |
+| Latency | the job can take hours | the request has a budget (often milliseconds) |
+| Freshness | features as of the last run | features as of now |
+| Typical use | churn scores for a weekly call list, nightly recommendations | card fraud at payment time, search ranking |
+| Cost and complexity | lower: one job, easy to retry | higher: always-on service, must handle peaks |
+
+Choose <Term id="batch-prediction" /> unless the decision needs information that only exists at request
+time. A weekly retention call list gains nothing from millisecond answers. A fraud check at payment
+time cannot be batch: the transaction did not exist last night. Many systems mix the two: features
+that change slowly are computed in batch, and the final <Term id="online-prediction" /> combines them
+with a few real-time signals.
+
+A quick load estimate belongs in the design. Ten million transactions a day is
+$10^7 / 86{,}400 \approx 116$ requests per second on average, and peaks can be several times higher.
+That number, together with the latency budget, decides how much serving capacity you need.
+
+## Features at the right moment
+
+The features a model is trained on must be the values that *would have been known* at prediction time.
+A common bug is to compute training features from today's database tables, which already contain the
+future. Here a balance table records each change, and we want the balance at the moment of each
+prediction:
+
+```python
+import pandas as pd
+
+# Each row: a customer's account balance changed at this time.
+balances = pd.DataFrame({
+    "customer": ["a", "a", "a", "b", "b"],
+    "time": pd.to_datetime(["2026-03-01", "2026-03-10", "2026-03-20", "2026-03-05", "2026-03-25"]),
+    "balance": [100, 40, 900, 500, 20],
+})
+# Each row: we made a prediction about this customer at this time.
+preds = pd.DataFrame({
+    "customer": ["a", "b"],
+    "time": pd.to_datetime(["2026-03-15", "2026-03-15"]),
+})
+
+# Wrong: the latest balance in the table, whenever it happened.
+latest = balances.sort_values("time").groupby("customer")["balance"].last()
+print(preds.assign(balance=preds["customer"].map(latest)))
+
+# Right: the last balance known strictly before each prediction time.
+pit = pd.merge_asof(preds.sort_values("time"), balances.sort_values("time"),
+                    on="time", by="customer", allow_exact_matches=False)
+print(pit)
+```
+
+```text title="Output"
+  customer       time  balance
+0        a 2026-03-15      900
+1        b 2026-03-15       20
+  customer       time  balance
+0        a 2026-03-15       40
+1        b 2026-03-15      500
+```
+
+`pd.merge_asof` matches each prediction to the most recent earlier row for the same customer
+(`by="customer"`); `allow_exact_matches=False` excludes a change at exactly the prediction time, a
+cautious choice when you cannot be sure which event came first. The "wrong" version uses balances from
+5 and 10 days in the future. This kind of **point-in-time correctness** is what feature stores and
+careful data pipelines exist to guarantee.
+
+The related production bug is <Term id="training-serving-skew" />: the features computed in serving
+differ from those computed in training, because two pieces of code implement "the same" feature
+differently (time zones, missing-value handling, a different window). The model then sees inputs it was
+never trained on. The best defence is a single implementation of each feature, used by both pipelines,
+and tests that compare them (A7 Testing).
+
+## Training cadence
+
+How often should you retrain?
+
+- **Once**, if the world is stable: a model that reads digits on forms may stay good for years.
+- **On a schedule** (weekly, monthly), if the world drifts steadily: fraud patterns, prices, tastes.
+- **When triggered** by monitoring: retrain when drift or a performance drop is detected.
+
+Two constraints from earlier lessons apply. Label delay sets a floor on freshness: with 30-day labels,
+even daily retraining learns from data at least a month old. And every retrained model must pass the
+same evaluation gate as the first one, against the current model as well as the baseline, or "automatic
+retraining" becomes "automatic regression".
+
+## Feedback loops
+
+The system changes the data it learns from. A fraud model that blocks a transaction prevents the fraud,
+so you never see whether it *was* fraud: blocked transactions have no label. Train the next model only
+on transactions that went through, and it never learns from the cases the old model was surest about.
+This is the <Term id="feedback-loop" /> from [F11](/foundations/f11/why-responsible-ai/), and it shows
+up in lending (outcomes only for approved loans), recommendations (feedback only on items shown) and
+moderation.
+
+Defences to plan from day one:
+
+- **A holdout:** a small random share of cases where the model's decision is not applied, or is
+  reviewed by a person instead, so unbiased labels keep arriving.
+- **Logging:** record the score, the decision, the model version and the features used, for every
+  prediction. You cannot fix later what you did not log.
+- **Awareness in evaluation:** when comparing models offline, remember that historical labels were
+  shaped by the old model's decisions.
+
+## Monitoring, in layers
+
+Plan what you will watch before launch, from fastest to slowest signal:
+
+1. **System health:** is the service up, how many errors, what latency? Seconds.
+2. **Data quality:** missing columns, nulls, values out of range, volumes. Minutes to hours.
+3. **Drift:** have input distributions or the prediction distribution moved
+   (<Term id="distribution-shift" />)? Hours to days, and available *before* labels arrive.
+4. **Model quality:** precision, recall, cost once labels have matured. Weeks, because of label delay.
+5. **Business outcome:** fraud losses, complaints. Months.
+
+The slower the label, the more you rely on the fast layers to warn you early.
+
+## Try it
+
+<CodeExercise id="a1-designing-the-ml-system-01" />
+
+## Summary
+
+- The model is a small part of an ML system: data sources, features, training, artefacts, serving,
+  decisions, feedback and monitoring form a loop. Track A covers each part in turn.
+- Prefer batch prediction unless the decision needs information that only exists at request time.
+- Features must be computed as of the prediction time; one implementation shared by training and
+  serving prevents training-serving skew.
+- Retraining cadence depends on how fast the world changes, limited by label delay, and every new model
+  must pass the evaluation gate.
+- Predictions shape future labels; keep a holdout and log every prediction. Monitor in layers, from
+  system health to business outcomes.

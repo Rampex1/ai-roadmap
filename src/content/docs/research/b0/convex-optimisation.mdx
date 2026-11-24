@@ -1,0 +1,326 @@
+---
+title: "Convex optimisation: Jensen, strong convexity, Lagrange multipliers and KKT"
+module: b0
+order: 3
+estMinutes: 22
+objectives:
+  - "Test convexity of a set or function with the chord, tangent-plane and Hessian conditions, and apply Jensen's inequality in both directions"
+  - "Explain what strong convexity adds (a unique minimiser) and how L2 regularisation provides it"
+  - "Solve a small equality- or inequality-constrained problem with Lagrange multipliers and the KKT conditions, and check the answer with scipy.optimize"
+goDeeper: boyd-convex-optimization
+---
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+import Figure from '@/components/Figure.astro';
+import lagrangeImg from '@/assets/diagrams/b0-lagrange.svg';
+
+[F6](/foundations/f6/what-is-optimisation/) introduced <Term id="convex-function" text="convex functions" />
+with one headline: every local minimum is a global one. Research papers use much more of convex analysis than
+that. Proofs that an algorithm converges assume convexity or strong convexity; the KL divergence is shown to be
+non-negative with Jensen's inequality; support vector machines, maximum-entropy models and many fairness or
+safety formulations are constrained problems solved with Lagrange multipliers. This lesson covers the core:
+three equivalent tests for convexity, Jensen, strong convexity, and the conditions that characterise a
+constrained optimum.
+
+## Convex sets
+
+A set $C$ is **convex** if the straight segment between any two of its points stays inside it: for all
+$\mathbf{x}, \mathbf{y} \in C$ and $\theta \in [0, 1]$,
+
+$$
+\theta\mathbf{x} + (1 - \theta)\mathbf{y} \in C
+$$
+
+Examples: a line, a plane, a half-space $\{\mathbf{x} : \mathbf{a}^\top\mathbf{x} \le b\}$, a ball
+$\{\mathbf{x} : \lVert\mathbf{x}\rVert \le r\}$, and the **probability simplex** (vectors with non-negative entries
+summing to 1, the set of all distributions over $K$ outcomes). The intersection of convex sets is convex, so any
+set described by linear equalities and convex inequalities is convex. Non-examples: a ring (annulus), the set of
+integers, the surface of a sphere.
+
+Why sets matter: minimising a convex function over a convex set is a **convex problem**, and convex problems
+keep the "local is global" guarantee with constraints added.
+
+## Three tests for a convex function
+
+Let $f$ be defined on a convex set. These are equivalent when $f$ is smooth enough for each to make sense:
+
+1. **Chord (the definition).** $f(\theta\mathbf{x} + (1 - \theta)\mathbf{y}) \le \theta f(\mathbf{x}) + (1 - \theta) f(\mathbf{y})$
+   for all $\mathbf{x}, \mathbf{y}$ and $\theta \in [0, 1]$: the function lies below its chords.
+2. **First order (tangent plane).** $f(\mathbf{y}) \ge f(\mathbf{x}) + \nabla f(\mathbf{x})^\top(\mathbf{y} - \mathbf{x})$
+   for all $\mathbf{x}, \mathbf{y}$: every tangent plane lies below the whole function.
+3. **Second order.** $H(\mathbf{x}) \succeq 0$ (positive semidefinite, [lesson 2](/research/b0/taylor-hessians-and-newton/))
+   everywhere: curvature is never negative in any direction.
+
+The first-order condition is the one that does the work in proofs. Put $\nabla f(\mathbf{x}^\star) = \mathbf{0}$ into
+it and you get $f(\mathbf{y}) \ge f(\mathbf{x}^\star)$ for every $\mathbf{y}$: **a stationary point of a convex
+function is a global minimum**. That is F6's headline, now with a one-line proof.
+
+You can test the tangent-plane condition numerically: draw random pairs and count violations. Log-sum-exp,
+$\log\sum_i e^{v_i}$, is convex (its gradient is the softmax); a wavy function is not:
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(0)
+
+def lse(v):                         # log-sum-exp, a convex function
+    return np.log(np.sum(np.exp(v)))
+
+def lse_grad(v):
+    e = np.exp(v)
+    return e / e.sum()              # the softmax
+
+def wavy(v):                        # not convex
+    return np.sum(np.sin(3 * v)) + 0.1 * v @ v
+
+def wavy_grad(v):
+    return 3 * np.cos(3 * v) + 0.2 * v
+
+for name, f, g in [("log-sum-exp", lse, lse_grad), ("wavy", wavy, wavy_grad)]:
+    bad = 0
+    for _ in range(10_000):
+        a, b = rng.normal(size=(2, 3)) * 2
+        if f(b) < f(a) + g(a) @ (b - a) - 1e-12:
+            bad += 1
+    print(f"{name:12s} tangent-plane violations: {bad} of 10000")
+```
+
+```text title="Output"
+log-sum-exp  tangent-plane violations: 0 of 10000
+wavy         tangent-plane violations: 4278 of 10000
+```
+
+Zero violations is evidence, not proof; one violation is a proof of non-convexity.
+
+**Rules that build convex functions** without any calculus: non-negative weighted sums of convex functions are
+convex; a convex function of an affine map, $f(A\mathbf{x} + \mathbf{b})$, is convex; the pointwise maximum of
+convex functions is convex. So the logistic loss $\log(1 + e^{-y\,\mathbf{w}^\top\mathbf{x}})$ (log-sum-exp of
+$0$ and an affine function of $\mathbf{w}$), the hinge loss $\max(0, 1 - y\,\mathbf{w}^\top\mathbf{x})$ and any
+norm are convex in $\mathbf{w}$, and so are their sums over a dataset plus an L2 or L1 penalty.
+
+## Jensen's inequality
+
+The chord definition with two points says "$f$ of an average is at most the average of $f$". Extending it to any
+number of points, or to any distribution, gives <Term id="jensens-inequality" text="Jensen's inequality" />: for a
+convex $f$ and a random variable $X$,
+
+$$
+f(\mathbb{E}[X]) \le \mathbb{E}[f(X)]
+$$
+
+For a **concave** $f$ (such as $\log$) the inequality flips: $\mathbb{E}[\log X] \le \log\mathbb{E}[X]$. Equality
+holds when $X$ is constant (or $f$ is linear where $X$ lives).
+
+```python
+x = np.array([1.0, 2.0, 6.0])      # values of X
+p = np.array([0.5, 0.3, 0.2])      # their probabilities
+EX = p @ x
+for name, f in [("x^2", np.square), ("exp", np.exp), ("log", np.log)]:
+    print(f"{name:4s} f(E[X]) = {f(EX):8.3f}   E[f(X)] = {p @ f(x):8.3f}")
+```
+
+```text title="Output"
+x^2  f(E[X]) =    5.290   E[f(X)] =    8.900
+exp  f(E[X]) =    9.974   E[f(X)] =   84.262
+log  f(E[X]) =    0.833   E[f(X)] =    0.566
+```
+
+The square case is something you know: $\mathbb{E}[X^2] - (\mathbb{E}[X])^2 = \operatorname{Var}(X) \ge 0$. The log
+case is the one research uses most: lesson 5 turns it into a proof that the KL divergence is never negative and
+into the evidence lower bound (ELBO) behind variational autoencoders.
+
+## Strong convexity
+
+Convexity allows flat regions and many minimisers. A function is **$\mu$-strongly convex** (for some $\mu > 0$) if
+it curves up at least as much as a quadratic of curvature $\mu$:
+
+$$
+f(\mathbf{y}) \ge f(\mathbf{x}) + \nabla f(\mathbf{x})^\top(\mathbf{y} - \mathbf{x}) + \frac{\mu}{2}\lVert\mathbf{y} - \mathbf{x}\rVert^2
+$$
+
+or, for twice-differentiable $f$, $H(\mathbf{x}) \succeq \mu I$: every Hessian eigenvalue is at least $\mu$. Two
+consequences:
+
+- The minimiser is **unique**.
+- Gradient descent converges **linearly** (the error shrinks by a constant factor each step), at a rate set by the
+  condition number $L/\mu$, where $L$ bounds the largest curvature. This is the precise form of the F6 and
+  lesson 2 story.
+
+Least squares with more features than examples is convex but not strongly convex: $X^\top X$ has zero eigenvalues,
+so a whole flat valley of weights fits equally well. Adding the ridge penalty $\lambda\lVert\mathbf{w}\rVert^2$ adds
+$2\lambda I$ to the Hessian and makes the problem $2\lambda$-strongly convex:
+
+```python
+X = rng.normal(size=(5, 8))          # 5 examples, 8 features: more features than examples
+H = 2 / 5 * X.T @ X                  # Hessian of the mean squared error
+print(np.round(np.linalg.eigvalsh(H)[:4], 6) + 0.0)        # + 0.0 turns -0.0 into 0.0
+lam = 0.1
+print(np.round(np.linalg.eigvalsh(H + 2 * lam * np.eye(8))[:4], 6))
+```
+
+```text title="Output"
+[0.       0.       0.       0.474814]
+[0.2      0.2      0.2      0.674814]
+```
+
+Rank 5 in 8 dimensions leaves three zero-curvature directions; the penalty lifts every eigenvalue by
+$2\lambda = 0.2$. This is one reason papers add a small weight decay "for numerical stability" and why theorems
+often assume strong convexity.
+
+## Constraints and Lagrange multipliers
+
+Now minimise $f(\mathbf{x})$ subject to an equality constraint $h(\mathbf{x}) = 0$. Take the example
+
+$$
+\min_{x, y}\; x^2 + 2y^2 \quad\text{subject to}\quad x + y = 3
+$$
+
+<Figure
+  src={lagrangeImg}
+  alt="Elliptical contours of x squared plus 2 y squared around the origin and the line x plus y equals 3. At the constrained optimum (2, 1) the line just touches a contour, and the gradient of f points perpendicular to the line. At (3, 0) on the line the gradient of f is horizontal, not perpendicular to the line"
+  caption="At the constrained minimum the constraint line is tangent to a contour, so ∇f is perpendicular to the line, parallel to ∇h. Anywhere else on the line, ∇f has a component along it, and sliding that way lowers f."
+/>
+
+Walk along the line. At a point where $\nabla f$ has a component along the line, moving against that component
+lowers $f$ while staying feasible, so it is not the minimum. At the minimum, $\nabla f$ must be perpendicular to
+the line, which means parallel to $\nabla h$ (the gradient of a constraint is perpendicular to its level set). So
+for some number $\nu$:
+
+$$
+\nabla f(\mathbf{x}^\star) + \nu\,\nabla h(\mathbf{x}^\star) = \mathbf{0}, \qquad h(\mathbf{x}^\star) = 0
+$$
+
+$\nu$ is the <Term id="lagrange-multiplier" />. A compact way to remember both conditions: they say the gradient
+of the **Lagrangian**
+
+$$
+\mathcal{L}(\mathbf{x}, \nu) = f(\mathbf{x}) + \nu\, h(\mathbf{x})
+$$
+
+is zero with respect to both $\mathbf{x}$ and $\nu$. With several constraints, each gets its own multiplier.
+
+**Worked example.** Here $h(x, y) = x + y - 3$, $\nabla f = (2x, 4y)$, $\nabla h = (1, 1)$:
+
+$$
+2x + \nu = 0, \qquad 4y + \nu = 0, \qquad x + y = 3
+$$
+
+The first two give $x = 2y$, the third $3y = 3$, so $(x, y) = (2, 1)$, $\nu = -4$ and $f^\star = 6$. Check with
+`scipy.optimize.minimize`, which switches to the SLSQP method when given constraints:
+
+```python
+from scipy.optimize import minimize
+
+f = lambda q: q[0]**2 + 2 * q[1]**2
+res = minimize(f, x0=[0.0, 0.0], constraints=[{"type": "eq", "fun": lambda q: q[0] + q[1] - 3}])
+print(res.x.round(6), round(res.fun, 6), res.message)
+```
+
+```text title="Output"
+[2. 1.] 6.0 Optimization terminated successfully
+```
+
+**What $\nu$ means.** Change the constraint to $x + y = c$. Repeating the algebra gives $f^\star(c) = \tfrac{2}{3}c^2$,
+so $\frac{df^\star}{dc} = \tfrac{4}{3}c = 4$ at $c = 3$, which is $-\nu$. The multiplier is the **sensitivity** of the
+optimal value to the constraint (economists call it a shadow price): how much better you could do if the
+constraint were loosened a little.
+
+**Quadratic problems are one linear solve.** For $f(\mathbf{x}) = \tfrac{1}{2}\mathbf{x}^\top Q\mathbf{x} + \mathbf{c}^\top\mathbf{x}$
+with constraints $A\mathbf{x} = \mathbf{b}$, the Lagrange conditions $Q\mathbf{x} + \mathbf{c} + A^\top\boldsymbol{\nu} = \mathbf{0}$ and
+$A\mathbf{x} = \mathbf{b}$ are linear, so stack them into one system (the **KKT system**):
+
+$$
+\begin{pmatrix} Q & A^\top \\ A & 0 \end{pmatrix}
+\begin{pmatrix} \mathbf{x} \\ \boldsymbol{\nu} \end{pmatrix}
+=
+\begin{pmatrix} -\mathbf{c} \\ \mathbf{b} \end{pmatrix}
+$$
+
+```python
+Q = np.array([[2.0, 0.0], [0.0, 4.0]])   # f = 0.5 x^T Q x, so f = x^2 + 2y^2
+c = np.zeros(2)
+A = np.array([[1.0, 1.0]])               # constraint A x = b
+b = np.array([3.0])
+K = np.block([[Q, A.T], [A, np.zeros((1, 1))]])
+sol = np.linalg.solve(K, np.concatenate([-c, b]))
+print(sol)
+```
+
+```text title="Output"
+[ 2.  1. -4.]
+```
+
+The same $(2, 1)$ and $\nu = -4$, with no iterations.
+
+## Inequality constraints: the KKT conditions
+
+Most constraints in ML are inequalities: a probability must be non-negative, a weight norm must stay below a
+budget, a policy must not drift too far. Write them as $g_i(\mathbf{x}) \le 0$. At the optimum each one is either:
+
+- **inactive** ($g_i < 0$): it does not touch the solution, which is the same as without it; or
+- **active** ($g_i = 0$): it behaves like an equality, pushing back on $f$ from one side only.
+
+The <Term id="kkt-conditions" text="Karush-Kuhn-Tucker (KKT) conditions" /> encode this with one multiplier
+$\mu_i$ per inequality (and $\nu_j$ per equality $h_j$):
+
+1. **Stationarity:** $\nabla f(\mathbf{x}) + \sum_i \mu_i\nabla g_i(\mathbf{x}) + \sum_j \nu_j\nabla h_j(\mathbf{x}) = \mathbf{0}$.
+2. **Primal feasibility:** $g_i(\mathbf{x}) \le 0$ and $h_j(\mathbf{x}) = 0$.
+3. **Dual feasibility:** $\mu_i \ge 0$. The constraint can only push you back into the feasible region, never pull.
+4. **Complementary slackness:** $\mu_i\, g_i(\mathbf{x}) = 0$. Either the constraint is active or its multiplier
+   is zero.
+
+For a convex problem (convex $f$ and $g_i$, affine $h_j$) and under a mild regularity condition (for example,
+Slater's condition: some point satisfies every inequality strictly), the KKT conditions are both necessary and
+sufficient: a point satisfying them is a global optimum. For non-convex problems they are only necessary, under
+regularity conditions.
+
+**Worked example.** Minimise $(x - 2)^2 + (y - 2)^2$, the squared distance to $(2, 2)$, subject to
+$x + y \le c$.
+
+- **$c = 5$.** The unconstrained minimum $(2, 2)$ has $x + y = 4 \le 5$: feasible. Take $\mu = 0$; stationarity
+  gives $(2, 2)$. The constraint is inactive.
+- **$c = 2$.** Now $(2, 2)$ is infeasible, so guess the constraint is active: $x + y = 2$. Stationarity:
+  $2(x - 2) + \mu = 0$ and $2(y - 2) + \mu = 0$, so $x = y = 1$ and $\mu = 2 \ge 0$. Dual feasibility holds, so the
+  guess was right. (A negative $\mu$ would have meant the constraint was pulling, and the guess was wrong.)
+
+scipy agrees. Careful with its sign convention: an `"ineq"` constraint means `fun(x) >= 0`, so $x + y \le c$
+becomes `c - x - y`:
+
+```python
+f = lambda q: (q[0] - 2)**2 + (q[1] - 2)**2
+for cap in [2.0, 5.0]:
+    res = minimize(f, x0=[0.0, 0.0], constraints=[{"type": "ineq", "fun": lambda q, cap=cap: cap - q[0] - q[1]}])
+    print(f"x + y <= {cap}: solution {res.x.round(4)}, f = {res.fun:.4f}")
+```
+
+```text title="Output"
+x + y <= 2.0: solution [1. 1.], f = 2.0000
+x + y <= 5.0: solution [2. 2.], f = 0.0000
+```
+
+:::note[Where KKT shows up in ML]
+- **Support vector machines:** the KKT conditions are why only the "support vectors" (points with $\mu_i > 0$,
+  on or inside the margin) determine the solution; the rest have $\mu_i = 0$ by complementary slackness.
+- **Maximum entropy:** maximising entropy subject to $\sum_k p_k = 1$ gives the uniform distribution; adding
+  constraints on expected features gives the softmax (exponential-family) form.
+- **Penalties versus constraints:** minimising $L(\mathbf{w}) + \lambda\lVert\mathbf{w}\rVert^2$ is closely related
+  to minimising $L$ subject to $\lVert\mathbf{w}\rVert^2 \le r$; $\lambda$ plays the role of the multiplier.
+  Trust-region methods in reinforcement learning use the same idea with a budget on the KL divergence.
+:::
+
+## Try it
+
+<CodeExercise id="b0-convex-optimisation-01" />
+
+<CodeExercise id="b0-convex-optimisation-02" />
+
+## Summary
+
+- Convex set: segments stay inside. Convex problem: convex $f$ over a convex set; local minima are global.
+- Convex function tests: chords above, tangent planes below ($f(\mathbf{y}) \ge f(\mathbf{x}) + \nabla f^\top(\mathbf{y} - \mathbf{x})$),
+  or $H \succeq 0$. Build convex losses from sums, affine maps and maxima.
+- Jensen: $f(\mathbb{E}X) \le \mathbb{E}f(X)$ for convex $f$; reversed for concave $f$ such as $\log$.
+- Strong convexity ($H \succeq \mu I$) gives a unique minimiser and linear convergence; L2 regularisation provides it.
+- Lagrange: at an equality-constrained optimum $\nabla f + \nu\nabla h = \mathbf{0}$; $\nu$ is the sensitivity of
+  the optimum to the constraint. A quadratic with linear constraints is one linear (KKT) solve.
+- KKT for $g_i \le 0$: stationarity, feasibility, $\mu_i \ge 0$, and $\mu_i g_i = 0$.

@@ -1,0 +1,79 @@
+id: c1-context-windows-01
+lesson: llm/c1/context-windows
+title: Fit a chat history into a token budget
+prompt: |
+  A chat is a list of `(role, n_tokens)` pairs, oldest first, where `n_tokens` counts the message's
+  content. Message 0 has role `"system"` and the last message has role `"user"`.
+
+  Write `fit_messages(messages, window, max_output, overhead=5, gen_prompt=3)` that returns the
+  **indices** of the messages to send, in increasing order.
+
+  - Each message costs `n_tokens + overhead` (template markers). The generation prompt costs
+    `gen_prompt`. The reply needs `max_output` tokens. So the messages may use at most
+    `window - max_output - gen_prompt` tokens.
+  - Always keep message 0 (system) and the last message (the new user message). If those two alone do
+    not fit, raise `ValueError`.
+  - Then add earlier messages from the **newest** backwards, stopping at the first one that does not
+    fit, so the kept history has no gaps.
+  - Finally, the kept history (everything between the system message and the last message) must not
+    **start** with an `"assistant"` message: if it does, drop that message too.
+
+  Example: `[("system", 20), ("user", 50), ("assistant", 80), ("user", 30), ("assistant", 40), ("user", 10)]`
+  with `window=300, max_output=100` gives a budget of 197. System and last user cost 25 + 15 = 40.
+  Adding message 4 (45), 3 (35) and 2 (85) would make 205, so message 2 does not fit: the answer is
+  `[0, 3, 4, 5]`.
+starter: |
+  def fit_messages(messages, window, max_output, overhead=5, gen_prompt=3):
+      return list(range(len(messages)))
+solution: |
+  def fit_messages(messages, window, max_output, overhead=5, gen_prompt=3):
+      budget = window - max_output - gen_prompt
+      cost = lambda i: messages[i][1] + overhead
+      last = len(messages) - 1
+      used = cost(0) + cost(last)
+      if used > budget:
+          raise ValueError("the system prompt and the latest message do not fit")
+      kept = []
+      for i in range(last - 1, 0, -1):
+          if used + cost(i) > budget:
+              break
+          used += cost(i)
+          kept.append(i)
+      kept.reverse()
+      if kept and messages[kept[0]][0] == "assistant":
+          kept = kept[1:]
+      return [0] + kept + [last]
+tests: |
+  chat = [("system", 20), ("user", 50), ("assistant", 80), ("user", 30), ("assistant", 40), ("user", 10)]
+  got = list(fit_messages(chat, 300, 100))
+  assert got == [0, 3, 4, 5], f"expected [0, 3, 4, 5], got {got}"
+  got = list(fit_messages(chat, 10_000, 100))
+  assert got == [0, 1, 2, 3, 4, 5], f"when everything fits, send everything, got {got}"
+  got = list(fit_messages(chat, 200, 100))
+  assert got == [0, 5], f"budget 97: system and last cost 40, message 4 (an assistant, 45) fits but would start the history, so drop it: expected [0, 5], got {got}"
+  got = list(fit_messages(chat, 300, 100, overhead=0))
+  assert got == [0, 3, 4, 5], f"with overhead=0, messages 4, 3 and 2 fit but 1 does not; message 2 is an assistant at the start, so drop it: expected [0, 3, 4, 5], got {got}"
+  got = list(fit_messages(chat, 300, 100, overhead=0, gen_prompt=0))
+  assert got == [0, 3, 4, 5], f"gen_prompt=0 gives budget 200, still not enough for message 1: got {got}"
+  got = list(fit_messages([("system", 10), ("user", 10)], 60, 20))
+  assert got == [0, 1], f"a two-message chat that fits returns [0, 1], got {got}"
+  got = list(fit_messages([("system", 10), ("user", 10)], 53, 20))
+  assert got == [0, 1], "budget 30 exactly equals 15 + 15: a total equal to the budget fits"
+  for args in (([("system", 10), ("user", 10)], 52, 20), ([("system", 500), ("user", 10)], 400, 50)):
+      try:
+          fit_messages(*args)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError(f"fit_messages{args} should raise ValueError: the system and last message alone do not fit")
+  long = [("system", 20), ("user", 5), ("assistant", 5), ("user", 500), ("assistant", 5), ("user", 5)]
+  got = list(fit_messages(long, 900, 400))
+  assert got == [0, 5], f"budget 497: message 4 fits but message 3 (505) does not, so stop; message 4 is an assistant at the start, so drop it: expected [0, 5], got {got}"
+  got = list(fit_messages(long, 960, 400))
+  assert got == [0, 3, 4, 5], f"budget 557 fits messages 4 and 3 (total 550) but not 2: expected [0, 3, 4, 5], got {got}"
+  got = list(fit_messages(long, 1000, 300))
+  assert got == [0, 1, 2, 3, 4, 5], f"budget 697 fits everything (570), got {got}"
+hints:
+  - "Compute budget = window - max_output - gen_prompt and start the running total with the system and last messages."
+  - "Loop i from len(messages) - 2 down to 1 and break at the first message that does not fit."
+  - "After reversing the kept list, check whether its first entry is an assistant message."
