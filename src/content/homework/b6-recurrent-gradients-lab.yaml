@@ -1,0 +1,22 @@
+id: b6-recurrent-gradients-lab
+module: b6
+kind: homework
+title: Trace recurrent computation and masked objectives
+brief: |-
+  Use scalar fixtures to expose recurrent state, shared derivatives, gate updates and token loss reduction.
+
+  1. Unroll a tanh recurrence.
+  2. Differentiate a linear sequence end to end.
+  3. Compute an LSTM cell from activated gates.
+  4. Exclude padding from a token average.
+  5. Differentiate the nonlinear recurrence and inspect truncation.
+
+  Explain what changes if you detach the state halfway through a long sequence. Give an example where masking the loss alone cannot repair the forward path.
+notebook: /homework/b6-recurrent-gradients-lab.ipynb
+rubric:
+  - Weights are shared across time.
+  - Shared gradient terms are accumulated.
+  - Cell memory and exposure remain distinct.
+  - Padded tokens do not change the objective denominator.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

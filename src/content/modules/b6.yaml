@@ -4,5 +4,7 @@ title: "Sequence models"
 order: 7
 prereqs: ["b5"]
 objectives:
-  - "Explain the core ideas of sequence models"
-  - "Derive or implement the key methods of sequence models"
+  - Trace shared recurrent state across a sequence
+  - Derive and implement backpropagation through time
+  - Explain the LSTM retention and exposure gates
+  - Apply padding masks with the intended loss denominator

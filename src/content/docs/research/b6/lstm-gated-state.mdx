@@ -1,0 +1,42 @@
+---
+title: Trace the gates of an LSTM cell
+module: b6
+order: 3
+estMinutes: 8
+objectives:
+  - Compute a cell update from activated gates
+  - Explain how a retained cell state provides a direct memory path
+goDeeper: d2l-lstm-chapter
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+An LSTM maintains a hidden output and a separate <Term id="lstm-gated-state" />. With activated forget gate f and input gate i, candidate g and output gate o, the cell update is c_new = f·c_old + i·g. The hidden output is o·tanh(c_new). Gates are computed from the current input and previous hidden output; this fixture takes the activated values as inputs.
+
+A forget gate close to one preserves information along the direct cell path. A small input gate suppresses new content. The output gate can hide retained information from the exposed hidden state. This path can help credit assignment, though gating does not guarantee long-range learning.
+
+For c_old=2, f=0.5, i=1, g=0.5 and o=0, the cell becomes 1.5 and hidden output is zero. The memory update and exposed state are deliberately separate in the interface.
+
+## Worked example
+
+A surviving cell state need not be exposed.
+
+```python
+def lstm_from_gates(cell,forget,insert,candidate,expose):
+    from math import tanh
+    next_cell = forget*cell + insert*candidate
+    return next_cell,expose*tanh(next_cell)
+
+print(lstm_from_gates(2,0.5,1,0.5,0))
+```
+
+```text title="Output"
+(1.5, 0.0)
+```
+
+Keep the memory state and visible hidden output separate when tracing an LSTM.
+
+## Try it
+
+<CodeExercise id="b6-lstm-gated-state-01" />

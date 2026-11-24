@@ -1,0 +1,4 @@
+term: "Recurrent state"
+short: "A hidden representation updated sequentially and passed from one time step to the next."
+body: "The vector h_t a recurrent network carries between steps, computed as h_t = f(W_h h_{t−1} + W_x x_t + b) with the same parameters at every step. It summarises the prefix x_1..x_t, so outputs can depend on earlier inputs. It is set to an initial value (often zero) at the start of each independent sequence."
+related: ["checkpoint","gradient"]

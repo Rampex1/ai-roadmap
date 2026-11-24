@@ -1,0 +1,93 @@
+items:
+  - id: b6-unroll-a-recurrent-state-01
+    type: mcq
+    prompt: Which values are shared across time?
+    explanation: The same update map is reused.
+    options:
+      - text: The recurrent parameters
+        why: The same update map is reused.
+        correct: true
+      - text: Only target labels are reused
+        why: Labels do not define parameter sharing.
+      - text: All hidden states are identical
+        why: States depend on the prefix.
+  - id: b6-unroll-a-recurrent-state-02
+    type: mcq
+    prompt: Why can a zero input produce nonzero state?
+    explanation: The update is not a function of input alone.
+    options:
+      - text: Past state or bias can contribute
+        why: The update is not a function of input alone.
+        correct: true
+      - text: Zero is secretly a future token
+        why: No future input enters the recurrence.
+      - text: Tanh always produces a constant
+        why: Tanh changes with its argument.
+  - id: b6-unroll-a-recurrent-state-03
+    type: mcq
+    prompt: When should state reset in this example?
+    explanation: Unrelated contexts should not mix.
+    options:
+      - text: Only when a label is positive
+        why: Labels do not determine independence.
+      - text: After every token by definition
+        why: That would remove recurrence.
+      - text: At independent sequence boundaries
+        why: Unrelated contexts should not mix.
+        correct: true
+  - id: b6-unroll-a-recurrent-state-04
+    type: mcq
+    prompt: What does unrolling change?
+    explanation: It represents the same process explicitly.
+    options:
+      - text: It exposes the time-indexed computation graph
+        why: It represents the same process explicitly.
+        correct: true
+      - text: It creates independently trained weights at each step
+        why: The parameter nodes remain shared.
+      - text: It sorts inputs by value
+        why: Sequence order is preserved.
+  - id: b6-unroll-a-recurrent-state-05
+    type: multi
+    prompt: Which are needed for the first update?
+    explanation: It appears in the recurrence. It contributes through u.
+    options:
+      - text: Initial hidden state
+        why: It appears in the recurrence.
+        correct: true
+      - text: The first input
+        why: It contributes through u.
+        correct: true
+      - text: The last future state
+        why: The recurrence is causal.
+  - id: b6-unroll-a-recurrent-state-06
+    type: cloze
+    prompt: A hidden value passed from one time step to the next is a recurrent ______.
+    accept:
+      - state
+    explanation: The state summarizes the processed prefix.
+  - id: b6-unroll-a-recurrent-state-07
+    type: order
+    prompt: Order a recurrent forward step.
+    items:
+      - Read previous state and current input
+      - Form the affine combination
+      - Apply tanh
+      - Carry the new state forward
+    explanation: The next step uses the result of this update.
+  - id: b6-unroll-a-recurrent-state-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def unroll(inputs,w,u,b,initial):
+          from math import tanh
+          trace = []
+          state = initial
+          for value in inputs:
+              state = tanh(w*state+u*value+b)
+              trace.append(state)
+          return trace
+
+      print(unroll([0, 0], 1, 1, 0, 0))
+    answer: "[0.0, 0.0]"
+    explanation: Zero state, input and bias keep the recurrence at zero.

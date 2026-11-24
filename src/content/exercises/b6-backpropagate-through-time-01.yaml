@@ -1,0 +1,24 @@
+id: b6-backpropagate-through-time-01
+lesson: research/b6/backpropagate-through-time
+title: Implement backpropagate through time
+prompt: Implement linear_bptt(inputs,w,initial) for h_t=w*h_previous+x_t and loss equal to final state. Return (value, dvalue/dw). Treat initial as fixed.
+starter: |
+  def linear_bptt(inputs,w,initial):
+      raise NotImplementedError
+solution: |
+  def linear_bptt(inputs,w,initial):
+      states = [initial]
+      for value in inputs:
+          states.append(w*states[-1]+value)
+      grad,adjoint = 0,1
+      for previous in reversed(states[:-1]):
+          grad += adjoint*previous
+          adjoint *= w
+      return states[-1],grad
+tests: |
+  assert linear_bptt([1,2,3],2,0)==(11,6)
+  assert linear_bptt([0],2,3)==(6,3)
+  assert linear_bptt([1,2],0,0)==(2,1)
+  assert linear_bptt([],2,3)==(3,0)
+hints:
+  - Cache one previous state for each use of w.

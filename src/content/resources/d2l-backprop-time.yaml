@@ -1,0 +1,6 @@
+title: "Dive into Deep Learning: Backpropagation Through Time"
+url: https://d2l.ai/chapter_recurrent-neural-networks/bptt.html
+kind: tool
+free: true
+modules:
+  - b6

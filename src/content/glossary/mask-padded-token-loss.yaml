@@ -1,0 +1,4 @@
+term: "Token-loss mask"
+short: "A per-position indicator deciding whether a token contributes to the training objective."
+body: "A 0/1 per-position weight m_t that removes padding (and optionally prompt tokens) from the objective. The token-mean loss is Σ m_t·ℓ_t / Σ m_t, so padding counts in neither the sum nor the denominator. It does not stop padding from affecting recurrent state or attention; that needs a separate state or attention mask."
+related: ["supervised-fine-tuning","validation"]

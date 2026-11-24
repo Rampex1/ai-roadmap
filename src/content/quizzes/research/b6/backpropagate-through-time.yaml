@@ -1,0 +1,94 @@
+items:
+  - id: b6-backpropagate-through-time-01
+    type: mcq
+    prompt: Why sum multiple weight derivatives?
+    explanation: Each occurrence contributes to total loss.
+    options:
+      - text: Each derivative must be discarded after one time step
+        why: That would lose paths.
+      - text: The weight changes identity at every step
+        why: It is shared.
+      - text: The same weight is used at several steps
+        why: Each occurrence contributes to total loss.
+        correct: true
+  - id: b6-backpropagate-through-time-02
+    type: mcq
+    prompt: What initial adjoint is used when the loss equals the final scalar state?
+    explanation: Its derivative with respect to itself is one.
+    options:
+      - text: Zero at every state
+        why: That would remove all gradients.
+      - text: One at each previous step independently
+        why: Previous adjoints are propagated.
+      - text: One at the final state
+        why: Its derivative with respect to itself is one.
+        correct: true
+  - id: b6-backpropagate-through-time-03
+    type: mcq
+    prompt: What can truncation preserve while removing longer gradients?
+    explanation: The graph can be detached at the boundary.
+    options:
+      - text: Carried forward state values
+        why: The graph can be detached at the boundary.
+        correct: true
+      - text: All exact full-sequence derivatives
+        why: Those paths are deliberately cut.
+      - text: Only different model weights per chunk
+        why: Parameters remain shared.
+  - id: b6-backpropagate-through-time-04
+    type: mcq
+    prompt: What causes vanishing gradients here when the magnitude of w is less than one?
+    explanation: Products can decay with distance.
+    options:
+      - text: Repeated multiplication along long paths
+        why: Products can decay with distance.
+        correct: true
+      - text: Shape alone
+        why: Gradient magnitude depends on the recurrence.
+      - text: A larger vocabulary by itself
+        why: Vocabulary is unrelated to the scalar product.
+  - id: b6-backpropagate-through-time-05
+    type: multi
+    prompt: What is useful for a BPTT check?
+    explanation: Backward steps need previous activations. Independent numerical evidence can catch errors.
+    options:
+      - text: Cache forward states
+        why: Backward steps need previous activations.
+        correct: true
+      - text: Overwrite the shared parameter gradient at each step
+        why: That discards contributions.
+      - text: Compare a short run with finite differences
+        why: Independent numerical evidence can catch errors.
+        correct: true
+  - id: b6-backpropagate-through-time-06
+    type: cloze
+    prompt: Differentiating the unrolled sequence is backpropagation through ______.
+    accept:
+      - time
+    explanation: Time steps become graph nodes.
+  - id: b6-backpropagate-through-time-07
+    type: order
+    prompt: Order the backward computation.
+    items:
+      - Unroll and cache forward values
+      - Seed the final loss derivative
+      - Accumulate shared weight gradients in reverse
+      - Compare the accumulated gradient with a finite difference of the loss
+    explanation: Reverse steps rely on cached forward states.
+  - id: b6-backpropagate-through-time-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def linear_bptt(inputs,w,initial):
+          states = [initial]
+          for value in inputs:
+              states.append(w*states[-1]+value)
+          grad,adjoint = 0,1
+          for previous in reversed(states[:-1]):
+              grad += adjoint*previous
+              adjoint *= w
+          return states[-1],grad
+
+      print(linear_bptt([2, 0], 3, 0)[1])
+    answer: "2"
+    explanation: "dL/dw = h1 + w·h0 = 2 + 3·0 = 2."

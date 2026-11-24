@@ -1,0 +1,4 @@
+term: "Backpropagation through time"
+short: "Applying reverse-mode differentiation to a recurrent computation unrolled across sequence steps."
+body: "Reverse-mode differentiation of a recurrent network unrolled into one graph node per step. Because the weights are shared, their gradient is the sum of their contributions at every step. Each contribution is scaled by a product of step Jacobians, and that product can make gradients vanish or explode over long ranges. Truncated BPTT stops the backward pass after k steps but still carries the state forward."
+related: ["unroll-a-recurrent-state","accumulate-shared-paths"]

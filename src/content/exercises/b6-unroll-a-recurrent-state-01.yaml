@@ -1,0 +1,26 @@
+id: b6-unroll-a-recurrent-state-01
+lesson: research/b6/unroll-a-recurrent-state
+title: Implement unroll a recurrent state
+prompt: Implement unroll(inputs,w,u,b,initial) using the stated tanh recurrence. Return each new hidden state in order, excluding the initial state.
+starter: |
+  def unroll(inputs,w,u,b,initial):
+      raise NotImplementedError
+solution: |
+  def unroll(inputs,w,u,b,initial):
+      from math import tanh
+      trace = []
+      state = initial
+      for value in inputs:
+          state = tanh(w*state+u*value+b)
+          trace.append(state)
+      return trace
+tests: |
+  from math import tanh, isclose
+  assert unroll([],2,1,0,3)==[]
+  assert unroll([1,0],0.5,1,0,0)==[tanh(1),tanh(0.5*tanh(1))]
+  assert unroll([0,0],0,1,0,1)==[0,0]
+  assert unroll([0],2,0,0,1)==[tanh(2)]
+  r = unroll([1,0],0.5,1,0.25,0)
+  assert len(r)==2 and all(isclose(a,e) for a,e in zip(r,[tanh(1.25),tanh(0.5*tanh(1.25)+0.25)])), "add b inside tanh at every step"
+hints:
+  - Feed the previous computed state into the next step.

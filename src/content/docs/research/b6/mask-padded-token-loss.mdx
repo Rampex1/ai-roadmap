@@ -1,0 +1,43 @@
+---
+title: Mask padding in sequence loss
+module: b6
+order: 4
+estMinutes: 8
+objectives:
+  - Normalize by valid tokens rather than padded length
+  - Distinguish loss masks from state and attention masks
+goDeeper: d2l-backprop-time
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Batching sequences often pads them to a common width. A <Term id="mask-padded-token-loss" /> excludes padding, and sometimes prompt positions, from the optimization objective. For token-mean loss, sum contributions and divide by the number of included tokens. Averaging per-sequence means gives each sequence equal weight instead; choose the intended objective.
+
+Loss masking does not prevent a recurrent state from updating on pad values, or an attention model from reading invalid positions. Use a length-aware recurrence or the appropriate attention mask separately when needed. Keep input/target alignment explicit for next-token prediction.
+
+An all-masked batch cannot produce a valid token mean. The exercise returns None, allowing caller code to skip the optimizer update explicitly. It accepts a flattened aligned loss vector and Boolean mask.
+
+## Worked example
+
+The excluded padding value does not enter either sum or count.
+
+```python
+def masked_token_mean(losses,mask):
+    if len(losses)!=len(mask):
+        raise ValueError("misaligned mask")
+    included = [loss for loss,keep in zip(losses,mask) if keep]
+    return sum(included)/len(included) if included else None
+
+print(masked_token_mean([1,5,99],[True,True,False]))
+```
+
+```text title="Output"
+3.0
+```
+
+Document which positions affect state, visibility and the objective separately.
+
+## Try it
+
+<CodeExercise id="b6-mask-padded-token-loss-01" />

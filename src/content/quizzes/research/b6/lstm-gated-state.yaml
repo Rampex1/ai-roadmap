@@ -1,0 +1,89 @@
+items:
+  - id: b6-lstm-gated-state-01
+    type: mcq
+    prompt: Which gate scales the old cell directly?
+    explanation: It controls retained memory.
+    options:
+      - text: Forget gate
+        why: It controls retained memory.
+        correct: true
+      - text: Output gate
+        why: It controls the exposed hidden output.
+      - text: Input gate
+        why: It controls the candidate contribution.
+  - id: b6-lstm-gated-state-02
+    type: mcq
+    prompt: What can output gate zero do?
+    explanation: The hidden output can be zero even with retained memory.
+    options:
+      - text: Hide a nonzero cell state
+        why: The hidden output can be zero even with retained memory.
+        correct: true
+      - text: Set the stored cell to zero necessarily
+        why: It does not enter the memory update.
+      - text: Force forget gate to one
+        why: The gates have distinct values.
+  - id: b6-lstm-gated-state-03
+    type: mcq
+    prompt: What enters through the input gate?
+    explanation: It is multiplied by the input gate.
+    options:
+      - text: The candidate state
+        why: It is multiplied by the input gate.
+        correct: true
+      - text: Only the previous cell state
+        why: Retention uses the forget gate.
+      - text: The entire final hidden state
+        why: The hidden output is computed later.
+  - id: b6-lstm-gated-state-04
+    type: mcq
+    prompt: Why can a near-one forget gate help?
+    explanation: It attenuates the existing state less.
+    options:
+      - text: The direct cell path retains information
+        why: It attenuates the existing state less.
+        correct: true
+      - text: It guarantees all possible gradients are exactly one
+        why: Other paths and gates still affect derivatives.
+      - text: It increases the sequence length physically
+        why: It only changes memory dynamics.
+  - id: b6-lstm-gated-state-05
+    type: multi
+    prompt: Which are distinct outputs of the calculation?
+    explanation: It is internal memory. It is gated exposure of the memory.
+    options:
+      - text: Updated cell
+        why: It is internal memory.
+        correct: true
+      - text: The chosen class label by definition
+        why: Classification can be a later operation.
+      - text: Hidden output
+        why: It is gated exposure of the memory.
+        correct: true
+  - id: b6-lstm-gated-state-06
+    type: cloze
+    prompt: The gate multiplying stored memory directly is the ______ gate.
+    accept:
+      - forget
+    explanation: It controls retention of the old cell.
+  - id: b6-lstm-gated-state-07
+    type: order
+    prompt: Order a cell update.
+    items:
+      - Read the activated gates and candidate
+      - Combine retained and inserted memory
+      - Apply tanh to the new memory
+      - Scale by the output gate
+    explanation: The hidden output follows the cell update.
+  - id: b6-lstm-gated-state-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def lstm_from_gates(cell,forget,insert,candidate,expose):
+          from math import tanh
+          next_cell = forget*cell + insert*candidate
+          return next_cell,expose*tanh(next_cell)
+
+      print(lstm_from_gates(7, 0, 0, 1, 1)[0])
+    answer: "0"
+    explanation: Neither old memory nor the candidate is retained.

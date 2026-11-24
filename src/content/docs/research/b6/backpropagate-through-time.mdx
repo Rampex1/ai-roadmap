@@ -1,0 +1,47 @@
+---
+title: Backpropagate through time
+module: b6
+order: 2
+estMinutes: 8
+objectives:
+  - Accumulate shared weight derivatives across time
+  - Trace the difference between full and truncated backpropagation
+goDeeper: d2l-backprop-time
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+<Term id="backpropagate-through-time" cap /> uses the same [shared-path chain rule as B3](/research/b3/accumulate-shared-paths/) on the unrolled graph. Every appearance of a shared weight contributes to its gradient. For a linear recurrence $h_t = w h_{t-1}+x_t$ and loss equal to the final state, seed the final adjoint with one. Moving back from t, add adjoint times $h_{t-1}$ to dL/dw, then multiply the state adjoint by w.
+
+For w=2, initial zero, and inputs [1,2,3], the state trace is [0,1,4,11]. The final update contributes four to the weight gradient; one step earlier the adjoint is two and contributes two more. The total is six. Long derivative paths can shrink or grow through repeated Jacobian products.
+
+Truncating the reverse pass reduces memory and limits dependency credit. Carrying a state value across a detached boundary preserves forward context without carrying its derivative. The exercise computes the full gradient for the scalar linear recurrence.
+
+## Worked example
+
+The shared weight receives contributions from several updates.
+
+```python
+def linear_bptt(inputs,w,initial):
+    states = [initial]
+    for value in inputs:
+        states.append(w*states[-1]+value)
+    grad,adjoint = 0,1
+    for previous in reversed(states[:-1]):
+        grad += adjoint*previous
+        adjoint *= w
+    return states[-1],grad
+
+print(linear_bptt([1,2,3],2,0))
+```
+
+```text title="Output"
+(11, 6)
+```
+
+Distinguish carrying a forward state from carrying its gradient across a boundary.
+
+## Try it
+
+<CodeExercise id="b6-backpropagate-through-time-01" />

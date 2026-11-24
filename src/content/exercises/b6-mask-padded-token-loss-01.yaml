@@ -1,0 +1,26 @@
+id: b6-mask-padded-token-loss-01
+lesson: research/b6/mask-padded-token-loss
+title: Implement mask padded token loss
+prompt: Implement masked_token_mean(losses,mask). Return the mean over true mask positions, None when none are included, and ValueError when lengths differ.
+starter: |
+  def masked_token_mean(losses,mask):
+      raise NotImplementedError
+solution: |
+  def masked_token_mean(losses,mask):
+      if len(losses)!=len(mask):
+          raise ValueError("misaligned mask")
+      included = [loss for loss,keep in zip(losses,mask) if keep]
+      return sum(included)/len(included) if included else None
+tests: |
+  assert masked_token_mean([1,5,99],[True,True,False])==3
+  assert masked_token_mean([0,4],[True,False])==0
+  assert masked_token_mean([1],[False]) is None
+  assert masked_token_mean([],[]) is None
+  try:
+      masked_token_mean([1],[])
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject mismatched mask")
+hints:
+  - Count included tokens, including tokens with zero loss.

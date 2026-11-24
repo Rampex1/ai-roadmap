@@ -1,0 +1,91 @@
+items:
+  - id: b6-mask-padded-token-loss-01
+    type: mcq
+    prompt: What is the denominator of a token-mean objective?
+    explanation: Only those tokens contribute to the objective.
+    options:
+      - text: The number of included tokens
+        why: Only those tokens contribute to the objective.
+        correct: true
+      - text: The padded width always
+        why: That counts invalid positions.
+      - text: The number of sequences only
+        why: That defines a different reduction.
+  - id: b6-mask-padded-token-loss-02
+    type: mcq
+    prompt: Does a loss mask stop recurrent state changes?
+    explanation: Excluding loss does not alter forward computation by itself.
+    options:
+      - text: Yes for all architectures
+        why: The forward graph can still use pad inputs.
+      - text: No, state masking is a separate decision
+        why: Excluding loss does not alter forward computation by itself.
+        correct: true
+      - text: Only when loss equals zero
+        why: A zero measured loss does not stop a state update.
+  - id: b6-mask-padded-token-loss-03
+    type: mcq
+    prompt: What should an all-masked batch return here?
+    explanation: The valid-token denominator is zero.
+    options:
+      - text: None
+        why: The valid-token denominator is zero.
+        correct: true
+      - text: The last excluded loss
+        why: Excluded values should not determine the objective.
+      - text: A successful zero-loss mean
+        why: No measured tokens support it.
+  - id: b6-mask-padded-token-loss-04
+    type: mcq
+    prompt: When can a sequence mean differ from a token mean?
+    explanation: The two choices weight examples differently.
+    options:
+      - text: When valid sequence lengths differ
+        why: The two choices weight examples differently.
+        correct: true
+      - text: Only when every token has identical loss
+        why: Then both means are the same.
+      - text: Never for padded examples
+        why: Padding removal can expose different lengths.
+  - id: b6-mask-padded-token-loss-05
+    type: multi
+    prompt: Which checks catch mask bugs?
+    explanation: It should not change the result. It should still count in the denominator.
+    options:
+      - text: Ignore aligned lengths
+        why: That can silently truncate the batch.
+      - text: Check a valid zero-loss token
+        why: It should still count in the denominator.
+        correct: true
+      - text: Include a large loss at padding
+        why: It should not change the result.
+        correct: true
+  - id: b6-mask-padded-token-loss-06
+    type: cloze
+    prompt: An ignored padding position should contribute neither loss nor token ______.
+    accept:
+      - count
+      - denominator
+    explanation: The valid-token mean excludes its denominator contribution.
+  - id: b6-mask-padded-token-loss-07
+    type: order
+    prompt: Order masked loss calculation.
+    items:
+      - Align predictions, targets and mask
+      - Compute per-position losses
+      - Sum and count valid positions
+      - Divide if the count is nonzero
+    explanation: Only included positions affect the mean.
+  - id: b6-mask-padded-token-loss-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def masked_token_mean(losses,mask):
+          if len(losses)!=len(mask):
+              raise ValueError("misaligned mask")
+          included = [loss for loss,keep in zip(losses,mask) if keep]
+          return sum(included)/len(included) if included else None
+
+      print(masked_token_mean([2, 8, 10], [False, True, True]))
+    answer: "9.0"
+    explanation: Only eight and ten are included.

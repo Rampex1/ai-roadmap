@@ -1,0 +1,4 @@
+term: "LSTM cell state"
+short: "A gated recurrent memory carried forward through an additive update."
+body: "The memory c_t of an LSTM, updated additively as c_t = f⊙c_{t−1} + i⊙g. Here f and i are sigmoid forget and input gates and g is a tanh candidate. The exposed hidden state is h_t = o⊙tanh(c_t), so the output gate o can hide stored memory. A forget gate near one keeps a direct path that resists vanishing gradients."
+related: ["unroll-a-recurrent-state","backpropagate-through-time"]
