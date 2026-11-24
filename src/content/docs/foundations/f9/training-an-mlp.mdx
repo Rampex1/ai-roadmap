@@ -26,8 +26,8 @@ have glossed over: how to choose the starting weights.
 non-linear classifiers. Each example has two features (its coordinates) and a label 0 or 1.
 
 We want to know how well the network does on points it has **never seen**, so before training we set some
-data aside. This is a **train/test split**: train on one part, measure on the other. F7 covers this
-properly; here we shuffle the indices and cut:
+data aside. This is a **train/test split**: train on one part, measure on the other. F7 covered this;
+here we shuffle the indices and cut:
 
 ```python
 import numpy as np
@@ -207,7 +207,8 @@ activations at the size of the input.
 ### Where $\sqrt{2/d_\text{in}}$ comes from
 
 A unit's pre-activation is a sum of $d_\text{in}$ terms $a_j w_j$. With independent random weights of
-variance $\sigma^2$, the variances of independent terms add (F5), so the
+variance $\sigma^2$, the variances of independent terms add
+([F5](/foundations/f5/random-variables/); $\operatorname{Var}(X + Y) = \operatorname{Var}(X) + \operatorname{Var}(Y)$), so the
 sum has variance about $d_\text{in}\,\sigma^2$ times the size of the inputs. To keep that size constant we
 need $\sigma^2 \approx 1/d_\text{in}$. ReLU zeroes about half of its inputs, halving the signal, so it
 needs twice as much: $\sigma^2 = 2/d_\text{in}$.

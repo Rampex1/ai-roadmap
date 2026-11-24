@@ -9,11 +9,12 @@ brief: |
   one branch is new and some questions have no policy, so the eval separates stale knowledge from
   grounded answers and correct abstention.
 
-  The capstone has two required parts. The **offline core** runs on any laptop with the standard
+  The capstone has three required parts. The **offline core** runs on any laptop with the standard
   library: retrieval is real BM25 over chunked policy text, while the "model" is a small toy
   (five features, two logits, a rank-one adapter) and the RAG reading step is a deterministic
   keyword reader, so every number can be checked by hand. The **GPU milestone** replaces the
-  stand-ins with a real open instruct model (Qwen2.5-0.5B-Instruct) on a free Colab T4.
+  stand-ins with a real open instruct model (Qwen2.5-0.5B-Instruct) on a free Colab T4. The
+  **MCP transport** serves your `policy_search` from a real stdio MCP server.
 
   **Milestones**
 
@@ -26,17 +27,17 @@ brief: |
      the old snapshot only. Confirm it fits the snapshot and goes stale on changed policies.
   4. **Score all variants.** Implement action, factual and citation scoring and run the shared report
      on development and holdout cases, by slice. Write your release rule before reading the holdout.
-  5. **Check the transport.** Optionally run a real MCP stdio server (Python SDK v1) that serves your
-     own `policy_search` and confirm it matches the offline report.
+  5. **Serve the tool over MCP.** Run a real stdio MCP server (Python SDK v1) that serves your own
+     `policy_search` and confirm its results match the offline report. The offline MCP-shaped call
+     is a check on the same logic, not a substitute for the server.
   6. **GPU milestone.** On a Colab T4, LoRA-fine-tune Qwen2.5-0.5B-Instruct with `peft` on the old
      snapshot and run the same eval suite on the frozen base, the LoRA model and RAG with the base
      model (retrieved chunks in the prompt). Report the three systems next to the offline toy.
   7. **Write up the comparison.** Show a concrete failure trace, one retrieval ablation, your release
      gate and what needs a larger evaluation before deployment.
 
-  **Deliverables:** the completed notebook with outputs from the offline core and the GPU milestone,
-  and the write-up in its final Markdown section, stating which parts (MCP transport, GPU run) you
-  actually ran.
+  **Deliverables:** the completed notebook with outputs from the offline core, the MCP server check
+  and the GPU milestone, and the write-up in its final Markdown section.
 notebook: /homework/llm-capstone.ipynb
 rubric:
   - "BM25 and policy_search pass their checks: public chunks only, zero-score chunks dropped, deterministic ranking with stable chunk and source IDs."
@@ -44,6 +45,7 @@ rubric:
   - "Both LoRA adapters (toy and Qwen2.5) train only on the old snapshot, the base weights stay frozen and no holdout answer enters training."
   - "The shared report separates action, factual accuracy and citation correctness, with denominators per slice, for the offline toy and for the GPU run."
   - "The GPU milestone ran on frozen base, LoRA and RAG-with-base with the same cases and scorer, and its outputs are in the notebook."
+  - "A stdio MCP server serves policy_search and its results match the offline report."
   - "The write-up traces one real failure to its cause and reports a retrieval ablation on both the offline and the LLM RAG system."
-  - "The write-up names a release gate and abstention policy, and states whether the MCP transport and the GPU run were actually executed."
-compute: "Offline core: any laptop, standard library only, a few seconds of CPU. GPU milestone: free Colab T4, about 30 to 45 minutes including installs and a 1 GB model download. Optional MCP extension needs the v1 Python SDK locally. Allow 4 to 6 hours including the write-up."
+  - "The write-up names a release gate and abstention policy."
+compute: "Offline core: any laptop, standard library only, a few seconds of CPU. GPU milestone: free Colab T4, about 30 to 45 minutes including installs and a 1 GB model download. MCP milestone: the v1 Python SDK, installed locally or in Colab. Allow 4 to 6 hours including the write-up."

@@ -25,7 +25,7 @@ P(x_t \mid x_1, \dots, x_{t-1})
 $$
 
 a probability distribution over the whole vocabulary for position $t$. By the chain rule of probability
-(F5), the probability of a whole sequence is the product of these next-token probabilities:
+([F5](/foundations/f5/conditional-probability/); $P(a, b) = P(a)\,P(b \mid a)$), the probability of a whole sequence is the product of these next-token probabilities:
 
 $$
 P(x_1, \dots, x_T) = P(x_1)\, P(x_2 \mid x_1)\, P(x_3 \mid x_1, x_2) \cdots P(x_T \mid x_1, \dots, x_{T-1})

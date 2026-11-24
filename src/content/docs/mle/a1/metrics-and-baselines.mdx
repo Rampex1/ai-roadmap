@@ -81,13 +81,14 @@ predicted probability $\ge t$ is flagged.
 
 There is a neat theoretical answer for the threshold. For one transaction with predicted fraud
 probability $p$, flagging costs $c_{FP}(1 - p)$ in expectation (it's a false alarm with probability
-$1 - p$), and not flagging costs $c_{FN} \cdot p$. Flag when the first is smaller:
+$1 - p$), and not flagging costs $c_{FN} \cdot p$. Flag when the first is no larger (on a tie either
+choice costs the same, and flagging matches the code's `p >= t`):
 
 $$
-c_{FP}(1 - p) < c_{FN} \cdot p \quad\Longleftrightarrow\quad p > t^* = \frac{c_{FP}}{c_{FP} + c_{FN}}
+c_{FP}(1 - p) \le c_{FN} \cdot p \quad\Longleftrightarrow\quad p \ge t^* = \frac{c_{FP}}{c_{FP} + c_{FN}}
 $$
 
-With £5 and £150, $t^* = 5/155 \approx 0.032$: flag anything with more than a 3.2% chance of being
+With £5 and £150, $t^* = 5/155 \approx 0.032$: flag anything with at least a 3.2% chance of being
 fraud. That is a long way from the default 0.5. The formula assumes the probabilities are
 **calibrated**; if they are not, choose the threshold by scanning candidates on validation data and
 picking the cheapest, which you will do in the exercises.
@@ -209,7 +210,7 @@ baseline, no model will rescue the project.
   metrics whose job is to predict the online result.
 - Pick the offline metric from the decision: expected cost at a threshold, precision@k under capacity,
   log loss when probabilities are used directly.
-- With a cost matrix, flag when $p > c_{FP}/(c_{FP} + c_{FN})$ for calibrated probabilities, or scan
+- With a cost matrix, flag when $p \ge c_{FP}/(c_{FP} + c_{FN})$ for calibrated probabilities, or scan
   thresholds on validation data and take the cheapest.
 - Compare against trivial, heuristic and simple-model baselines; the heuristic is usually the one to beat.
 - Write the success threshold, with guardrails, before seeing model results.

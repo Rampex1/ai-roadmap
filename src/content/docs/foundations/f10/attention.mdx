@@ -217,8 +217,8 @@ print([hd.shape for hd in heads], out.shape)
 The output has the same shape as the input, which lets the next layer stack on top. Because each head
 works in $d/h$ dimensions, $h$ heads cost about the same as one full-size head. Studies of trained models
 find heads with recognisable jobs, such as attending to the previous token or copying an earlier
-pattern, though many heads do not have a clean story. Track B (B12) returns to this under
-interpretability.
+pattern, though many heads do not have a clean story. B12 teaches intervention and attribution methods
+for testing such stories.
 
 :::note[What attention costs]
 The score matrix is $T \times T$, so time and memory grow with the square of the sequence length:

@@ -193,13 +193,15 @@ loss is still next-token cross-entropy, usually counted only on the response tok
 Finally, the model is tuned towards responses people prefer. In <Term id="rlhf" text="RLHF" />
 (reinforcement learning from human feedback), people compare pairs of responses, a **reward model** is
 trained to predict their preferences, and the language model is optimised to earn high reward while a
-penalty (a KL divergence, from F5) keeps it close to the instruction-tuned model. Simpler methods such as
+penalty (a KL divergence, a measure of how far one distribution is from another; see
+[F5](/foundations/f5/information-theory/)) keeps it close to the instruction-tuned model. Simpler methods such as
 DPO learn from the preference pairs directly. As of late 2026, models are also trained with
 reinforcement learning on tasks whose answers can be checked automatically, such as maths and code,
 which produces the "reasoning" models that write long chains of intermediate steps before answering.
 
 Pretraining takes almost all of the compute; post-training is comparatively cheap but shapes most of the
-behaviour you see in a chat assistant. Track B (B8) and Track C (C10) cover these methods in detail.
+behaviour you see in a chat assistant. C10 implements the DPO loss and B8 covers the data side (shifted targets, loss masks, preference
+evaluation); reward-model RLHF is beyond this course.
 
 ### Context windows
 

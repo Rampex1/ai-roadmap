@@ -7,7 +7,7 @@ brief: |
   practitioner would: decide everything with the training data, open the test set once, report numbers
   with their uncertainty, and write down what the model is for and where it fails. Download the starter
   notebook. Part A runs in local Jupyter (as set up in F0) or [Google Colab](https://colab.research.google.com/)
-  (File > Upload notebook); Part B needs PyTorch, so run it in Colab with a GPU.
+  (File > Upload notebook); Part B is fastest on a Colab GPU and also runs on a laptop CPU.
   Before starting, review F2 (data analysis), F5 (estimation), F7–F8 (classical ML), F9 (neural
   networks) and F11 (fairness).
 
@@ -72,4 +72,4 @@ rubric:
   - "The model card covers intended and out-of-scope use, data, metrics with intervals, results by group, and caveats, using your own numbers"
   - "The experiment log has at least three controlled changes covering architecture, optimisation and regularisation, each with an expectation and an outcome, and the learning-curve figure has labelled axes and a legend"
   - "The final MNIST MLP reaches at least 98% test accuracy, chosen on validation accuracy"
-compute: "Part A: any laptop or free Colab CPU, under 10 minutes of compute (the solution's cells took about 1 minute on a laptop), plus a small (a few MB) OpenML download. Part B: free Colab T4 GPU about 10 to 20 minutes including the ~12 MB MNIST download; on a CPU allow about 30 to 40 minutes (the solution's five runs took about 2 minutes on a laptop CPU)"
+compute: "Part A: any laptop or free Colab CPU, about 10 minutes including a few-MB OpenML download. Part B: Colab GPU about 3 minutes or laptop CPU about 5 to 10 minutes, plus a ~12 MB MNIST download (the solution's five runs took about 2 minutes on a laptop CPU)."

@@ -4,7 +4,7 @@ items:
     prompt: "A bank estimates that a missed fraud costs £90 and a false alarm £10. For calibrated probabilities, what is the cost-minimising threshold $t^* = c_{FP} / (c_{FP} + c_{FN})$?"
     answer: 0.1
     tol: 0.001
-    explanation: "$t^* = 10 / (10 + 90) = 0.1$. Flag any payment with more than a 10% chance of being fraud: far below the default 0.5, because misses are nine times as expensive as false alarms."
+    explanation: "$t^* = 10 / (10 + 90) = 0.1$. Flag any payment with at least a 10% chance of being fraud: far below the default 0.5, because misses are nine times as expensive as false alarms."
   - id: a1-metrics-and-baselines-02
     type: mcq
     prompt: "A bank's fraud team can review exactly 300 alerts a day; alerts beyond that are not looked at. Which offline metric best matches this decision?"

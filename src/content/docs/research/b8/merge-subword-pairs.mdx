@@ -12,7 +12,7 @@ goDeeper: neural-machine-translation-bpe
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-A model trains on integer token IDs, so vocabulary construction is part of data design. A common subword strategy, <Term id="merge-subword-pairs" />, starts with small units and learns frequent adjacent merges. The training step counts pairs over the corpus, picks a pair, merges its occurrences and repeats. Inference uses the learned merge ranks rather than learning new pairs from requests.
+A model trains on integer token IDs, so vocabulary construction is part of data design. A common subword strategy, <Term id="byte-pair-encoding" />, starts with small units and learns frequent adjacent merges. The training step counts pairs over the corpus, picks a pair, merges its occurrences and repeats. Inference uses the learned merge ranks rather than learning new pairs from requests.
 
 This exercise counts weighted pair occurrences within symbol sequences. A word observed ten times contributes ten times as much as one observed once. Do not count across separate sequence boundaries. Implement a stable tie rule, because changing merge order can change the vocabulary and downstream IDs.
 

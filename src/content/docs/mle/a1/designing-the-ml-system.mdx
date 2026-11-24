@@ -116,10 +116,14 @@ print(pit)
 ```
 
 `pd.merge_asof` matches each prediction to the most recent earlier row for the same customer
-(`by="customer"`); `allow_exact_matches=False` excludes a change at exactly the prediction time, a
-cautious choice when you cannot be sure which event came first. The "wrong" version uses balances from
-5 and 10 days in the future. This kind of **point-in-time correctness** is what feature stores and
-careful data pipelines exist to guarantee.
+(`by="customer"`); `allow_exact_matches=False` excludes a change at exactly the prediction time. The
+"wrong" version uses balances from 5 and 10 days in the future. This kind of **point-in-time correctness** is what feature stores and careful data
+pipelines exist to guarantee.
+
+Here a balance is available as soon as it occurs. In general, also require its ingestion time (when the
+row reached your system) to be at or before the prediction time: see
+[Join features at decision time](/mle/a3/join-point-in-time-features/) in A3. Excluding exact ties is a
+cautious choice when you cannot be sure which event came first; A3 keeps them (≤).
 
 The related production bug is <Term id="training-serving-skew" />: the features computed in serving
 differ from those computed in training, because two pieces of code implement "the same" feature
