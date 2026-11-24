@@ -1,0 +1,20 @@
+id: b13-extract-paper-claims-01
+lesson: research/b13/extract-paper-claims
+title: Implement extract paper claims
+prompt: Implement evidence_ids. Filter report rows by exact task, split, metric and baseline matches with the claim; missing comparison fields never match. Preserve input row order.
+starter: |
+  def evidence_ids(rows,claim):
+      raise NotImplementedError
+solution: |
+  def evidence_ids(rows,claim):
+      fields=("task","split","metric","baseline")
+      return [row["id"] for row in rows
+              if all(field in row and field in claim and row[field]==claim[field] for field in fields)]
+tests: |
+  claim={"task":"x","split":"test","metric":"acc","baseline":"linear"}
+  assert evidence_ids([{**claim,"id":"a"},{**claim,"id":"b","split":"dev"}],claim)==["a"]
+  assert evidence_ids([{**claim,"id":"a","baseline":"tree"},{**claim,"id":"b"}],claim)==["b"]
+  assert evidence_ids([{"id":"a"}],{})==[]
+  assert evidence_ids([],claim)==[]
+hints:
+  - A missing field is not proof of agreement.

@@ -1,0 +1,4 @@
+term: "Reproduction protocol"
+short: "A recorded specification of the inputs, environment and procedure needed to repeat an experiment."
+body: "A reproduction protocol pins data revisions, splits, preprocessing, code version, hyperparameters, seeds, compute budget, scorer version and the exact command. It also notes how any conflict between the paper text and the code was resolved. Explicit zero or false values count as recorded."
+related: ["dataset-manifest","experiment-run"]

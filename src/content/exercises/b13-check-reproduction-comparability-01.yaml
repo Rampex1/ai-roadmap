@@ -1,0 +1,24 @@
+id: b13-check-reproduction-comparability-01
+lesson: research/b13/check-reproduction-comparability
+title: Implement check reproduction comparability
+prompt: Implement protocol_differences. Return (missing, changed) field lists in the declared order. Absent or None on either side is missing. Otherwise compare by equality.
+starter: |
+  def protocol_differences(original,repeat,fields):
+      raise NotImplementedError
+solution: |
+  def protocol_differences(original,repeat,fields):
+      missing,changed=[],[]
+      for field in fields:
+          if field not in original or field not in repeat or original[field] is None or repeat[field] is None:
+              missing.append(field)
+          elif original[field]!=repeat[field]:
+              changed.append(field)
+      return missing,changed
+tests: |
+  assert protocol_differences({"a":0,"b":1},{"a":0,"b":2},["a","b","c"])==(["c"],["b"])
+  assert protocol_differences({"a":None},{"a":None},["a"])==(["a"],[])
+  assert protocol_differences({"a":"x","b":"x"},{"a":"y","b":"y"},["b","a"])==([],["b","a"])
+  assert protocol_differences({}, {}, [])==([],[])
+  assert protocol_differences({"a":1,"b":None},{"b":2},["a","b"])==(["a","b"],[]), "a field absent or None on either side is missing"
+hints:
+  - Missing information is not equivalent to equal settings.

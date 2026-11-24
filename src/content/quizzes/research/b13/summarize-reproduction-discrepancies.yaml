@@ -1,0 +1,90 @@
+items:
+  - id: b13-summarize-reproduction-discrepancies-01
+    type: mcq
+    prompt: How is discrepancy signed here?
+    explanation: A repeat below reference gives a negative value.
+    options:
+      - text: Repeat minus reference
+        why: A repeat below reference gives a negative value.
+        correct: true
+      - text: Reference minus repeat
+        why: That reverses the sign.
+      - text: Absolute difference only
+        why: The direction matters.
+  - id: b13-summarize-reproduction-discrepancies-02
+    type: mcq
+    prompt: What should happen when a pair is missing?
+    explanation: It is not evidence of agreement or difference.
+    options:
+      - text: Count it as incomplete
+        why: It is not evidence of agreement or difference.
+        correct: true
+      - text: Discard it without reporting coverage
+        why: That hides failures.
+      - text: Treat it as a zero discrepancy
+        why: That would invent a comparison.
+  - id: b13-summarize-reproduction-discrepancies-03
+    type: mcq
+    prompt: Does an observed min/max range give a confidence interval?
+    explanation: An uncertainty interval requires a method and assumptions.
+    options:
+      - text: No, it describes observed differences
+        why: An uncertainty interval requires a method and assumptions.
+        correct: true
+      - text: Yes for every sample size
+        why: Observed extremes are not a calibrated interval.
+      - text: Only if all differences are positive
+        why: Signs do not establish coverage.
+  - id: b13-summarize-reproduction-discrepancies-04
+    type: mcq
+    prompt: Why match experimental units?
+    explanation: Correspondence supports a paired comparison.
+    options:
+      - text: It guarantees equal measurements
+        why: Matched units can still differ.
+      - text: It can control variation shared by reference and repeat
+        why: Correspondence supports a paired comparison.
+        correct: true
+      - text: It eliminates all measurement noise
+        why: Noise can remain.
+  - id: b13-summarize-reproduction-discrepancies-05
+    type: multi
+    prompt: Which should be shown with the mean?
+    explanation: It defines the evidence count. It reveals missing measurements.
+    options:
+      - text: Number of complete pairs
+        why: It defines the evidence count.
+        correct: true
+      - text: Number of incomplete pairs
+        why: It reveals missing measurements.
+        correct: true
+      - text: Only the highest repeated score
+        why: A best run can hide instability.
+  - id: b13-summarize-reproduction-discrepancies-06
+    type: cloze
+    prompt: A repeat reported without a corresponding reference is an incomplete ______.
+    accept:
+      - pair
+      - comparison
+    explanation: Both measurements are required for a paired difference.
+  - id: b13-summarize-reproduction-discrepancies-07
+    type: order
+    prompt: Order discrepancy reporting.
+    items:
+      - Align reference and repeat measurements by experimental unit
+      - Using those pairs, compute signed differences and tally missing or failed units
+      - Report the effects, incomplete-pair count and uncertainty limits
+    explanation: The summary keeps missingness visible.
+  - id: b13-summarize-reproduction-discrepancies-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def discrepancy_summary(pairs):
+          diffs=[repeat-reference for reference,repeat in pairs if reference is not None and repeat is not None]
+          return {"paired":len(diffs),"missing":len(pairs)-len(diffs),
+                  "mean":sum(diffs)/len(diffs) if diffs else None,
+                  "range":(min(diffs),max(diffs)) if diffs else None}
+
+      print(discrepancy_summary([(3, 1)])["mean"])
+    answer: "-2.0"
+    explanation: The repeat is two lower than its reference.

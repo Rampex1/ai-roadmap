@@ -1,0 +1,4 @@
+term: "Protocol deviation"
+short: "A documented difference between the intended experiment and the run actually performed."
+body: "A protocol deviation is any known difference in data, split, preprocessing, objective, metric, comparator or budget between the original and the repeat. It narrows which original claims the repeat can confirm. A field missing on either side is unresolved, not a deviation."
+related: ["record-a-reproduction-protocol","summarize-reproduction-discrepancies"]

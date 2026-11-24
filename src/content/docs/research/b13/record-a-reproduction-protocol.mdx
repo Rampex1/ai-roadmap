@@ -1,0 +1,45 @@
+---
+title: Turn methods into a runnable protocol
+module: b13
+order: 2
+estMinutes: 8
+objectives:
+  - Record the data and evaluation identities
+  - Distinguish an unspecified choice from a measured value
+goDeeper: neurips-paper-checklist
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="record-a-reproduction-protocol" /> describes data revisions, splits, preprocessing, model code, hyperparameters, random seeds, compute budget and evaluation. Include the exact command and the expected artifact. Record the evaluation version independently from the training checkpoint because the scorer can change the headline result.
+
+Search the appendix and released code for defaults omitted from the text. If they disagree, record the conflict and pick an explicit interpretation rather than silently picking the setting that produces a better result. A resource-constrained run can still be informative if the changes to scope are visible.
+
+This fixture checks presence of required fields. An explicit zero or false value can be intentional; missing values and blank strings are not sufficient evidence of a resolved setting. The checker cannot validate that a command actually runs.
+
+## Worked example
+
+The zero seed is a recorded setting.
+
+```python
+def missing_protocol(record,required):
+    missing=[]
+    for name in required:
+        value=record.get(name)
+        if value is None or (isinstance(value,str) and not value.strip()):
+            missing.append(name)
+    return missing
+
+print(missing_protocol({"seed":0,"data":"v1","metric":" "}, ["data","metric","seed","command"]))
+```
+
+```text title="Output"
+['metric', 'command']
+```
+
+Capture the actual environment and declare unresolved assumptions before running comparisons.
+
+## Try it
+
+<CodeExercise id="b13-record-a-reproduction-protocol-01" />

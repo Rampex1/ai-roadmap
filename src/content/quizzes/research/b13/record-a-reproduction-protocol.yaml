@@ -1,0 +1,93 @@
+items:
+  - id: b13-record-a-reproduction-protocol-01
+    type: mcq
+    prompt: Why preserve seed zero?
+    explanation: Falsey is not the same as missing.
+    options:
+      - text: It means the seed is always random
+        why: That is not the stated policy.
+      - text: Zero is a valid explicit seed
+        why: Falsey is not the same as missing.
+        correct: true
+      - text: It disables version reporting
+        why: Seeds and versions are separate.
+  - id: b13-record-a-reproduction-protocol-02
+    type: mcq
+    prompt: What should a text/code disagreement produce?
+    explanation: The discrepancy should stay visible.
+    options:
+      - text: A documented interpretation and choice
+        why: The discrepancy should stay visible.
+        correct: true
+      - text: An unreported optimistically tuned setting
+        why: This obscures what was reproduced.
+      - text: An assumption that both must be identical
+        why: They can differ.
+  - id: b13-record-a-reproduction-protocol-03
+    type: mcq
+    prompt: Why version the scorer?
+    explanation: Model identity alone cannot reconstruct evaluation.
+    options:
+      - text: The scoring implementation can change the result
+        why: Model identity alone cannot reconstruct evaluation.
+        correct: true
+      - text: It chooses the optimizer automatically
+        why: Evaluation and training are separate.
+      - text: It removes the need to name the metric
+        why: Names and implementations both matter.
+  - id: b13-record-a-reproduction-protocol-04
+    type: mcq
+    prompt: What does a presence check establish?
+    explanation: It does not execute the procedure.
+    options:
+      - text: Every setting is technically valid
+        why: Value semantics need separate validation.
+      - text: Required settings are recorded under the declared rules
+        why: It does not execute the procedure.
+        correct: true
+      - text: The result will match exactly
+        why: Environment and randomness can still affect it.
+  - id: b13-record-a-reproduction-protocol-05
+    type: multi
+    prompt: Which belong in a protocol?
+    explanation: They define the evaluated sample. They describe execution.
+    options:
+      - text: Data and split identity
+        why: They define the evaluated sample.
+        correct: true
+      - text: Command and environment
+        why: They describe execution.
+        correct: true
+      - text: Only a screenshot of a final number
+        why: That does not show how to reproduce it.
+  - id: b13-record-a-reproduction-protocol-06
+    type: cloze
+    prompt: A recorded repeatable experimental procedure is a ______.
+    accept:
+      - protocol
+      - reproduction protocol
+    explanation: It specifies how the result was obtained.
+  - id: b13-record-a-reproduction-protocol-07
+    type: order
+    prompt: Order protocol preparation.
+    items:
+      - Read methods and supplementary material
+      - Resolve or document ambiguous settings
+      - Freeze inputs and execution details
+      - Run the named procedure
+    explanation: Execution should use the recorded settings.
+  - id: b13-record-a-reproduction-protocol-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def missing_protocol(record,required):
+          missing=[]
+          for name in required:
+              value=record.get(name)
+              if value is None or (isinstance(value,str) and not value.strip()):
+                  missing.append(name)
+          return missing
+
+      print(missing_protocol({"value": False}, ["value"]))
+    answer: "[]"
+    explanation: False is explicitly recorded and is not missing.

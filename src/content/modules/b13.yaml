@@ -4,5 +4,7 @@ title: "Reading and reproducing papers"
 order: 14
 prereqs: ["b12"]
 objectives:
-  - "Explain the core ideas of reading and reproducing papers"
-  - "Derive or implement the key methods of reading and reproducing papers"
+  - Extract a bounded claim and link it to evidence
+  - Specify the data, compute and evaluation protocol needed for reproduction
+  - Check whether reproduced runs match the intended comparison
+  - Quantify discrepancies without hiding unsuccessful runs

@@ -1,0 +1,95 @@
+items:
+  - id: b13-check-reproduction-comparability-01
+    type: mcq
+    prompt: Does a smaller training budget preserve the original performance claim?
+    explanation: A smaller-scale result can answer a narrower question.
+    options:
+      - text: It changes the tested setting
+        why: A smaller-scale result can answer a narrower question.
+        correct: true
+      - text: Only when all metric values are identical
+        why: Equal outcomes do not eliminate protocol differences.
+      - text: Yes, if the model name is the same
+        why: Budget may affect results.
+  - id: b13-check-reproduction-comparability-02
+    type: mcq
+    prompt: Why report missing fields separately?
+    explanation: Absent values cannot be confirmed equal or different, so they need resolution, not a mismatch label.
+    options:
+      - text: They represent unresolved comparability
+        why: Absent values cannot be confirmed equal or different, so they need resolution, not a mismatch label.
+        correct: true
+      - text: Missing fields always describe the same setting
+        why: Unknown values cannot be assumed equal.
+      - text: To give them a lower metric value automatically
+        why: Missing metadata is not a metric.
+  - id: b13-check-reproduction-comparability-03
+    type: mcq
+    prompt: Which is often a direct training-budget unit?
+    explanation: These describe the amount of work.
+    options:
+      - text: Optimizer steps or examples seen
+        why: These describe the amount of work.
+        correct: true
+      - text: The checkpoint nickname
+        why: Names can be arbitrary.
+      - text: The final plot width
+        why: Display size is unrelated.
+  - id: b13-check-reproduction-comparability-04
+    type: mcq
+    prompt: What if data preprocessing changed?
+    explanation: It can change the effective data distribution.
+    options:
+      - text: Record and explain the deviation
+        why: It can change the effective data distribution.
+        correct: true
+      - text: Hide it if results are similar
+        why: The workflow is still different.
+      - text: Treat the data as automatically immutable
+        why: Inputs may be transformed differently.
+  - id: b13-check-reproduction-comparability-05
+    type: multi
+    prompt: Which comparisons should be explicit?
+    explanation: They affect the sampled cases. Different definitions change meaning.
+    options:
+      - text: Data and split versions
+        why: They affect the sampled cases.
+        correct: true
+      - text: Objective and metric versions
+        why: Different definitions change meaning.
+        correct: true
+      - text: Only the names of report authors
+        why: This does not identify settings.
+  - id: b13-check-reproduction-comparability-06
+    type: cloze
+    prompt: A known changed setting is a protocol ______.
+    accept:
+      - deviation
+      - difference
+      - change
+      - mismatch
+    explanation: It limits which original claims are directly comparable.
+  - id: b13-check-reproduction-comparability-07
+    type: order
+    prompt: Order a comparability review.
+    items:
+      - List the source controls and collect the corresponding run settings
+      - Compare the two records to classify gaps and differences
+      - Use the classified differences to bound the comparison claim
+    explanation: The claim must follow the verified scope.
+  - id: b13-check-reproduction-comparability-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def protocol_differences(original,repeat,fields):
+          missing,changed=[],[]
+          for field in fields:
+              if field not in original or field not in repeat or original[field] is None or repeat[field] is None:
+                  missing.append(field)
+              elif original[field]!=repeat[field]:
+                  changed.append(field)
+          return missing,changed
+
+      print(protocol_differences({"k": 0}, {"k": 0}, ["k"]))
+    answer: ([], [])
+    explanation: Explicit zeros are present and equal.

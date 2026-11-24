@@ -1,0 +1,89 @@
+items:
+  - id: b13-extract-paper-claims-01
+    type: mcq
+    prompt: Why include a comparator in the claim?
+    explanation: Different baselines change what the result means.
+    options:
+      - text: Improvement is relative to a baseline
+        why: Different baselines change what the result means.
+        correct: true
+      - text: A comparator proves generalization
+        why: Evidence is still scoped.
+      - text: It sets the metric units automatically
+        why: Metric interpretation is separate.
+  - id: b13-extract-paper-claims-02
+    type: mcq
+    prompt: Can a train result replace a test result?
+    explanation: Evidence must match the claim.
+    options:
+      - text: No, the split has a different role
+        why: Evidence must match the claim.
+        correct: true
+      - text: Yes, if its value is larger
+        why: Training scores are inflated by fitting the training data.
+      - text: Only if the same code ran
+        why: Same code can run on different splits.
+  - id: b13-extract-paper-claims-03
+    type: mcq
+    prompt: What does a scope match establish?
+    explanation: It does not prove adequate statistical strength.
+    options:
+      - text: The record refers to the requested comparison
+        why: It does not prove adequate statistical strength.
+        correct: true
+      - text: The paper is correct in every context
+        why: That exceeds the evidence.
+      - text: The artifact can be reproduced automatically
+        why: Execution still needs a protocol.
+  - id: b13-extract-paper-claims-04
+    type: mcq
+    prompt: Why read a table caption?
+    explanation: These delimit the comparison.
+    options:
+      - text: It often specifies conditions or aggregation rules
+        why: These delimit the comparison.
+        correct: true
+      - text: Captions replace all recorded outputs
+        why: The actual results remain evidence.
+      - text: They decide the outcome of every run
+        why: They describe rather than execute runs.
+  - id: b13-extract-paper-claims-05
+    type: multi
+    prompt: Which narrow an empirical statement?
+    explanation: It identifies who was evaluated. They define the comparison.
+    options:
+      - text: Dataset split
+        why: It identifies who was evaluated.
+        correct: true
+      - text: Metric and comparator
+        why: They define the comparison.
+        correct: true
+      - text: Only the model nickname
+        why: It does not establish scope.
+  - id: b13-extract-paper-claims-06
+    type: cloze
+    prompt: Connecting an assertion to its supporting result is claim–______ mapping.
+    accept:
+      - evidence
+    explanation: The link makes the assertion inspectable.
+  - id: b13-extract-paper-claims-07
+    type: order
+    prompt: Order a claim audit.
+    items:
+      - State the exact comparison
+      - Identify the matching experiment
+      - Inspect its protocol and uncertainty
+      - Summarize what the evidence supports
+    explanation: The conclusion follows inspection of scope and data.
+  - id: b13-extract-paper-claims-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def evidence_ids(rows,claim):
+          fields=("task","split","metric","baseline")
+          return [row["id"] for row in rows
+                  if all(field in row and field in claim and row[field]==claim[field] for field in fields)]
+
+      print(evidence_ids([], {}))
+    answer: "[]"
+    explanation: No records means there is no matching evidence.

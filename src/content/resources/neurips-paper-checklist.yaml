@@ -1,0 +1,7 @@
+title: NeurIPS Paper Checklist
+url: https://nips.cc/public/guides/PaperChecklist
+kind: tool
+free: true
+modules:
+  - b13
+  - b14

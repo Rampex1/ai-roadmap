@@ -1,0 +1,42 @@
+---
+title: Read a paper as a set of testable claims
+module: b13
+order: 1
+estMinutes: 8
+objectives:
+  - Separate a paper claim from motivation
+  - Locate evidence under the claim’s precise scope
+goDeeper: neurips-paper-checklist
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Start with the task and the claimed improvement. Write down the metric, comparator, population and conditions. An accuracy improvement on one benchmark does not establish improvement on every dataset or runtime. Track which claims describe observations, which are theoretical and which are hypotheses about causes.
+
+For each empirical claim, build a <Term id="extract-paper-claims" />. Record the table, figure or logged run, along with the relevant split and training budget. Read the caption and settings before comparing numbers. A chart may combine different compute budgets or show only a chosen subset of runs.
+
+The fixture matches the requested task, split and metric exactly and returns only evidence whose comparator also matches. It does not judge whether the evidence is strong enough, or whether the claimed comparison is statistically precise.
+
+## Worked example
+
+The synthetic record matches all four dimensions.
+
+```python
+def evidence_ids(rows,claim):
+    fields=("task","split","metric","baseline")
+    return [row["id"] for row in rows
+            if all(field in row and field in claim and row[field]==claim[field] for field in fields)]
+
+print(evidence_ids([{"id":"r1","task":"classify","split":"test","metric":"acc","baseline":"linear"}], {"task":"classify","split":"test","metric":"acc","baseline":"linear"}))
+```
+
+```text title="Output"
+['r1']
+```
+
+Write the exact claim and evidence pointer next to each planned reproduction target.
+
+## Try it
+
+<CodeExercise id="b13-extract-paper-claims-01" />

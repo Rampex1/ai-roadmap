@@ -1,0 +1,22 @@
+id: b13-record-a-reproduction-protocol-01
+lesson: research/b13/record-a-reproduction-protocol
+title: Implement record a reproduction protocol
+prompt: Implement missing_protocol(record,required). Return required field names in input order when a key is absent, None or a blank string. Preserve valid zero and false settings.
+starter: |
+  def missing_protocol(record,required):
+      raise NotImplementedError
+solution: |
+  def missing_protocol(record,required):
+      missing=[]
+      for name in required:
+          value=record.get(name)
+          if value is None or (isinstance(value,str) and not value.strip()):
+              missing.append(name)
+      return missing
+tests: |
+  assert missing_protocol({"seed":0,"shuffle":False,"metric":" "},["seed","shuffle","metric","split"])==["metric","split"]
+  assert missing_protocol({"data":"v1","code":None},["code","data"])==["code"]
+  assert missing_protocol({},[])==[]
+  assert missing_protocol({"a":"","b":0},["a","b"])==["a"]
+hints:
+  - Check missingness explicitly instead of using truthiness.

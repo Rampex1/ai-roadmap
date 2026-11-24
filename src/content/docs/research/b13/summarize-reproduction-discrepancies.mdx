@@ -1,0 +1,43 @@
+---
+title: Report discrepancies and unsuccessful runs
+module: b13
+order: 4
+estMinutes: 8
+objectives:
+  - Compare measurements on matched experimental units
+  - Keep failed or missing repeats visible
+goDeeper: neurips-paper-checklist
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="summarize-reproduction-discrepancies" /> can arise from random variation, software differences, data changes or an implementation problem. Compare the expected experiment at the same unit where possible, such as a matched seed or task. Use repeat minus reference as the sign convention rather than averaging absolute differences by accident.
+
+Keep completed, failed and missing runs separate. Omitting failed configurations can make a protocol appear more stable than it is. If a paper reports only an aggregate, matched-seed analysis may be impossible. State that limitation and avoid inventing pairs.
+
+The fixture summarizes paired scalar results with a signed mean and an observed range. It does not treat the range as a confidence interval, and reports None when no complete pair is available.
+
+## Worked example
+
+The positive and negative differences do not cancel exactly.
+
+```python
+def discrepancy_summary(pairs):
+    diffs=[repeat-reference for reference,repeat in pairs if reference is not None and repeat is not None]
+    return {"paired":len(diffs),"missing":len(pairs)-len(diffs),
+            "mean":sum(diffs)/len(diffs) if diffs else None,
+            "range":(min(diffs),max(diffs)) if diffs else None}
+
+print(discrepancy_summary([(1,2),(4,2),(None,3)]))
+```
+
+```text title="Output"
+{'paired': 2, 'missing': 1, 'mean': -0.5, 'range': (-2, 1)}
+```
+
+Report the sign, denominators and uncertainty method rather than a single best run.
+
+## Try it
+
+<CodeExercise id="b13-summarize-reproduction-discrepancies-01" />

@@ -1,0 +1,4 @@
+term: "Reproduction discrepancy"
+short: "The difference between an original measurement and its matched repeat under a declared comparison convention."
+body: "A reproduction discrepancy is the signed difference, repeat minus reference, on a matched unit such as a seed or task. It can arise from random variation, software or data changes, or bugs. Incomplete pairs are counted rather than imputed."
+related: ["paired-bootstrap","matched-seeds"]

@@ -1,0 +1,46 @@
+---
+title: Separate matched runs from changed settings
+module: b13
+order: 3
+estMinutes: 8
+objectives:
+  - Check data and compute controls for a comparison
+  - Label resource-constrained variants explicitly
+goDeeper: neurips-paper-checklist
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="check-reproduction-comparability" /> can arise from unavailable data, a changed tokenizer, different hardware or a smaller training budget. Such deviations do not make the work useless; they change what conclusion it supports. Identify the exact fields that differ, and state whether the new run aims to replicate the original result or test a nearby question.
+
+Review the most consequential controls first: data, objective, split, metric, comparators and number of examples or updates. Wall-clock time depends on hardware and workload, so use the appropriate resource unit. Calibration, preprocessing and data augmentation may also change interpretation.
+
+The exercise compares explicit required fields only. A missing field on either side is classified separately from a mismatch. Use that distinction to decide what can be resolved before spending compute.
+
+## Worked example
+
+Steps changed and the seed is absent.
+
+```python
+def protocol_differences(original,repeat,fields):
+    missing,changed=[],[]
+    for field in fields:
+        if field not in original or field not in repeat or original[field] is None or repeat[field] is None:
+            missing.append(field)
+        elif original[field]!=repeat[field]:
+            changed.append(field)
+    return missing,changed
+
+print(protocol_differences({"split":"v1","steps":100},{"split":"v1","steps":50},["split","steps","seed"]))
+```
+
+```text title="Output"
+(['seed'], ['steps'])
+```
+
+Label what was reproduced, what was changed and which result comparison remains defensible.
+
+## Try it
+
+<CodeExercise id="b13-check-reproduction-comparability-01" />

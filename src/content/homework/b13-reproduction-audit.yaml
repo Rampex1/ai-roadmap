@@ -1,0 +1,22 @@
+id: b13-reproduction-audit
+module: b13
+kind: homework
+title: Audit a paper reproduction plan
+brief: |-
+  Use synthetic paper records to separate evidence, protocol, comparability and discrepancy. No paper artifacts need to be downloaded.
+
+  1. Find the result supporting a claim.
+  2. Identify gaps in a run manifest.
+  3. Distinguish a matched run from a changed protocol.
+  4. Summarize paired reproduction discrepancies.
+  5. Audit paired runs before computing discrepancies.
+
+  Select one paper result from an earlier module and write a reproduction contract with a clearly bounded claim and a list of unresolved assumptions.
+notebook: /homework/b13-reproduction-audit.ipynb
+rubric:
+  - Claim and experiment identity are explicit.
+  - Protocol metadata distinguishes missing entries from known settings.
+  - Comparability checks are strict about named controls.
+  - Discrepancies preserve sign and pair counts.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

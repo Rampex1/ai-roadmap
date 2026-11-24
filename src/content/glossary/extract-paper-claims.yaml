@@ -1,0 +1,4 @@
+term: "Claim–evidence mapping"
+short: "An explicit link between a statement and the experiment or analysis that supports it."
+body: "A claim–evidence mapping pairs each empirical claim (task, split, metric, comparator, conditions) with the specific table, figure or logged run that supports it. Only evidence matching every one of those dimensions counts."
+related: ["held-out-set","experiment-run"]
