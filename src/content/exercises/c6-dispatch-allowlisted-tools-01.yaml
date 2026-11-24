@@ -1,0 +1,37 @@
+id: c6-dispatch-allowlisted-tools-01
+lesson: llm/c6/dispatch-allowlisted-tools
+title: Dispatch through a fixed registry
+prompt: Implement dispatch_read(name, arguments, registry). The registry maps names to trusted handlers and arguments already passed validation. Call only registered names. Return status unknown_tool for a missing name, unavailable for TimeoutError, and ok plus result for success. Any other exception is a bug, so let it propagate.
+starter: |
+  def dispatch_read(name, arguments, registry):
+      raise NotImplementedError
+solution: |
+  def dispatch_read(name, arguments, registry):
+      if name not in registry:
+          return {"status": "unknown_tool"}
+      try:
+          result = registry[name](**arguments)
+      except TimeoutError:
+          return {"status": "unavailable"}
+      return {"status": "ok", "result": result}
+tests: |
+  calls = []
+  def stub(query):
+      calls.append(query)
+      return []
+  def slow():
+      raise TimeoutError
+  tools = {"catalogue": stub, "slow": slow}
+  assert dispatch_read("missing", {}, tools) == {"status":"unknown_tool"} and calls == []
+  assert dispatch_read("catalogue", {"query":"maps"}, tools) == {"status":"ok","result":[]} and calls == ["maps"]
+  assert dispatch_read("slow", {}, tools) == {"status":"unavailable"}
+  def buggy():
+      raise KeyError("bug in handler")
+  try:
+      dispatch_read("buggy", {}, {"buggy": buggy})
+  except KeyError:
+      pass
+  else:
+      raise AssertionError("Catch only TimeoutError: a KeyError is a bug and must propagate")
+hints:
+  - Look up the name in the registry before invoking anything.

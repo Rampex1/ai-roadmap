@@ -4,5 +4,7 @@ title: "Tool use"
 order: 6
 prereqs: ["c5"]
 objectives:
-  - "Explain the core ideas of tool use"
-  - "Build and evaluate an application using tool use"
+  - Run a chat-completions tool round trip, from tools and tool_choice to tool messages and the second request
+  - Validate JSON-string arguments and dispatch only allowlisted tools the current user may call
+  - Answer every tool_call_id, returning timeouts and invalid arguments as error content the model can act on
+  - Filter, project and byte-cap tool results, and contain prompt injection with a fixed tool set and least privilege

@@ -1,0 +1,4 @@
+term: "Tool call"
+short: "A structured model request asking the application to execute a named operation with arguments."
+body: "A tool call is output, not an action. In chat completions it appears in an assistant message's `tool_calls` list as an `id`, a function name and arguments encoded as a JSON string, with `finish_reason` set to `tool_calls`. The application parses and validates the arguments, decides whether to run the operation under its own permissions, and answers with a `tool` message. The model never executes anything itself."
+related: ["tool-call-id","tool-registry","api-contract","schema"]

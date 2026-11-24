@@ -1,0 +1,144 @@
+items:
+  - id: c6-tool-call-contract-01
+    type: mcq
+    prompt: Who executes the application-defined function?
+    explanation: The model only writes text. A tool call is that text in a structured shape. This is why every safety control in the module lives in application code, which is the only place where anything actually runs.
+    options:
+      - text: The application or its tool service
+        why: Correct. The model proposes a name and arguments, and your code decides whether to run the function, under its own credentials.
+        correct: true
+      - text: The argument schema itself
+        why: A schema only describes the allowed shape of the arguments. It runs nothing.
+      - text: The end user by typing a title
+        why: The user supplies text that the model may copy into arguments, but the user does not run the function.
+  - id: c6-tool-call-contract-02
+    type: mcq
+    prompt: A lookup contract says `limit` is an integer from 1 to 5. Why reject JSON `true` as a limit?
+    explanation: In Python `isinstance(True, int)` is `True` and `True == 1`, so a naive check would accept it as a limit of 1. `type(limit) is int` excludes booleans.
+    options:
+      - text: The contract calls for a numeric count
+        why: Correct. A boolean is a different JSON type, so a model sending `true` has misunderstood the contract and the call should be rejected.
+        correct: true
+      - text: All boolean values are strings
+        why: JSON booleans parse to Python booleans, not strings.
+      - text: It is invalid JSON
+        why: "`true` is valid JSON. `json.loads` parses it into the Python value `True`."
+  - id: c6-tool-call-contract-03
+    type: mcq
+    prompt: A catalogue lookup tool allows `limit` from 1 to 5. Which check is a domain rule rather than a parsing or envelope check?
+    explanation: Parsing checks ask whether the text is JSON. Envelope checks ask whether the response has the expected fields. Domain rules ask whether these particular values make sense for this tool, and only your application can know them.
+    options:
+      - text: Reject limits greater than five
+        why: Correct. The 1 to 5 range is a rule of this tool's purpose. JSON syntax and the response envelope know nothing about it.
+        correct: true
+      - text: Require a function name field in the outer message
+        why: This checks the structure of the tool call envelope, not the values of this tool's arguments.
+      - text: Require syntactically valid JSON
+        why: This is a parsing check that applies to every tool's arguments.
+  - id: c6-tool-call-contract-04
+    type: mcq
+    prompt: When should invalid arguments be handled?
+    explanation: Rejected arguments still produce a tool message, containing an error. The model can then retry with corrected arguments on the next request, so rejecting early costs little.
+    options:
+      - text: Before execution
+        why: Correct. A rejected call never touches the catalogue, so a malformed proposal cannot cause a side effect or a misleading result.
+        correct: true
+      - text: After returning the search results
+        why: By then the invalid request has already run and its results may already be in the model's context.
+      - text: Only when they crash a model turn
+        why: Many invalid inputs, such as a limit of 500, run without crashing and return wrong or oversized results.
+  - id: c6-tool-call-contract-05
+    type: multi
+    prompt: Which belong in argument validation for a tool call?
+    explanation: Validation covers keys, types and domain bounds after `json.loads`. Strict mode makes malformed arguments rarer, but schemas cannot express every rule, and open-model servers differ in what they enforce.
+    options:
+      - text: Reject keys the contract does not list
+        why: Correct. Unexpected keys signal a confused proposal and would raise `TypeError` if passed on as keyword arguments.
+        correct: true
+      - text: Skip the checks when strict mode is on
+        why: Strict mode constrains shape, not domain rules such as which branch a user may see, and support varies by server.
+      - text: Run the tool and treat any exception as proof the arguments were invalid
+        why: This executes before checking, and many invalid arguments run without raising an exception.
+      - text: Check value bounds
+        why: Correct. Bounds such as a limit of 1 to 5 are domain rules that the model can break even when the JSON is well formed.
+        correct: true
+      - text: Check types
+        why: Correct. A query of `3` or a limit of `"5"` parses as valid JSON but cannot be used as the tool expects.
+        correct: true
+  - id: c6-tool-call-contract-06
+    type: cloze
+    prompt: A tool call gives the application a function name and proposed ______.
+    accept:
+      - arguments
+      - parameters
+      - argument
+      - args
+      - inputs
+    explanation: In chat completions the arguments arrive in `function.arguments` as a JSON string. You must parse them with `json.loads` before validating them.
+  - id: c6-tool-call-contract-07
+    type: order
+    prompt: Order the steps of handling a tool call.
+    items:
+      - Expose a tool definition
+      - Receive a proposed call
+      - Validate and execute through the application
+      - Return a tool result
+    explanation: These four steps span two HTTP requests. The definition goes out in request 1, the proposal comes back in response 1, and the result goes out in request 2 as a `tool` message.
+  - id: c6-tool-call-contract-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def lookup_arguments(raw):
+          import json
+          try:
+              args = json.loads(raw)
+          except json.JSONDecodeError:
+              return None
+          if not isinstance(args, dict) or set(args) != {"query", "limit"}:
+              return None
+          query, limit = args["query"], args["limit"]
+          if not isinstance(query, str) or not query.strip() or type(limit) is not int or not 1 <= limit <= 5:
+              return None
+          return {"query": query.strip(), "limit": limit}
+
+      print(lookup_arguments('{"query":"maps","limit":0}'))
+    answer: None
+    explanation: The JSON parses and the keys and types are right, but `1 <= 0` is false, so the domain bound rejects it. A well-formed call can still break the contract.
+  - id: c6-tool-call-contract-09
+    type: mcq
+    prompt: A chat-completions response has `message.content` set to `null` and a `tool_calls` list. What is `choices[0].finish_reason`?
+    explanation: The finish reason is the loop condition for a tool round trip. While it is `"tool_calls"`, your code runs tools and sends another request. When it is `"stop"`, the content is the answer.
+    options:
+      - text: '"tool_calls"'
+        why: Correct. The model stopped so that your application can run the proposed calls and send their results back.
+        correct: true
+      - text: '"content_filter"'
+        why: This signals that output was withheld by a content filter, which is unrelated to tools.
+      - text: '"length"'
+        why: '"length" means generation hit `max_tokens`, as in C2.'
+      - text: '"stop"'
+        why: '"stop" means the model finished a normal text answer.'
+  - id: c6-tool-call-contract-10
+    type: mcq
+    prompt: You keep the `tools` list in every request, but on this turn the model must answer in plain text. Which `tool_choice` value do you send?
+    explanation: '`tool_choice` controls whether the model may, must or must not call tools. A named choice, `{"type": "function", "function": {"name": ...}}`, forces one specific tool.'
+    options:
+      - text: '"auto"'
+        why: '"auto" lets the model decide, so it might still call a tool.'
+      - text: A named function choice
+        why: This forces a call to that specific tool.
+      - text: '"none"'
+        why: Correct. The tools stay listed, but the model must reply with text this turn.
+        correct: true
+      - text: '"required"'
+        why: '"required" forces at least one tool call, which is the opposite.'
+  - id: c6-tool-call-contract-11
+    type: output
+    prompt: What does this print?
+    code: |
+      import json
+      call = {"id": "call_1", "function": {"name": "search", "arguments": "{\"limit\": 3}"}}
+      raw = call["function"]["arguments"]
+      print(type(raw).__name__, type(json.loads(raw)["limit"]).__name__)
+    answer: "str int"
+    explanation: Chat completions sends `function.arguments` as a JSON string. Only after `json.loads` do you have a dict with typed values to validate. Anthropic's `tool_use` blocks, by contrast, deliver `input` already parsed.

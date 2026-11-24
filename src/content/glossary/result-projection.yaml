@@ -1,0 +1,4 @@
+term: "Result projection"
+short: "Selecting only the fields an operation is allowed to expose."
+body: "Projection builds each returned record from an explicit list of allowed fields rather than passing whole rows through. For tool results it follows an eligibility filter and precedes record and size caps, so private records and internal fields never reach the model's context, regardless of what the model asked for."
+related: ["tool-registry","metadata-filter"]

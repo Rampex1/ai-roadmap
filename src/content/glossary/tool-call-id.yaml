@@ -1,0 +1,4 @@
+term: "Tool call ID"
+short: "An identifier linking a tool response to the specific invocation requested by the model."
+body: "The provider assigns each proposed call an opaque ID, such as `call_a1`. The matching result carries it back, in chat completions as `tool_call_id` on a `tool` message. Because parallel calls can share a tool name and finish in any order, the ID is the only reliable way to pair a result with its request. Every issued ID should receive exactly one result, even if that result reports an error or timeout."
+related: ["tool-call","tool-registry"]

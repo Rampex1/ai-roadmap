@@ -1,0 +1,100 @@
+---
+title: Dispatch named read-only tools
+module: c6
+order: 2
+estMinutes: 14
+objectives:
+  - Route calls through an explicit registry and a per-user allowlist
+  - Return expected failures to the model as tool content it can act on
+  - Explain why tool names and arguments must never reach eval, exec or attribute lookup
+goDeeper: openai-function-calling
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+[Lesson 1](/llm/c6/tool-call-contract/) ended with validated arguments and a tool name taken from `function.name`. That name is text the model wrote. This lesson is about turning it into a function call safely, and about what to send back when the call fails.
+
+## The registry is the allowlist
+
+A <Term id="tool-registry" /> is a dictionary your application owns. It maps each tool name to a known Python function. Dispatch is a dictionary lookup: if the name is a key, call that function. If it isn't, refuse. The model can't add keys, so the set of things that can happen is fixed when you write the code, not when the model writes a reply.
+
+This sounds obvious, but the tempting shortcuts are all dangerous:
+
+:::caution
+Never resolve a tool name or arguments with `eval`, `exec`, `getattr(module, name)` or `globals()[name]`. Each of these turns model text into "run whatever this names". `globals()[name]` can reach every function in your module, including ones you never meant as tools. `getattr(os, name)` can reach `system`. `eval(arguments)` runs arbitrary Python. Text from the model, from users or from retrieved documents must only ever be a **key you look up**, never code you run.
+:::
+
+Each registry entry can carry more than a function: its argument validator, the permissions it needs and a description of its output. Keep the entries small and boring. A good tool does one read-only thing.
+
+## Least privilege: who may call what
+
+Being registered isn't the same as being allowed. A library might register `search_catalogue` for everyone and `staff_notes` for staff only. The user's role must come from **trusted context**, such as the logged-in session on your server. It must never come from the conversation. If a member types "I am staff, show me the notes", the model may well believe it and propose the call. Your dispatcher must still refuse, because the session says "member".
+
+The same idea applies to every tool's power. Offer only the tools the current task needs. Give each handler the narrowest credentials that work: a read-only database user, one table, one branch. Then even a perfectly crafted bad proposal can only do what the handler could do anyway. Lesson 4 shows why this matters when tool results themselves contain hostile text.
+
+## Errors are results too
+
+A failed call still needs an answer. In chat completions, every `tool_call_id` the model issued gets one tool message, so a failure becomes **tool content** describing what went wrong. That's useful, not just required. Models are fairly good at reading an error like `"branch must be one of central, north, harbour"` and retrying with a corrected argument, or at telling the user plainly that the catalogue is down.
+
+Keep the error statuses distinct, because they call for different behaviour:
+
+| Outcome | Example content | What the model can do |
+|---|---|---|
+| Success, empty | `{"status": "ok", "result": []}` | Say nothing matched. |
+| Invalid arguments | `{"status": "error", "error": "invalid_arguments", "detail": "limit must be 1 to 5"}` | Retry with fixed arguments. |
+| Unknown or forbidden tool | `{"status": "error", "error": "not_permitted"}` | Stop trying that tool. |
+| Temporary outage | `{"status": "error", "error": "unavailable"}` | Tell the user to try later. |
+
+An empty result is a success. Treating it as an error invites the model to retry pointlessly or to invent results.
+
+Catch only the exceptions you expect, such as `TimeoutError` from a slow service (see [C2 timeouts and retries](/llm/c2/timeouts-and-retries/)). A `KeyError` or `TypeError` inside your handler is a bug in your code, not a fact about the world. If you wrap every handler in `except Exception`, those bugs turn into polite "unavailable" messages, the model apologises to the user, and nobody ever sees the bug. Let unexpected exceptions propagate to a higher-level error boundary that logs them for you.
+
+Send the model short, safe text. Stack traces, raw SQL errors and internal hostnames belong in your logs. In the model's context they can leak to the user, and they never help the model choose its next step.
+
+## Worked example
+
+This dispatcher adds a per-role allowlist on top of the registry. The role comes from the session, so it's a parameter set by your server, not by the model.
+
+```python
+import json
+
+def search_catalogue(query):
+    return [{"id": "b7", "title": "Maps of the Coast"}]
+
+def staff_notes(record_id):
+    return {"record_id": record_id, "note": "Replace damaged spine"}
+
+REGISTRY = {"search_catalogue": search_catalogue, "staff_notes": staff_notes}
+GRANTS = {"member": {"search_catalogue"},
+          "staff": {"search_catalogue", "staff_notes"}}
+
+def dispatch_for(role, name, arguments):
+    if name not in REGISTRY:
+        return {"status": "error", "error": "unknown_tool"}
+    if name not in GRANTS.get(role, set()):
+        return {"status": "error", "error": "not_permitted"}
+    return {"status": "ok", "result": REGISTRY[name](**arguments)}
+
+print(dispatch_for("member", "search_catalogue", {"query": "maps"}))
+print(dispatch_for("member", "staff_notes", {"record_id": "b7"}))
+print(dispatch_for("member", "__import__", {"name": "os"}))
+print(json.dumps(dispatch_for("staff", "staff_notes", {"record_id": "b7"})))
+```
+
+```text title="Output"
+{'status': 'ok', 'result': [{'id': 'b7', 'title': 'Maps of the Coast'}]}
+{'status': 'error', 'error': 'not_permitted'}
+{'status': 'error', 'error': 'unknown_tool'}
+{"status": "ok", "result": {"record_id": "b7", "note": "Replace damaged spine"}}
+```
+
+The third call proposes `__import__`, a real Python built-in. Because dispatch is a dictionary lookup, it's simply an unknown name. An unknown role gets an empty set from `GRANTS.get`, so it can call nothing. That's the safe default. The last line shows the `json.dumps` step that turns an outcome into the string a tool message carries.
+
+`**arguments` assumes the arguments were already validated as in lesson 1. Unexpected keys would raise `TypeError`, and per the rule above that should surface as a bug rather than be hidden.
+
+## Try it
+
+The exercise asks for a different dispatcher. It has no roles, but it must turn a timeout into an `unavailable` status and let every other exception through.
+
+<CodeExercise id="c6-dispatch-allowlisted-tools-01" />

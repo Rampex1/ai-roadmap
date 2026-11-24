@@ -1,0 +1,17 @@
+id: c6-correlate-tool-results-01
+lesson: llm/c6/correlate-tool-results
+title: Join results to the originating calls
+prompt: Write ordered_results(call_ids, results_by_id). Return (call_id, result) pairs in the input call order. Use {"status":"missing"} for absent IDs and omit results for unknown calls.
+starter: |
+  def ordered_results(call_ids, results_by_id):
+      raise NotImplementedError
+solution: |
+  def ordered_results(call_ids, results_by_id):
+      return [(call_id, results_by_id.get(call_id, {"status": "missing"}))
+              for call_id in call_ids]
+tests: |
+  assert ordered_results(["one","two"], {"two":{"status":"ok","result":[]}}) == [("one",{"status":"missing"}),("two",{"status":"ok","result":[]})]
+  assert ordered_results(["b","a"], {"a":{"status":"ok"}, "b":{"status":"unavailable"}, "c":{"status":"ok"}}) == [("b",{"status":"unavailable"}),("a",{"status":"ok"})]
+  assert ordered_results([], {"x":{"status":"ok"}}) == []
+hints:
+  - Look up each expected ID in order instead of iterating over all returned results.

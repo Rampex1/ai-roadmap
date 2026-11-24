@@ -1,0 +1,4 @@
+term: "Tool registry"
+short: "A finite mapping from recognized tool names to application-owned handlers."
+body: "The registry is the allowlist of operations an application will perform for a model. Dispatch is a lookup in it: a registered name selects a known function, and any other name is refused. Entries often also hold an argument validator and the permissions required. Because names are only keys, model output can never reach `eval`, `exec` or arbitrary attribute lookup."
+related: ["tool-call","schema"]

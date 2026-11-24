@@ -1,0 +1,6 @@
+title: Ollama tool calling
+url: https://docs.ollama.com/capabilities/tool-calling
+kind: tool
+free: true
+modules:
+  - c6

@@ -1,0 +1,161 @@
+---
+title: Model requests and tool argument contracts
+module: c6
+order: 1
+estMinutes: 16
+objectives:
+  - Write a chat-completions request that offers a tool, and read a tool_calls response
+  - Run one full round trip, including tool messages and the second request
+  - Reject malformed model arguments before any tool runs
+goDeeper: ollama-tool-calling
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+In [C1](/llm/c1/llm-as-a-function/) you saw that a model is a function from text to text. It cannot open a database or read a clock. Tool use doesn't change that. The model still only writes text. What changes is the *shape* of that text: instead of a reply for the user, it can write a structured request that says "please run `check_availability` with these arguments". That request is a <Term id="tool-call" />. Your application decides whether to run it, runs it under its own authority, and sends the result back on the next request. The model then writes its answer with the result in view.
+
+So a tool call is a **proposal**, never an action. Everything in this module follows from that. The model can propose a tool you never offered, arguments that break your rules, or the right call with the wrong value. Your code is the only place where anything actually happens.
+
+## The round trip on the wire
+
+[C2](/llm/c2/chat-requests/) built requests for the OpenAI-compatible `/v1/chat/completions` endpoint. As of late 2026, tool calling uses the same endpoint with a few extra fields, and OpenAI, Ollama, llama.cpp's `llama-server` and vLLM all accept this shape for models trained for tool use. A full exchange takes two requests:
+
+1. **Request 1.** Send `messages` plus a `tools` list. Each tool has a `name`, a `description` the model reads to decide when to use it, and `parameters`, a JSON Schema for the arguments.
+2. **Response 1.** If the model wants a tool, `finish_reason` is `"tool_calls"`, `message.content` is usually `null`, and `message.tool_calls` lists one or more calls. Each has an `id`, a `function.name` and `function.arguments`.
+3. **Your code.** Parse and validate each call's arguments, run the allowed ones, and build one `{"role": "tool", "tool_call_id": ..., "content": ...}` message per call.
+4. **Request 2.** Send the original messages, then the assistant message from response 1 unchanged, then the tool messages. The model now answers in text, with `finish_reason` `"stop"`, or asks for more tools.
+
+:::caution
+`function.arguments` is a **JSON string**, not an object. You must `json.loads` it, and that can fail. Models sometimes emit invalid JSON, extra keys or wrong types, so treat the string exactly like untrusted user input.
+:::
+
+Two request fields control the model's freedom:
+
+| Field | Values | Effect |
+|---|---|---|
+| `tool_choice` | `"auto"` | The default when tools are present. The model chooses text or tool calls. |
+| | `"none"` | The model must answer in text, even though tools are listed. |
+| | `"required"` | The model must call at least one tool. |
+| | `{"type": "function", "function": {"name": "check_availability"}}` | The model must call that tool. |
+| `strict` (inside `function`) | `true` | Asks the server to constrain generation so arguments match the schema exactly. |
+
+As of late 2026, OpenAI's strict mode needs `"additionalProperties": false` and every property listed in `required`. Open-model servers differ in what they enforce, so check your server's documentation. Even with strict mode on, the schema can't express everything. It can't know that an ISBN exists or that this user may see this branch. Constrained generation reduces malformed arguments but never replaces your own checks.
+
+## Worked example: one round trip
+
+The tool here is `check_availability`. It counts copies of one book at one branch. The request offers it:
+
+```python
+import json
+
+tools = [{
+    "type": "function",
+    "function": {
+        "name": "check_availability",
+        "description": "Count copies of one book that are on the shelf at one branch.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "isbn": {"type": "string", "description": "13-digit ISBN, digits only"},
+                "branch": {"type": "string", "enum": ["central", "north", "harbour"]},
+            },
+            "required": ["isbn", "branch"],
+            "additionalProperties": False,
+        },
+    },
+}]
+messages = [
+    {"role": "system", "content": "You help library members. Use tools for stock questions."},
+    {"role": "user", "content": "Is 9780141439518 on the shelf at central or north?"},
+]
+request_1 = {"model": "example-model", "messages": messages,
+             "tools": tools, "tool_choice": "auto"}
+```
+
+The user asked about two branches, so the model proposes two calls in one turn. The second one capitalises the branch name, which the schema forbids. This is a recorded response, so no network call happens:
+
+```python
+response_1 = {"choices": [{"index": 0, "finish_reason": "tool_calls", "message": {
+    "role": "assistant", "content": None,
+    "tool_calls": [
+        {"id": "call_a1", "type": "function", "function": {
+            "name": "check_availability",
+            "arguments": "{\"isbn\": \"9780141439518\", \"branch\": \"central\"}"}},
+        {"id": "call_b2", "type": "function", "function": {
+            "name": "check_availability",
+            "arguments": "{\"isbn\": \"9780141439518\", \"branch\": \"North\"}"}},
+    ]}}]}
+```
+
+The validator parses the string and checks every rule before anything runs. It returns the arguments or `None`:
+
+```python
+BRANCHES = {"central", "north", "harbour"}
+
+def availability_arguments(raw):
+    try:
+        args = json.loads(raw)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(args, dict) or set(args) != {"isbn", "branch"}:
+        return None
+    isbn, branch = args["isbn"], args["branch"]
+    if not (isinstance(isbn, str) and len(isbn) == 13 and isbn.isascii() and isbn.isdigit()):
+        return None
+    if not isinstance(branch, str) or branch not in BRANCHES:
+        return None
+    return args
+
+STOCK = {("9780141439518", "central"): 2}
+
+def check_availability(isbn, branch):
+    return {"isbn": isbn, "branch": branch, "copies": STOCK.get((isbn, branch), 0)}
+```
+
+Each check closes a specific hole. `set(args) != {...}` catches missing and extra keys before you index into the dict. `isascii()` matters because `str.isdigit()` also accepts digits from other scripts. `isinstance(branch, str)` comes before `in BRANCHES`, because a list would raise `TypeError` inside a set lookup.
+
+Now the loop: append the assistant turn, then one tool message per call.
+
+```python
+choice = response_1["choices"][0]
+if choice["finish_reason"] == "tool_calls":
+    messages.append(choice["message"])          # the assistant turn goes back first
+    for call in choice["message"]["tool_calls"]:
+        args = availability_arguments(call["function"]["arguments"])
+        if call["function"]["name"] != "check_availability" or args is None:
+            result = {"error": "invalid_arguments",
+                      "detail": "branch must be one of central, north, harbour"}
+        else:
+            result = check_availability(**args)
+        messages.append({"role": "tool", "tool_call_id": call["id"],
+                         "content": json.dumps(result)})
+
+request_2 = {"model": "example-model", "messages": messages, "tools": tools}
+for m in request_2["messages"][2:]:
+    print(m["role"], m.get("tool_call_id"), m["content"])
+```
+
+```text title="Output"
+assistant None None
+tool call_a1 {"isbn": "9780141439518", "branch": "central", "copies": 2}
+tool call_b2 {"error": "invalid_arguments", "detail": "branch must be one of central, north, harbour"}
+```
+
+The invalid call didn't crash the loop and didn't run. It became an error *result*, sent back like any other. In request 2 the model can read that error and retry with `"north"`, or tell the user it couldn't check that branch. Lesson 2 builds on this idea. Tool `content` is a string, so the result is serialised with `json.dumps`.
+
+:::note
+Other APIs carry the same loop in different fields (as of late 2026). Anthropic's Messages API lists tools with an `input_schema`. A tool request arrives as a `tool_use` content block with an `id` and an already-parsed `input` object, and `stop_reason` is `"tool_use"`. You answer in the next `user` message with `tool_result` blocks that carry a matching `tool_use_id`. OpenAI's Responses API returns `function_call` items with a `call_id` and takes results as `function_call_output` items. The ideas are the same: a proposal, an ID, and a result you send back. An adapter maps each format onto your own objects.
+:::
+
+## Two layers of checks
+
+Validation has two layers. **Shape** comes from the schema: which keys exist and what JSON types they hold. **Domain rules** come from your application: a limit from 1 to 5, a branch this user may see, a nonblank query. The schema you send helps the model write good arguments. Your validator decides what runs.
+
+One Python trap: `True` is an instance of `int`, so `isinstance(True, int)` is `True`. If JSON `true` must not count as a number, test `type(x) is int`. Strip whitespace only when the contract allows that normalisation, and return the cleaned value so the tool sees exactly what you checked.
+
+## Try it
+
+The exercise validates a different tool, a catalogue search with `query` and `limit`. Apply the same pattern: parse, check keys, check types, check domain bounds.
+
+<CodeExercise id="c6-tool-call-contract-01" />

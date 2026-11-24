@@ -1,0 +1,27 @@
+id: c6-tool-call-contract-01
+lesson: llm/c6/tool-call-contract
+title: Validate catalogue lookup arguments
+prompt: Implement lookup_arguments(raw) for a JSON string. After JSON parsing, require exactly query and limit. Query must be a nonblank string; strip its edges. Limit must be an integer from 1 to 5, excluding booleans. Return the cleaned dictionary or None.
+starter: |
+  def lookup_arguments(raw):
+      raise NotImplementedError
+solution: |
+  def lookup_arguments(raw):
+      import json
+      try:
+          args = json.loads(raw)
+      except json.JSONDecodeError:
+          return None
+      if not isinstance(args, dict) or set(args) != {"query", "limit"}:
+          return None
+      query, limit = args["query"], args["limit"]
+      if not isinstance(query, str) or not query.strip() or type(limit) is not int or not 1 <= limit <= 5:
+          return None
+      return {"query": query.strip(), "limit": limit}
+tests: |
+  assert lookup_arguments('{"query":"  local history ","limit":1}') == {"query":"local history","limit":1}
+  assert lookup_arguments('{"query":"maps","limit":5}') == {"query":"maps","limit":5}, "A limit of 5 is allowed"
+  for value in ('{', '[]', '{"query":" ","limit":1}', '{"query":3,"limit":1}', '{"limit":1}', '{"query":"maps","limit":0}', '{"query":"maps","limit":true}', '{"query":"maps","limit":6}', '{"query":"maps","limit":1,"extra":0}'):
+      assert lookup_arguments(value) is None, f"Reject invalid arguments: {value}"
+hints:
+  - Use type(limit) is int to exclude JSON booleans.

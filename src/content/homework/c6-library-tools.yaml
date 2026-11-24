@@ -1,0 +1,22 @@
+id: c6-library-tools
+module: c6
+kind: homework
+title: Build a read-only library tool adapter
+brief: |-
+  Write the application side of a chat-completions tool round trip. The notebook supplies a library catalogue, two read-only tools with validators, and two recorded fixtures. In each fixture the model has returned `finish_reason: "tool_calls"` with three parallel `tool_calls`. One call succeeds. The others fail in different ways: a timeout, invalid arguments or an unknown tool. Your code must answer every call with a `tool` message, turning each failure into error content the model can read.
+
+  1. Read the proposed calls from a response, returning none when the model answered in text.
+  2. Run one call through the registry. Classify the outcome as ok, unknown_tool, invalid_arguments or timeout, and let unexpected exceptions propagate.
+  3. Serialise an outcome under a UTF-8 byte cap by dropping whole result items and marking the result as truncated, never by slicing JSON.
+  4. Build one `{"role": "tool", "tool_call_id": ..., "content": ...}` message per call, in the model's order.
+  5. Build request 2: the original messages, the unchanged assistant message, then the tool messages, without modifying request 1.
+  6. Interpret the results. What should the model tell the user, which errors can it fix on its own, and which failures belong in logs rather than in the conversation?
+notebook: /homework/c6-library-tools.ipynb
+rubric:
+  - Every issued tool_call_id gets exactly one tool message, in the model's order, on both fixture sets.
+  - Unknown tools, invalid arguments and timeouts become distinct error content, and a handler bug (KeyError) propagates instead of being hidden.
+  - Tool names are resolved only through the registry, with no eval, getattr or globals lookup.
+  - Tool content stays within the byte cap measured in UTF-8 bytes, remains valid JSON and flags truncation.
+  - Request 2 keeps the assistant message unchanged before its tool messages and leaves request 1 unmodified.
+  - The interpretation separates user-facing errors from diagnostics and explains why side-effecting tools are not offered.
+compute: Any laptop, local Jupyter or Colab CPU. Python standard library only, no API key or network. Allow 60 to 90 minutes.

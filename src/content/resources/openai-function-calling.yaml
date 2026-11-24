@@ -1,0 +1,6 @@
+title: OpenAI function calling guide
+url: https://developers.openai.com/api/docs/guides/function-calling
+kind: tool
+free: true
+modules:
+  - c6

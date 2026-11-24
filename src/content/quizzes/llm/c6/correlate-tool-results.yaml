@@ -1,0 +1,130 @@
+items:
+  - id: c6-correlate-tool-results-01
+    type: mcq
+    prompt: What identifies an individual tool invocation?
+    explanation: In chat completions the ID appears as `tool_calls[i].id` in the assistant message and comes back as `tool_call_id` on the tool message. Treat it as an opaque string and copy it through unchanged.
+    options:
+      - text: Its tool call ID
+        why: Correct. The provider gives each proposed call its own ID, and the result must carry that same ID back.
+        correct: true
+      - text: Only the tool name
+        why: Parallel calls often use the same tool with different arguments, such as two searches.
+      - text: Only the parent session ID
+        why: One session contains many calls, so a session ID cannot tell them apart.
+  - id: c6-correlate-tool-results-02
+    type: mcq
+    prompt: Why not match tool results to calls by the order in which they arrive?
+    explanation: Running independent calls concurrently is the point of parallel tool calling. Matching by ID lets you collect results in any order and still assemble the tool messages correctly.
+    options:
+      - text: Independent calls can complete out of order
+        why: Correct. A fast lookup can finish before a slow one that was issued first, so arrival order says nothing about which call a result answers.
+        correct: true
+      - text: Tool names always arrive encrypted
+        why: Tool names arrive as plain text in `function.name`.
+      - text: Every provider returns exactly one call
+        why: Parallel tool calling returns several calls in one assistant message.
+  - id: c6-correlate-tool-results-03
+    type: mcq
+    prompt: 'In `ordered_results`, a call ID with no entry in `results_by_id` gets `{"status": "missing"}`. What does missing mean there?'
+    explanation: Missing, empty and unknown_tool are three different facts, and the model should be told which one happened. Before sending, a missing status still becomes a tool message so that every call ID is answered.
+    options:
+      - text: The returned list was empty
+        why: An empty list is a completed lookup with no matches, which is a success.
+      - text: No result exists for an expected ID
+        why: Correct. The call was issued, but nothing came back for it, for example because it timed out.
+        correct: true
+      - text: The tool name was unknown
+        why: An unknown name is rejected at dispatch with its own status, before any result could exist.
+  - id: c6-correlate-tool-results-04
+    type: mcq
+    prompt: A result arrives with an ID that the model never issued. How should it affect the tool messages?
+    explanation: A stray often points to a bug in your own concurrency code or to a late duplicate from a retry. Logging it with the trace ID makes that bug findable.
+    options:
+      - text: Append it as another valid result
+        why: A tool message whose ID matches no call breaks the chat-completions message rules and has no question to answer.
+      - text: Leave it out and diagnose separately
+        why: Correct. It answers no call in this turn, so including it would only mislead the model.
+        correct: true
+      - text: Replace the first missing result with it
+        why: That attaches an answer to a question it was never about.
+  - id: c6-correlate-tool-results-05
+    type: multi
+    prompt: Which belong in a trace record of a tool call?
+    explanation: A useful trace answers "what happened for this user question, and how did each call end?". It should never need secrets, because traces are read by many people and kept for a long time.
+    options:
+      - text: The parent request ID
+        why: Correct. It groups every model request and tool call made for one user turn.
+        correct: true
+      - text: The individual call ID
+        why: Correct. It ties this record to one specific proposed invocation and its result.
+        correct: true
+      - text: The provider API key, for reproducing the call later
+        why: Keys are secrets and belong in a secret store, never in logs or traces.
+      - text: The tool name alone, used as the key for matching results
+        why: The name is worth recording, but as a key it cannot tell apart two calls to the same tool.
+      - text: The call's final status, such as ok, timeout or error
+        why: Correct. The status shows how each call ended without storing the full result.
+        correct: true
+  - id: c6-correlate-tool-results-06
+    type: cloze
+    prompt: The call ______ connects a tool result to the specific invocation.
+    accept:
+      - id
+      - identifier
+      - tool_call_id
+      - tool call id
+    explanation: Each API names this field differently. Chat completions uses `tool_call_id`, Anthropic uses `tool_use_id` and the Responses API uses `call_id`. The role is the same in all three.
+  - id: c6-correlate-tool-results-07
+    type: order
+    prompt: Order the path for collecting parallel tool results.
+    items:
+      - Track expected call IDs
+      - Collect results keyed by ID
+      - Join in request order and mark missing results
+      - Send correlated outcomes to the model
+    explanation: Starting from the expected IDs, not from whatever arrived, guarantees that every issued call gets a tool message and that strays are excluded automatically.
+  - id: c6-correlate-tool-results-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def ordered_results(call_ids, results_by_id):
+          return [(call_id, results_by_id.get(call_id, {"status": "missing"}))
+                  for call_id in call_ids]
+
+      print(ordered_results(["a"], {"x":{"status":"ok"}}))
+    answer: "[('a', {'status': 'missing'})]"
+    explanation: The comprehension loops over the expected IDs, so the stray result `x` is never looked at, and `a` gets the default missing status.
+  - id: c6-correlate-tool-results-09
+    type: numeric
+    prompt: Request 1 had a system message and a user message. The model answered with one assistant message containing 3 parallel tool calls. How many messages does request 2 contain?
+    answer: 6
+    tol: 0
+    explanation: The 2 original messages, plus the assistant message with its `tool_calls`, plus 3 tool messages, one per call ID, gives 6.
+  - id: c6-correlate-tool-results-10
+    type: mcq
+    prompt: You run three parallel lookups with a 2-second budget. Two return and one does not. What should request 2 contain for the third call?
+    explanation: A timeout is information. With it, the model can answer from the two results it has and tell the user the third source did not respond, instead of inventing it.
+    options:
+      - text: A tool message with its ID and content saying it timed out
+        why: Correct. Every call is answered, and the model knows exactly which lookup failed.
+        correct: true
+      - text: No tool message, since there is no result
+        why: An unanswered tool_call_id makes OpenAI reject the request and may leave a local model to invent a result.
+      - text: Nothing yet, because request 2 should wait however long the lookup takes
+        why: Unbounded waits hang the user's request. A fixed budget with an explicit timeout result keeps the system responsive.
+      - text: The result of another call to the same tool
+        why: That attaches an answer to the wrong question.
+  - id: c6-correlate-tool-results-11
+    type: mcq
+    prompt: In request 2, where does the assistant message that contains `tool_calls` go?
+    explanation: The model needs to see its own proposals to understand the results. The API needs the assistant message to know which IDs the tool messages answer.
+    options:
+      - text: Before its tool messages, unchanged
+        why: Correct. The tool messages answer calls listed in that assistant message, so it must come first, exactly as the model sent it.
+        correct: true
+      - text: After its tool messages
+        why: The tool messages would then answer calls that have not appeared yet, and the request is invalid.
+      - text: Inside the system message as a summary
+        why: The system message holds instructions. Rewriting the calls there breaks the message structure the API checks.
+      - text: Nowhere, since the tool messages carry the IDs
+        why: Without the assistant message the IDs refer to nothing, and the model loses track of what it asked for.

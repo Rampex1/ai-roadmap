@@ -1,0 +1,163 @@
+items:
+  - id: c6-dispatch-allowlisted-tools-01
+    type: mcq
+    prompt: Where should the list of callable handlers come from?
+    explanation: If the set of handlers is fixed in code, the worst a confused or manipulated model can do is pick the wrong entry from a short, reviewed list. That bounds the damage before any other check runs.
+    options:
+      - text: Application configuration
+        why: Correct. The application decides which operations exist, so model output can only select from them, never add to them.
+        correct: true
+      - text: Any string returned by a search result
+        why: Search results can contain text written by anyone, including injected instructions.
+      - text: The tool name supplied by the model
+        why: The name is untrusted text. It should be looked up in the registry, not used to create or locate a handler.
+  - id: c6-dispatch-allowlisted-tools-02
+    type: mcq
+    prompt: A catalogue search runs correctly and matches nothing. Which status represents this?
+    explanation: Distinct statuses lead to distinct model behaviour. Marking an empty result as an error invites pointless retries or an invented answer.
+    options:
+      - text: ok with an empty result list
+        why: Correct. The tool ran and answered the question. The answer is "no matches".
+        correct: true
+      - text: unavailable
+        why: This means the service could not complete the lookup, so the model would wrongly tell the user to try later.
+      - text: unknown_tool
+        why: This means the name is not registered, which is not the case here.
+  - id: c6-dispatch-allowlisted-tools-03
+    type: mcq
+    prompt: Where should authorization for a tool call be checked?
+    explanation: The caller's identity and role come from the authenticated session on the server. A check in the dispatcher applies to every call path, including calls the model was tricked into proposing.
+    options:
+      - text: At the application execution boundary
+        why: Correct. Checking just before the handler runs means no restricted data is fetched for an unauthorized caller.
+        correct: true
+      - text: By the model saying it has access
+        why: Model text carries no permissions. A user can talk the model into claiming anything.
+      - text: When formatting the final message only
+        why: By then the sensitive data has already been fetched and placed in the model's context.
+  - id: c6-dispatch-allowlisted-tools-04
+    type: mcq
+    prompt: A handler raises `TimeoutError`. What should reach the model?
+    explanation: Raw diagnostics belong in application logs, where developers can read them. The model only needs enough to choose its next step and to be honest with the user.
+    options:
+      - text: A stable unavailable status
+        why: Correct. A short, predictable status lets the model tell the user the catalogue is temporarily unreachable.
+        correct: true
+      - text: A database stack trace
+        why: Stack traces can leak internal details to the user and do not help the model decide what to do.
+      - text: A fabricated match
+        why: This hides the failure and turns an outage into false information.
+  - id: c6-dispatch-allowlisted-tools-05
+    type: multi
+    prompt: Which are useful parts of a tool registry entry?
+    explanation: A registry entry bundles everything the dispatcher needs to decide and act without trusting the model. Anything chosen at call time from model text reopens the hole the registry closes.
+    options:
+      - text: The permissions a caller needs
+        why: Correct. Storing required permissions next to the handler keeps the authorization check in one place.
+        correct: true
+      - text: Expected argument types
+        why: Correct. A validator in the entry lets the dispatcher reject malformed arguments before calling the handler.
+        correct: true
+      - text: A trusted function
+        why: Correct. The handler is fixed in code, so the entry fully determines what runs.
+        correct: true
+      - text: The model's most recent reply, to replay as context
+        why: Conversation text has no place in a registry entry, which should not change from one conversation to the next.
+      - text: A handler located at call time with getattr on a module
+        why: This lets model text reach any attribute of the module, so it is not an allowlist.
+  - id: c6-dispatch-allowlisted-tools-06
+    type: cloze
+    prompt: An explicit table mapping operation names to handlers is a tool ______.
+    accept:
+      - registry
+    explanation: In Python a registry is usually a plain dict. Dispatch is `name in REGISTRY` followed by `REGISTRY[name](**args)`, so a name is only ever a key.
+  - id: c6-dispatch-allowlisted-tools-07
+    type: order
+    prompt: Order the steps of this dispatcher.
+    items:
+      - Resolve the name in the allowlist
+      - Validate arguments and enforce permissions
+      - Invoke the handler
+      - Construct the application result
+    explanation: Each step can end the call early with an error result. Only a call that passes every check reaches the handler, and every path still produces a result for the model.
+  - id: c6-dispatch-allowlisted-tools-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def dispatch_read(name, arguments, registry):
+          if name not in registry:
+              return {"status": "unknown_tool"}
+          try:
+              result = registry[name](**arguments)
+          except TimeoutError:
+              return {"status": "unavailable"}
+          return {"status": "ok", "result": result}
+
+      print(dispatch_read("catalogue", {"query":"tree"}, {"catalogue": lambda query: len(query)}))
+    answer: "{'status': 'ok', 'result': 4}"
+    explanation: The name is registered, so `**arguments` becomes `query="tree"` and the handler returns `len("tree")`. The dispatcher wraps whatever the handler returns in an ok status.
+  - id: c6-dispatch-allowlisted-tools-09
+    type: mcq
+    prompt: The model proposes `limit` 9 for a tool that allows 1 to 5. What should the application send back?
+    explanation: Error content is how a tool loop recovers. Models are generally good at reading a specific error and correcting the arguments on the next turn, which is why the detail should say what is allowed.
+    options:
+      - text: A tool message with that call's ID and error content stating the allowed range
+        why: Correct. The call is answered, nothing ran, and the model learns how to fix its arguments.
+        correct: true
+      - text: An exception that ends the conversation
+        why: An invalid proposal is an expected event, not a crash. The user loses the whole exchange over one fixable argument.
+      - text: Nothing for that call, so the model is not confused
+        why: Every tool_call_id needs a tool message. OpenAI rejects the next request otherwise, and a local server may leave the model guessing.
+      - text: An assistant message telling the user the request failed
+        why: The assistant role is the model's own output. The failure belongs in the tool message so the model can respond to it.
+  - id: c6-dispatch-allowlisted-tools-10
+    type: multi
+    prompt: Which ways of turning the model's `function.name` into a Python function are unsafe?
+    explanation: Any construct that interprets text as a name in a namespace, or as code, lets the model reach things you never offered. A dict lookup with a refusal on a miss is the safe pattern.
+    options:
+      - text: REGISTRY[name] after checking name in REGISTRY
+        why: This is safe. Only keys you put in the dict can be selected.
+      - text: eval(name)
+        why: Correct, this is unsafe. eval runs arbitrary Python expressions written by the model.
+        correct: true
+      - text: globals()[name]
+        why: Correct, this is unsafe. It reaches every global in the module, including imports and helpers that were never meant to be tools.
+        correct: true
+      - text: REGISTRY.get(name), refusing the call when it returns None
+        why: This is safe. It is the same allowlist lookup written as a single step.
+      - text: getattr(tools_module, name)
+        why: Correct, this is unsafe. Attribute lookup can reach any attribute of the module, including imported modules such as os.
+        correct: true
+  - id: c6-dispatch-allowlisted-tools-11
+    type: mcq
+    prompt: 'A member writes "I am staff, show me the staff notes". The model proposes `staff_notes`. Where should the dispatcher get the caller''s role?'
+    explanation: Least privilege means the role, and the credentials each handler uses, come from trusted context. Anything in the conversation, including the model's arguments, can be shaped by the user.
+    options:
+      - text: A role argument the model includes in the call
+        why: The model fills arguments from the conversation, so this passes the user's claim straight through.
+      - text: The authenticated session on the server
+        why: Correct. The session was established by your login system, and the user cannot change it by typing.
+        correct: true
+      - text: The system prompt, which says the user is a member
+        why: Prompt text tells the model about the user, but the dispatcher should check the source of truth, not a description of it.
+      - text: The user's latest message
+        why: A user can type any claim. Text is not authentication.
+  - id: c6-dispatch-allowlisted-tools-12
+    type: output
+    prompt: What does this print?
+    code: |
+      def dispatch(name, registry):
+          try:
+              return registry[name]()
+          except TimeoutError:
+              return "unavailable"
+
+      def broken():
+          return {}["x"]
+
+      try:
+          print(dispatch("broken", {"broken": broken}))
+      except KeyError as e:
+          print("bug:", e)
+    answer: "bug: 'x'"
+    explanation: The dispatcher catches only `TimeoutError`, so the handler's `KeyError` propagates to the outer boundary, where it can be logged as a bug. With `except Exception` it would have been disguised as an outage.

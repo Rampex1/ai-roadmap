@@ -1,0 +1,6 @@
+title: "OWASP LLM01:2025 Prompt Injection"
+url: https://genai.owasp.org/llmrisk/llm01-prompt-injection/
+kind: tool
+free: true
+modules:
+  - c6

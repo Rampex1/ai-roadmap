@@ -1,0 +1,89 @@
+---
+title: Correlate calls with tool results
+module: c6
+order: 3
+estMinutes: 13
+objectives:
+  - Attach each tool message to the call it answers with tool_call_id
+  - Handle parallel calls that finish out of order, time out or never arrive
+  - Check a conversation for unanswered and stray tool results before sending it
+goDeeper: ollama-tool-calling
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+In [lesson 1](/llm/c6/tool-call-contract/) the model asked about two branches and got back two `tool_calls` in a single response. That's **parallel tool calling**, and it's a deliberate API feature. When the calls are independent, the model proposes them all at once instead of spending a full request and response on each. As of late 2026, OpenAI enables it by default and lets you switch it off with `"parallel_tool_calls": false`, which limits each turn to at most one call. Open-model servers support it to different degrees, depending on the model and its chat template.
+
+Parallel calls raise a bookkeeping question. Which result answers which call?
+
+## The ID is the join key
+
+Every entry in `tool_calls` has an `id`, such as `"call_a1"`. Every tool message you send back names it in `tool_call_id`. That pair is the <Term id="tool-call-id" />, and it's the only reliable link between a request and its result. Two calls can share a tool name and differ only in arguments, as `search_catalogue("Persuasion")` and `search_catalogue("Emma")` do. Their results can also finish in any order if you run them concurrently. Neither the name nor the arrival order tells you which is which. Only the ID does.
+
+Treat IDs as opaque strings. Don't parse them, don't assume a prefix or a length, and don't invent your own in place of the provider's. Copy them through validation, dispatch and result assembly unchanged.
+
+For chat completions, a valid second request follows two rules (as of late 2026):
+
+1. The assistant message containing `tool_calls` appears in `messages` *before* its tool messages, exactly as the model sent it.
+2. **Every** `tool_call_id` from that assistant message gets a tool message.
+
+OpenAI rejects a request that breaks rule 2 with a 400 error naming the unanswered IDs. Some local servers don't check, and that's worse: the model silently sees no result and may invent one. So send something for every call, even if it's only an error.
+
+## Timeouts, missing results and strays
+
+Suppose you run three lookups concurrently with a two-second budget. Two return and one doesn't. You can't wait forever, and you can't skip the call. Send a tool message whose content says what happened, such as `{"status": "error", "error": "timeout"}`. The model can then answer from the two results it has and say the third source didn't respond. That's far better than inventing it. This is the same rule as in [lesson 2](/llm/c6/dispatch-allowlisted-tools/): failures are results.
+
+The reverse can also happen. A result might arrive for an ID the model never issued, perhaps from a late retry or a bug in your own concurrency code. That's a **stray**. Don't append it and don't use it to fill a gap, because that would attach an answer to the wrong question. Log it and leave it out.
+
+Keep two kinds of ID apart in your logs:
+
+| ID | Scope | Use |
+|---|---|---|
+| Request or trace ID (yours) | One user turn, which may span several model requests | Grouping everything that happened for one question |
+| `tool_call_id` (the provider's) | One proposed invocation | Matching a result to its call |
+
+:::tip
+When the model's next turn asks for *more* tools, you get a new assistant message with new IDs. A conversation can go through several rounds like this. Each round's tool messages answer only that round's calls. Lesson 1's `finish_reason` check is the loop condition: keep going while it says `"tool_calls"`, up to a fixed limit of rounds. C7 turns that loop into an agent.
+:::
+
+## Worked example
+
+Before sending a conversation back, you can check it. This audit finds IDs the model issued that have no tool message, and tool messages that answer no issued ID.
+
+```python
+def audit_tool_turn(messages):
+    expected, answered = [], []
+    for m in messages:
+        if m["role"] == "assistant":
+            expected += [call["id"] for call in m.get("tool_calls") or []]
+        elif m["role"] == "tool":
+            answered.append(m["tool_call_id"])
+    missing = [i for i in expected if i not in answered]
+    stray = [i for i in answered if i not in expected]
+    return missing, stray
+
+conversation = [
+    {"role": "user", "content": "Any copies of Persuasion or Emma?"},
+    {"role": "assistant", "content": None, "tool_calls": [
+        {"id": "call_p", "type": "function",
+         "function": {"name": "search_catalogue", "arguments": "{\"query\": \"Persuasion\"}"}},
+        {"id": "call_e", "type": "function",
+         "function": {"name": "search_catalogue", "arguments": "{\"query\": \"Emma\"}"}}]},
+    {"role": "tool", "tool_call_id": "call_e", "content": "{\"status\": \"ok\", \"result\": []}"},
+    {"role": "tool", "tool_call_id": "call_x", "content": "{\"status\": \"ok\", \"result\": []}"},
+]
+print(audit_tool_turn(conversation))
+```
+
+```text title="Output"
+(['call_p'], ['call_x'])
+```
+
+`call_p` was issued but never answered, so this request would be rejected by OpenAI or silently confuse a local model. `call_x` answers nothing. `m.get("tool_calls") or []` covers assistant messages with no tools, where the field may be absent or `null`. This audit works on a whole conversation. In your own adapter it's easier to make the problem impossible: build tool messages by walking the issued calls in order and looking each one up in your results, which is what the exercise does.
+
+## Try it
+
+The exercise joins collected results to the expected call IDs, in request order, with an explicit `missing` status for calls that produced nothing.
+
+<CodeExercise id="c6-correlate-tool-results-01" />

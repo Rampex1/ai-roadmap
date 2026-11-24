@@ -1,0 +1,27 @@
+id: c6-bound-tool-results-01
+lesson: llm/c6/bound-tool-results
+title: Project and cap catalogue results
+prompt: Implement public_results(records, limit). Reject negative limits. Filter to public records first, preserve input order and return at most limit dictionaries containing only id and title.
+starter: |
+  def public_results(records, limit):
+      raise NotImplementedError
+solution: |
+  def public_results(records, limit):
+      if limit < 0:
+          raise ValueError("negative limit")
+      visible = [{"id": row["id"], "title": row["title"]}
+                 for row in records if row["public"]]
+      return visible[:limit]
+tests: |
+  records = [{"id":"z","title":"Hidden","public":False},{"id":"b","title":"Maps","public":True,"note":"private"},{"id":"c","title":"Tides","public":True}]
+  assert public_results(records, 1) == [{"id":"b","title":"Maps"}]
+  assert public_results(records, 4) == [{"id":"b","title":"Maps"},{"id":"c","title":"Tides"}]
+  assert public_results(records, 0) == []
+  try:
+      public_results([], -1)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("Reject a negative cap")
+hints:
+  - Build public id/title pairs before slicing the result list.
