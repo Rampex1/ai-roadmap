@@ -25,7 +25,7 @@ items:
         why: Bounded losses may still be selected on.
   - id: b1-empirical-and-population-risk-03
     type: mcq
-    prompt: When is minimizing total loss equivalent to minimizing mean?
+    prompt: When is minimising total loss equivalent to minimising mean?
     explanation: The denominator is constant.
     options:
       - text: Whenever samples have different sizes
@@ -46,7 +46,7 @@ items:
       - text: Only when there are two hypotheses
         why: Class size alone is insufficient.
       - text: Yes, ERM is a proof of correctness
-        why: Optimization does not prove generalization.
+        why: Optimisation does not prove generalisation.
   - id: b1-empirical-and-population-risk-05
     type: multi
     prompt: Which need to be fixed for a clear ERM comparison?

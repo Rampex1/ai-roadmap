@@ -21,7 +21,7 @@ items:
         correct: true
       - text: Insertion order of dictionary keys in the digest
         why: Dictionary keys are sorted.
-      - text: Unserializable objects automatically
+      - text: Unserialisable objects automatically
         why: The contract uses JSON data.
   - id: a3-fingerprint-dataset-lineage-03
     type: mcq
@@ -42,7 +42,7 @@ items:
     options:
       - text: That the quality of all records is high
         why: A hash is not a quality metric.
-      - text: Identity of the serialized manifest
+      - text: Identity of the serialised manifest
         why: Referenced data must be checked separately.
         correct: true
       - text: That every file still matches its declared digest
@@ -71,9 +71,9 @@ items:
     type: order
     prompt: Order a reproducible snapshot build.
     items:
-      - Validate and materialize data
+      - Validate and materialise data
       - Compute object digests and record split metadata
-      - Serialize the manifest deterministically
+      - Serialise the manifest deterministically
       - Store and verify its digest
     explanation: The manifest describes an already identified snapshot.
   - id: a3-fingerprint-dataset-lineage-08

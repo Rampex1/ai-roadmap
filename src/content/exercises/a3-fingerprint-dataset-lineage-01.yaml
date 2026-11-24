@@ -1,7 +1,7 @@
 id: a3-fingerprint-dataset-lineage-01
 lesson: mle/a3/fingerprint-dataset-lineage
 title: Fingerprint a JSON manifest
-prompt: Implement manifest_digest(manifest) for JSON data with string keys. Serialize with sorted keys, compact separators, unescaped Unicode, and disallow nonfinite numeric values. Return lowercase SHA-256 of UTF-8 bytes. Preserve list order.
+prompt: Implement manifest_digest(manifest) for JSON data with string keys. Serialise with sorted keys, compact separators, unescaped Unicode, and disallow nonfinite numeric values. Return lowercase SHA-256 of UTF-8 bytes. Preserve list order.
 starter: |
   def manifest_digest(manifest):
       raise NotImplementedError

@@ -1,6 +1,6 @@
 term: Schema
 short: A specification for the expected structure and field types of data.
-body: A valid shape does not establish that the values are correct for the current request. Check domain rules and authorization separately.
+body: A valid shape does not establish that the values are correct for the current request. Check domain rules and authorisation separately.
 related:
   - api-contract
   - few-shot-prompting

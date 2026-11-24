@@ -16,7 +16,7 @@ An <Term id="experiment-run" /> needs enough information to reproduce a result. 
 
 Use immutable dataset and checkpoint references where possible. Record the step and metric definition along with values. Two runs can both log accuracy while one uses per-example accuracy and the other averages across groups. Track failure and interrupted trials as outcomes, rather than omitting them from a tuning report.
 
-Libraries such as MLflow organize these objects under a run ID, but the schema still needs a deliberate policy. This fixture builds an inspectable in-memory record. It copies parameter and metric dictionaries to avoid top-level changes after logging. Production code should serialize nested inputs or make them immutable where mutation could matter.
+Libraries such as MLflow organise these objects under a run ID, but the schema still needs a deliberate policy. This fixture builds an inspectable in-memory record. It copies parameter and metric dictionaries to avoid top-level changes after logging. Production code should serialise nested inputs or make them immutable where mutation could matter.
 
 ## Worked example
 

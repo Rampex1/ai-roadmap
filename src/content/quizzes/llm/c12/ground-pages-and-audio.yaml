@@ -16,7 +16,7 @@ items:
     prompt: Why store coordinate units for page boxes?
     explanation: A viewer needs the convention to locate the region.
     options:
-      - text: Pixels and normalized coordinates are different scales
+      - text: Pixels and normalised coordinates are different scales
         why: A viewer needs the convention to locate the region.
         correct: true
       - text: Units change the model vocabulary

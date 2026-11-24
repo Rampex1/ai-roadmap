@@ -1,7 +1,7 @@
 id: a6-frozen-preprocessing-01
 lesson: mle/a6/frozen-preprocessing
 title: Apply frozen scaler state
-prompt: Implement apply_scaler(values, centers, scales). Require matching lengths and positive finite scales. Inputs are finite. Return each centered value divided by the fitted scale.
+prompt: Implement apply_scaler(values, centers, scales). Require matching lengths and positive finite scales. Inputs are finite. Return each centred value divided by the fitted scale.
 starter: |
   def apply_scaler(values, centers, scales):
       raise NotImplementedError

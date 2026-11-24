@@ -1,4 +1,4 @@
 term: "Reverse diffusion mean"
-short: "The mean of a modeled reverse denoising transition at one timestep."
+short: "The mean of a modelled reverse denoising transition at one timestep."
 body: "With ε-prediction, μ_θ(x_t, t) = (x_t − β_t/√(1 − ᾱ_t)·ε_θ)/√α_t. It equals the forward posterior mean μ̃_t when ε_θ is the true noise. Sampling adds σ_t·z, except at the final step."
 related: ["diffusion-forward-marginal","probability-quality"]

@@ -38,10 +38,10 @@ items:
   - id: c10-evaluate-and-ship-an-adapter-04
     type: mcq
     prompt: Why retain the original adapter artifact?
-    explanation: A merge may otherwise obscure the original factorization.
+    explanation: A merge may otherwise obscure the original factorisation.
     options:
       - text: It supports rollback and reproducibility
-        why: A merge may otherwise obscure the original factorization.
+        why: A merge may otherwise obscure the original factorisation.
         correct: true
       - text: It proves the current answers are factual
         why: Artifacts do not verify facts.
@@ -54,7 +54,7 @@ items:
     options:
       - text: Only the number of printed responses
         why: That does not reproduce the run.
-      - text: Tokenizer and template settings
+      - text: Tokeniser and template settings
         why: They determine how requests become inputs.
         correct: true
       - text: Base checkpoint identity

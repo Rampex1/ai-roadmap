@@ -8,7 +8,7 @@ brief: |-
   1. Find the result supporting a claim.
   2. Identify gaps in a run manifest.
   3. Distinguish a matched run from a changed protocol.
-  4. Summarize paired reproduction discrepancies.
+  4. Summarise paired reproduction discrepancies.
   5. Audit paired runs before computing discrepancies.
 
   Select one paper result from an earlier module and write a reproduction contract with a clearly bounded claim and a list of unresolved assumptions.

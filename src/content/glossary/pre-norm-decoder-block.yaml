@@ -1,4 +1,4 @@
-term: "Pre-normalization"
-short: "Normalizing a sublayer input before computing the update added to its residual stream."
+term: "Pre-normalisation"
+short: "Normalising a sublayer input before computing the update added to its residual stream."
 body: "Each sublayer reads a layer-normalised copy of the residual stream and adds its output back to the unnormalised stream: x + Attn(LN(x)), then x + MLP(LN(x)). Post-norm, used in the original Transformer, instead normalises after the residual sum."
 related: ["residual-connection","transformer"]

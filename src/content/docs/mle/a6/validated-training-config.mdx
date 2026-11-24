@@ -5,7 +5,7 @@ order: 3
 estMinutes: 8
 objectives:
   - Reject ambiguous configuration and unsupported keys
-  - Record normalized inputs for reproducibility
+  - Record normalised inputs for reproducibility
 goDeeper: sklearn-pipeline-reference
 ---
 
@@ -16,7 +16,7 @@ A <Term id="validated-training-config" /> describes settings independently of ex
 
 Validate before starting a costly job. A numeric-looking string from an environment variable must be explicitly parsed at the edge. In the fixture the parsed configuration must already contain numbers. A boolean epoch count is invalid even though Python treats bool as a subtype of int.
 
-Capture the effective settings in the run log alongside seeds, artifact identity and data manifest. Secrets should be referenced by an approved mechanism rather than serialized with public run metadata.
+Capture the effective settings in the run log alongside seeds, artifact identity and data manifest. Secrets should be referenced by an approved mechanism rather than serialised with public run metadata.
 
 ## Worked example
 

@@ -1,4 +1,4 @@
 term: "Expectation-maximization"
-short: "An iterative algorithm alternating latent posterior estimation with maximization of expected complete-data log likelihood."
+short: "An iterative algorithm alternating latent posterior estimation with maximisation of expected complete-data log likelihood."
 body: "EM alternates an E-step, which computes latent posteriors under the current parameters, with an M-step, which maximises the expected complete-data log likelihood. Each exact step never decreases the observed-data likelihood."
 related: ["stable-mixture-responsibilities","maximum-likelihood-estimation"]

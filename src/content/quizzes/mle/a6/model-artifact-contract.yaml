@@ -37,7 +37,7 @@ items:
         why: Serving compatibility is separate.
   - id: a6-model-artifact-contract-04
     type: mcq
-    prompt: Why avoid untrusted executable serialization?
+    prompt: Why avoid untrusted executable serialisation?
     explanation: Artifact origin is a trust boundary.
     options:
       - text: Loading it can run code

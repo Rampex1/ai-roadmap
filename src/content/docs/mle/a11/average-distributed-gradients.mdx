@@ -12,11 +12,11 @@ goDeeper: pytorch-ddp-reference
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-In <Term id="data-parallel-training" />, each worker computes a local gradient and the workers synchronize before updating model parameters. With identical local batch sizes, averaging local per-example gradients gives the global per-example mean. When local sample counts vary, these means need weights proportional to counts. Uniformly averaging a worker with one example and a worker with three overweights the singleton.
+In <Term id="data-parallel-training" />, each worker computes a local gradient and the workers synchronise before updating model parameters. With identical local batch sizes, averaging local per-example gradients gives the global per-example mean. When local sample counts vary, these means need weights proportional to counts. Uniformly averaging a worker with one example and a worker with three overweights the singleton.
 
-Many distributed trainers average gradients over ranks by default. Verify the reduction, each rank's loss normalization and what happens on the final partial batch. The exercise computes the mathematical target for unequal local counts; it does not replace the trainer's reduction setup.
+Many distributed trainers average gradients over ranks by default. Verify the reduction, each rank's loss normalisation and what happens on the final partial batch. The exercise computes the mathematical target for unequal local counts; it does not replace the trainer's reduction setup.
 
-With equal local batch size, the effective batch is local size times worker count times accumulation steps, assuming independent samples and no partial steps. Larger batches can change learning dynamics. Record the global batch, optimizer step count and sample budget before comparing training curves. Communication and stragglers can limit speedup even with correct gradients.
+With equal local batch size, the effective batch is local size times worker count times accumulation steps, assuming independent samples and no partial steps. Larger batches can change learning dynamics. Record the global batch, optimiser step count and sample budget before comparing training curves. Communication and stragglers can limit speedup even with correct gradients.
 
 ## Worked example
 

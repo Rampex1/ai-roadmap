@@ -5,18 +5,18 @@ order: 2
 estMinutes: 8
 objectives:
   - Compute first and second moment estimates
-  - Correct zero-initialization bias before scaling
+  - Correct zero-initialisation bias before scaling
 goDeeper: adam-original-paper
 ---
 
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-Adam tracks an exponential average of the gradient and another of its elementwise square. The square average tracks magnitude, not centered variance. Both states start at zero, which initially pulls estimates toward zero. <Term id="adam-bias-correction" cap /> divides the first average by 1−β₁ᵗ and the second by 1−β₂ᵗ at step t, starting at one.
+Adam tracks an exponential average of the gradient and another of its elementwise square. The square average tracks magnitude, not centred variance. Both states start at zero, which initially pulls estimates toward zero. <Term id="adam-bias-correction" cap /> divides the first average by 1−β₁ᵗ and the second by 1−β₂ᵗ at step t, starting at one.
 
 With β₁ = β₂ = 0.5 and first gradient 2, the raw states are 1 and 2. The corrected states are 2 and 4. Dividing the corrected first moment by the square root of the corrected second moment, with epsilon added after the root, gives a direction near one. Epsilon belongs outside the square root in this lesson's Adam convention.
 
-The scalar exercise returns the raw states for the next call and the normalized direction for the present update. A learning rate is applied separately. Keeping state and direction distinct helps avoid feeding corrected estimates back into the recurrence.
+The scalar exercise returns the raw states for the next call and the normalised direction for the present update. A learning rate is applied separately. Keeping state and direction distinct helps avoid feeding corrected estimates back into the recurrence.
 
 ## Worked example
 
@@ -37,7 +37,7 @@ print(adam_direction(0,0,2,0.5,0.5,1,0))
 (1.0, 2.0, 1.0)
 ```
 
-Record optimizer variant, step counter and epsilon placement when reproducing training.
+Record optimiser variant, step counter and epsilon placement when reproducing training.
 
 ## Try it
 

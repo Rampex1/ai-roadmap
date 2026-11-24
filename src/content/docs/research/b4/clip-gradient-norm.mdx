@@ -14,9 +14,9 @@ import CodeExercise from '@/components/CodeExercise.astro';
 
 <Term id="clip-gradient-norm" cap /> can limit the impact of an unusually large gradient. Compute the Euclidean norm across the full gradient vector, including all chosen parameter groups. If it exceeds the cap, multiply all coordinates by cap divided by norm. This preserves direction. Clipping coordinates separately can change direction.
 
-For a vector (3,4) the norm is 5. With cap 2.5 the scale is one half, giving (1.5,2). Do not normalize a smaller gradient up to the cap. Zero vectors need no division. With gradient accumulation, specify whether clipping happens before or after accumulation; those operations do not generally commute.
+For a vector (3,4) the norm is 5. With cap 2.5 the scale is one half, giving (1.5,2). Do not normalise a smaller gradient up to the cap. Zero vectors need no division. With gradient accumulation, specify whether clipping happens before or after accumulation; those operations do not generally commute.
 
-In mixed-precision training, inspect unscaled gradients before applying the intended cap. Record clipped fraction and norm summaries to distinguish occasional spikes from persistent instability. Clipping the gradient is distinct from directly bounding an adaptive optimizer's resulting parameter step.
+In mixed-precision training, inspect unscaled gradients before applying the intended cap. Record clipped fraction and norm summaries to distinguish occasional spikes from persistent instability. Clipping the gradient is distinct from directly bounding an adaptive optimiser's resulting parameter step.
 
 ## Worked example
 

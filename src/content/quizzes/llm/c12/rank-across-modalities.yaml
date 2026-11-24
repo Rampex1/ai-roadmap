@@ -44,7 +44,7 @@ items:
         why: The sort uses a deterministic secondary key.
         correct: true
       - text: Random order
-        why: That would destabilize the baseline.
+        why: That would destabilise the baseline.
       - text: Shortest vector dimension
         why: All compared vectors have the same length.
   - id: c12-rank-across-modalities-05

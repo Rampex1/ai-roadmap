@@ -33,7 +33,7 @@ A loan may be renewed three times if no other member has placed a hold.
 </source>
 ```
 
-The ID alone may cost 10 or more tokens. Count the rendered block with the generator's tokenizer, not the bare passage.
+The ID alone may cost 10 or more tokens. Count the rendered block with the generator's tokeniser, not the bare passage.
 
 Second, the candidate list contains repeats. Overlapping windows and two retrievers can return the same chunk twice, and the same ID can appear twice after a careless merge. Keep the first occurrence and skip later ones, so one passage does not consume the budget twice.
 

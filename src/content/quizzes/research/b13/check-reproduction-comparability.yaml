@@ -28,7 +28,7 @@ items:
     prompt: Which is often a direct training-budget unit?
     explanation: These describe the amount of work.
     options:
-      - text: Optimizer steps or examples seen
+      - text: Optimiser steps or examples seen
         why: These describe the amount of work.
         correct: true
       - text: The checkpoint nickname

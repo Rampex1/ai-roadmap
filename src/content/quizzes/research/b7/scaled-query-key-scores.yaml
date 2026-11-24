@@ -49,7 +49,7 @@ items:
         why: Masking is a separate operation.
   - id: b7-scaled-query-key-scores-05
     type: multi
-    prompt: Which axes matter for score normalization?
+    prompt: Which axes matter for score normalisation?
     explanation: It gets a separate distribution. Softmax acts across keys.
     options:
       - text: A query row identifies one output position
@@ -73,7 +73,7 @@ items:
       - Choose one query
       - Compute its dot product with each key
       - Divide by the square root of width
-      - Pass the row to masking and normalization
+      - Pass the row to masking and normalisation
     explanation: Scores are formed before the probability row.
   - id: b7-scaled-query-key-scores-08
     type: output

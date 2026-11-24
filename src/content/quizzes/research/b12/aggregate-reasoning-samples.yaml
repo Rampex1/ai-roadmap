@@ -28,7 +28,7 @@ items:
     prompt: Why freeze the parser?
     explanation: Parser changes can create or remove votes.
     options:
-      - text: Normalization affects which answers agree
+      - text: Normalisation affects which answers agree
         why: Parser changes can create or remove votes.
         correct: true
       - text: It makes all outputs identical
@@ -72,7 +72,7 @@ items:
     items:
       - Freeze prompts parser and budget
       - Collect attempts
-      - Normalize and count valid answers
+      - Normalise and count valid answers
       - Score vote outcomes and cost
     explanation: Correctness is assessed after the voting rule.
   - id: b12-aggregate-reasoning-samples-08

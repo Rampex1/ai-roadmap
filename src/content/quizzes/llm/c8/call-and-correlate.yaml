@@ -38,12 +38,12 @@ items:
   - id: c8-call-and-correlate-04
     type: mcq
     prompt: When should arguments be checked?
-    explanation: Shape and authorization are independent execution requirements.
+    explanation: Shape and authorisation are independent execution requirements.
     options:
       - text: After exposing returned sensitive data
         why: That is too late.
       - text: Before the operation is allowed to execute
-        why: Shape and authorization are independent execution requirements.
+        why: Shape and authorisation are independent execution requirements.
         correct: true
       - text: Only when a network connection drops
         why: Malformed inputs exist on healthy connections.

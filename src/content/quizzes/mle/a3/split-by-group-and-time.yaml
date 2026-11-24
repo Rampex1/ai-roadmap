@@ -1,7 +1,7 @@
 items:
   - id: a3-split-by-group-and-time-01
     type: mcq
-    prompt: Which split tests generalization to new patients?
+    prompt: Which split tests generalisation to new patients?
     explanation: The model sees no training rows from those patients.
     options:
       - text: Use every row for training
@@ -9,7 +9,7 @@ items:
       - text: Hold out entire patient groups
         why: The model sees no training rows from those patients.
         correct: true
-      - text: Randomize appointment rows only
+      - text: Randomise appointment rows only
         why: Related rows may cross the boundary.
   - id: a3-split-by-group-and-time-02
     type: mcq

@@ -13,6 +13,9 @@ brief: |
 
   Download the starter notebook. Part A runs in local Jupyter or Colab on CPU. Part B needs a GPU:
   upload the notebook to [Google Colab](https://colab.research.google.com/) and choose a T4 runtime.
+  Before starting, review B0 (Gaussians and Monte Carlo), B9 (generative models, especially the
+  diffusion lessons), B13 (reproducing papers) and B14 (matched ablations, paired bootstrap intervals
+  and research ethics).
 
   ## Milestones
 
@@ -21,7 +24,7 @@ brief: |
   2. **Freeze the protocol.** Record the schedule, data, seeds, evaluation draws, compute budget, the
      primary comparison and the smallest differences you would call meaningful, before seeing results.
   3. **Run the matched ablations (Part A).** Time-conditioned versus time-blind training with the same
-     initialization, data and optimizer steps; then $\beta_t$ versus $\tilde\beta_t$ sampling on the same
+     initialisation, data and optimiser steps; then $\beta_t$ versus $\tilde\beta_t$ sampling on the same
      trained weights with the same noise draws, for every training seed.
   4. **Reproduce on MNIST (Part B, Colab GPU).** Implement the training loss, train the provided small
      U-Net with $T=1000$ and the paper's linear schedule, show sample grids, and repeat the variance
@@ -39,11 +42,11 @@ brief: |
 notebook: /homework/research-capstone.ipynb
 rubric:
   - "The forward marginal, both reverse variances, the reverse step and the training loss pass the notebook's fixtures."
-  - "The time-conditioning ablation matches model shape, initialization, data draws, optimizer steps and held-out draws between variants."
-  - "σ² ablation reported on matched weights: β_t and β̃_t sampling reuse the same trained weights and the same noise draws in both parts."
-  - "MNIST DDPM trained on Colab with sample grid and FID-proxy reported, alongside the real-versus-real noise floor and class entropy."
+  - "The time-conditioning ablation matches model shape, initialisation, data draws, optimiser steps and held-out draws between variants."
+  - "The σ² ablation is reported on matched weights: β_t and β̃_t sampling reuse the same trained weights and the same noise draws in both parts."
+  - "The MNIST DDPM is trained on Colab, and its sample grid and FID proxy are reported alongside the real-versus-real noise floor and class entropy."
   - "The results table lists every seed with paired effects and bootstrap intervals, and states that training-seed variation on MNIST is not measured."
   - "The write-up follows paper format (abstract, method, setup, results, ablation, limitations) and states whether the results agree with the paper's Section 3.2 claim."
   - "The report separates what was reproduced from the paper's CIFAR-10 results and explains why the FID proxy is not comparable with published FID."
   - "The protocols, versions, hardware, runtimes and any failed runs are recorded well enough to repeat the study."
-compute: "CPU core ~1 min (Part A, NumPy). Colab T4 milestone ~45 min (Part B, PyTorch; estimated, not measured; free-tier GPUs and quotas change). Allow several more hours for implementation and the write-up."
+compute: "Part A on any laptop CPU, about 1 minute (NumPy); Part B on a free Colab T4, about 45 minutes (PyTorch; estimated, not measured; free-tier GPUs and quotas change). Effort: about 8 to 12 hours including implementation and the write-up."

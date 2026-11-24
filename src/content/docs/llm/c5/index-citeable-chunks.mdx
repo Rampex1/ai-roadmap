@@ -54,7 +54,7 @@ A citation is only useful if a reviewer can follow it back to the exact words. G
 
 - the **document ID** (`loan-policy`);
 - the **revision** (`r2`), so a citation from last year's policy is distinguishable from this year's;
-- the **start and end offsets** of the window in the tokenized document (or characters, which survive a tokenizer change).
+- the **start and end offsets** of the window in the tokenised document (or characters, which survive a tokeniser change).
 
 An ID such as `loan-policy@r2#16-32` meets all three. The retrieval rank, the similarity score and the position in a database table do not: they change from query to query or from one rebuild to the next. Keep the original text and any page number in the metadata, so the interface can show the reader the passage that was cited.
 
@@ -91,7 +91,7 @@ loan-policy@r2#2-5 ['c', 'd', 'e']
 
 The stride is $3 - 1 = 2$, so the second window starts at offset 2 and repeats token `c`. The loop stops as soon as a window reaches the last token. Without that `break`, it would also emit a redundant window `(4, 5, ['e'])` that is wholly contained in the previous one. Overlap must be smaller than the width, because otherwise the stride is zero or negative and the loop never advances.
 
-Real ingestion receives text, not ready-made tokens. Use a tokenizer compatible with your encoder for windowing ([F10](/foundations/f10/tokens/) showed that token counts differ from word counts) and keep character offsets in the original text for display.
+Real ingestion receives text, not ready-made tokens. Use a tokeniser compatible with your encoder for windowing ([F10](/foundations/f10/tokens/) showed that token counts differ from word counts) and keep character offsets in the original text for display.
 
 ## Try it
 

@@ -4,7 +4,7 @@ items:
     prompt: Which value should a repeat detector ignore here?
     explanation: The operation can be identical despite an ID change.
     options:
-      - text: The normalized query
+      - text: The normalised query
         why: It identifies the lookup content.
       - text: The selected tool name
         why: Different tools may have different effects.
@@ -62,7 +62,7 @@ items:
         why: Message length alone does not imply a stop.
   - id: c7-stop-repeated-work-06
     type: cloze
-    prompt: A normalized lookup key helps detect ______ proposals.
+    prompt: A normalised lookup key helps detect ______ proposals.
     accept:
       - repeat
       - repeated
@@ -76,7 +76,7 @@ items:
     items:
       - Receive a proposed read
       - Check the remaining budget
-      - Check its normalized key against prior reads
+      - Check its normalised key against prior reads
       - Dispatch only if allowed
     explanation: The fixture gives the budget check priority.
   - id: c7-stop-repeated-work-08
@@ -91,4 +91,4 @@ items:
 
       print(read_permission("schedule", "NORTH", {("catalogue", "north")}, 0, 1))
     answer: allowed
-    explanation: The normalized query matches, but the tool name differs.
+    explanation: The normalised query matches, but the tool name differs.

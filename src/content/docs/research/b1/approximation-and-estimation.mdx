@@ -14,7 +14,7 @@ import CodeExercise from '@/components/CodeExercise.astro';
 
 Use three population quantities: the selected model risk, the smallest risk in its candidate class and the best risk under the chosen broader reference. Their ordered differences split the total excess risk. <Term id="approximation-and-estimation" cap /> is the gap between best in class and the reference. Estimation error is the gap between the selected model and best in class.
 
-A larger class can reduce approximation error while making a finite sample less informative about which candidate wins. This trade-off explains why increasing capacity can improve training fit without improving test performance. Optimization error is an additional concern when the algorithm does not find an empirical minimizer.
+A larger class can reduce approximation error while making a finite sample less informative about which candidate wins. This trade-off explains why increasing capacity can improve training fit without improving test performance. Optimisation error is an additional concern when the algorithm does not find an empirical minimiser.
 
 Do not plug training loss into the population decomposition. In an experiment you may estimate these values with separate evaluation or calculate them exactly under a synthetic data-generating process. This fixture provides the three population risks in order, which need not be estimable in real problems.
 

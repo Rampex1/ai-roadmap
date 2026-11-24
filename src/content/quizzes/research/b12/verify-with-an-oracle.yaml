@@ -9,7 +9,7 @@ items:
       - text: It is an exact integer equal to the specified sum
         why: The declared task is checkable.
         correct: true
-      - text: The model generalizes to every task
+      - text: The model generalises to every task
         why: One check does not establish breadth.
   - id: b12-verify-with-an-oracle-02
     type: mcq

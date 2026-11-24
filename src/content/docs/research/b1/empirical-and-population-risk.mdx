@@ -5,7 +5,7 @@ order: 1
 estMinutes: 8
 objectives:
   - Write risk as a population expectation
-  - Select an empirical minimizer over a fixed class
+  - Select an empirical minimiser over a fixed class
 goDeeper: understanding-machine-learning
 ---
 
@@ -14,9 +14,9 @@ import CodeExercise from '@/components/CodeExercise.astro';
 
 Population risk is the expectation of loss on a fresh example from the target distribution. <Term id="empirical-and-population-risk" cap /> replaces that expectation with a sample average. For a hypothesis fixed independently of an i.i.d. sample, this average estimates its population risk. Once a learner selects a hypothesis on that same sample, the independence argument no longer applies directly.
 
-Empirical risk minimization (ERM) chooses a candidate of minimum observed average loss. With the same number of examples for each candidate, minimizing the total is equivalent. Ties need a deterministic convention to make a result reproducible. Even a perfect training score can come from fitting sample noise.
+Empirical risk minimisation (ERM) chooses a candidate of minimum observed average loss. With the same number of examples for each candidate, minimising the total is equivalent. Ties need a deterministic convention to make a result reproducible. Even a perfect training score can come from fitting sample noise.
 
-A population-optimal member of a class need not be the empirical minimizer. Generalization theory asks when their population risks will be close. This fixture scores given lists of losses on aligned cases and rejects missing or unequal sample sizes.
+A population-optimal member of a class need not be the empirical minimiser. Generalisation theory asks when their population risks will be close. This fixture scores given lists of losses on aligned cases and rejects missing or unequal sample sizes.
 
 ## Worked example
 

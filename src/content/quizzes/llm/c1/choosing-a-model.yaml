@@ -39,7 +39,7 @@ items:
         why: Inference keeps attention state and working buffers in memory.
       - text: Only the final string
         why: The decoder holds intermediate state.
-      - text: Only the tokenizer vocabulary
+      - text: Only the tokeniser vocabulary
         why: The vocabulary does not account for attention state.
   - id: c1-choosing-a-model-06
     type: mcq
@@ -70,8 +70,8 @@ items:
     prompt: Why can a mixture-of-experts model need more storage than its active parameter count suggests?
     explanation: The active count describes a token’s computation, while the set of available experts must be stored.
     options:
-      - text: Inactive experts are recreated by the tokenizer
-        why: The tokenizer maps text to IDs and does not regenerate weights.
+      - text: Inactive experts are recreated by the tokeniser
+        why: The tokeniser maps text to IDs and does not regenerate weights.
       - text: Different tokens can route to different experts
         correct: true
         why: The active count describes a token’s computation, while the set of available experts must be stored.

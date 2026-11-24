@@ -32,7 +32,7 @@ items:
         why: That is separate.
       - text: It is irrelevant after learning the final token count
         why: The same count can encode different rules.
-      - text: Order can change the tokenization
+      - text: Order can change the tokenisation
         why: Later merges depend on earlier symbols.
         correct: true
   - id: b8-merge-subword-pairs-04
@@ -49,7 +49,7 @@ items:
         why: That ignores repeated positions.
   - id: b8-merge-subword-pairs-05
     type: multi
-    prompt: Which are tokenizer artifacts?
+    prompt: Which are tokeniser artifacts?
     explanation: They determine model inputs. They reproduce segmentation.
     options:
       - text: Vocabulary and ID mapping
@@ -68,7 +68,7 @@ items:
     explanation: BPE stands for byte pair encoding.
   - id: b8-merge-subword-pairs-07
     type: order
-    prompt: Order one tokenizer training iteration.
+    prompt: Order one tokeniser training iteration.
     items:
       - Read current symbol sequences
       - Count within-sequence adjacent pairs

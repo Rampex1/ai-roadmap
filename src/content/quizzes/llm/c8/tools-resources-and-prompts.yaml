@@ -5,7 +5,7 @@ items:
     explanation: It is data addressed by a URI.
     options:
       - text: An instruction string treated as a permission
-        why: Text cannot authorize access.
+        why: Text cannot authorise access.
       - text: A write tool
         why: Reading the page does not modify it.
       - text: A resource
@@ -25,7 +25,7 @@ items:
         why: The result depends on the query.
   - id: c8-tools-resources-and-prompts-03
     type: mcq
-    prompt: Which primitive fits a reusable summarization template?
+    prompt: Which primitive fits a reusable summarisation template?
     explanation: It supplies a repeatable interaction pattern.
     options:
       - text: A prompt
@@ -34,7 +34,7 @@ items:
       - text: A tool result
         why: A result is observed data.
       - text: A session handshake
-        why: Initialization negotiates compatibility.
+        why: Initialisation negotiates compatibility.
   - id: c8-tools-resources-and-prompts-04
     type: mcq
     prompt: What should an empty stored page return in the example?
@@ -59,7 +59,7 @@ items:
         why: It allows the application to match content to source.
         correct: true
       - text: Treating page text as permission
-        why: Data does not authorize a read.
+        why: Data does not authorise a read.
   - id: c8-tools-resources-and-prompts-06
     type: cloze
     prompt: A resource is normally identified by a ______.
@@ -72,10 +72,10 @@ items:
     prompt: Order an application-selected resource read.
     items:
       - Identify the resource URI
-      - Check authorization for that object
+      - Check authorisation for that object
       - Read its permitted content
       - Supply it as data with provenance
-    explanation: Authorization comes before returning content.
+    explanation: Authorisation comes before returning content.
   - id: c8-tools-resources-and-prompts-08
     type: output
     prompt: What does this print?

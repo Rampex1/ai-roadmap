@@ -57,7 +57,7 @@ items:
       - text: Human rubric calibration
         why: It checks whether automated judgment matches criteria.
         correct: true
-      - text: Randomized candidate side
+      - text: Randomised candidate side
         why: Side bias can be measured and reduced.
         correct: true
   - id: b8-preference-evaluation-pairs-06
@@ -75,7 +75,7 @@ items:
       - Freeze held-out prompts and rubric
       - Collect responses from both systems
       - Blind and judge each pair
-      - Summarize wins ties missing cases and slices
+      - Summarise wins ties missing cases and slices
     explanation: Keep selection evidence separate from training preferences.
   - id: b8-preference-evaluation-pairs-08
     type: output

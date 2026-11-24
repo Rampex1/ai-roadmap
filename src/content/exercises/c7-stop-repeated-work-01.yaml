@@ -20,4 +20,4 @@ tests: |
   assert read_permission("catalogue","Straße",{("catalogue","strasse")},0,1) == "repeated", "Use casefold, not lower"
   assert seen == {("catalogue","open map")}, "Permission checks do not mutate history"
 hints:
-  - Build the normalized key only after checking the budget.
+  - Build the normalised key only after checking the budget.

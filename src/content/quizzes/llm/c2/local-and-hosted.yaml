@@ -26,12 +26,12 @@ items:
   - id: c2-local-and-hosted-03
     type: mcq
     prompt: Which comparison should be labelled separately?
-    explanation: Model load and initialization can change timings.
+    explanation: Model load and initialisation can change timings.
     options:
       - text: Prompts scored by the same rubric
         why: Comparable scores are desirable.
       - text: Cold start versus warmed requests
-        why: Model load and initialization can change timings.
+        why: Model load and initialisation can change timings.
         correct: true
       - text: Times converted to the same unit
         why: A shared unit supports comparison.

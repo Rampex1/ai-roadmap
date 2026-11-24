@@ -1,7 +1,7 @@
 id: b12-aggregate-reasoning-samples-01
 lesson: research/b12/aggregate-reasoning-samples
 title: Implement aggregate reasoning samples
-prompt: Implement vote_answers for strings already normalized and None for invalid parses. Return the unique plurality if it has at least minimum votes, otherwise None. Minimum is a positive integer.
+prompt: Implement vote_answers for strings already normalised and None for invalid parses. Return the unique plurality if it has at least minimum votes, otherwise None. Minimum is a positive integer.
 starter: |
   def vote_answers(answers,minimum):
       raise NotImplementedError

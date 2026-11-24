@@ -6,5 +6,5 @@ prereqs: ["c10"]
 objectives:
   - Instrument model requests with bounded, privacy-aware metadata
   - Budget token use and operations before execution
-  - Enforce application authorization independently of model output
+  - Enforce application authorisation independently of model output
   - Use canary metrics to stop or roll back a release

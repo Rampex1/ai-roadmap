@@ -9,15 +9,15 @@ items:
         correct: true
       - text: The batch label order
         why: Label order is not the measured limit.
-      - text: Only the optimized kernel speed
+      - text: Only the optimised kernel speed
         why: The rest of the work still takes time.
   - id: a11-profile-the-bottleneck-02
     type: mcq
-    prompt: Why synchronize when timing asynchronous work?
-    explanation: Synchronization defines the measured boundary.
+    prompt: Why synchronise when timing asynchronous work?
+    explanation: Synchronisation defines the measured boundary.
     options:
       - text: Launch completion may occur before device work finishes
-        why: Synchronization defines the measured boundary.
+        why: Synchronisation defines the measured boundary.
         correct: true
       - text: It removes every permanent bottleneck
         why: It improves measurement, not throughput.
@@ -75,9 +75,9 @@ items:
     items:
       - Define the representative workload
       - Measure stage and whole-run timings
-      - Optimize the measured bottleneck
+      - Optimise the measured bottleneck
       - Rerun the same whole-workload comparison
-    explanation: Measurements determine which stage to optimize.
+    explanation: Measurements determine which stage to optimise.
   - id: a11-profile-the-bottleneck-08
     type: output
     prompt: What does this print?

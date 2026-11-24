@@ -7,4 +7,4 @@ objectives:
   - Accumulate gradient contributions when a graph node has several consumers
   - Derive and implement dense-layer gradients for a batched loss
   - Compute stable softmax cross-entropy and its logit gradient
-  - Verify a manual gradient with centered differences
+  - Verify a manual gradient with centred differences

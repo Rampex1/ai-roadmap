@@ -50,13 +50,13 @@ items:
   - id: b11-discounted-trajectory-return-05
     type: multi
     prompt: Which define a trajectory?
-    explanation: They describe the decisions. They determine the realized return.
+    explanation: They describe the decisions. They determine the realised return.
     options:
       - text: State and action sequence
         why: They describe the decisions.
         correct: true
       - text: Observed rewards
-        why: They determine the realized return.
+        why: They determine the realised return.
         correct: true
       - text: The final chart file name
         why: It does not determine experience.

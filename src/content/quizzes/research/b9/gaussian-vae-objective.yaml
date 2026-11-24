@@ -37,7 +37,7 @@ items:
         why: Log variance may be negative.
   - id: b9-gaussian-vae-objective-04
     type: mcq
-    prompt: Why reparameterize?
+    prompt: Why reparameterise?
     explanation: The sampled noise is treated separately.
     options:
       - text: Gradients can flow through differentiable posterior parameters
@@ -50,13 +50,13 @@ items:
   - id: b9-gaussian-vae-objective-05
     type: multi
     prompt: Which appear in the negative ELBO?
-    explanation: It penalizes poor decoder fit. It penalizes divergence from the reference.
+    explanation: It penalises poor decoder fit. It penalises divergence from the reference.
     options:
       - text: KL to the latent prior
-        why: It penalizes divergence from the reference.
+        why: It penalises divergence from the reference.
         correct: true
       - text: Negative reconstruction log likelihood
-        why: It penalizes poor decoder fit.
+        why: It penalises poor decoder fit.
         correct: true
       - text: A label-smoothing requirement
         why: This is not part of the stated objective.

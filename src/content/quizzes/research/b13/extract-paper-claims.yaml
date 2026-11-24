@@ -7,7 +7,7 @@ items:
       - text: Improvement is relative to a baseline
         why: Different baselines change what the result means.
         correct: true
-      - text: A comparator proves generalization
+      - text: A comparator proves generalisation
         why: Evidence is still scoped.
       - text: It sets the metric units automatically
         why: Metric interpretation is separate.
@@ -73,7 +73,7 @@ items:
       - State the exact comparison
       - Identify the matching experiment
       - Inspect its protocol and uncertainty
-      - Summarize what the evidence supports
+      - Summarise what the evidence supports
     explanation: The conclusion follows inspection of scope and data.
   - id: b13-extract-paper-claims-08
     type: output

@@ -30,9 +30,9 @@ items:
     options:
       - text: The source label vocabulary automatically
         why: Labels are data configuration.
-      - text: The optimizer state for an excluded parameter by this plan
-        why: Excluded parameters are not optimized.
-      - text: Stateful normalization statistics in training mode
+      - text: The optimiser state for an excluded parameter by this plan
+        why: Excluded parameters are not optimised.
+      - text: Stateful normalisation statistics in training mode
         why: Those buffers can update without gradients.
         correct: true
   - id: a2-freeze-and-fine-tune-04
@@ -43,7 +43,7 @@ items:
       - text: Choose each split after seeing the test results
         why: That reuses holdout information.
       - text: Use only train loss and ignore target validation
-        why: It does not estimate generalization.
+        why: It does not estimate generalisation.
       - text: Use the same target splits and metric
         why: The candidate regimes face comparable cases.
         correct: true
@@ -52,7 +52,7 @@ items:
     prompt: Which should be checked when a backbone is frozen?
     explanation: Only intended variables should update. Evaluation mode can keep feature behaviour fixed.
     options:
-      - text: Optimizer membership
+      - text: Optimiser membership
         why: Only intended variables should update.
         correct: true
       - text: Module mode and stateful buffers
@@ -70,7 +70,7 @@ items:
     type: order
     prompt: Order one gradual fine-tuning comparison.
     items:
-      - Initialize from the source model
+      - Initialise from the source model
       - Fit the target head with the backbone frozen
       - Unfreeze selected groups and set learning rates
       - Compare both regimes on shared validation cases

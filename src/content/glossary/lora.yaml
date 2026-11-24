@@ -1,4 +1,4 @@
 term: "LoRA"
-short: "Low-rank adaptation that learns a factorized update while keeping a base weight frozen."
+short: "Low-rank adaptation that learns a factorised update while keeping a base weight frozen."
 body: "LoRA freezes a weight matrix W and learns W + (alpha/r)·BA, where A is r×d_in and B is d_out×r. This trains r(d_in+d_out) parameters instead of d_in·d_out. B usually starts at zero, so training begins from the base model's behaviour."
 related: ["gradient-descent","supervised-fine-tuning"]

@@ -12,9 +12,9 @@ goDeeper: d2l-backprop-time
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-A recurrent layer summarizes past inputs in a <Term id="unroll-a-recurrent-state" />. A scalar example computes $h_t = \tanh(w h_{t-1} + u x_t + b)$. The state changes with each token. The parameters w, u and b are reused across time. The output at one step can depend on earlier inputs even if only the current feature vector is supplied.
+A recurrent layer summarises past inputs in a <Term id="unroll-a-recurrent-state" />. A scalar example computes $h_t = \tanh(w h_{t-1} + u x_t + b)$. The state changes with each token. The parameters w, u and b are reused across time. The output at one step can depend on earlier inputs even if only the current feature vector is supplied.
 
-Unrolling rewrites this sequence as an ordinary graph with one copy of the operations per time step and shared parameter nodes. The state initialization is a separate choice. Reset it for independent sequences. Carrying it across unrelated documents can leak context and change results.
+Unrolling rewrites this sequence as an ordinary graph with one copy of the operations per time step and shared parameter nodes. The state initialisation is a separate choice. Reset it for independent sequences. Carrying it across unrelated documents can leak context and change results.
 
 The fixture returns a sequence of hidden values without the initial state. Empty input produces the empty trace. Track the time axis separately from the batch and hidden-feature axes in a batched implementation.
 

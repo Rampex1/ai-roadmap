@@ -112,4 +112,4 @@ items:
       - text: The model will never follow instructions inside the field
         why: A data boundary is a hint to the model, not an enforcement mechanism, so injected text can still sway it.
       - text: The ticket will be removed before the model sees it
-        why: Serializing text into a field keeps it in the prompt; nothing is removed.
+        why: Serialising text into a field keeps it in the prompt; nothing is removed.

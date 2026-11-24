@@ -9,7 +9,7 @@ items:
         correct: true
       - text: Only a high-level statement of motivation
         why: Motivation is not result evidence.
-      - text: Only the most favorable seed
+      - text: Only the most favourable seed
         why: This can hide instability.
   - id: b14-review-methods-and-ethics-02
     type: mcq
@@ -19,7 +19,7 @@ items:
       - text: The setting may omit real-world variation
         why: Results may not transfer to operational data.
         correct: true
-      - text: Synthetic data guarantees every conclusion generalizes
+      - text: Synthetic data guarantees every conclusion generalises
         why: The data-generating assumptions restrict the study.
       - text: It prevents training any model
         why: Synthetic experiments can be useful.

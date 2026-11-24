@@ -34,7 +34,7 @@ items:
       - text: Softplus of positive real logit
         why: That uses a zero target.
       - text: The raw real logit alone
-        why: Binary cross-entropy needs the normalizer.
+        why: Binary cross-entropy needs the normaliser.
   - id: b9-adversarial-generator-losses-04
     type: mcq
     prompt: "Early in training the discriminator confidently rejects generated samples, so d_fake is very negative. Why prefer the non-saturating loss softplus(−d_fake) to the minimax loss −softplus(d_fake) there?"
@@ -52,10 +52,10 @@ items:
   - id: b9-adversarial-generator-losses-05
     type: multi
     prompt: Which are useful sample assessments?
-    explanation: Training examples alone can hide memorization. Diversity can fail even when samples look plausible.
+    explanation: Training examples alone can hide memorisation. Diversity can fail even when samples look plausible.
     options:
       - text: Quality on independent examples
-        why: Training examples alone can hide memorization.
+        why: Training examples alone can hide memorisation.
         correct: true
       - text: Coverage of known modes
         why: Diversity can fail even when samples look plausible.

@@ -14,7 +14,7 @@ import CodeExercise from '@/components/CodeExercise.astro';
 
 An <Term id="model-artifact-contract" /> identifies the model version, expected feature order, preprocessing state and decision threshold. A file that loads without errors may still produce the wrong answers if the feature order changed. Validate compatibility at service startup before accepting traffic.
 
-Store content by immutable digest and use deployment configuration to locate the approved version. Resolve a mutable alias once per release and compare the resolved reference with what the service reports. Treat artifact origin as a trust boundary: never load executable serialization (pickle, joblib) from an unverified source.
+Store content by immutable digest and use deployment configuration to locate the approved version. Resolve a mutable alias once per release and compare the resolved reference with what the service reports. Treat artifact origin as a trust boundary: never load executable serialisation (pickle, joblib) from an unverified source.
 
 The fixture checks only schema and feature order. Real workflows should also verify artifact bytes, preprocessing identity and runtime compatibility. Fail explicitly and keep the currently compatible deployment available.
 

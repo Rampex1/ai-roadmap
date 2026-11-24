@@ -7,4 +7,4 @@ objectives:
   - Compute analytic Gaussian KL and interpret the VAE objective
   - Distinguish adversarial generator and discriminator updates
   - Derive the forward diffusion marginal using cumulative retention
-  - Compute and test an epsilon-parameterized reverse mean
+  - Compute and test an epsilon-parameterised reverse mean

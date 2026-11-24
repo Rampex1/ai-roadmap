@@ -64,12 +64,12 @@ brief: |
     experiment table and learning curves, and what you would do next.
 notebook: /homework/foundations-capstone.ipynb
 rubric:
-  - "Every check cell prints OK after restarting and running all cells, and each test set was used exactly once"
-  - "Part A uses only leakage-safe choices: fnlwgt and the duplicate education column are removed, preprocessing is inside a Pipeline, and the threshold comes from out-of-fold predictions"
-  - "The CV comparison reports mean and standard deviation for the dummy, logistic and boosting models, and the notes justify the metric and judge the gap against the fold-to-fold spread"
-  - "The test AUC and the threshold metric are reported with 95% bootstrap intervals and compared with the CV estimate"
-  - "The fairness notes give the selection-rate and TPR gaps by sex, relate them to the base rates, and explain the role of a proxy such as relationship"
-  - "The model card covers intended and out-of-scope use, data, metrics with intervals, results by group, and caveats, using your own numbers"
-  - "The experiment log has at least three controlled changes covering architecture, optimisation and regularisation, each with an expectation and an outcome, and the learning-curve figure has labelled axes and a legend"
-  - "The final MNIST MLP reaches at least 98% test accuracy, chosen on validation accuracy"
-compute: "Part A: any laptop or free Colab CPU, about 10 minutes including a few-MB OpenML download. Part B: Colab GPU about 3 minutes or laptop CPU about 5 to 10 minutes, plus a ~12 MB MNIST download (the solution's five runs took about 2 minutes on a laptop CPU)."
+  - "Every check cell prints OK after restarting and running all cells, and each test set was used exactly once."
+  - "Part A uses only leakage-safe choices: fnlwgt and the duplicate education column are removed, preprocessing is inside a Pipeline, and the threshold comes from out-of-fold predictions."
+  - "The CV comparison reports mean and standard deviation for the dummy, logistic and boosting models, and the notes justify the metric and judge the gap against the fold-to-fold spread."
+  - "The test AUC and the threshold metric are reported with 95% bootstrap intervals and compared with the CV estimate."
+  - "The fairness notes give the selection-rate and TPR gaps by sex, relate them to the base rates, and explain the role of a proxy such as relationship."
+  - "The model card covers intended and out-of-scope use, data, metrics with intervals, results by group, and caveats, using your own numbers."
+  - "The experiment log has at least three controlled changes covering architecture, optimisation and regularisation, each with an expectation and an outcome, and the learning-curve figure has labelled axes and a legend."
+  - "The final MNIST MLP reaches at least 98% test accuracy, chosen on validation accuracy."
+compute: "Part A on any laptop or free Colab CPU, about 10 minutes including a few-MB OpenML download; Part B on a Colab GPU in about 3 minutes or a laptop CPU in about 5 to 10 minutes (the solution's five runs took about 2 minutes on a laptop CPU), plus a ~12 MB MNIST download. Effort: about 15 to 20 hours over the suggested three weeks."

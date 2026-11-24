@@ -1,9 +1,9 @@
 id: b4-optimizer-lab
 module: b4
 kind: homework
-title: Compare optimizer steps on controlled objectives
+title: Compare optimiser steps on controlled objectives
 brief: |-
-  Implement optimizer updates and check their state on deterministic gradient sequences.
+  Implement optimiser updates and check their state on deterministic gradient sequences.
 
   1. Trace momentum on a scalar path.
   2. Compute Adam bias correction.

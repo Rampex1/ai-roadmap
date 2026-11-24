@@ -12,7 +12,7 @@ goDeeper: pytorch-transfer-tutorial
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-A <Term id="checkpoint" /> records a model state at a specific training step. Save the best state according to a predefined validation metric and direction. For a loss, choose the minimum. The last epoch might overfit or simply score worse. If you need to resume training, save optimizer and scheduler state as well as parameter values and versioned configuration.
+A <Term id="checkpoint" /> records a model state at a specific training step. Save the best state according to a predefined validation metric and direction. For a loss, choose the minimum. The last epoch might overfit or simply score worse. If you need to resume training, save optimiser and scheduler state as well as parameter values and versioned configuration.
 
 Data augmentation changes training inputs while preserving the label or updating it appropriately. A horizontal flip may preserve many object labels but can reverse a direction sign. Use augmentations that match plausible variation. Split data first so two derived versions of one source cannot land in training and evaluation.
 

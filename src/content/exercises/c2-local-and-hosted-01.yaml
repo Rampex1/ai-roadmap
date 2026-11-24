@@ -1,6 +1,6 @@
 id: c2-local-and-hosted-01
 lesson: llm/c2/local-and-hosted
-title: Summarize an inference benchmark
+title: Summarise an inference benchmark
 prompt: Write summarize_runs(seconds) for a list of completed request times and None for each failure. Return (nearest-rank p90 of completed times, number of failures). Use None for p90 if no request finished.
 starter: |
   def summarize_runs(seconds):

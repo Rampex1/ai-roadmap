@@ -7,4 +7,4 @@ objectives:
   - Derive scaled dot-product attention and implement a stable softmax
   - Enforce causality and test prefix invariance
   - Combine multiple attention heads and preserve axis order
-  - Build a pre-normalized decoder block and trace its residual paths
+  - Build a pre-normalised decoder block and trace its residual paths

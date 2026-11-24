@@ -38,10 +38,10 @@ items:
   - id: b11-bernoulli-policy-gradient-04
     type: mcq
     prompt: Which sign is returned here?
-    explanation: A minimization implementation would negate the objective.
+    explanation: A minimisation implementation would negate the objective.
     options:
       - text: An ascent direction for expected return
-        why: A minimization implementation would negate the objective.
+        why: A minimisation implementation would negate the objective.
         correct: true
       - text: An automatic descent direction
         why: The sign convention is stated explicitly.
@@ -50,12 +50,12 @@ items:
   - id: b11-bernoulli-policy-gradient-05
     type: multi
     prompt: Which are distinct from the score derivative?
-    explanation: It weights the sampled action. It centers the weighting signal.
+    explanation: It weights the sampled action. It centres the weighting signal.
     options:
       - text: The action minus probability itself
         why: That is the derivative.
       - text: The baseline
-        why: It centers the weighting signal.
+        why: It centres the weighting signal.
         correct: true
       - text: Observed return
         why: It weights the sampled action.

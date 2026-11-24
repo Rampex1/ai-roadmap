@@ -65,7 +65,7 @@ items:
     prompt: A hidden value passed from one time step to the next is a recurrent ______.
     accept:
       - state
-    explanation: The state summarizes the processed prefix.
+    explanation: The state summarises the processed prefix.
   - id: b6-unroll-a-recurrent-state-07
     type: order
     prompt: Order a recurrent forward step.

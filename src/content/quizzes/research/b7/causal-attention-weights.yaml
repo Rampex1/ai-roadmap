@@ -26,12 +26,12 @@ items:
   - id: b7-causal-attention-weights-03
     type: mcq
     prompt: Which maximum should be subtracted?
-    explanation: Forbidden logits should not affect stabilization.
+    explanation: Forbidden logits should not affect stabilisation.
     options:
       - text: The largest future score
         why: That can underflow permitted values.
       - text: The largest allowed score
-        why: Forbidden logits should not affect stabilization.
+        why: Forbidden logits should not affect stabilisation.
         correct: true
       - text: The smallest allowed score
         why: This can leave very large exponentials.
@@ -75,9 +75,9 @@ items:
     items:
       - Identify permitted positions
       - Subtract the maximum among permitted scores
-      - Normalize permitted exponentials
-      - Return the normalized weights and zeros for excluded keys
-    explanation: Excluded scores do not enter stabilization.
+      - Normalise permitted exponentials
+      - Return the normalised weights and zeros for excluded keys
+    explanation: Excluded scores do not enter stabilisation.
   - id: b7-causal-attention-weights-08
     type: output
     prompt: What does this print?

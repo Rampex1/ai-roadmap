@@ -32,7 +32,7 @@ items:
         why: It is an operational rule.
       - text: Critical incidents are always harmless at small scale
         why: Impact can occur before large exposure.
-      - text: Some failures warrant action before aggregate metrics stabilize
+      - text: Some failures warrant action before aggregate metrics stabilise
         why: The condition takes priority over sample counts.
         correct: true
   - id: a12-ship-with-gates-and-rollback-04

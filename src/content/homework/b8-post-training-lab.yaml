@@ -1,17 +1,17 @@
 id: b8-post-training-lab
 module: b8
 kind: homework
-title: Audit tokenization and training targets
+title: Audit tokenisation and training targets
 brief: |-
-  Use offline synthetic examples to trace the path from tokenization to training supervision and post-training assessment.
+  Use offline synthetic examples to trace the path from tokenisation to training supervision and post-training assessment.
 
   1. Rank weighted candidate merges.
   2. Shift next-token inputs and labels.
   3. Shift assistant supervision masks together with targets.
   4. Count held-out preference results.
-  5. Replay two tokenizer merges and audit supervision alignment.
+  5. Replay two tokeniser merges and audit supervision alignment.
 
-  Describe one example of leakage from tokenization, data duplication, or preferences into the final evaluation. Propose a test that would detect it.
+  Describe one example of leakage from tokenisation, data duplication, or preferences into the final evaluation. Propose a test that would detect it.
 notebook: /homework/b8-post-training-lab.ipynb
 rubric:
   - Pair counts preserve row boundaries.

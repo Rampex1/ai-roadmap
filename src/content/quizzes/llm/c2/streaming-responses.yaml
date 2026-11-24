@@ -74,8 +74,8 @@ items:
       - Receive bytes
       - Decode complete protocol events
       - Append text deltas
-      - Finalize after the terminal event
-    explanation: The client consumes parsed events before it finalizes the answer.
+      - Finalise after the terminal event
+    explanation: The client consumes parsed events before it finalises the answer.
   - id: c2-streaming-responses-08
     type: output
     prompt: What does this stream parser return?

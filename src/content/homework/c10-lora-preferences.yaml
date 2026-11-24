@@ -11,7 +11,7 @@ brief: |-
   4. Apply a predefined holdout and critical-case release gate.
   5. Track preference loss and holdout release evidence separately.
 
-  Record when you would use prompt changes, RAG, supervised LoRA or preference tuning. Name a critical holdout case and explain how you would gather independent evidence for it. Record the base checkpoint, tokenizer/template revision, target modules, rank and alpha you would version.
+  Record when you would use prompt changes, RAG, supervised LoRA or preference tuning. Name a critical holdout case and explain how you would gather independent evidence for it. Record the base checkpoint, tokeniser/template revision, target modules, rank and alpha you would version.
 notebook: /homework/c10-lora-preferences.ipynb
 rubric:
   - Target labels retain only the intended assistant span.

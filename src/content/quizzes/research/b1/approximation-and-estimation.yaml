@@ -8,7 +8,7 @@ items:
         why: It measures class restriction.
         correct: true
       - text: Training risk minus test risk
-        why: That is an empirical generalization-gap estimate.
+        why: That is an empirical generalisation-gap estimate.
       - text: Selected risk minus best in class
         why: That is estimation error.
   - id: b1-approximation-and-estimation-02

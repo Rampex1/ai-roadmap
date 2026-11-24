@@ -12,7 +12,7 @@ goDeeper: instructgpt-paper
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-Supervised fine-tuning teaches response behavior from demonstrations. The input still contains the prompt and earlier context, but <Term id="assistant-target-masks" /> includes only selected answer targets. Keep a token-aligned role mask from chat templating. A mask on position i applies to the token at i, so when targets shift forward, shift the validity mask with them.
+Supervised fine-tuning teaches response behaviour from demonstrations. The input still contains the prompt and earlier context, but <Term id="assistant-target-masks" /> includes only selected answer targets. Keep a token-aligned role mask from chat templating. A mask on position i applies to the token at i, so when targets shift forward, shift the validity mask with them.
 
 For tokens [BOS,user,request,answer,EOS,pad], you might enable loss on answer and its EOS while excluding prompt and padding. Then the input at request predicts answer and contributes loss. Prompt tokens remain visible context subject to the attention mask.
 

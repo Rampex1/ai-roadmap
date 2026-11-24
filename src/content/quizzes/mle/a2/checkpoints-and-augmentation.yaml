@@ -40,7 +40,7 @@ items:
     prompt: What helps resume an interrupted run?
     explanation: Training dynamics depend on these states.
     options:
-      - text: Weights plus optimizer and scheduler state
+      - text: Weights plus optimiser and scheduler state
         why: Training dynamics depend on these states.
         correct: true
       - text: Only the best score

@@ -1,7 +1,7 @@
 id: a6-validated-training-config-01
 lesson: mle/a6/validated-training-config
 title: Resolve a training configuration
-prompt: Implement training_config(options). Recognize only epochs and rate, with defaults 10 and 0.01. Epochs must be a positive exact integer; rate a number, excluding bool, in (0,1]. Return a fresh dictionary and normalize rate to float.
+prompt: Implement training_config(options). Recognise only epochs and rate, with defaults 10 and 0.01. Epochs must be a positive exact integer; rate a number, excluding bool, in (0,1]. Return a fresh dictionary and normalise rate to float.
 starter: |
   def training_config(options):
       raise NotImplementedError

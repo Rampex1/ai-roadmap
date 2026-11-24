@@ -14,7 +14,7 @@ import CodeExercise from '@/components/CodeExercise.astro';
 
 A <Term id="timestamped-transcript" /> can be searched without sending the full recording to the model. Keep the original media ID with each segment. A question about a quote can cite the time range, while a question about layout can cite the original page and its bounding region. Retrieved text is easier to verify when the evidence links back to these coordinates.
 
-Define coordinate conventions. Speech segments can use half-open intervals: start is included and end is excluded. This avoids assigning a shared boundary to two adjoining segments. OCR systems may represent boxes in pixels or normalized coordinates. Keep the page dimensions or units with the boxes, and track how rotation and resizing alter positions.
+Define coordinate conventions. Speech segments can use half-open intervals: start is included and end is excluded. This avoids assigning a shared boundary to two adjoining segments. OCR systems may represent boxes in pixels or normalised coordinates. Keep the page dimensions or units with the boxes, and track how rotation and resizing alter positions.
 
 Time or bounding-box metadata shows where to look; it does not confirm the transcript itself. Inspect the source when speech is unclear, columns are ambiguous or extraction confidence is low. A pipeline should abstain if the claim needs evidence the available media cannot support.
 

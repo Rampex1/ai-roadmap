@@ -4,7 +4,7 @@ module: c7
 order: 4
 estMinutes: 8
 objectives:
-  - Summarize statuses and work across replayed runs
+  - Summarise statuses and work across replayed runs
   - Diagnose trajectory errors separately from final answer errors
 goDeeper: anthropic-effective-agents
 ---
@@ -12,7 +12,7 @@ goDeeper: anthropic-effective-agents
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-An <Term id="agent-trace" /> tells you how a result was reached. Record the run ID, model and prompt version, authorized tool names, call statuses, step count, elapsed time and terminal reason. Use IDs and redacted diagnostics rather than retaining sensitive prompt or tool data unnecessarily.
+An <Term id="agent-trace" /> tells you how a result was reached. Record the run ID, model and prompt version, authorised tool names, call statuses, step count, elapsed time and terminal reason. Use IDs and redacted diagnostics rather than retaining sensitive prompt or tool data unnecessarily.
 
 Score the final outcome with a task rubric: correct answer, appropriate clarification or justified handoff. Then inspect the path for unnecessary calls, invalid arguments and repeated work. Two trajectories may reach the same answer but differ in time, cost or reliability. A high completion rate can also hide wrong final answers, so judge factual success separately.
 

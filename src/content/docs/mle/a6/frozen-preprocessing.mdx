@@ -14,7 +14,7 @@ import CodeExercise from '@/components/CodeExercise.astro';
 
 Learn scale, vocabulary and imputation values on training data. Use the fitted state for validation, holdout and serving. Recomputing it per request changes feature meaning. Computing it on holdout can also expose information about the evaluation population.
 
-<Term id="frozen-preprocessing" cap /> keeps the learned constants alongside the model. For a standardized feature, subtract the training mean and divide by the recorded scale. Choose a convention for constant columns when fitting, such as replacing a zero standard deviation with one, and persist that convention.
+<Term id="frozen-preprocessing" cap /> keeps the learned constants alongside the model. For a standardised feature, subtract the training mean and divide by the recorded scale. Choose a convention for constant columns when fitting, such as replacing a zero standard deviation with one, and persist that convention.
 
 Use paired examples to assert that offline and online paths produce equal vectors. If implementations differ, share golden cases and tolerances. The fixture accepts an already chosen positive scale for each feature and rejects mismatched vectors.
 

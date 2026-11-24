@@ -1,4 +1,4 @@
 term: "Total variation distance"
-short: "For discrete normalized distributions, one half of the sum of absolute differences over all categories."
+short: "For discrete normalised distributions, one half of the sum of absolute differences over all categories."
 body: "Total variation distance between distributions P and Q is half the sum over the category union of |P(k) − Q(k)|. It ranges from 0 (identical) to 1 (no shared support) and equals the largest difference in probability the two distributions can assign to any single event."
 related: ["dataset-manifest","evaluation-slice"]

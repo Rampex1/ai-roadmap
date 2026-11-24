@@ -44,7 +44,7 @@ items:
         why: They control updates.
       - text: The exclusion always improves every model
         why: That must be measured.
-      - text: They change which weights are regularized
+      - text: They change which weights are regularised
         why: This affects reproducibility.
         correct: true
   - id: b4-decoupled-weight-decay-05

@@ -7,7 +7,7 @@ items:
       - text: The training path can fit simple examples
         why: It checks mechanics under controlled inputs.
         correct: true
-      - text: The model generalizes to new groups
+      - text: The model generalises to new groups
         why: That requires held-out data.
       - text: The chosen model is optimal
         why: One batch cannot establish that.
@@ -25,7 +25,7 @@ items:
         why: The contract uses zero-based indices.
   - id: a2-training-loop-sanity-checks-03
     type: mcq
-    prompt: Why inspect gradients before an optimizer step?
+    prompt: Why inspect gradients before an optimiser step?
     explanation: Missing gradients point to a wiring issue.
     options:
       - text: They reveal whether trainable parameters receive a signal
@@ -45,12 +45,12 @@ items:
         correct: true
       - text: The dataset automatically changes
         why: The caller still chooses the split.
-      - text: The optimizer deletes stored parameters
+      - text: The optimiser deletes stored parameters
         why: Mode does not delete parameters.
   - id: a2-training-loop-sanity-checks-05
     type: multi
     prompt: Which can explain failure on a fixed tiny batch?
-    explanation: The target can be wrong for each input. The optimizer cannot update them.
+    explanation: The target can be wrong for each input. The optimiser cannot update them.
     options:
       - text: A high held-out score in a separate run
         why: That does not explain the local failure.
@@ -58,7 +58,7 @@ items:
         why: The target can be wrong for each input.
         correct: true
       - text: Frozen parameters in the intended trainable path
-        why: The optimizer cannot update them.
+        why: The optimiser cannot update them.
         correct: true
   - id: a2-training-loop-sanity-checks-06
     type: cloze
@@ -76,8 +76,8 @@ items:
       - Clear previous gradients
       - Compute predictions and loss
       - Backpropagate the loss
-      - Take the optimizer step
-    explanation: The optimizer uses gradients from the current batch.
+      - Take the optimiser step
+    explanation: The optimiser uses gradients from the current batch.
   - id: a2-training-loop-sanity-checks-08
     type: output
     prompt: What does this print?

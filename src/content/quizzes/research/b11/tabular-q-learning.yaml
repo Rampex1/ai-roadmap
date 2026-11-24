@@ -10,7 +10,7 @@ items:
       - text: Always the action actually sampled
         why: That describes SARSA.
       - text: Always the smallest value
-        why: This lesson models reward maximization.
+        why: This lesson models reward maximisation.
   - id: b11-tabular-q-learning-02
     type: mcq
     prompt: Which old value is updated?
@@ -41,7 +41,7 @@ items:
     explanation: Greedy decisions alone may miss alternatives.
     options:
       - text: It changes true terminal rewards
-        why: Behavior does not redefine the task.
+        why: Behaviour does not redefine the task.
       - text: Exploration guarantees every estimate is exact immediately
         why: Experience remains finite.
       - text: Some actions need evidence before their values can improve
@@ -52,7 +52,7 @@ items:
     prompt: What should be logged for research?
     explanation: They affect visited state-action pairs. Training estimates do not replace outcomes.
     options:
-      - text: Behavior policy and exploration schedule
+      - text: Behaviour policy and exploration schedule
         why: They affect visited state-action pairs.
         correct: true
       - text: Only the highest learned Q value

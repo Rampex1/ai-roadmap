@@ -62,7 +62,7 @@ items:
         why: That does not locate spatial support.
   - id: b5-stacked-receptive-fields-06
     type: cloze
-    prompt: Spacing between neighboring output centers in original input units is the ______.
+    prompt: Spacing between neighboring output centres in original input units is the ______.
     accept:
       - jump
       - effective stride

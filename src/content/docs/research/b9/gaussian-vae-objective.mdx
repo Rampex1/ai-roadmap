@@ -5,18 +5,18 @@ order: 1
 estMinutes: 8
 objectives:
   - Compute the diagonal-Gaussian KL term
-  - Distinguish reconstruction likelihood from posterior regularization
+  - Distinguish reconstruction likelihood from posterior regularisation
 goDeeper: vae-original-paper
 ---
 
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-A variational autoencoder uses an encoder distribution q(z|x) to approximate an otherwise difficult posterior and a decoder p(x|z) to score reconstruction. The ELBO adds expected reconstruction log likelihood and subtracts a KL divergence from the encoder distribution to the prior. Minimize negative ELBO if your training loop expects a loss.
+A variational autoencoder uses an encoder distribution q(z|x) to approximate an otherwise difficult posterior and a decoder p(x|z) to score reconstruction. The ELBO adds expected reconstruction log likelihood and subtracts a KL divergence from the encoder distribution to the prior. Minimise negative ELBO if your training loop expects a loss.
 
-For a diagonal Gaussian posterior with mean μ and log variance ℓ and prior N(0,I), the <Term id="gaussian-vae-objective" /> is half the sum of exp(ℓ)+μ²−1−ℓ across latent coordinates. For mean zero and log variance zero, the posterior equals the prior and this term becomes zero. Parameterizing log variance keeps its exponential positive.
+For a diagonal Gaussian posterior with mean μ and log variance ℓ and prior N(0,I), the <Term id="gaussian-vae-objective" /> is half the sum of exp(ℓ)+μ²−1−ℓ across latent coordinates. For mean zero and log variance zero, the posterior equals the prior and this term becomes zero. Parameterising log variance keeps its exponential positive.
 
-For reparameterization, draw ε from a standard normal independently and compute z = μ + exp(ℓ/2)ε. This moves sampling noise outside the learned arguments so gradients can flow through μ and ℓ. Keep likelihood units and reduction explicit; averaging one term by latent width while summing the other changes their relative weight.
+For reparameterisation, draw ε from a standard normal independently and compute z = μ + exp(ℓ/2)ε. This moves sampling noise outside the learned arguments so gradients can flow through μ and ℓ. Keep likelihood units and reduction explicit; averaging one term by latent width while summing the other changes their relative weight.
 
 ## Worked example
 

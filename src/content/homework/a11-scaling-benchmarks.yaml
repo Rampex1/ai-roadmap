@@ -11,7 +11,7 @@ brief: |-
   4. Report latency percentiles, failures and on-time completions.
   5. Compare simulated batching policies with the same arrivals.
 
-  Choose whether to add workers, optimize ingestion or change a batch deadline. State the measurement that would justify the choice and a controlled comparison you would run next.
+  Choose whether to add workers, optimise ingestion or change a batch deadline. State the measurement that would justify the choice and a controlled comparison you would run next.
 notebook: /homework/a11-scaling-benchmarks.ipynb
 rubric:
   - The speedup uses wall times under explicit assumptions.

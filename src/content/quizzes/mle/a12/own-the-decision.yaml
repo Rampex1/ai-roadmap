@@ -43,7 +43,7 @@ items:
       - text: To limit where model output may be relied on
         why: Evidence rarely covers every use.
         correct: true
-      - text: To increase the number of authorized decisions
+      - text: To increase the number of authorised decisions
         why: Scope limits authority.
       - text: To hide limitations from operators
         why: The purpose is to communicate limits.
@@ -62,7 +62,7 @@ items:
         correct: true
   - id: a12-own-the-decision-06
     type: cloze
-    prompt: A model’s intended use, limits and evidence can be summarized in a model ______.
+    prompt: A model’s intended use, limits and evidence can be summarised in a model ______.
     accept:
       - card
     explanation: The card documents deployment-relevant information.

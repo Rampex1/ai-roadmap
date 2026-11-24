@@ -14,9 +14,9 @@ import CodeExercise from '@/components/CodeExercise.astro';
 
 A <Term id="dataset-manifest" /> lets you reconstruct which rows and transformations were used. Record raw object digests, schema version, feature code version and split identities. A path such as current/train can be overwritten while keeping its name. Store immutable references and verify hashes whenever the same content is required.
 
-A manifest hash identifies the exact serialized description. Canonicalize object-key order and separators before hashing. Some list order can be meaningful, as with a declared column order or sequence of shards, so preserve it unless the manifest contract explicitly defines a set. Keep sensitive row content out of the manifest.
+A manifest hash identifies the exact serialised description. Canonicalise object-key order and separators before hashing. Some list order can be meaningful, as with a declared column order or sequence of shards, so preserve it unless the manifest contract explicitly defines a set. Keep sensitive row content out of the manifest.
 
-The example serializes a restricted JSON manifest using sorted keys and compact separators, then hashes UTF-8 bytes. It assumes finite values and string keys. This provides deterministic identity for the given serialization rules. It cannot verify content unless the referenced objects are hashed and checked too.
+The example serialises a restricted JSON manifest using sorted keys and compact separators, then hashes UTF-8 bytes. It assumes finite values and string keys. This provides deterministic identity for the given serialisation rules. It cannot verify content unless the referenced objects are hashed and checked too.
 
 ## Worked example
 

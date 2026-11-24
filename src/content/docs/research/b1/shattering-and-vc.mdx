@@ -12,15 +12,15 @@ goDeeper: understanding-machine-learning
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-A class shatters a set when every binary labeling of that set is realizable. <Term id="shattering-and-vc" cap /> is the largest shattered set size, or infinite if arbitrarily large finite sets can be shattered. To show dimension d, exhibit a shattered set of size d and explain why no set of size d+1 can be shattered.
+A class shatters a set when every binary labelling of that set is realisable. <Term id="shattering-and-vc" cap /> is the largest shattered set size, or infinite if arbitrarily large finite sets can be shattered. To show dimension d, exhibit a shattered set of size d and explain why no set of size d+1 can be shattered.
 
-Consider thresholds on the real line predicting one for inputs at or above the threshold. On n sorted distinct points, every labeling is a run of zeroes followed by ones. There are n+1 choices for how many zeroes appear first. A single point can receive either label, while the labeling (1,0) is impossible on two ordered points. The dimension is one even though the threshold parameter ranges continuously.
+Consider thresholds on the real line predicting one for inputs at or above the threshold. On n sorted distinct points, every labelling is a run of zeroes followed by ones. There are n+1 choices for how many zeroes appear first. A single point can receive either label, while the labelling (1,0) is impossible on two ordered points. The dimension is one even though the threshold parameter ranges continuously.
 
 For an arbitrary class, the count for a particular set is not automatically the maximum over all sets of that size. This fixture is specific to one-direction thresholds, with distinct sorted points and both constant labelings allowed.
 
 ## Worked example
 
-The labeling (1,0) does not appear.
+The labelling (1,0) does not appear.
 
 ```python
 def threshold_labelings(n):
@@ -35,7 +35,7 @@ print(threshold_labelings(2))
 [(1, 1), (0, 1), (0, 0)]
 ```
 
-To identify VC dimension, reason about realizable labelings rather than parameter count.
+To identify VC dimension, reason about realisable labelings rather than parameter count.
 
 ## Try it
 

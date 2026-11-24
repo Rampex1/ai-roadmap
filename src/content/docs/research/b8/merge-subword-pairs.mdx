@@ -5,7 +5,7 @@ order: 1
 estMinutes: 8
 objectives:
   - Count adjacent pairs within strings
-  - Keep tokenization and dataset splitting reproducible
+  - Keep tokenisation and dataset splitting reproducible
 goDeeper: neural-machine-translation-bpe
 ---
 
@@ -16,7 +16,7 @@ A model trains on integer token IDs, so vocabulary construction is part of data 
 
 This exercise counts weighted pair occurrences within symbol sequences. A word observed ten times contributes ten times as much as one observed once. Do not count across separate sequence boundaries. Implement a stable tie rule, because changing merge order can change the vocabulary and downstream IDs.
 
-Production tokenizers may begin with bytes and add pretokenization or special tokens. Record normalization, vocabulary IDs, merge rules and corpus version. Fit the tokenizer on training data, and keep near-duplicate documents together or deduplicate before splitting.
+Production tokenisers may begin with bytes and add pretokenisation or special tokens. Record normalisation, vocabulary IDs, merge rules and corpus version. Fit the tokeniser on training data, and keep near-duplicate documents together or deduplicate before splitting.
 
 ## Worked example
 
@@ -39,7 +39,7 @@ print(choose_pair([(["a","b","a"],2),(["b","a"],3)]))
 ('b', 'a')
 ```
 
-Version every tokenizer choice that affects model input IDs.
+Version every tokeniser choice that affects model input IDs.
 
 ## Try it
 

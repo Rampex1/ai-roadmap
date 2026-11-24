@@ -8,7 +8,7 @@ brief: |-
   1. Route requests to representations that retain the needed evidence.
   2. Rank image results using a compatible text query vector.
   3. Find the source transcript segment for a citation.
-  4. Summarize supported, unsupported and abstained outcomes across conditions.
+  4. Summarise supported, unsupported and abstained outcomes across conditions.
   5. Evaluate timestamped evidence on paired conditions. A missing observation counts as "abstained" only when no answer was expected; when an answer was expected it counts as "missed".
 
   Describe one task where OCR should suffice and one that requires the source image. Specify paired clean/degraded cases and a criterion for abstention that an evaluator could apply.

@@ -7,7 +7,8 @@ brief: |
   base model, a LoRA fine-tune trained on an older policy snapshot, and a RAG agent that searches the
   current policy text through a read-only, MCP-shaped tool. Two policies changed after the snapshot,
   one branch is new and some questions have no policy, so the eval separates stale knowledge from
-  grounded answers and correct abstention.
+  grounded answers and correct abstention. Before starting, review C4–C5 (retrieval and RAG), C6–C8
+  (tool use, agents and MCP), C9 (evals) and C10 (LoRA fine-tuning).
 
   The capstone has three required parts. The **offline core** runs on any laptop with the standard
   library: retrieval is real BM25 over chunked policy text, while the "model" is a small toy
@@ -48,4 +49,4 @@ rubric:
   - "A stdio MCP server serves policy_search and its results match the offline report."
   - "The write-up traces one real failure to its cause and reports a retrieval ablation on both the offline and the LLM RAG system."
   - "The write-up names a release gate and abstention policy."
-compute: "Offline core: any laptop, standard library only, a few seconds of CPU. GPU milestone: free Colab T4, about 30 to 45 minutes including installs and a 1 GB model download. MCP milestone: the v1 Python SDK, installed locally or in Colab. Allow 4 to 6 hours including the write-up."
+compute: "Offline core on any laptop, standard library only, a few seconds of CPU; MCP server with the v1 Python SDK, installed locally or in Colab; GPU milestone on a free Colab T4, about 30 to 45 minutes including installs and a 1 GB model download. Effort: 4 to 6 hours including the write-up."

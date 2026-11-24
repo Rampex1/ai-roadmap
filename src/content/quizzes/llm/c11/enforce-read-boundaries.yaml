@@ -31,9 +31,9 @@ items:
       - text: Deny it before execution
         why: Unknown operations are outside the allowlist.
         correct: true
-      - text: Send it to the nearest recognized handler
-        why: That can create unauthorized effects.
-      - text: Let generated prose authorize it
+      - text: Send it to the nearest recognised handler
+        why: That can create unauthorised effects.
+      - text: Let generated prose authorise it
         why: The model has no authority to expand permissions.
   - id: c11-enforce-read-boundaries-04
     type: mcq
@@ -52,7 +52,7 @@ items:
     prompt: Which reduce the impact of an untrusted document?
     explanation: Fewer operations can be affected. A document cannot change the session scope.
     options:
-      - text: Trusted authorization at the execution boundary
+      - text: Trusted authorisation at the execution boundary
         why: A document cannot change the session scope.
         correct: true
       - text: Narrow tool capabilities
@@ -74,7 +74,7 @@ items:
       - Load trusted session scope and collection
       - Check operation and object permission
       - Execute and return only permitted data
-    explanation: Authorization must precede access.
+    explanation: Authorisation must precede access.
   - id: c11-enforce-read-boundaries-08
     type: output
     prompt: What does this print?

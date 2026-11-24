@@ -38,10 +38,10 @@ items:
   - id: a5-validation-threshold-cost-04
     type: mcq
     prompt: Why write down costs first?
-    explanation: Otherwise comparisons can be optimized after inspection.
+    explanation: Otherwise comparisons can be optimised after inspection.
     options:
       - text: They define what better means for the policy
-        why: Otherwise comparisons can be optimized after inspection.
+        why: Otherwise comparisons can be optimised after inspection.
         correct: true
       - text: They calibrate scores automatically
         why: Costs govern decisions, not calibration.

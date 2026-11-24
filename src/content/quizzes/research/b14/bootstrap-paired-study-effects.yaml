@@ -26,10 +26,10 @@ items:
   - id: b14-bootstrap-paired-study-effects-03
     type: mcq
     prompt: What does a narrow interval from three similar seeds imply?
-    explanation: Strong generalization claims still need more evidence.
+    explanation: Strong generalisation claims still need more evidence.
     options:
       - text: It describes limited observed variation under the method
-        why: Strong generalization claims still need more evidence.
+        why: Strong generalisation claims still need more evidence.
         correct: true
       - text: The model is unbiased for all populations
         why: This experiment cannot show that.

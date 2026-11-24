@@ -1,6 +1,6 @@
 id: a11-measure-load-and-tail-latency-01
 lesson: mle/a11/measure-load-and-tail-latency
-title: Summarize one load window
+title: Summarise one load window
 prompt: Implement load_summary(latencies, target_ms) for a list of successful millisecond latencies and None for failures. Return attempted, failed, nearest-rank p95_success_ms or None, and number of successes at or below target.
 starter: |
   def load_summary(latencies, target_ms):

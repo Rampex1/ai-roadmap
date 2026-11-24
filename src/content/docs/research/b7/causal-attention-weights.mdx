@@ -12,11 +12,11 @@ goDeeper: attention-is-all-you-need
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-In a decoder, the representation at position t must not depend on any key at a later position. Build a <Term id="causal-attention-weights" /> by masking future logits before normalizing. The diagonal is visible because the hidden state at t predicts the next token. An architecture with a different target alignment must specify its visibility convention.
+In a decoder, the representation at position t must not depend on any key at a later position. Build a <Term id="causal-attention-weights" /> by masking future logits before normalising. The diagonal is visible because the hidden state at t predicts the next token. An architecture with a different target alignment must specify its visibility convention.
 
-Find the largest permitted score and subtract it before exponentiating. Filling forbidden positions with numeric zero before softmax would give them positive mass. Zeroing probabilities after an unrestricted softmax also changes the sum unless you renormalize; including a huge forbidden logit in the numerical maximum can lose all permitted mass.
+Find the largest permitted score and subtract it before exponentiating. Filling forbidden positions with numeric zero before softmax would give them positive mass. Zeroing probabilities after an unrestricted softmax also changes the sum unless you renormalise; including a huge forbidden logit in the numerical maximum can lose all permitted mass.
 
-A direct correctness test compares outputs for a prefix by itself with the same prefix inside a longer sequence. Change the appended token values while holding prefix data and parameters fixed. Any earlier output change signals a causal or normalization bug.
+A direct correctness test compares outputs for a prefix by itself with the same prefix inside a longer sequence. Change the appended token values while holding prefix data and parameters fixed. Any earlier output change signals a causal or normalisation bug.
 
 ## Worked example
 

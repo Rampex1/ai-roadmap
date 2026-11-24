@@ -1,4 +1,4 @@
 term: "Data-parallel training"
-short: "Training with replicated models that process distinct examples and synchronize updates."
+short: "Training with replicated models that process distinct examples and synchronise updates."
 body: "Each worker holds a full copy of the model and runs forward and backward passes on its own share of the data. Gradients are then combined, usually by an all-reduce, so every copy applies the same update. The global batch is local batch × workers × accumulation steps."
 related: ["gradient-descent","training-sanity-check"]

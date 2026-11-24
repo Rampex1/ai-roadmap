@@ -73,7 +73,7 @@ items:
       - Align both variants by case
       - Compute new-minus-old differences
       - Sample case indices with replacement
-      - Summarize the distribution of mean differences
+      - Summarise the distribution of mean differences
     explanation: The differences preserve the alignment.
   - id: c9-paired-bootstrap-08
     type: output

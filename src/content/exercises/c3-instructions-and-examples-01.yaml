@@ -46,5 +46,5 @@ tests: |
           raise AssertionError(f"Raise ValueError for {why}")
 hints:
   - Check the fallback and every example label against the labels before building anything.
-  - Build a Python dict first, then serialize it with json.dumps.
-  - Convert labels with list() so a tuple still serializes as a JSON list.
+  - Build a Python dict first, then serialise it with json.dumps.
+  - Convert labels with list() so a tuple still serialises as a JSON list.

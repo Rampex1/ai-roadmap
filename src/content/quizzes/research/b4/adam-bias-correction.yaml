@@ -7,7 +7,7 @@ items:
       - text: Squared gradients
         why: It is a raw second moment.
         correct: true
-      - text: Centered gradient variance
+      - text: Centred gradient variance
         why: The mean is not subtracted.
       - text: Parameter magnitudes
         why: It tracks gradients.
@@ -16,7 +16,7 @@ items:
     prompt: Why correct early estimates?
     explanation: Their weights initially sum to less than one.
     options:
-      - text: Zero initialization shrinks the raw averages
+      - text: Zero initialisation shrinks the raw averages
         why: Their weights initially sum to less than one.
         correct: true
       - text: The true gradient must always be zero initially
@@ -50,10 +50,10 @@ items:
   - id: b4-adam-bias-correction-05
     type: multi
     prompt: Which affect the direction?
-    explanation: It changes averaged gradient. It changes normalization.
+    explanation: It changes averaged gradient. It changes normalisation.
     options:
       - text: Second-moment decay
-        why: It changes normalization.
+        why: It changes normalisation.
         correct: true
       - text: First-moment decay
         why: It changes averaged gradient.
@@ -73,8 +73,8 @@ items:
       - Observe the current gradient
       - Update raw moments
       - Bias-correct each moment
-      - Form the normalized direction
-    explanation: Correction precedes normalization.
+      - Form the normalised direction
+    explanation: Correction precedes normalisation.
   - id: b4-adam-bias-correction-08
     type: output
     prompt: What does this print?

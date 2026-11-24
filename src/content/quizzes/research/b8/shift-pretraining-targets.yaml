@@ -70,7 +70,7 @@ items:
     type: order
     prompt: Order explicit construction.
     items:
-      - Read one tokenized document
+      - Read one tokenised document
       - Form inputs and next-token targets
       - Apply visibility and loss masks
       - Aggregate token loss

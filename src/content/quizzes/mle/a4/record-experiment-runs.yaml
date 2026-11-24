@@ -34,7 +34,7 @@ items:
       - text: A metric name always specifies its computation
         why: Names are often reused.
       - text: It makes the checkpoint train faster
-        why: Logging does not change optimization.
+        why: Logging does not change optimisation.
   - id: a4-record-experiment-runs-04
     type: mcq
     prompt: What should happen to interrupted trials?

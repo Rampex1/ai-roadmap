@@ -14,7 +14,7 @@ import CodeExercise from '@/components/CodeExercise.astro';
 
 Before shipping, compare the frozen base and adapter on the same held-out prompts using the same decoding and rubric. Measure what changed: instruction adherence, answer format, factual correctness and critical regressions. A lower training loss does not establish a better release. Run prompt-only and retrieval baselines when they address the same task.
 
-Record an <Term id="adapter-version" /> with base checkpoint, tokenizer and chat template revision, target modules, rank and scale, training data version and relevant software versions. Load the adapter into the matching base. If you merge factors into the base weights for deployment, keep an unmerged source artifact for rollback and run an equivalence check under the planned precision.
+Record an <Term id="adapter-version" /> with base checkpoint, tokeniser and chat template revision, target modules, rank and scale, training data version and relevant software versions. Load the adapter into the matching base. If you merge factors into the base weights for deployment, keep an unmerged source artifact for rollback and run an equivalence check under the planned precision.
 
 This example imposes two gates. The candidate must meet a minimum absolute accuracy gain and must not regress on any marked critical case. That policy is intentionally strict for this fixture. Define thresholds before seeing held-out results and use C9's uncertainty and slice analysis for actual release decisions.
 

@@ -1,25 +1,25 @@
 items:
   - id: b7-pre-norm-decoder-block-01
     type: mcq
-    prompt: What does normalizing across all sequence positions risk?
+    prompt: What does normalising across all sequence positions risk?
     explanation: Earlier statistics could depend on later tokens.
     options:
       - text: Future-token leakage
         why: Earlier statistics could depend on later tokens.
         correct: true
       - text: Increasing output head count
-        why: The normalization axis does not add heads.
+        why: The normalisation axis does not add heads.
       - text: A deliberate zero derivative everywhere
         why: That is not implied.
   - id: b7-pre-norm-decoder-block-02
     type: mcq
     prompt: Which residual is used after attention?
-    explanation: Pre-normalization changes what enters the transform.
+    explanation: Pre-normalisation changes what enters the transform.
     options:
-      - text: The unnormalized sublayer input
-        why: Pre-normalization changes what enters the transform.
+      - text: The unnormalised sublayer input
+        why: Pre-normalisation changes what enters the transform.
         correct: true
-      - text: Only the normalized row
+      - text: Only the normalised row
         why: That would change the residual path.
       - text: Only the final token row
         why: Every position has a residual path.
@@ -40,7 +40,7 @@ items:
     prompt: Why add epsilon?
     explanation: A constant row has zero variance.
     options:
-      - text: To keep the normalization denominator positive
+      - text: To keep the normalisation denominator positive
         why: A constant row has zero variance.
         correct: true
       - text: To encode token positions
@@ -70,16 +70,16 @@ items:
       - layer normalisation
       - layer norm
       - layernorm
-    explanation: It normalizes the feature dimension for each position.
+    explanation: It normalises the feature dimension for each position.
   - id: b7-pre-norm-decoder-block-07
     type: order
     prompt: Order a pre-norm block.
     items:
-      - Normalize the input rows
+      - Normalise the input rows
       - Apply causal attention and add the residual
-      - Normalize the updated rows
+      - Normalise the updated rows
       - Apply the feed-forward sublayer and add its residual
-    explanation: Each update is formed from a normalized view of the current residual.
+    explanation: Each update is formed from a normalised view of the current residual.
   - id: b7-pre-norm-decoder-block-08
     type: output
     prompt: What does this print?
@@ -95,4 +95,4 @@ items:
 
       print(normalize_token([5, 5, 5]))
     answer: "[0.0, 0.0, 0.0]"
-    explanation: Centering a constant row yields all zeros.
+    explanation: Centring a constant row yields all zeros.

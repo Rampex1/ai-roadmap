@@ -43,7 +43,7 @@ items:
       - text: Differences are easier to attribute to the design
         why: Task difficulty stays fixed.
         correct: true
-      - text: It guarantees the design generalizes
+      - text: It guarantees the design generalises
         why: Unseen workloads still need evaluation.
       - text: It makes latency measurements identical
         why: Execution choices can change elapsed time.

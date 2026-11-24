@@ -72,7 +72,7 @@ items:
     items:
       - Construct candidate similarities
       - Shift and scale scores
-      - Normalize exponentials
+      - Normalise exponentials
       - Take negative log probability of the positive
     explanation: The positive score competes with all candidates.
   - id: b10-contrastive-logit-loss-08

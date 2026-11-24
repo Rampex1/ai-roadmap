@@ -16,7 +16,7 @@ For one decision, let action a be one with probability p=sigmoid(z). The derivat
 
 Subtracting an action-independent baseline can reduce variance without changing the expected gradient, since the expected score is zero under the policy. Treat the baseline and sampled return as fixed multipliers in this update; learning the baseline uses its own objective. A state-dependent baseline can be valid when it does not depend on the current sampled action.
 
-For a trajectory, objective conventions matter. Multi-step estimators use time-indexed returns or advantages and may require additional discount weighting depending on the objective. This exercise is a single-step logit gradient for maximization.
+For a trajectory, objective conventions matter. Multi-step estimators use time-indexed returns or advantages and may require additional discount weighting depending on the objective. This exercise is a single-step logit gradient for maximisation.
 
 ## Worked example
 

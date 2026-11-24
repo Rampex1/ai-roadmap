@@ -25,16 +25,16 @@ items:
         why: Classification still affects routing.
   - id: c7-workflows-versus-agents-03
     type: mcq
-    prompt: What authorizes a lookup?
+    prompt: What authorises a lookup?
     explanation: The router proposes a path but policy grants access.
     options:
       - text: Application policy for the current request
         why: The router proposes a path but policy grants access.
         correct: true
-      - text: The presence of a recognized tag
+      - text: The presence of a recognised tag
         why: Tags do not carry permissions.
       - text: Only the number of steps
-        why: A step count does not establish authorization.
+        why: A step count does not establish authorisation.
   - id: c7-workflows-versus-agents-04
     type: mcq
     prompt: What does the router do for an unknown intent?

@@ -55,7 +55,7 @@ items:
       - text: Reference, threshold and evidence counts
         why: These make it interpretable.
         correct: true
-      - text: Only a color on a chart
+      - text: Only a colour on a chart
         why: The decision and context would be missing.
       - text: A responsible owner and triage path
         why: Someone can investigate and act.

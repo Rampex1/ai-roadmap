@@ -4,7 +4,7 @@ title: "Pretraining and post-training"
 order: 9
 prereqs: ["b7"]
 objectives:
-  - Build reproducible subword tokenization artifacts
+  - Build reproducible subword tokenisation artifacts
   - Construct shifted causal pretraining examples
   - Align assistant-only target masks for supervised fine-tuning
   - Evaluate post-training outcomes with blinded paired prompts

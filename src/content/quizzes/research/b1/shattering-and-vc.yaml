@@ -4,9 +4,9 @@ items:
     prompt: What is needed to shatter n points?
     explanation: Shattering includes all assignments.
     options:
-      - text: All hypotheses return the same labeling
+      - text: All hypotheses return the same labelling
         why: That provides only one assignment.
-      - text: Only one correct labeling is attainable
+      - text: Only one correct labelling is attainable
         why: That does not establish shattering.
       - text: Every one of the 2^n labelings is attainable
         why: Shattering includes all assignments.
@@ -14,14 +14,14 @@ items:
   - id: b1-shattering-and-vc-02
     type: mcq
     prompt: What is the VC dimension of one-direction real thresholds?
-    explanation: A single point is shattered and two ordered points cannot realize (1,0).
+    explanation: A single point is shattered and two ordered points cannot realise (1,0).
     options:
       - text: Infinite because the threshold is real
         why: Infinitely many parameter values do not guarantee shattering.
       - text: Two
-        why: A required labeling is impossible.
+        why: A required labelling is impossible.
       - text: One
-        why: A single point is shattered and two ordered points cannot realize (1,0).
+        why: A single point is shattered and two ordered points cannot realise (1,0).
         correct: true
   - id: b1-shattering-and-vc-03
     type: mcq
@@ -62,10 +62,10 @@ items:
         why: That reverses the prediction rule.
   - id: b1-shattering-and-vc-06
     type: cloze
-    prompt: Realizing every labeling on a set is called ______ the set.
+    prompt: Realising every labelling on a set is called ______ the set.
     accept:
       - shattering
-    explanation: The hypothesis class can realize all assignments.
+    explanation: The hypothesis class can realise all assignments.
   - id: b1-shattering-and-vc-07
     type: order
     prompt: Order a VC dimension proof that establishes the lower bound before the upper bound.

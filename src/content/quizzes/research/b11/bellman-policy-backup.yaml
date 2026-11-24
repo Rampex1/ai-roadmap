@@ -58,7 +58,7 @@ items:
       - text: Values for allowed continuation
         why: They approximate remaining return.
         correct: true
-      - text: A maximization over independent rewards
+      - text: A maximisation over independent rewards
         why: Evaluation keeps the policy fixed.
   - id: b11-bellman-policy-backup-06
     type: cloze

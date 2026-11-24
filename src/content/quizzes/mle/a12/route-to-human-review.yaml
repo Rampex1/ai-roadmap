@@ -29,7 +29,7 @@ items:
     explanation: The reviewer needs enough information to act.
     options:
       - text: All private data regardless of need
-        why: Minimize what is shared.
+        why: Minimise what is shared.
       - text: Only a raw probability without context
         why: That may not support a decision.
       - text: Permitted context and an accountable decision owner

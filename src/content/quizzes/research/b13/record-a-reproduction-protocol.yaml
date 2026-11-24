@@ -31,7 +31,7 @@ items:
       - text: The scoring implementation can change the result
         why: Model identity alone cannot reconstruct evaluation.
         correct: true
-      - text: It chooses the optimizer automatically
+      - text: It chooses the optimiser automatically
         why: Evaluation and training are separate.
       - text: It removes the need to name the metric
         why: Names and implementations both matter.

@@ -14,10 +14,10 @@ items:
   - id: a4-search-under-a-budget-02
     type: mcq
     prompt: Why store actual candidate values as well as a seed?
-    explanation: The realized settings identify the run.
+    explanation: The realised settings identify the run.
     options:
       - text: Implementations or search spaces may change
-        why: The realized settings identify the run.
+        why: The realised settings identify the run.
         correct: true
       - text: A seed directly stores the model weights
         why: It supplies randomness only.
@@ -50,10 +50,10 @@ items:
   - id: a4-search-under-a-budget-05
     type: multi
     prompt: Which should be fixed for a comparison?
-    explanation: It defines what the study optimizes. It controls resources and opportunities to find a winner.
+    explanation: It defines what the study optimises. It controls resources and opportunities to find a winner.
     options:
       - text: The validation metric
-        why: It defines what the study optimizes.
+        why: It defines what the study optimises.
         correct: true
       - text: The search budget
         why: It controls resources and opportunities to find a winner.

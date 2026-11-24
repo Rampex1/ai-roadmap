@@ -31,8 +31,8 @@ items:
       - text: More workers guarantee faster iteration
         why: Training may be bottlenecked elsewhere.
       - text: All ranks have no communication
-        why: Correct synchronized updates involve a reduction.
-      - text: Synchronization and stragglers add overhead
+        why: Correct synchronised updates involve a reduction.
+      - text: Synchronisation and stragglers add overhead
         why: Workers can wait for communication and slower ranks.
         correct: true
   - id: a11-average-distributed-gradients-04
@@ -50,15 +50,15 @@ items:
   - id: a11-average-distributed-gradients-05
     type: multi
     prompt: Which affect a fair scaling comparison?
-    explanation: It can change optimization behaviour. Both govern the learning schedule.
+    explanation: It can change optimisation behaviour. Both govern the learning schedule.
     options:
-      - text: Training examples and optimizer steps
+      - text: Training examples and optimiser steps
         why: Both govern the learning schedule.
         correct: true
       - text: Only the reported number of hosts
         why: Hosts alone do not fix the workload.
       - text: Global batch size
-        why: It can change optimization behaviour.
+        why: It can change optimisation behaviour.
         correct: true
   - id: a11-average-distributed-gradients-06
     type: cloze
@@ -74,7 +74,7 @@ items:
       - Compute local gradients
       - Reduce to a common gradient
       - Update the replicated weights
-    explanation: Reduction happens before synchronized optimizer steps.
+    explanation: Reduction happens before synchronised optimiser steps.
   - id: a11-average-distributed-gradients-08
     type: output
     prompt: What does this print?

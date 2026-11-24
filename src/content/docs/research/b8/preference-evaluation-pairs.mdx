@@ -12,9 +12,9 @@ goDeeper: instructgpt-paper
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-A common post-training pipeline starts with supervised demonstrations and then uses preference evidence. One approach trains a reward model and optimizes a policy against it under a constraint; DPO instead uses chosen and rejected outputs with a reference policy. Neither makes the training preference a substitute for independent release evidence.
+A common post-training pipeline starts with supervised demonstrations and then uses preference evidence. One approach trains a reward model and optimises a policy against it under a constraint; DPO instead uses chosen and rejected outputs with a reference policy. Neither makes the training preference a substitute for independent release evidence.
 
-Use <Term id="preference-evaluation-pairs" /> on prompts held out from training and tuning. Randomize or counterbalance candidate order, hide model identity when possible and measure agreement with human rubric decisions. Preferences can reflect verbosity or presentation bias rather than correctness.
+Use <Term id="preference-evaluation-pairs" /> on prompts held out from training and tuning. Randomise or counterbalance candidate order, hide model identity when possible and measure agreement with human rubric decisions. Preferences can reflect verbosity or presentation bias rather than correctness.
 
 Retain ties and unavailable judgments explicitly. Report quality slices, critical regressions and failure outcomes alongside any win rate. The exercise accepts already-oriented judgments, where candidate means a win regardless of the side on which that response was displayed.
 

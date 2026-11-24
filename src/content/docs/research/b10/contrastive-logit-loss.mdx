@@ -14,9 +14,9 @@ import CodeExercise from '@/components/CodeExercise.astro';
 
 A <Term id="contrastive-logit-loss" /> creates supervision from the data. For example, two views of one image can form a positive pair when cropping or jitter preserves the properties you want the representation to learn. Views of other images often supply negatives. Those are a training assumption: two nominal negatives might share the same object class, or even duplicate the source.
 
-For one anchor, divide similarities by a positive temperature, normalize over the candidate list and take negative log probability of the correct match. When using unit vectors, dot product equals cosine similarity. Subtract the largest scaled score before exponentiating. The loss equals ln(number of candidates) for a uniform row, independent of which candidate is marked positive.
+For one anchor, divide similarities by a positive temperature, normalise over the candidate list and take negative log probability of the correct match. When using unit vectors, dot product equals cosine similarity. Subtract the largest scaled score before exponentiating. The loss equals ln(number of candidates) for a uniform row, independent of which candidate is marked positive.
 
-A small temperature sharpens differences and can amplify mislabeled negatives. Report batch composition, positive construction and normalization alongside the loss.
+A small temperature sharpens differences and can amplify mislabelled negatives. Report batch composition, positive construction and normalisation alongside the loss.
 
 ## Worked example
 

@@ -1,6 +1,6 @@
 term: Few-shot prompting
 short: Putting a small number of worked input-output examples in the prompt.
-body: Choose examples that demonstrate the decision boundary or output format. Keep your evaluation cases separate so they can measure generalization.
+body: Choose examples that demonstrate the decision boundary or output format. Keep your evaluation cases separate so they can measure generalisation.
 related:
   - held-out-set
   - schema

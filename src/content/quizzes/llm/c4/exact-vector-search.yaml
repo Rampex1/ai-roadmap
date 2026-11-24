@@ -50,10 +50,10 @@ items:
   - id: c4-exact-vector-search-05
     type: multi
     prompt: Which should affect ranked results?
-    explanation: Trusted eligibility rules decide which documents may appear at all, and similarity orders the eligible ones. Authorization must come from application data such as the logged-in user's workspace, never from a model's guess, which a prompt could manipulate.
+    explanation: Trusted eligibility rules decide which documents may appear at all, and similarity orders the eligible ones. Authorisation must come from application data such as the logged-in user's workspace, never from a model's guess, which a prompt could manipulate.
     options:
-      - text: A model guess about a user’s authorization
-        why: Authorization requires trusted application data.
+      - text: A model guess about a user’s authorisation
+        why: Authorisation requires trusted application data.
       - text: Document-to-query similarity
         why: It orders the eligible documents.
         correct: true

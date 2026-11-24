@@ -7,7 +7,7 @@ brief: |-
 
   1. Route known requests to fixed paths and ambiguous requests to clarification.
   2. Execute only preapproved read actions and stop on an answer or failure.
-  3. Recognize repeated proposals and exhausted budgets.
+  3. Recognise repeated proposals and exhausted budgets.
   4. Group trace events and interpret final statuses.
   5. Add a repeat guard to an agent replay.
 

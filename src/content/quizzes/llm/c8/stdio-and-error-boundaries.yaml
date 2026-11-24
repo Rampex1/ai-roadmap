@@ -44,7 +44,7 @@ items:
         why: Starting a process is an authority boundary.
         correct: true
       - text: The executable name changes the protocol version automatically
-        why: Version is negotiated at initialization.
+        why: Version is negotiated at initialisation.
       - text: It makes authentication unnecessary everywhere
         why: Trust requirements still apply.
   - id: c8-stdio-and-error-boundaries-05
@@ -72,7 +72,7 @@ items:
     prompt: Order a local session.
     items:
       - Start the configured subprocess
-      - Initialize the client session
+      - Initialise the client session
       - List and call a permitted tool
       - Close the session and transport
     explanation: The SDK brackets protocol operations with session lifetime.

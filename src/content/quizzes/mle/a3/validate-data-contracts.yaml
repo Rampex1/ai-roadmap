@@ -43,7 +43,7 @@ items:
       - text: Only successful predictions
         why: That hides invalid inputs.
       - text: Raw identifiers by default
-        why: Aggregate diagnostics can minimize exposure.
+        why: Aggregate diagnostics can minimise exposure.
       - text: Counts and reasons for rejection
         why: This reveals changes in usable coverage.
         correct: true
@@ -58,7 +58,7 @@ items:
       - text: Allowed values and missingness rules
         why: These define accepted rows.
         correct: true
-      - text: A guarantee that a model will generalize
+      - text: A guarantee that a model will generalise
         why: That requires separate evaluation.
   - id: a3-validate-data-contracts-06
     type: cloze

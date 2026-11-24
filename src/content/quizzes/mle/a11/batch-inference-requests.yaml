@@ -34,7 +34,7 @@ items:
       - text: The queue can never drain
         why: The deadline provides a launch condition.
       - text: All requests are dropped automatically
-        why: The modeled policy dispatches partial batches.
+        why: The modelled policy dispatches partial batches.
   - id: a11-batch-inference-requests-04
     type: mcq
     prompt: Which latency can grow directly from batching?

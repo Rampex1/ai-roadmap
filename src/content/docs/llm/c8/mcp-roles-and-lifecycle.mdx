@@ -14,9 +14,9 @@ import CodeExercise from '@/components/CodeExercise.astro';
 
 In C6, the application registered tools directly. <Term id="model-context-protocol" cap /> adds a protocol boundary so applications and servers can discover supported primitives and exchange requests. A host is the application the user interacts with. It manages client sessions and decides what to show to the model. Each client session communicates with a server that exposes capabilities.
 
-A session starts with initialization. The parties agree on a protocol version and exchange capabilities. After the client signals initialization is complete, it can make requests appropriate to those capabilities. For example, use tools/list after the server advertises tools. An empty tools capability object still advertises tools. It simply declares no optional fields under that capability.
+A session starts with initialisation. The parties agree on a protocol version and exchange capabilities. After the client signals initialisation is complete, it can make requests appropriate to those capabilities. For example, use tools/list after the server advertises tools. An empty tools capability object still advertises tools. It simply declares no optional fields under that capability.
 
-Discovery is an inventory, not authorization. The host still chooses which operations to expose and the server still checks access at execution. This lesson models only the decision of which discovery requests are relevant. It omits transport, version negotiation and the initialized notification.
+Discovery is an inventory, not authorisation. The host still chooses which operations to expose and the server still checks access at execution. This lesson models only the decision of which discovery requests are relevant. It omits transport, version negotiation and the initialized notification.
 
 ## Worked example
 
@@ -34,7 +34,7 @@ print(discovery_methods({"resources": {}, "tools": {}}))
 ['tools/list', 'resources/list']
 ```
 
-Initialize the session and respect the capability inventory before attempting discovery.
+Initialise the session and respect the capability inventory before attempting discovery.
 
 ## Try it
 

@@ -2,7 +2,7 @@ items:
   - id: c5-pack-evidence-and-cite-01
     type: mcq
     prompt: What should a rendered passage cost include?
-    explanation: The model's tokenizer counts everything placed in the prompt. The ID label, tags and separators around each passage take real space, and with many short passages they can add up to a noticeable share of the budget.
+    explanation: The model's tokeniser counts everything placed in the prompt. The ID label, tags and separators around each passage take real space, and with many short passages they can add up to a noticeable share of the budget.
     options:
       - text: Only raw body text
         why: Ignoring labels and separators undercounts the cost and can overflow the budget.

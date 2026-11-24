@@ -1,7 +1,7 @@
 id: b1-shattering-and-vc-01
 lesson: research/b1/shattering-and-vc
 title: Enumerate one-direction threshold labelings
-prompt: Implement threshold_labelings(n). Return tuples for 0 through n leading zeroes in that order. Include the empty labeling for n=0. Reject negative or noninteger n.
+prompt: Implement threshold_labelings(n). Return tuples for 0 through n leading zeroes in that order. Include the empty labelling for n=0. Reject negative or noninteger n.
 starter: |
   def threshold_labelings(n):
       raise NotImplementedError

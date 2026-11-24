@@ -2,14 +2,14 @@ items:
   - id: b4-momentum-recurrence-01
     type: mcq
     prompt: What does beta retain?
-    explanation: It is the coefficient on optimizer state.
+    explanation: It is the coefficient on optimiser state.
     options:
       - text: The number of examples
         why: Beta is a smoothing parameter.
       - text: The old parameter value instead
         why: The recurrence acts on velocity.
       - text: A fraction of the old velocity
-        why: It is the coefficient on optimizer state.
+        why: It is the coefficient on optimiser state.
         correct: true
   - id: b4-momentum-recurrence-02
     type: mcq

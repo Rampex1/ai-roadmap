@@ -1,7 +1,7 @@
 id: a10-measure-input-drift-01
 lesson: mle/a10/measure-input-drift
 title: Calculate categorical total variation
-prompt: Implement total_variation(reference,current) for dictionaries with string categories and nonnegative counts. Compare normalized masses across all categories and return None if either histogram has zero total.
+prompt: Implement total_variation(reference,current) for dictionaries with string categories and nonnegative counts. Compare normalised masses across all categories and return None if either histogram has zero total.
 starter: |
   def total_variation(reference, current):
       raise NotImplementedError

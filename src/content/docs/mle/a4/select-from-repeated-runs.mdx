@@ -12,11 +12,11 @@ goDeeper: mlflow-experiment-tracking
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-One training run can benefit from initialization, sampling or augmentation by chance. Compare each candidate using the same set of seed identifiers and the same data and metric. <Term id="matched-seeds" cap /> can reduce variation attributable to nuisance randomness, although a change in architecture may change how random draws are consumed.
+One training run can benefit from initialisation, sampling or augmentation by chance. Compare each candidate using the same set of seed identifiers and the same data and metric. <Term id="matched-seeds" cap /> can reduce variation attributable to nuisance randomness, although a change in architecture may change how random draws are consumed.
 
 Fix how to aggregate outcomes, such as mean validation loss with a dispersion measure and a deterministic tie-breaker. Look for repeated gains, especially across important slices. If one candidate had missing seeds, complete them or explicitly define a matched subset before comparing. A better average can hide a critical failure.
 
-Searching many settings makes the observed best validation result optimistic. Select using validation, then freeze the candidate and measure it once on a separate test split. With small datasets, nested cross-validation can separate tuning from estimating generalization.
+Searching many settings makes the observed best validation result optimistic. Select using validation, then freeze the candidate and measure it once on a separate test split. With small datasets, nested cross-validation can separate tuning from estimating generalisation.
 
 The fixture requires exactly matching seed keys and chooses the minimum mean metric. Production tracking should retain the individual results and uncertainty, not just the winning configuration name.
 

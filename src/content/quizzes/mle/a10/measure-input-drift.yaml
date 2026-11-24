@@ -1,12 +1,12 @@
 items:
   - id: a10-measure-input-drift-01
     type: mcq
-    prompt: Why normalize separate histograms?
+    prompt: Why normalise separate histograms?
     explanation: The comparison concerns distribution proportions.
     options:
       - text: Counts may all be negative
         why: Inputs are nonnegative counts.
-      - text: Normalization supplies labels
+      - text: Normalisation supplies labels
         why: It only converts counts to mass.
       - text: Request volumes can differ
         why: The comparison concerns distribution proportions.
@@ -74,7 +74,7 @@ items:
     items:
       - Choose reference and observation windows
       - Build comparable histograms
-      - Normalize and calculate distance
+      - Normalise and calculate distance
       - Inspect affected categories and slices
     explanation: The category contract must be shared.
   - id: a10-measure-input-drift-08

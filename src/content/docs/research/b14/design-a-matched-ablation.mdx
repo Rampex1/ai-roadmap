@@ -12,7 +12,7 @@ goDeeper: neurips-paper-checklist
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-A <Term id="design-a-matched-ablation" /> tests the contribution of a named component. Compare a time-conditioned denoiser with the same architecture receiving zeroed time features. Keep data, seeds, optimizer steps and evaluator inputs fixed. Record any consequences of the treatment, such as compute changes, rather than suppressing them.
+A <Term id="design-a-matched-ablation" /> tests the contribution of a named component. Compare a time-conditioned denoiser with the same architecture receiving zeroed time features. Keep data, seeds, optimiser steps and evaluator inputs fixed. Record any consequences of the treatment, such as compute changes, rather than suppressing them.
 
 If the baseline also has fewer parameters or an easier evaluation distribution, the result cannot isolate timestep information. Some interventions naturally change cost. In that case report accuracy and cost together and consider an additional budget-matched comparison.
 

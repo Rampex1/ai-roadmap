@@ -18,7 +18,7 @@ items:
     options:
       - text: Warm-up replaces validation data
         why: The rule still needs measurements.
-      - text: Early scores can penalize slow starters unfairly
+      - text: Early scores can penalise slow starters unfairly
         why: Training curves may cross later.
         correct: true
       - text: It makes all candidates converge identically

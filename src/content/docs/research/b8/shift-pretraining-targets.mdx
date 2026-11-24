@@ -16,7 +16,7 @@ The <Term id="shift-pretraining-targets" /> predicts a token from its prefix. Gi
 
 Keep document boundaries explicit when packing examples. Allowing attention across independent documents changes the task. If boundaries should reset context, apply the appropriate attention mask or handle documents separately. Padding contributes neither loss nor valid token count.
 
-Perplexity is the exponential of mean token negative log likelihood in natural-log units. Aggregate total loss and valid count before exponentiating, rather than averaging per-batch perplexities. Comparisons across tokenizers need care because the unit being predicted changes.
+Perplexity is the exponential of mean token negative log likelihood in natural-log units. Aggregate total loss and valid count before exponentiating, rather than averaging per-batch perplexities. Comparisons across tokenisers need care because the unit being predicted changes.
 
 ## Worked example
 

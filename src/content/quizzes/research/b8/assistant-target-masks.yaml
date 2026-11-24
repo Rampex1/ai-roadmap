@@ -76,7 +76,7 @@ items:
       - Render messages and record token roles
       - Form shifted input and target tokens and align the mask with the targets
       - Sum the losses for included targets and count those targets
-      - Normalize loss over included targets
+      - Normalise loss over included targets
     explanation: The mask follows the targets.
   - id: b8-assistant-target-masks-08
     type: output

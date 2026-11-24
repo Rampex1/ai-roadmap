@@ -72,7 +72,7 @@ items:
     items:
       - Fix the rubric and slice rules
       - Align outputs to case IDs
-      - Summarize matched changes by slice
+      - Summarise matched changes by slice
       - Investigate critical disagreements
     explanation: The comparison requires aligned scores.
   - id: a5-paired-slice-comparison-08

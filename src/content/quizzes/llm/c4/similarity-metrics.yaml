@@ -52,10 +52,10 @@ items:
     prompt: Which operations can recover cosine rankings?
     explanation: After normalising, the dot product equals the cosine, and squared distance equals 2 − 2cos θ, which decreases as cosine increases. Both give the cosine ranking. Document length is unrelated to direction.
     options:
-      - text: Normalize both sides and rank by ascending squared Euclidean distance
+      - text: Normalise both sides and rank by ascending squared Euclidean distance
         why: Squared distance between unit vectors is 2 minus twice the cosine, so it falls as cosine rises.
         correct: true
-      - text: Normalize both sides and rank by descending dot product
+      - text: Normalise both sides and rank by descending dot product
         why: The dot product of unit vectors is exactly their cosine.
         correct: true
       - text: Rank by input document length alone
@@ -69,7 +69,7 @@ items:
     explanation: Dividing a vector by its length keeps its direction and makes its length one. Normalising every stored vector once, and each query, lets a fast dot product stand in for cosine.
   - id: c4-similarity-metrics-07
     type: order
-    prompt: Order the steps for the normalized-dot-product method.
+    prompt: Order the steps for the normalised-dot-product method.
     items:
       - Check vector dimensions and nonzero lengths
       - Divide each vector by its length

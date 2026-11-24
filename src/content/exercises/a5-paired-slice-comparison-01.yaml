@@ -1,6 +1,6 @@
 id: a5-paired-slice-comparison-01
 lesson: mle/a5/paired-slice-comparison
-title: Summarize matched decisions
+title: Summarise matched decisions
 prompt: Implement paired_slices(rows) for (tag, before_correct, after_correct) with booleans or None. Use gain, regression, tie and missing keys for each observed tag. A missing side wins over any other category.
 starter: |
   def paired_slices(rows):

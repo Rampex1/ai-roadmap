@@ -12,7 +12,7 @@ goDeeper: triton-dynamic-batching
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-<Term id="dynamic-batching" cap /> can increase accelerator utilization. Waiting briefly allows compatible requests to run in a larger batch. The benefit is higher throughput at the possible cost of added queue delay. At low arrival rates, a target batch may rarely fill. Enforce an oldest-request delay cap rather than waiting indefinitely.
+<Term id="dynamic-batching" cap /> can increase accelerator utilisation. Waiting briefly allows compatible requests to run in a larger batch. The benefit is higher throughput at the possible cost of added queue delay. At low arrival rates, a target batch may rarely fill. Enforce an oldest-request delay cap rather than waiting indefinitely.
 
 Bucket only compatible requests, such as inputs that share a model version and appropriate shape. Padding very long inputs together with short inputs can waste compute. Measure queue time and service time separately. Compare p95 or p99 at a fixed offered load and report timeouts and rejects alongside successful latency.
 

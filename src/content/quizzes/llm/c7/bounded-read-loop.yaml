@@ -43,8 +43,8 @@ items:
       - text: They explain what happened before termination
         why: A caller can inspect completed reads.
         correct: true
-      - text: They authorize future actions automatically
-        why: Authorization remains in the application.
+      - text: They authorise future actions automatically
+        why: Authorisation remains in the application.
       - text: They guarantee the final answer is factual
         why: The answer still needs an evidence check.
   - id: c7-bounded-read-loop-05

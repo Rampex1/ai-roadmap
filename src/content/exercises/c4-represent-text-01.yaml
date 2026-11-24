@@ -15,4 +15,4 @@ tests: |
   assert keyword_vector("refund? refund", ["refund", "refund?"]) == [1, 1], "Split only on whitespace"
   assert keyword_vector("", ["reset"]) == [0], "Empty text has zero counts"
 hints:
-  - Count the normalized tokens before building the vector.
+  - Count the normalised tokens before building the vector.

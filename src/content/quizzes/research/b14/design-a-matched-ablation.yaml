@@ -52,7 +52,7 @@ items:
     prompt: Which are common controls?
     explanation: They define examples. It controls training exposure.
     options:
-      - text: Optimizer step budget
+      - text: Optimiser step budget
         why: It controls training exposure.
         correct: true
       - text: Data identity and split

@@ -20,7 +20,7 @@ items:
         why: Clipping only constrains large norms.
         correct: true
       - text: Scale it up to the cap
-        why: That is normalization rather than clipping.
+        why: That is normalisation rather than clipping.
       - text: Replace it with zero
         why: No clipping is required.
   - id: b4-clip-gradient-norm-03
@@ -38,14 +38,14 @@ items:
   - id: b4-clip-gradient-norm-04
     type: mcq
     prompt: Does clipping guarantee every adaptive update is bounded by the same cap?
-    explanation: Optimizer state and scaling can change the resulting step.
+    explanation: Optimiser state and scaling can change the resulting step.
     options:
       - text: Only if every layer has the same width
         why: Width does not establish the claim.
-      - text: Yes for every optimizer
+      - text: Yes for every optimiser
         why: The subsequent algorithm matters.
       - text: No, it bounds the input gradient
-        why: Optimizer state and scaling can change the resulting step.
+        why: Optimiser state and scaling can change the resulting step.
         correct: true
   - id: b4-clip-gradient-norm-05
     type: multi
@@ -73,7 +73,7 @@ items:
       - Collect the gradient coordinates
       - Calculate the global norm
       - Compute a shared factor if needed
-      - Scale and pass gradients to the optimizer
+      - Scale and pass gradients to the optimiser
     explanation: The factor depends on the complete norm.
   - id: b4-clip-gradient-norm-08
     type: output

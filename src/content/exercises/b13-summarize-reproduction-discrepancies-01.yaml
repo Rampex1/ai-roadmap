@@ -1,6 +1,6 @@
 id: b13-summarize-reproduction-discrepancies-01
 lesson: research/b13/summarize-reproduction-discrepancies
-title: Implement summarize reproduction discrepancies
+title: Implement summarise reproduction discrepancies
 prompt: Implement discrepancy_summary(pairs). Each item is (reference, repeat) with finite values or None. Count complete and incomplete pairs. For complete pairs report mean repeat-minus-reference and min/max range; otherwise both summary values are None.
 starter: |
   def discrepancy_summary(pairs):

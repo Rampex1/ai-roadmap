@@ -8,7 +8,7 @@ items:
         why: Attributions describe change from it.
         correct: true
       - text: The learning rate used to train the model
-        why: No optimizer is used.
+        why: No optimiser is used.
       - text: A guaranteed causally neutral input
         why: Neutrality requires justification.
   - id: b12-integrate-gradients-along-path-02
@@ -58,7 +58,7 @@ items:
       - text: The chosen baseline and why it fits
         why: Attributions depend on the reference.
         correct: true
-      - text: Only the most colorful feature visualization
+      - text: Only the most colourful feature visualisation
         why: That does not establish correctness.
   - id: b12-integrate-gradients-along-path-06
     type: cloze

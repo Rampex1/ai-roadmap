@@ -25,11 +25,11 @@ items:
         why: This means the name is not registered, which is not the case here.
   - id: c6-dispatch-allowlisted-tools-03
     type: mcq
-    prompt: Where should authorization for a tool call be checked?
+    prompt: Where should authorisation for a tool call be checked?
     explanation: The caller's identity and role come from the authenticated session on the server. A check in the dispatcher applies to every call path, including calls the model was tricked into proposing.
     options:
       - text: At the application execution boundary
-        why: Correct. Checking just before the handler runs means no restricted data is fetched for an unauthorized caller.
+        why: Correct. Checking just before the handler runs means no restricted data is fetched for an unauthorised caller.
         correct: true
       - text: By the model saying it has access
         why: Model text carries no permissions. A user can talk the model into claiming anything.
@@ -53,7 +53,7 @@ items:
     explanation: A registry entry bundles everything the dispatcher needs to decide and act without trusting the model. Anything chosen at call time from model text reopens the hole the registry closes.
     options:
       - text: The permissions a caller needs
-        why: Correct. Storing required permissions next to the handler keeps the authorization check in one place.
+        why: Correct. Storing required permissions next to the handler keeps the authorisation check in one place.
         correct: true
       - text: Expected argument types
         why: Correct. A validator in the entry lets the dispatcher reject malformed arguments before calling the handler.

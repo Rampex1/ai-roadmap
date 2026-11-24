@@ -50,15 +50,15 @@ items:
   - id: a6-frozen-preprocessing-05
     type: multi
     prompt: Which should be persisted?
-    explanation: Inference needs them to center features. They define normalization.
+    explanation: Inference needs them to centre features. They define normalisation.
     options:
       - text: Chosen scales
-        why: They define normalization.
+        why: They define normalisation.
         correct: true
       - text: Statistics recomputed on every request
         why: Those violate the frozen contract.
       - text: Training means
-        why: Inference needs them to center features.
+        why: Inference needs them to centre features.
         correct: true
   - id: a6-frozen-preprocessing-06
     type: cloze

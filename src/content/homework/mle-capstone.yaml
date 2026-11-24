@@ -6,7 +6,9 @@ brief: |
   Train and operate a small support-ticket classifier on synthetic examples. Compare it with
   an always-standard baseline, write a drift report, then package it as a FastAPI service in a
   local Docker container with pytest tests, a GitHub Actions CI workflow and an MLflow run.
-  Use the deployment evidence to decide whether to hold, promote or roll back.
+  Use the deployment evidence to decide whether to hold, promote or roll back. Before starting,
+  review A3 (data management), A4 (experiment tracking), A5 (evaluation), A6–A10 (packaging, testing,
+  serving, CI/CD and monitoring) and A12 (responsible deployment).
 
   **Offline core (standard library, local Jupyter or Colab)**
 
@@ -22,6 +24,8 @@ brief: |
   7. **Package it.** The notebook writes a `capstone/` project: `core.py` and `model.json` from your frozen artifact, a FastAPI `app.py` with `/predict` and `/health`, a `Dockerfile` (pinned slim Python base, non-root user), pinned `requirements.txt`, pytest tests using FastAPI's TestClient, and `.github/workflows/ci.yml`. Run `docker build -t ticket-clf . && docker run -p 8000:8000 ticket-clf`, then call `/health` and `/predict` with curl. Push the folder to a GitHub repository and watch CI run.
   8. **Track the run.** Log the band, validation cost and holdout counts, and the artifact and drift report, to a local MLflow store.
 
+  **Optional stretch (not graded):** deploy the same FastAPI app as a free Hugging Face Space demo.
+
   **Deliverables:** the completed notebook; the `capstone/` folder (app, Dockerfile, requirements, tests, CI workflow, `model.json`, `drift_report.json`); the MLflow run ID; a link to a CI run; and a deployment note in the notebook's final Markdown section covering scope, owners, safeguards, the drift report and remaining evidence gaps.
 notebook: /homework/mle-capstone.ipynb
 rubric:
@@ -29,8 +33,8 @@ rubric:
   - "The prediction handler reads thresholds from the artifact, returns its version, rejects malformed requests with 400 without echoing the ticket and routes unknown text to review."
   - "The holdout report compares both systems on the same cases and preserves per-channel denominators and unknown outcomes."
   - "The drift report uses total variation on normalised histograms and states its counts, threshold and alert."
-  - "Docker image builds and serves /predict locally, and /health returns the same model version as the notebook."
-  - "pytest tests cover /health, /predict and invalid requests, and pass locally."
-  - "CI workflow runs tests; MLflow run records band, metrics and artifact."
+  - "The Docker image builds and serves /predict locally, and /health returns the same model version as the notebook."
+  - "The pytest tests cover /health, /predict and invalid requests, and pass locally."
+  - "The CI workflow runs the tests, and the MLflow run records the band, metrics and artifact."
   - "The deployment note names the owner and rollback route, applies the release gate and lists evidence gaps."
-compute: "Offline core: any laptop. Packaging: local Docker + GitHub Actions (free); about 4–5 h."
+compute: "Offline core on any laptop or Colab, standard library only, a few seconds; packaging on your own machine with local Docker (the first image build takes a few minutes, including the pinned package downloads) and a free GitHub Actions run of a few minutes. Effort: about 4 to 5 hours including the deployment note."

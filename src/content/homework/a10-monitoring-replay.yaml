@@ -5,7 +5,7 @@ title: Replay drift and delayed outcomes
 brief: |-
   Audit a synthetic stream of prediction events and delayed labels. Compare a reference histogram with incoming traffic and apply a repeatable alert rule.
 
-  1. Summarize service outcomes.
+  1. Summarise service outcomes.
   2. Compute categorical distribution change.
   3. Join only labels available by report time.
   4. Fire an alert only with repeated valid evidence.
@@ -15,8 +15,8 @@ brief: |-
 notebook: /homework/a10-monitoring-replay.ipynb
 rubric:
   - Service failures, attempts and successful review outcomes are counted separately per version.
-  - Drift uses normalized comparable distributions.
+  - Drift uses normalised comparable distributions.
   - Delayed outcomes remain visible.
-  - Alert decisions preserve warm-up and missing-evidence behavior.
+  - Alert decisions preserve warm-up and missing-evidence behaviour.
   - The integrated task passes its fixture checks.
 compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

@@ -29,8 +29,8 @@ items:
     explanation: Capabilities and protocol version are established first.
     options:
       - text: Before negotiating a session
-        why: The lifecycle starts with initialization.
-      - text: After initialization
+        why: The lifecycle starts with initialisation.
+      - text: After initialisation
         why: Capabilities and protocol version are established first.
         correct: true
       - text: Only after a first tool call
@@ -66,16 +66,16 @@ items:
     accept:
       - initialization
       - initialisation
-    explanation: The initialization phase establishes compatibility.
+    explanation: The initialisation phase establishes compatibility.
   - id: c8-mcp-roles-and-lifecycle-07
     type: order
     prompt: Order the client lifecycle.
     items:
       - Send initialize
       - Receive the version and capabilities
-      - Signal initialization complete
+      - Signal initialisation complete
       - Discover a supported primitive
-    explanation: Discovery follows the initialization handshake.
+    explanation: Discovery follows the initialisation handshake.
   - id: c8-mcp-roles-and-lifecycle-08
     type: output
     prompt: What does this print?
@@ -86,4 +86,4 @@ items:
 
       print(discovery_methods({"tools": {}, "unknown": {}}))
     answer: "['tools/list']"
-    explanation: Only tools is recognized and present.
+    explanation: Only tools is recognised and present.

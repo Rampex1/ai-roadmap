@@ -1,6 +1,6 @@
 id: c11-enforce-read-boundaries-01
 lesson: llm/c11/enforce-read-boundaries
-title: Authorize a read-only tool
+title: Authorise a read-only tool
 prompt: Implement may_read(tool, requested_collection, trusted_collection, scopes). Allow catalogue_search only with catalogue:read and hours_lookup only with hours:read. Also require the requested collection to equal the trusted collection. Deny unknown tools.
 starter: |
   def may_read(tool, requested_collection, trusted_collection, scopes):

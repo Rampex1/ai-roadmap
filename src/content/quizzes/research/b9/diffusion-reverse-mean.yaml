@@ -55,7 +55,7 @@ items:
       - text: Reverse variance and timestep convention
         why: They define the transition.
         correct: true
-      - text: Denoiser target parameterization
+      - text: Denoiser target parameterisation
         why: It defines how outputs are converted.
         correct: true
       - text: Only the generated image filename

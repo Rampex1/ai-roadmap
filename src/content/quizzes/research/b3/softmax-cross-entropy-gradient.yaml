@@ -2,22 +2,22 @@ items:
   - id: b3-softmax-cross-entropy-gradient-01
     type: mcq
     prompt: What is the single-example logit derivative?
-    explanation: The normalizer contributes the probabilities.
+    explanation: The normaliser contributes the probabilities.
     options:
       - text: Softmax probabilities minus one-hot target
-        why: The normalizer contributes the probabilities.
+        why: The normaliser contributes the probabilities.
         correct: true
       - text: Raw logits minus the target index
-        why: Logits are unnormalized and the index is positional.
+        why: Logits are unnormalised and the index is positional.
       - text: The probabilities times the target index
         why: This does not differentiate cross-entropy.
   - id: b3-softmax-cross-entropy-gradient-02
     type: mcq
     prompt: Why shift by the maximum logit?
-    explanation: The common shift cancels in normalization.
+    explanation: The common shift cancels in normalisation.
     options:
-      - text: Largest exponential is one and normalized ratios stay the same
-        why: The common shift cancels in normalization.
+      - text: Largest exponential is one and normalised ratios stay the same
+        why: The common shift cancels in normalisation.
         correct: true
       - text: It removes the target from the loss
         why: The target remains in the shifted subtraction.
@@ -74,9 +74,9 @@ items:
     items:
       - Validate target and shift the logits
       - Exponentiate shifted scores
-      - Normalize to obtain probabilities
+      - Normalise to obtain probabilities
       - Compute loss and subtract the target indicator for the derivative
-    explanation: The shifted normalizer supports both outputs.
+    explanation: The shifted normaliser supports both outputs.
   - id: b3-softmax-cross-entropy-gradient-08
     type: output
     prompt: What does this print?

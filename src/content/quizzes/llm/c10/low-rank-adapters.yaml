@@ -25,7 +25,7 @@ items:
         why: Rank squared does not count both matrices.
   - id: c10-low-rank-adapters-03
     type: mcq
-    prompt: Why initialize one factor to zero?
+    prompt: Why initialise one factor to zero?
     explanation: The product initially vanishes.
     options:
       - text: The initial adapter update is zero
@@ -62,7 +62,7 @@ items:
         correct: true
   - id: c10-low-rank-adapters-06
     type: cloze
-    prompt: LoRA constrains the update via a low-______ factorization.
+    prompt: LoRA constrains the update via a low-______ factorisation.
     accept:
       - rank
     explanation: A product of two thin factors has bounded rank.
