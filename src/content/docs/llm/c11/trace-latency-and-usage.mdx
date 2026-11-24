@@ -12,7 +12,7 @@ goDeeper: otel-genai-conventions
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-<Term id="inference-telemetry" /> follows a request across the application, model provider, retriever and tools. A trace ID groups spans, while each span describes an operation and its timing. Record wall time from a monotonic clock, count errors with their denominator and distinguish first visible text from total latency for streaming. Spans can overlap, so adding their durations may overcount wall time.
+<Term id="inference-telemetry" cap /> follows a request across the application, model provider, retriever and tools. A trace ID groups spans, while each span describes an operation and its timing. Record wall time from a monotonic clock, count errors with their denominator and distinguish first visible text from total latency for streaming. Spans can overlap, so adding their durations may overcount wall time.
 
 Use low-cardinality labels such as deployment version and status for metrics. Store request-specific IDs in traces where they are useful for debugging. Raw prompts, completions and tool results can contain personal information. An allowlist of validated metadata is easier to inspect than a blacklist of known secret fields. A safe schema still needs retention and access controls.
 

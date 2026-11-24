@@ -80,7 +80,7 @@ $a$ and $b$ two groups:
 
 ### Demographic parity (independence)
 
-<Term id="demographic-parity" /> asks for equal **selection rates**:
+<Term id="demographic-parity" cap /> asks for equal **selection rates**:
 
 $$
 P(\hat{y} = 1 \mid A = a) = P(\hat{y} = 1 \mid A = b)
@@ -111,7 +111,7 @@ labels. **What it ignores:** what happens to the negatives.
 
 ### Equalized odds (separation)
 
-<Term id="equalized-odds" /> asks for equal TPR **and** equal FPR. It conditions on the true outcome, so
+<Term id="equalized-odds" cap /> asks for equal TPR **and** equal FPR. It conditions on the true outcome, so
 the model's errors are spread evenly: the same miss rate and the same false-alarm rate in every group.
 In the example the FPRs are 0.25 and 0.17, so both gaps are non-zero. A common single number is the
 larger of the two gaps, here $\max(0.33, 0.08) = 0.33$.

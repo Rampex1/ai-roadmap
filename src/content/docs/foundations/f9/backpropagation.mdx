@@ -16,7 +16,7 @@ import graphImg from '@/assets/diagrams/f9-backprop-graph.svg';
 
 To train a network with gradient descent we need $\partial L/\partial w$ for every weight. A small MNIST
 network has a hundred thousand weights; large models have billions. Estimating each derivative with
-finite differences would need two forward passes per weight. <Term id="backpropagation" /> gets all of
+finite differences would need two forward passes per weight. <Term id="backpropagation" cap /> gets all of
 them from **one** forward pass and **one** backward pass. It is nothing more than the
 [chain rule](/foundations/f4/chain-rule/) from F4, applied in a careful order.
 

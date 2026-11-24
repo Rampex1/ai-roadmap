@@ -12,7 +12,7 @@ goDeeper: github-actions-workflow-artifacts
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-<Term id="promote-the-same-artifact" /> keeps the deployable container, model and preprocessing bundle aligned with test evidence. Build once for the candidate revision, assign stable digests and test that bundle. Promote those same bytes to staging and production. Rebuilding from a mutable image tag after approval can change what is shipped.
+<Term id="promote-the-same-artifact" cap /> keeps the deployable container, model and preprocessing bundle aligned with test evidence. Build once for the candidate revision, assign stable digests and test that bundle. Promote those same bytes to staging and production. Rebuilding from a mutable image tag after approval can change what is shipped.
 
 A workflow can publish reports and deployable artifacts as different outputs. A successful report should link to the tested digest. Check provenance and compatibility together. A digest identifies bytes and cannot establish that the source or approval is trusted.
 

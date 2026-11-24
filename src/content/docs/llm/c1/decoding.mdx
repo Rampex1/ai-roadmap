@@ -52,7 +52,7 @@ print(np.round(softmax(logits), 3))
 
 ## Greedy decoding
 
-<Term id="greedy-decoding" /> always takes the arg max: "Paris" here, every time. It is deterministic in
+<Term id="greedy-decoding" cap /> always takes the arg max: "Paris" here, every time. It is deterministic in
 principle, fast and a good default for tasks with one right answer: extraction, classification,
 short factual answers, code completions you will test anyway.
 
@@ -64,7 +64,7 @@ token limit.
 
 ## Top-p (nucleus) sampling
 
-Top-k keeps a fixed number of tokens whatever the distribution looks like. <Term id="nucleus-sampling" />
+Top-k keeps a fixed number of tokens whatever the distribution looks like. <Term id="nucleus-sampling" cap />
 (top-p) adapts: sort the tokens by probability and keep the smallest prefix whose total probability is at
 least $p$, then renormalise.
 

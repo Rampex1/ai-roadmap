@@ -92,7 +92,7 @@ never seen.
 
 How good is a language model? Ask how much probability it gave to what actually came next. The loss is
 the average negative log-probability of each true next token, which is exactly the
-<Term id="cross-entropy" /> loss from [F5](/foundations/f5/information-theory/) and
+<Term id="cross-entropy" cap /> loss from [F5](/foundations/f5/information-theory/) and
 [F9](/foundations/f9/loss-functions/):
 
 $$
@@ -143,7 +143,7 @@ Three lessons in one table:
 The count table is not the only way to get $P(x_t \mid x_{t-1})$. Put a $V \times V$ weight matrix $W$
 in a network: look up row $W[x_{t-1}]$ (an [embedding lookup](/foundations/f10/embeddings/), equivalently
 one-hot times $W$), treat that row as <Term id="logit" text="logits" />, apply
-<Term id="softmax" /> and train with cross-entropy and gradient descent. The model learns logits whose
+<Term id="softmax" cap /> and train with cross-entropy and gradient descent. The model learns logits whose
 softmax matches the counts, so it converges to the same probabilities as the count table (a little weight
 decay plays the role of smoothing). The homework does exactly this in PyTorch.
 
@@ -178,7 +178,7 @@ in exactly this loop, just with a far better $P$.
 
 ### Temperature
 
-Sampling knobs reshape the distribution before drawing. <Term id="temperature" /> $T$ divides the logits
+Sampling knobs reshape the distribution before drawing. <Term id="temperature" cap /> $T$ divides the logits
 $\mathbf{z}$ before the softmax:
 
 $$

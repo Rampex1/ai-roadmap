@@ -14,7 +14,7 @@ import CodeExercise from '@/components/CodeExercise.astro';
 
 Train-serving skew compares training and inference inputs or their computation paths. Drift over time compares serving windows or another serving baseline. Both need explicit reference and current populations. Changing feature extraction can move distributions even if incoming cases are unchanged.
 
-<Term id="measure-input-drift" /> is zero for identical distributions and one when their supports do not overlap. Normalize each count histogram by its own total and use the union of categories. An absent category contributes probability zero. An empty histogram has no defined empirical distribution.
+<Term id="measure-input-drift" cap /> is zero for identical distributions and one when their supports do not overlap. Normalize each count histogram by its own total and use the union of categories. An absent category contributes probability zero. An empty histogram has no defined empirical distribution.
 
 Choose a stable binning scheme before comparing a numeric feature. Segment by channel and version to check whether a shift is a traffic mix effect. Input change is a diagnostic signal; delayed outcomes and qualitative review may be needed before inferring degraded decisions.
 

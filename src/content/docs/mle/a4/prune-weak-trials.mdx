@@ -12,7 +12,7 @@ goDeeper: mlflow-experiment-tracking
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-<Term id="trial-pruning" /> spends less compute on weak candidates. A pruning rule observes intermediate validation points, so compare trials at the same resource milestone. Epoch count can be misleading when batch size, data volume or compute per epoch differs. Choose a unit aligned with your resource constraint and log it.
+<Term id="trial-pruning" cap /> spends less compute on weak candidates. A pruning rule observes intermediate validation points, so compare trials at the same resource milestone. Epoch count can be misleading when batch size, data volume or compute per epoch differs. Choose a unit aligned with your resource constraint and log it.
 
 A median rule can stop a trial whose loss is worse than typical reference performance at that milestone. Give trials time to warm up and wait for enough comparable peers to make the rule meaningful. Slow starters can eventually win. Keep enough fully trained runs to check that the rule is not systematically eliminating a useful family.
 

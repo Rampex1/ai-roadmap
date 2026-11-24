@@ -17,7 +17,7 @@ Lessons 1 to 3 controlled what goes *into* a tool. This lesson controls what com
 
 ## Filter, then project, then cap
 
-A catalogue row might hold an ID, a title, an author, internal staff notes, a loan history and a visibility flag. The model needs perhaps two of those fields. <Term id="result-projection" /> means building each result from an explicit list of allowed fields, never by passing the whole row through and hoping the model ignores the rest. What you never send can't leak.
+A catalogue row might hold an ID, a title, an author, internal staff notes, a loan history and a visibility flag. The model needs perhaps two of those fields. <Term id="result-projection" cap /> means building each result from an explicit list of allowed fields, never by passing the whole row through and hoping the model ignores the rest. What you never send can't leak.
 
 Order matters:
 

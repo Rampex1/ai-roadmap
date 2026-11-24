@@ -51,7 +51,7 @@ high-dimensional data like ratings, locations or browsing histories, almost ever
 
 ## k-anonymity
 
-<Term id="k-anonymity" /> is a classic, simple test. A table is **k-anonymous** with respect to a set of
+<Term id="k-anonymity" cap /> is a classic, simple test. A table is **k-anonymous** with respect to a set of
 quasi-identifiers if every combination of their values that appears is shared by **at least $k$ rows**.
 Then any record links to at least $k$ people, not one. To compute $k$, group by the quasi-identifiers and
 take the smallest group size.
@@ -99,7 +99,7 @@ These weaknesses led researchers to a stronger, mathematical definition.
 
 ## Differential privacy: the intuition
 
-<Term id="differential-privacy" /> (DP) changes the question. Instead of making the **data** look
+<Term id="differential-privacy" cap /> (DP) changes the question. Instead of making the **data** look
 anonymous, it makes the **answers** computed from it barely depend on any single person. The promise:
 whatever an attacker learns from the output, they would have learned almost the same if your record had
 not been in the dataset at all. So joining the dataset carries little extra risk for you.

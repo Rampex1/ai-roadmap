@@ -14,7 +14,7 @@ import CodeExercise from '@/components/CodeExercise.astro';
 
 Before adding accelerators, measure representative work. Break a training step into ingestion, CPU preprocessing, transfers, forward and backward passes, and synchronization. Warm up first and synchronize asynchronous device work at timing boundaries. Otherwise a host timer can measure launch overhead while kernels are still running.
 
-<Term id="amdahls-law" /> is useful when an optimization changes only one part of a serial pipeline. If an iteration takes 100 ms and the improved stage occupies 40 ms, making that stage twice as fast gives 60 + 20 = 80 ms. Overall speedup is 100 / 80 = 1.25. Even eliminating it leaves the other 60 ms.
+<Term id="amdahls-law" cap /> is useful when an optimization changes only one part of a serial pipeline. If an iteration takes 100 ms and the improved stage occupies 40 ms, making that stage twice as fast gives 60 + 20 = 80 ms. Overall speedup is 100 / 80 = 1.25. Even eliminating it leaves the other 60 ms.
 
 The same arithmetic does not apply directly when stages overlap. A prefetched batch can arrive while an accelerator works on the previous one. In that case inspect the critical path and measure the steady-state rate after warming. Record batch size, workload, hardware and timing scope so others can reproduce the measurement.
 

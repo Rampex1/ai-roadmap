@@ -13,7 +13,7 @@ goDeeper: ollama-openai-compatibility
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-<Term id="streaming" /> lets an interface display the first generated text before the sentence or answer is complete. It usually improves perceived latency by moving the first display forward. The total number of decode steps can be unchanged.
+<Term id="streaming" cap /> lets an interface display the first generated text before the sentence or answer is complete. It usually improves perceived latency by moving the first display forward. The total number of decode steps can be unchanged.
 
 Keep network framing separate from application events. A single network read can end halfway through an event or contain several. Let a protocol parser or SDK reconstruct events, then translate them to your internal form.
 

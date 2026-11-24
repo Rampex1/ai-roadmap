@@ -12,7 +12,7 @@ goDeeper: model-cards-reporting
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-<Term id="human-review" /> is useful when predictions are uncertain, cases are outside the documented scope or a decision requires judgement. Forward enough permitted context for a reviewer to act. Define the response deadline and what happens if the reviewer is unavailable. A fallback that no one can operate is not a release control.
+<Term id="human-review" cap /> is useful when predictions are uncertain, cases are outside the documented scope or a decision requires judgement. Forward enough permitted context for a reviewer to act. Define the response deadline and what happens if the reviewer is unavailable. A fallback that no one can operate is not a release control.
 
 A confidence threshold changes both prediction risk and review load. Choose it on validation using a realistic workload, then assess how it affects relevant slices. Confidence is only useful when its meaning is stable enough for the task. A high score on an unsupported input does not make it eligible for automation.
 

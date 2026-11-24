@@ -14,7 +14,7 @@ import CodeExercise from '@/components/CodeExercise.astro';
 
 A load experiment needs an offered rate, request mix and a time window. A closed-loop benchmark starts new work only as previous requests finish, which can reduce the offered pressure when a service slows. An open-loop pattern can better expose how a queue behaves under an external arrival rate. Configure either workload carefully and report which was used.
 
-<Term id="goodput" /> can count successes within a latency objective per second, rather than counting every request the system accepted. A server with high raw throughput can still miss the objective. Show failures and slow successes as well as p95, and say whether latency percentiles are calculated only for completed calls.
+<Term id="goodput" cap /> can count successes within a latency objective per second, rather than counting every request the system accepted. A server with high raw throughput can still miss the objective. Show failures and slow successes as well as p95, and say whether latency percentiles are calculated only for completed calls.
 
 This exercise uses nearest-rank p95 over successes and treats timeouts as missing latencies. It also reports on-time success count. Use the measurement window in seconds to convert that count to goodput. A tiny test gives a coarse tail estimate even when the calculation is correct.
 

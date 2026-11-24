@@ -45,7 +45,7 @@ gradient is that simple too: each prediction is pushed towards its target in pro
 ## Classification: from logits to probabilities
 
 For $k$ classes the last layer outputs $k$ logits $\mathbf{z} = (z_1, \dots, z_k)$ per example. The
-<Term id="softmax" /> turns them into probabilities:
+<Term id="softmax" cap /> turns them into probabilities:
 
 $$
 p_j = \operatorname{softmax}(\mathbf{z})_j = \frac{e^{z_j}}{\sum_{c=1}^{k} e^{z_c}}

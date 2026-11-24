@@ -206,7 +206,7 @@ The generation loop calls the model once per new token, so why is it not painful
 
 **The KV cache.** In [causal attention](/foundations/f10/attention/) each position only looks backwards,
 so the keys and values computed for earlier tokens never change. Servers store them in a
-<Term id="kv-cache" /> and, for each new token, compute only that token's query, key and value and
+<Term id="kv-cache" cap /> and, for each new token, compute only that token's query, key and value and
 attend to the cached rest. Generating token $t+1$ therefore costs about the same as one position, not
 a full pass over all $t+1$ tokens.
 

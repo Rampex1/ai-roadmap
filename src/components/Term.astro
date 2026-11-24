@@ -1,8 +1,8 @@
 ---
 import { getEntry } from 'astro:content';
 
-interface Props { id: string; text?: string }
-const { id, text } = Astro.props;
+interface Props { id: string; text?: string; cap?: boolean }
+const { id, text, cap } = Astro.props;
 const entry = await getEntry('glossary', id);
 if (!entry) throw new Error(`<Term id="${id}">: no glossary entry "${id}"`);
 // Deterministic per-page id: count Term renders on this request.
@@ -12,7 +12,8 @@ const tipId = `term-tip-${id}-${n}`;
 // Keep proper nouns and words with inner capitals or acronyms (Bayes, Adam, DataFrame, NumPy, ReLU).
 const PROPER = /^(Bayes|Adam|Jupyter|Gauss|Gaussian|Laplace|Markov|Python|Git|GitHub|Bernoulli|Poisson|Euclid|Euclidean|Fourier|Kullback|Shannon|Transformer)\b/;
 const inline = (s: string) => (PROPER.test(s) || /^\S*[A-Z]\S*[A-Z]|^[A-Z]{2}|^\S[A-Z]/.test(s) ? s : s.charAt(0).toLowerCase() + s.slice(1));
-const label = text ?? inline(entry.data.term);
+// `cap` keeps the capital for a term that starts a sentence, list item or heading.
+const label = text ?? (cap ? entry.data.term : inline(entry.data.term));
 ---
 
 <a class="air-term" data-term={id} href={`/glossary/#${id}`} aria-describedby={tipId}

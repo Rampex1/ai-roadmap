@@ -12,7 +12,7 @@ goDeeper: otel-genai-conventions
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-<Term id="least-privilege" /> matters when an assistant has tools or retrieval. A model response can propose a tool name and query. The application derives the user identity, allowed operations and authorized collection from trusted context and checks them before invoking a tool. A search result, attachment or generated message cannot expand that authority.
+<Term id="least-privilege" cap /> matters when an assistant has tools or retrieval. A model response can propose a tool name and query. The application derives the user identity, allowed operations and authorized collection from trusted context and checks them before invoking a tool. A search result, attachment or generated message cannot expand that authority.
 
 Untrusted text can contain instructions directed at the assistant. This is the boundary relevant to indirect prompt injection. Use application-side permission checks and restrict tool effects. Keep sensitive data out of contexts where it is not required. Labels and delimiters can help the model interpret content, while permission enforcement remains outside the prompt.
 

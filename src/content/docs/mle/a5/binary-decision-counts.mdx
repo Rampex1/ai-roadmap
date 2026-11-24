@@ -14,7 +14,7 @@ import CodeExercise from '@/components/CodeExercise.astro';
 
 Start with the decision the model supports. In urgent ticket routing, a false negative is an urgent ticket assigned standard handling. A false positive routes a standard ticket to the urgent queue. These errors use different operational resources and can have different consequences.
 
-<Term id="binary-decision-counts" /> are sufficient for many threshold metrics. Precision divides true positives by predicted positives. Recall divides true positives by actual positives. If a denominator is zero, report the metric as undefined and show the counts. Accuracy can look high on an imbalanced workload when a model never detects a rare positive.
+<Term id="binary-decision-counts" cap /> are sufficient for many threshold metrics. Precision divides true positives by predicted positives. Recall divides true positives by actual positives. If a denominator is zero, report the metric as undefined and show the counts. Accuracy can look high on an imbalanced workload when a model never detects a rare positive.
 
 State what constitutes one example, where labels come from and whether pending outcomes were excluded. Keep attempted and labelled counts in the report so that a move in coverage is visible. The fixture uses known 0/1 labels and does not handle abstention.
 

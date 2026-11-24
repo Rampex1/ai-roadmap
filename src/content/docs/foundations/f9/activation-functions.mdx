@@ -31,7 +31,7 @@ pointless.
 
 The sigmoid derivative was derived in [F4](/foundations/f4/chain-rule/). The tanh derivative has the
 same pleasant form: once the forward pass has computed $t = \tanh z$, the slope is just $1 - t^2$.
-<Term id="relu" /> (rectified linear unit) is the simplest: it lets positive numbers through and
+<Term id="relu" cap /> (rectified linear unit) is the simplest: it lets positive numbers through and
 replaces negative ones with 0. Its slope is 0 or 1. At exactly $z = 0$ it has no derivative; code uses 0
 there by convention, and it makes no practical difference.
 

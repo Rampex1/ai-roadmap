@@ -16,7 +16,7 @@ In the [last lesson](/foundations/f9/backpropagation/) you wrote every backward 
 for two layers, but every change to the network means re-deriving the backward pass. **Automatic
 differentiation** removes that chore: each operation records what it did, and a generic `backward()`
 walks the record in reverse. This lesson builds a complete reverse-mode
-<Term id="automatic-differentiation" /> engine in about 50 lines. It works on single numbers rather than
+<Term id="automatic-differentiation" cap /> engine in about 50 lines. It works on single numbers rather than
 arrays, which makes every step visible.
 
 :::note[Credit]

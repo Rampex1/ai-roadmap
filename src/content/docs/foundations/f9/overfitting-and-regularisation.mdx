@@ -131,7 +131,7 @@ points. Meanwhile the validation loss bottoms out early and then **rises** to th
 The network is bending its boundary around individual noisy points and becoming confidently wrong on
 new ones. The **gap** between training and validation loss is the thing to watch.
 
-## L2 regularisation (weight decay)
+## L2 regularisation
 
 Large weights let a network make sharp, confident turns. L2 <Term id="regularisation" /> adds a penalty
 on their size to the loss:
@@ -147,12 +147,14 @@ $$
 W \leftarrow W - \eta\,(dW + \lambda W) = (1 - \eta\lambda)\,W - \eta\,dW
 $$
 
-Every step shrinks the weights by a factor $1 - \eta\lambda$ before the usual update, which is why this is
-also called **weight decay**. In the code it is the two lines marked `L2 penalty` and `+ lam * W`.
+With plain SGD, the factor $1 - \eta\lambda$ shrinks the weights before the data-gradient update.
+That is equivalent to applying **weight decay** directly. The equivalence need not hold for adaptive
+optimisers. The [Research lesson on decoupled weight decay](/research/b4/decoupled-weight-decay/) shows
+how AdamW handles the two terms. In the code, look for `L2 penalty` and `+ lam * W`.
 
 ## Dropout
 
-<Term id="dropout" /> attacks overfitting differently. During training, each hidden unit is switched off
+<Term id="dropout" cap /> attacks overfitting differently. During training, each hidden unit is switched off
 (set to 0) at random with probability $p$, independently for every example and every step. The network
 can never rely on any one unit being present, so it spreads what it knows across many units instead of
 building fragile combinations that only fit the training points. A common intuition: each step trains a

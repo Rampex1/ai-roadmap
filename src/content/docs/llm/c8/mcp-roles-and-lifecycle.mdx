@@ -12,7 +12,7 @@ goDeeper: mcp-python-sdk
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-In C6, the application registered tools directly. <Term id="model-context-protocol" /> adds a protocol boundary so applications and servers can discover supported primitives and exchange requests. A host is the application the user interacts with. It manages client sessions and decides what to show to the model. Each client session communicates with a server that exposes capabilities.
+In C6, the application registered tools directly. <Term id="model-context-protocol" cap /> adds a protocol boundary so applications and servers can discover supported primitives and exchange requests. A host is the application the user interacts with. It manages client sessions and decides what to show to the model. Each client session communicates with a server that exposes capabilities.
 
 A session starts with initialization. The parties agree on a protocol version and exchange capabilities. After the client signals initialization is complete, it can make requests appropriate to those capabilities. For example, use tools/list after the server advertises tools. An empty tools capability object still advertises tools. It simply declares no optional fields under that capability.
 

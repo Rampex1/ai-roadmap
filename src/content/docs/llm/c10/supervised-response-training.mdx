@@ -12,7 +12,7 @@ goDeeper: hf-trl-peft
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-<Term id="supervised-fine-tuning" /> teaches a model how to respond from demonstrations, such as formatting a library ticket or using an approved tone. In causal language-model training, each position predicts the next token. Use the same chat template at training and inference. Inspect a decoded sample before training so role boundaries and end-of-turn markers match your target format.
+<Term id="supervised-fine-tuning" cap /> teaches a model how to respond from demonstrations, such as formatting a library ticket or using an approved tone. In causal language-model training, each position predicts the next token. Use the same chat template at training and inference. Inspect a decoded sample before training so role boundaries and end-of-turn markers match your target format.
 
 For response-only loss, mask prompt tokens in the labels. They remain in the input so the assistant can attend to them. The target assistant completion, including the intended end token, contributes loss. Many causal-model training APIs handle the shift internally. Verify that rather than manually shifting labels twice. Padding tokens should not contribute to the loss.
 

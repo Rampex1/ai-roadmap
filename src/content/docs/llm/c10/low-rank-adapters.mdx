@@ -12,7 +12,7 @@ goDeeper: hf-trl-peft
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-A frozen linear map with weight W sends an input vector x to Wx. <Term id="lora" /> adds a learned update: output equals Wx plus (alpha divided by r) times B(Ax). For input width d, output width m and adapter rank r, A has shape r by d and B has shape m by r. The update uses r times (d plus m) trainable parameters instead of m times d for a full trainable matrix, ignoring bias.
+A frozen linear map with weight W sends an input vector x to Wx. <Term id="lora" cap /> adds a learned update: output equals Wx plus (alpha divided by r) times B(Ax). For input width d, output width m and adapter rank r, A has shape r by d and B has shape m by r. The update uses r times (d plus m) trainable parameters instead of m times d for a full trainable matrix, ignoring bias.
 
 One common initialization makes B zero and A small and random. Then the initial update is zero, while B can still receive gradients through the nonzero Ax. If both factors start exactly zero, each factor's gradient through the product is initially zero. The base weights remain frozen, but the forward pass and intermediate activations still require memory.
 

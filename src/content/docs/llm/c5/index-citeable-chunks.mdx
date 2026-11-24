@@ -13,7 +13,7 @@ goDeeper: lewis-rag-paper
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-A language model only knows what was in its training data plus what you put in the prompt. A library's loan policy changes every year, and retraining a model each time is out of the question. <Term id="retrieval-augmented-generation" /> (RAG) solves this by looking up relevant passages at question time and placing them in the prompt as evidence. The model weights never change. Only the documents do.
+A language model only knows what was in its training data plus what you put in the prompt. A library's loan policy changes every year, and retraining a model each time is out of the question. <Term id="retrieval-augmented-generation" cap /> (RAG) solves this by looking up relevant passages at question time and placing them in the prompt as evidence. The model weights never change. Only the documents do.
 
 This module builds a RAG pipeline in four steps: this lesson indexes documents, the next one retrieves candidates, the third packs evidence and checks citations, and the last one measures where things went wrong.
 

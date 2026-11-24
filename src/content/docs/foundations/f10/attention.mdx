@@ -17,7 +17,7 @@ import attnImg from '@/assets/diagrams/f10-attention.svg';
 
 The bigram model of the [previous lesson](/foundations/f10/language-models/) predicts from one token
 back. To predict the next word of "the cat that chased the dogs was ___" a model must look much further:
-the verb agrees with "cat", six words earlier. <Term id="attention" /> is the mechanism that lets every
+the verb agrees with "cat", six words earlier. <Term id="attention" cap /> is the mechanism that lets every
 position gather information from any earlier position, with weights that depend on the content. It is the
 core of the transformer, introduced in the 2017 paper "Attention Is All You Need".
 
@@ -119,7 +119,7 @@ print(A @ V)                      # outputs, (3, 2)
 Token 2's query $(0, 2)$ matches keys 2 and 3 equally, so it takes 44.6% from each and only 10.8% from
 token 1.
 
-### Why divide by $\sqrt{d_k}$?
+### Why scale the dot products?
 
 If the entries of $\mathbf{q}$ and $\mathbf{k}$ are roughly independent with mean 0 and variance 1, their
 dot product is a sum of $d_k$ such products, so its variance is about $d_k$ and its standard deviation
@@ -142,8 +142,9 @@ print(softmax(np.array([8.0, 0.0, -8.0])), softmax(np.array([1.0, 0.0, -1.0])))
 [1. 0. 0.] [0.665 0.245 0.09 ]
 ```
 
-Unscaled scores with a spread of 8 or more push the softmax to one-hot weights. A saturated softmax has
-gradients near zero, so learning stalls, the same problem as a saturated sigmoid in
+In this example the largest unscaled score is far above the next largest, so softmax puts nearly all
+the weight on one token. A saturated softmax has gradients near zero, so learning can slow down,
+as with a saturated sigmoid in
 [F9](/foundations/f9/activation-functions/).
 
 ## The causal mask
@@ -176,9 +177,10 @@ print(A @ V)
 
 Token 1 can only see itself, so its output is its own value. Token 3 sees everything and is unchanged.
 
-The mask has a second benefit. One training sequence of $T$ tokens gives $T$ prediction problems
-(predict token 2 from token 1, token 3 from tokens 1 and 2, and so on), and with the mask all of them are
-computed in parallel in one pass, with no position cheating.
+The mask has a second benefit. A sequence of $T$ tokens supplies $T-1$ next-token targets within that
+sequence (predict token 2 from token 1, token 3 from tokens 1 and 2, and so on). An additional target
+after the sequence, such as an end-of-sequence token, gives $T$ targets. The mask lets us compute all
+these predictions in parallel in one pass without revealing the targets.
 
 ## Multi-head attention
 

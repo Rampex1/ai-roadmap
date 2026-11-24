@@ -12,7 +12,7 @@ goDeeper: pytest-fixtures-reference
 import Term from '@/components/Term.astro';
 import CodeExercise from '@/components/CodeExercise.astro';
 
-<Term id="prediction-parity-tests" /> matters when converting a trained model to another runtime. Test comparable scores, shapes and row order. Floating-point differences are normal; choose tolerances suited to the runtime and downstream decision. Check decisions separately around a threshold, where a tiny score change can flip a label.
+<Term id="prediction-parity-tests" cap /> matters when converting a trained model to another runtime. Test comparable scores, shapes and row order. Floating-point differences are normal; choose tolerances suited to the runtime and downstream decision. Check decisions separately around a threshold, where a tiny score change can flip a label.
 
 Relative tolerance scales with magnitude. Absolute tolerance is important near zero. Reject nonfinite outputs unless the contract explicitly supports them. A list comparison using zip alone can hide extra values because it silently truncates to the shorter input.
 

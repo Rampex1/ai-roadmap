@@ -160,3 +160,14 @@ describe('quiz values must be text', () => {
     expect(checkContent(root).join('\n')).toMatch(/options\[0\]\.text must be text/);
   });
 });
+
+describe('Term at the start of a sentence', () => {
+  it('reports a bare Term that starts a sentence', () => {
+    const root = variant((r) => edit(r, 'docs/demo/m1/intro.mdx', (s) => s + '\nIt works. <Term id="widget" /> is next.\n'));
+    expect(checkContent(root).join('\n')).toMatch(/<Term id="widget" \/> starts a sentence/);
+  });
+  it('accepts cap or text at the start, and a bare Term mid-sentence', () => {
+    const root = variant((r) => edit(r, 'docs/demo/m1/intro.mdx', (s) => s + '\nIt works. <Term id="widget" cap /> is next. A <Term id="widget" /> too.\n- <Term id="widget" text="Widgets" /> again.\n'));
+    expect(checkContent(root).join('\n')).not.toMatch(/starts a sentence/);
+  });
+});

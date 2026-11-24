@@ -41,7 +41,7 @@ More evidence is not always better. Every extra passage costs money and latency,
 
 ## Two different citation checks
 
-Ask the model to cite source IDs after each claim. <Term id="citation-grounding" /> then needs two separate checks.
+Ask the model to cite source IDs after each claim. <Term id="citation-grounding" cap /> then needs two separate checks.
 
 1. **Membership.** Every cited ID must be one you supplied in this request. This is exact code: compare the cited IDs with the packed IDs. A model that cites `loan-policy@r1#16-32` when only revision 2 was supplied has invented or remembered a source, and that answer fails.
 2. **Support.** The cited passage must actually state what the claim says. If the answer reads "you may renew four times [loan-policy@r2#16-32]" and the passage says three, membership passes and support fails. Checking support needs a person or a calibrated judge model reading the claim next to the passage (C9 covers judges). A valid-looking ID proves nothing about content.

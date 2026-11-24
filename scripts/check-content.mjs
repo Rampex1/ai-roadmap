@@ -120,6 +120,9 @@ export function checkContent(root) {
       if (!exercises.has(x)) err(file, `<CodeExercise id="${x}"> does not exist`);
     for (const [, t] of body.matchAll(/<Term\b[^>]*\bid=["']([^"']+)["']/g))
       if (!glossary.has(t)) err(file, `<Term id="${t}"> is not a glossary entry`);
+    // Term lowercases its label inline; at the start of a sentence, list item or heading it needs `cap` or `text`.
+    for (const [, t] of body.matchAll(/(?:^|[.!?] +|^ *[-*] +|^#+ +)<Term id="([^"]+)" *\/>/gm))
+      err(file, `<Term id="${t}" /> starts a sentence — add cap (or text="...")`);
   }
 
   // Ordering must be unambiguous: module order unique per course, lesson order unique per module.

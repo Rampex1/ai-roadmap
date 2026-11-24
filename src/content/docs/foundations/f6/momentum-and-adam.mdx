@@ -31,7 +31,7 @@ the three you will meet most: momentum, RMSProp and Adam.
 Look at the zigzag again. In the steep $y$ direction, consecutive gradients point in *opposite*
 directions. In the flat $x$ direction they all point the *same* way. If we averaged the recent
 gradients, the $y$ parts would cancel and the $x$ parts would add up. That is exactly what
-<Term id="momentum" /> does. It keeps a running "velocity" $\mathbf{v}$:
+<Term id="momentum" cap /> does. It keeps a running "velocity" $\mathbf{v}$:
 
 $$
 \mathbf{v}_{t+1} = \beta\,\mathbf{v}_t + \nabla L(\boldsymbol{\theta}_t), \qquad
