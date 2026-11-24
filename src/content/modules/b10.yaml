@@ -4,5 +4,7 @@ title: "Self-supervised and multimodal learning"
 order: 11
 prereqs: ["b9"]
 objectives:
-  - "Explain the core ideas of self-supervised and multimodal learning"
-  - "Derive or implement the key methods of self-supervised and multimodal learning"
+  - Derive stable contrastive objectives
+  - Train paired image and text representations conceptually in both directions
+  - Build masked reconstruction examples
+  - Evaluate retrieval under multiple valid matches

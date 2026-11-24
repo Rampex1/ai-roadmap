@@ -1,0 +1,94 @@
+items:
+  - id: b10-cross-modal-recall-01
+    type: mcq
+    prompt: How many hits can one query contribute?
+    explanation: The metric checks whether any match occurs.
+    options:
+      - text: At most one
+        why: The metric checks whether any match occurs.
+        correct: true
+      - text: One per relevant document found
+        why: That is a different metric.
+      - text: Always k
+        why: A query can miss all relevant IDs.
+  - id: b10-cross-modal-recall-02
+    type: mcq
+    prompt: What does an empty relevance set mean in this fixture?
+    explanation: It is excluded from judged count.
+    options:
+      - text: An automatic miss
+        why: The fixture explicitly excludes it.
+      - text: No usable judgement
+        why: It is excluded from judged count.
+        correct: true
+      - text: An automatic hit
+        why: It supplies no matching ID.
+  - id: b10-cross-modal-recall-03
+    type: mcq
+    prompt: Why report both directions?
+    explanation: One direction need not predict the other.
+    options:
+      - text: The results must be identical by definition
+        why: Rankings can differ.
+      - text: Queries and candidates can have asymmetric difficulty
+        why: One direction need not predict the other.
+        correct: true
+      - text: It replaces held-out data
+        why: Protocol remains separate.
+  - id: b10-cross-modal-recall-04
+    type: mcq
+    prompt: What does high hit-based recall omit?
+    explanation: It counts only any-match success.
+    options:
+      - text: How many relevant items were found beyond the first hit
+        why: It counts only any-match success.
+        correct: true
+      - text: Whether any relevant item appears in the cutoff
+        why: That is precisely measured.
+      - text: The chosen cutoff when it is recorded
+        why: The value can be stated explicitly.
+  - id: b10-cross-modal-recall-05
+    type: multi
+    prompt: Which should be reported?
+    explanation: It controls the retrieval cutoff. It is the denominator.
+    options:
+      - text: The value of k
+        why: It controls the retrieval cutoff.
+        correct: true
+      - text: Judged query count
+        why: It is the denominator.
+        correct: true
+      - text: Only the largest raw similarity
+        why: That does not measure retrieval.
+  - id: b10-cross-modal-recall-06
+    type: cloze
+    prompt: Whether any relevant ID appears in top-k is a query-level ______.
+    accept:
+      - hit
+    explanation: The individual query contributes one result.
+  - id: b10-cross-modal-recall-07
+    type: order
+    prompt: Order a retrieval evaluation.
+    items:
+      - Freeze queries and relevance labels
+      - Rank candidates with a stable tie rule
+      - Check the first k for each judged query
+      - Report hits and judged counts for both directions
+    explanation: The counts depend on frozen rankings and labels.
+  - id: b10-cross-modal-recall-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def retrieval_hits(rows,k):
+          if k<=0:
+              raise ValueError("k must be positive")
+          judged=hits=0
+          for ranked,relevant in rows:
+              if relevant:
+                  judged+=1
+                  hits+=bool(set(ranked[:k])&set(relevant))
+          return hits,judged
+
+      print(retrieval_hits([(["a", "a"], {"a"})], 2))
+    answer: (1, 1)
+    explanation: Even repeated returned IDs yield just one hit.

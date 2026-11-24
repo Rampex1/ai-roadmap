@@ -1,0 +1,92 @@
+items:
+  - id: b10-contrastive-logit-loss-01
+    type: mcq
+    prompt: What supplies labels in a two-view image setup?
+    explanation: Both came from the same source.
+    options:
+      - text: Known correspondence between views
+        why: Both came from the same source.
+        correct: true
+      - text: The sign of the logit
+        why: Scores are outputs, not labels.
+      - text: Only a human category label
+        why: The pair can be generated automatically.
+  - id: b10-contrastive-logit-loss-02
+    type: mcq
+    prompt: What is the loss for all equal scores over K candidates?
+    explanation: The positive probability is 1/K.
+    options:
+      - text: ln(K)
+        why: The positive probability is 1/K.
+        correct: true
+      - text: K squared
+        why: This does not follow from log probability.
+      - text: Zero for every K
+        why: Zero requires probability one.
+  - id: b10-contrastive-logit-loss-03
+    type: mcq
+    prompt: What does lower temperature do?
+    explanation: Scores are divided by a smaller number.
+    options:
+      - text: Remove all negatives
+        why: They remain in the denominator.
+      - text: Guarantee all positives are correct
+        why: Labels still depend on pairing.
+      - text: Sharpen relative logit differences
+        why: Scores are divided by a smaller number.
+        correct: true
+  - id: b10-contrastive-logit-loss-04
+    type: mcq
+    prompt: Why can an in-batch negative be misleading?
+    explanation: Batch membership alone does not prove dissimilarity.
+    options:
+      - text: A negative must always be from a different modality
+        why: Contrastive learning can use a single modality.
+      - text: Every negative necessarily has score zero
+        why: Scores depend on embeddings.
+      - text: It can share relevant semantics or duplicate the source
+        why: Batch membership alone does not prove dissimilarity.
+        correct: true
+  - id: b10-contrastive-logit-loss-05
+    type: multi
+    prompt: Which need to be specified?
+    explanation: They define the intended invariances. Both affect the loss.
+    options:
+      - text: How positive views are constructed
+        why: They define the intended invariances.
+        correct: true
+      - text: Only the filename of the model
+        why: It does not determine the objective.
+      - text: Temperature and candidate set
+        why: Both affect the loss.
+        correct: true
+  - id: b10-contrastive-logit-loss-06
+    type: cloze
+    prompt: The known matching example is the ______ case.
+    accept:
+      - positive
+    explanation: The loss rewards assigning the match probability.
+  - id: b10-contrastive-logit-loss-07
+    type: order
+    prompt: Order one stable contrastive calculation.
+    items:
+      - Construct candidate similarities
+      - Shift and scale scores
+      - Normalize exponentials
+      - Take negative log probability of the positive
+    explanation: The positive score competes with all candidates.
+  - id: b10-contrastive-logit-loss-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def contrastive_row(similarities,positive,temperature):
+          from math import exp,log
+          if not 0<=positive<len(similarities) or temperature<=0:
+              raise ValueError("invalid contrastive inputs")
+          high=max(similarities)
+          logits=[(score-high)/temperature for score in similarities]
+          return log(sum(exp(value) for value in logits))-logits[positive]
+
+      print(round(contrastive_row([0, 0], 1, 1), 3))
+    answer: "0.693"
+    explanation: A uniform distribution over two candidates gives ln(2).

@@ -1,0 +1,4 @@
+term: "Masked reconstruction"
+short: "Learning by predicting hidden parts of the input using only the declared visible context."
+body: "Selected input positions are replaced (for example with a mask token, or dropped as image patches), and the model predicts their original values. As in BERT and MAE, the loss is computed only on those masked positions, never on visible tokens or padding."
+related: ["mask-padded-token-loss","causal-mask"]

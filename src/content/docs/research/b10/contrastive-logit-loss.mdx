@@ -1,0 +1,45 @@
+---
+title: Derive a contrastive loss for one anchor
+module: b10
+order: 1
+estMinutes: 8
+objectives:
+  - Identify a positive and valid negatives
+  - Compute stable log-softmax with temperature
+goDeeper: simclr-paper
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="contrastive-logit-loss" /> creates supervision from the data. For example, two views of one image can form a positive pair when cropping or jitter preserves the properties you want the representation to learn. Views of other images often supply negatives. Those are a training assumption: two nominal negatives might share the same object class, or even duplicate the source.
+
+For one anchor, divide similarities by a positive temperature, normalize over the candidate list and take negative log probability of the correct match. When using unit vectors, dot product equals cosine similarity. Subtract the largest scaled score before exponentiating. The loss equals ln(number of candidates) for a uniform row, independent of which candidate is marked positive.
+
+A small temperature sharpens differences and can amplify mislabeled negatives. Report batch composition, positive construction and normalization alongside the loss.
+
+## Worked example
+
+Equal similarities assign equal probability to all candidates.
+
+```python
+def contrastive_row(similarities,positive,temperature):
+    from math import exp,log
+    if not 0<=positive<len(similarities) or temperature<=0:
+        raise ValueError("invalid contrastive inputs")
+    high=max(similarities)
+    logits=[(score-high)/temperature for score in similarities]
+    return log(sum(exp(value) for value in logits))-logits[positive]
+
+print(round(contrastive_row([1,1,1],0,0.1),6))
+```
+
+```text title="Output"
+1.098612
+```
+
+Inspect what your sampling process calls a positive or negative.
+
+## Try it
+
+<CodeExercise id="b10-contrastive-logit-loss-01" />

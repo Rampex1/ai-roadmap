@@ -1,0 +1,4 @@
+term: "Hit-based recall at k"
+short: "The fraction of judged queries with at least one relevant item in the first k results."
+body: "A query scores a hit if any relevant item ranks in its top k. Recall@k is hits divided by judged queries, reported separately for each retrieval direction, along with the tie-breaking rule."
+related: ["recall","cross-modal-embedding"]

@@ -1,0 +1,47 @@
+---
+title: Evaluate retrieval with multiple valid matches
+module: b10
+order: 4
+estMinutes: 8
+objectives:
+  - Compute hit-based recall at k
+  - Define missing judgements and deterministic ties
+goDeeper: clip-paper
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Evaluate image-to-text and text-to-image retrieval separately, on data disjoint from pretraining and selection when feasible. Rankings should be reproducible, including tie-breaking. Set a query scope and reference labels before inspecting model outputs. A caption can be valid for several images.
+
+In the common <Term id="cross-modal-recall" /> convention, each judged query contributes one hit if at least one relevant ID appears among its first k results. This differs from per-query fraction of all relevant items retrieved. Report the convention and count of queries without relevance labels. The fixture excludes those queries from the denominator.
+
+Slice by conditions that matter, such as visually similar but semantically different candidates. Retrieval quality can reveal representation failure even while a classification probe improves.
+
+## Worked example
+
+Only the second judged query has a top-one hit.
+
+```python
+def retrieval_hits(rows,k):
+    if k<=0:
+        raise ValueError("k must be positive")
+    judged=hits=0
+    for ranked,relevant in rows:
+        if relevant:
+            judged+=1
+            hits+=bool(set(ranked[:k])&set(relevant))
+    return hits,judged
+
+print(retrieval_hits([(["a","b"],{"b","c"}),(["a"],{"a"}),(["z"],set())],1))
+```
+
+```text title="Output"
+(1, 2)
+```
+
+Keep labelled denominators and the exact metric definition in results.
+
+## Try it
+
+<CodeExercise id="b10-cross-modal-recall-01" />

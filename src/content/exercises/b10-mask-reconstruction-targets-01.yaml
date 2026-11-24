@@ -1,0 +1,30 @@
+id: b10-mask-reconstruction-targets-01
+lesson: research/b10/mask-reconstruction-targets
+title: Implement mask reconstruction targets
+prompt: Implement reconstruction_example with aligned tokens and Boolean hide lists and distinct mask and padding IDs. Replace only flagged nonpadding positions. Return a fresh token list and increasing scored indices. Reject length mismatch.
+starter: |
+  def reconstruction_example(tokens,hide,mask_id,pad_id):
+      raise NotImplementedError
+solution: |
+  def reconstruction_example(tokens,hide,mask_id,pad_id):
+      if len(tokens)!=len(hide):
+          raise ValueError("unaligned masks")
+      eligible=[i for i,token in enumerate(tokens) if hide[i] and token!=pad_id]
+      encoded=list(tokens)
+      for i in eligible:
+          encoded[i]=mask_id
+      return encoded,eligible
+tests: |
+  tokens=[7,8,0]
+  assert reconstruction_example(tokens,[True,False,True],99,0)==([99,8,0],[0])
+  assert tokens==[7,8,0]
+  assert reconstruction_example([5,6],[False,False],99,0)==([5,6],[])
+  assert reconstruction_example([],[],99,0)==([],[])
+  try:
+      reconstruction_example([5],[],99,0)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject misalignment")
+hints:
+  - Do not allow a padding token to become a scored target.

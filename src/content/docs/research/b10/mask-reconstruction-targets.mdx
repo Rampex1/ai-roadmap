@@ -1,0 +1,46 @@
+---
+title: Build a masked reconstruction objective
+module: b10
+order: 3
+estMinutes: 8
+objectives:
+  - Separate visibility and reconstruction targets
+  - Prevent padding from contributing to loss
+goDeeper: mae-paper
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+<Term id="mask-reconstruction-targets" cap /> draws supervision from values you deliberately hide. For a text example the hidden target may be an original token. For a vision example it might be an image patch. Choose the masking process to make prediction useful: hiding a value while exposing a direct copy allows a shortcut.
+
+Keep three concepts separate: original target, masked input and the loss eligibility flag. Padding is normally neither evidence nor a reconstruction target. A bidirectional encoder can read visible context on both sides if the objective allows it. That differs from next-token pretraining.
+
+The fixture uses distinct mask and pad IDs. The hidden flags are supplied explicitly. It returns an input with masks inserted and the indices to score against the original sequence.
+
+## Worked example
+
+The final position is flagged but is padding.
+
+```python
+def reconstruction_example(tokens,hide,mask_id,pad_id):
+    if len(tokens)!=len(hide):
+        raise ValueError("unaligned masks")
+    eligible=[i for i,token in enumerate(tokens) if hide[i] and token!=pad_id]
+    encoded=list(tokens)
+    for i in eligible:
+        encoded[i]=mask_id
+    return encoded,eligible
+
+print(reconstruction_example([7,8,0],[True,False,True],99,0))
+```
+
+```text title="Output"
+([99, 8, 0], [0])
+```
+
+Verify both the visible input and the positions that contribute to the objective.
+
+## Try it
+
+<CodeExercise id="b10-mask-reconstruction-targets-01" />

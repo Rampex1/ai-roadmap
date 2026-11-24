@@ -1,0 +1,22 @@
+id: b10-representation-lab
+module: b10
+kind: homework
+title: Check training and retrieval for paired representations
+brief: |-
+  Work with small synthetic similarities and masked examples. No external model or dataset is required.
+
+  1. Calculate per-anchor contrastive loss.
+  2. Compare both embedding directions.
+  3. Flag eligible reconstruction targets.
+  4. Measure retrieval hits at a fixed cutoff.
+  5. Compare symmetric training loss with directional retrieval.
+
+  Explain how a false negative can affect the training loss while a richer relevance set improves retrieval evaluation.
+notebook: /homework/b10-representation-lab.ipynb
+rubric:
+  - Loss remains finite under large common shifts.
+  - Rows and columns keep correct pair alignment.
+  - Padding is never reconstructed.
+  - Retrieval denominators and cutoffs are explicit.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

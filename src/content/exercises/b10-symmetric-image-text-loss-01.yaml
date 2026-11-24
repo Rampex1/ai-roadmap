@@ -1,0 +1,39 @@
+id: b10-symmetric-image-text-loss-01
+lesson: research/b10/symmetric-image-text-loss
+title: Implement symmetric image text loss
+prompt: Implement symmetric_loss for a nonempty square similarity matrix with diagonal positives. Use the stable contrastive formula from the previous lesson in both directions and average all 2N losses.
+starter: |
+  def symmetric_loss(matrix,temperature):
+      raise NotImplementedError
+solution: |
+  def symmetric_loss(matrix,temperature):
+      if not matrix or any(len(row)!=len(matrix) for row in matrix):
+          raise ValueError("expected a nonempty square batch")
+      from math import exp,log
+      if temperature<=0:
+          raise ValueError("temperature must be positive")
+      def contrastive_row(scores,positive,temperature):
+          high=max(scores)
+          scaled=[(score-high)/temperature for score in scores]
+          return log(sum(exp(value) for value in scaled))-scaled[positive]
+      n=len(matrix)
+      row_losses=[contrastive_row(row,i,temperature) for i,row in enumerate(matrix)]
+      column_losses=[contrastive_row(list(column),i,temperature) for i,column in enumerate(zip(*matrix))]
+      return sum(row_losses+column_losses)/(2*n)
+tests: |
+  from math import exp, log, log1p
+  assert abs(symmetric_loss([[0,0],[0,0]],1)-log(2))<1e-12
+  assert symmetric_loss([[2,0],[0,2]],1)<symmetric_loss([[0,2],[2,0]],1)
+  a=[[2,1],[0,3]]
+  assert abs(symmetric_loss(a,1)-symmetric_loss(list(zip(*a)),1))<1e-12
+  expected=sum(log1p(exp(-gap)) for gap in [1,3,2,2])/4
+  assert abs(symmetric_loss(a,1)-expected)<1e-12
+  assert abs(symmetric_loss(a,0.5)-sum(log1p(exp(-2*g)) for g in [1,3,2,2])/4)<1e-12
+  try:
+      symmetric_loss([[1,2]],1)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject nonsquare batch")
+hints:
+  - The same index is positive along the corresponding row and column.

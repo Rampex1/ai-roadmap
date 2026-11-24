@@ -1,0 +1,4 @@
+term: "Contrastive loss"
+short: "A training objective that asks an anchor to assign more similarity to a matching example than to competing examples."
+body: "For an anchor with candidate similarities s_j and temperature τ, the loss is −log(exp(s_pos/τ) / Σ_j exp(s_j/τ)): cross-entropy that treats the known positive as the correct class among the candidates. SimCLR-style InfoNCE uses cosine similarities of L2-normalised embeddings."
+related: ["softmax","embedding"]

@@ -1,0 +1,100 @@
+items:
+  - id: b10-symmetric-image-text-loss-01
+    type: mcq
+    prompt: What does one row represent?
+    explanation: Rows anchor image-to-text retrieval.
+    options:
+      - text: All images compared with one caption
+        why: That is one column.
+      - text: One image compared with every caption
+        why: Rows anchor image-to-text retrieval.
+        correct: true
+      - text: Only already correct matches
+        why: The row includes competitors.
+  - id: b10-symmetric-image-text-loss-02
+    type: mcq
+    prompt: How many losses are averaged for N pairs?
+    explanation: Each image and each caption anchors a row loss.
+    options:
+      - text: 2N
+        why: Each image and each caption anchors a row loss.
+        correct: true
+      - text: N squared
+        why: Each entry is a score, not a complete row loss.
+      - text: Only one
+        why: The loss aggregates anchors.
+  - id: b10-symmetric-image-text-loss-03
+    type: mcq
+    prompt: Why require identical pair order?
+    explanation: Reordering one modality changes label identity.
+    options:
+      - text: The positives are assumed to lie on the diagonal
+        why: Reordering one modality changes label identity.
+        correct: true
+      - text: Matrix multiplication changes its dtype otherwise
+        why: Ordering is semantic.
+      - text: The temperature equals the number of pairs
+        why: Temperature is independent.
+  - id: b10-symmetric-image-text-loss-04
+    type: mcq
+    prompt: What can duplicate valid matches require?
+    explanation: Treating valid matches as negative is misleading.
+    options:
+      - text: Ignoring one retrieval direction always
+        why: That does not solve the pairing assumption.
+      - text: An unconditional ban on duplicate words
+        why: Duplicates in a caption are a different issue.
+      - text: A multiple-positive objective or suitable deduplication
+        why: Treating valid matches as negative is misleading.
+        correct: true
+  - id: b10-symmetric-image-text-loss-05
+    type: multi
+    prompt: Which can diagnose a pairing bug?
+    explanation: This verifies label alignment. The correct loss should improve.
+    options:
+      - text: Check anchor-to-target IDs per direction
+        why: This verifies label alignment.
+        correct: true
+      - text: Test a matrix with strong known matches
+        why: The correct loss should improve.
+        correct: true
+      - text: Only count model layers
+        why: That does not validate pairs.
+  - id: b10-symmetric-image-text-loss-06
+    type: cloze
+    prompt: A symmetric matrix-based training loss scores rows and ______.
+    accept:
+      - columns
+      - column
+    explanation: They anchor the other retrieval direction.
+  - id: b10-symmetric-image-text-loss-07
+    type: order
+    prompt: Order the bidirectional loss.
+    items:
+      - Align image and caption IDs
+      - Build the similarity matrix
+      - Evaluate anchored losses in both directions
+      - Average the row and column losses
+    explanation: Alignment establishes correct positive targets.
+  - id: b10-symmetric-image-text-loss-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def symmetric_loss(matrix,temperature):
+          if not matrix or any(len(row)!=len(matrix) for row in matrix):
+              raise ValueError("expected a nonempty square batch")
+          from math import exp,log
+          if temperature<=0:
+              raise ValueError("temperature must be positive")
+          def contrastive_row(scores,positive,temperature):
+              high=max(scores)
+              scaled=[(score-high)/temperature for score in scores]
+              return log(sum(exp(value) for value in scaled))-scaled[positive]
+          n=len(matrix)
+          row_losses=[contrastive_row(row,i,temperature) for i,row in enumerate(matrix)]
+          column_losses=[contrastive_row(list(column),i,temperature) for i,column in enumerate(zip(*matrix))]
+          return sum(row_losses+column_losses)/(2*n)
+
+      print(symmetric_loss([[7]], 1))
+    answer: "0.0"
+    explanation: A single candidate gets probability one in both directions.

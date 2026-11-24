@@ -1,0 +1,36 @@
+id: b10-contrastive-logit-loss-01
+lesson: research/b10/contrastive-logit-loss
+title: Implement contrastive logit loss
+prompt: Implement contrastive_row for finite similarities and positive temperature. Return stable negative log probability of the supplied positive index. Reject invalid indices or temperatures.
+starter: |
+  def contrastive_row(similarities,positive,temperature):
+      raise NotImplementedError
+solution: |
+  def contrastive_row(similarities,positive,temperature):
+      from math import exp,log
+      if not 0<=positive<len(similarities) or temperature<=0:
+          raise ValueError("invalid contrastive inputs")
+      high=max(similarities)
+      logits=[(score-high)/temperature for score in similarities]
+      return log(sum(exp(value) for value in logits))-logits[positive]
+tests: |
+  from math import log
+  assert abs(contrastive_row([5000,5000],0,0.01)-log(2))<1e-12
+  assert contrastive_row([0,1],1,0.5)<contrastive_row([0,1],0,0.5)
+  assert contrastive_row([5],0,1)==0
+  try:
+      contrastive_row([5],1,1)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject invalid positive index")
+  from math import exp
+  assert abs(contrastive_row([0,1,3],0,0.5)-log(1+exp(2)+exp(6)))<1e-12
+  try:
+      contrastive_row([1,2],0,0)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject nonpositive temperature")
+hints:
+  - Shift by a common maximum before exponentiating.

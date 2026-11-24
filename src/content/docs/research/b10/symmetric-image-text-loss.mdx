@@ -1,0 +1,52 @@
+---
+title: Train with paired image and text embeddings
+module: b10
+order: 2
+estMinutes: 8
+objectives:
+  - Read a cross-modal similarity matrix in two directions
+  - Compute a symmetric paired objective
+goDeeper: clip-paper
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+For a batch with aligned image-caption pairs, the similarity matrix has one image per row and one caption per column. With one known match per example, the diagonal supplies positive indices after both lists have been ordered consistently. A <Term id="symmetric-image-text-loss" /> averages image-to-text row losses and text-to-image column losses.
+
+A model can retrieve captions well from images and still confuse images when queried with text. Training both directions exposes both decisions. Multiple valid captions or near-identical images need a loss and evaluation set that acknowledge multiple matches rather than counting them all as negatives.
+
+This exercise consumes a square matrix of already computed similarities. Reusing the scalar loss ensures the directions share temperature and numerical conventions.
+
+## Worked example
+
+A strong diagonal makes both matching directions easier.
+
+```python
+def symmetric_loss(matrix,temperature):
+    if not matrix or any(len(row)!=len(matrix) for row in matrix):
+        raise ValueError("expected a nonempty square batch")
+    from math import exp,log
+    if temperature<=0:
+        raise ValueError("temperature must be positive")
+    def contrastive_row(scores,positive,temperature):
+        high=max(scores)
+        scaled=[(score-high)/temperature for score in scores]
+        return log(sum(exp(value) for value in scaled))-scaled[positive]
+    n=len(matrix)
+    row_losses=[contrastive_row(row,i,temperature) for i,row in enumerate(matrix)]
+    column_losses=[contrastive_row(list(column),i,temperature) for i,column in enumerate(zip(*matrix))]
+    return sum(row_losses+column_losses)/(2*n)
+
+print(round(symmetric_loss([[2,0],[0,2]],1),6))
+```
+
+```text title="Output"
+0.126928
+```
+
+Check both modality orderings before assuming the diagonal is correct.
+
+## Try it
+
+<CodeExercise id="b10-symmetric-image-text-loss-01" />

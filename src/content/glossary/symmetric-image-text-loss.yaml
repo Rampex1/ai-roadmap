@@ -1,0 +1,4 @@
+term: "Symmetric contrastive loss"
+short: "An average of the matching loss computed from each modality toward the other."
+body: "Given an N×N similarity matrix of matched image-text pairs with positives on the diagonal, it averages the image-to-text cross-entropy over rows and the text-to-image cross-entropy over columns, as in CLIP."
+related: ["cross-modal-embedding","contrastive-logit-loss"]

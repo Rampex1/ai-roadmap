@@ -1,0 +1,96 @@
+items:
+  - id: b10-mask-reconstruction-targets-01
+    type: mcq
+    prompt: What is the label for a masked token?
+    explanation: The task is to reconstruct hidden content.
+    options:
+      - text: The padding ID
+        why: Padding is excluded here.
+      - text: The mask placeholder itself
+        why: That is an input marker.
+      - text: Its original token
+        why: The task is to reconstruct hidden content.
+        correct: true
+  - id: b10-mask-reconstruction-targets-02
+    type: mcq
+    prompt: Why preserve the original sequence?
+    explanation: Replacing it would lose labels.
+    options:
+      - text: It contains the true reconstruction targets
+        why: Replacing it would lose labels.
+        correct: true
+      - text: To send a visible copy of every hidden token
+        why: That can leak the task.
+      - text: Because the encoder cannot process masks
+        why: Masks are expected inputs.
+  - id: b10-mask-reconstruction-targets-03
+    type: mcq
+    prompt: What does padding contribute to this objective?
+    explanation: It is excluded from eligibility.
+    options:
+      - text: Neither a target nor an inserted mask
+        why: It is excluded from eligibility.
+        correct: true
+      - text: A target whenever hide is true
+        why: Padding overrides that flag.
+      - text: The only loss in a batch
+        why: Padding is not supervised here.
+  - id: b10-mask-reconstruction-targets-04
+    type: mcq
+    prompt: Must masked reconstruction be causal?
+    explanation: The architecture and task define available context.
+    options:
+      - text: No, the visibility policy can be bidirectional
+        why: The architecture and task define available context.
+        correct: true
+      - text: Yes, all token objectives are next-token training
+        why: Masked prediction can use surrounding evidence.
+      - text: Only on even sequence lengths
+        why: Length parity does not define visibility.
+  - id: b10-mask-reconstruction-targets-05
+    type: multi
+    prompt: Which should be checked on one example?
+    explanation: They define the scored targets. It can expose unintended shortcuts.
+    options:
+      - text: Hidden indices and original values
+        why: They define the scored targets.
+        correct: true
+      - text: The number of CPU cores alone
+        why: It does not verify supervision.
+      - text: Visible input after replacement
+        why: It can expose unintended shortcuts.
+        correct: true
+  - id: b10-mask-reconstruction-targets-06
+    type: cloze
+    prompt: Prediction of intentionally hidden source values is masked ______.
+    accept:
+      - reconstruction
+      - modelling
+      - modeling
+      - prediction
+    explanation: The original hidden content supplies supervision.
+  - id: b10-mask-reconstruction-targets-07
+    type: order
+    prompt: Order one reconstruction example.
+    items:
+      - Preserve the original sequence
+      - Use the preserved sequence to select eligible non-padding positions
+      - Replace their input values with masks
+      - Score only those original targets
+    explanation: Masked inputs and target eligibility share the same selected indices.
+  - id: b10-mask-reconstruction-targets-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def reconstruction_example(tokens,hide,mask_id,pad_id):
+          if len(tokens)!=len(hide):
+              raise ValueError("unaligned masks")
+          eligible=[i for i,token in enumerate(tokens) if hide[i] and token!=pad_id]
+          encoded=list(tokens)
+          for i in eligible:
+              encoded[i]=mask_id
+          return encoded,eligible
+
+      print(reconstruction_example([0, 4], [True, True], 9, 0)[1])
+    answer: "[1]"
+    explanation: Index zero is padding; only index one is scored.

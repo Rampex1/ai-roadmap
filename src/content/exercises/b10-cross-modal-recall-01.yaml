@@ -1,0 +1,32 @@
+id: b10-cross-modal-recall-01
+lesson: research/b10/cross-modal-recall
+title: Implement cross modal recall
+prompt: Implement retrieval_hits(rows,k). Each row contains ranked IDs and relevant IDs. Ignore rows with empty relevant sets, and count at most one hit per judged query. Return (hits, judged). Reject nonpositive k.
+starter: |
+  def retrieval_hits(rows,k):
+      raise NotImplementedError
+solution: |
+  def retrieval_hits(rows,k):
+      if k<=0:
+          raise ValueError("k must be positive")
+      judged=hits=0
+      for ranked,relevant in rows:
+          if relevant:
+              judged+=1
+              hits+=bool(set(ranked[:k])&set(relevant))
+      return hits,judged
+tests: |
+  rows=[(["a","b"],{"b","c"}),(["a"],{"a"}),(["z"],set())]
+  assert retrieval_hits(rows,1)==(1,2)
+  assert retrieval_hits(rows,2)==(2,2)
+  assert retrieval_hits([([],{"a"})],3)==(0,1)
+  assert retrieval_hits([],1)==(0,0)
+  assert retrieval_hits([(["a","b"],{"a","b"})],2)==(1,1)
+  try:
+      retrieval_hits([],0)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject nonpositive k")
+hints:
+  - Determine whether any relevant ID intersects the first k.
