@@ -1,0 +1,92 @@
+items:
+  - id: b14-bootstrap-paired-study-effects-01
+    type: mcq
+    prompt: What is resampled for training-seed uncertainty?
+    explanation: They reflect the intended unit.
+    options:
+      - text: Complete paired differences from training seeds
+        why: They reflect the intended unit.
+        correct: true
+      - text: Only the best seed
+        why: That changes the evidence distribution.
+      - text: Test predictions as if each trained a separate model
+        why: This understates seed uncertainty.
+  - id: b14-bootstrap-paired-study-effects-02
+    type: mcq
+    prompt: Why keep pairing?
+    explanation: Sampling independently loses that information.
+    options:
+      - text: It preserves shared variation
+        why: Sampling independently loses that information.
+        correct: true
+      - text: It forces every treatment result to increase
+        why: Effects can be negative.
+      - text: It removes the need for matched IDs
+        why: Correct matching is essential.
+  - id: b14-bootstrap-paired-study-effects-03
+    type: mcq
+    prompt: What does a narrow interval from three similar seeds imply?
+    explanation: Strong generalization claims still need more evidence.
+    options:
+      - text: It describes limited observed variation under the method
+        why: Strong generalization claims still need more evidence.
+        correct: true
+      - text: The model is unbiased for all populations
+        why: This experiment cannot show that.
+      - text: The effect is identical for all future seeds
+        why: The observed set is small.
+  - id: b14-bootstrap-paired-study-effects-04
+    type: mcq
+    prompt: How does a true null result differ from a low-precision result?
+    explanation: Uncertain evidence does not imply no effect.
+    options:
+      - text: Low precision may include meaningful effects
+        why: Uncertain evidence does not imply no effect.
+        correct: true
+      - text: They always have identical confidence intervals
+        why: Precision is determined by evidence.
+      - text: Low precision automatically proves equivalence
+        why: Equivalence needs a calibrated bound.
+  - id: b14-bootstrap-paired-study-effects-05
+    type: multi
+    prompt: Which make uncertainty readable?
+    explanation: They clarify the estimand. It shows evidence strength.
+    options:
+      - text: Observed effect signs and units
+        why: They clarify the estimand.
+        correct: true
+      - text: Number of independent matched pairs
+        why: It shows evidence strength.
+        correct: true
+      - text: Only the best replicate
+        why: That hides variation.
+  - id: b14-bootstrap-paired-study-effects-06
+    type: cloze
+    prompt: Sampling complete pairs with replacement is a paired ______.
+    accept:
+      - bootstrap
+    explanation: The method preserves matched units.
+  - id: b14-bootstrap-paired-study-effects-07
+    type: order
+    prompt: Order the analysis.
+    items:
+      - Identify independent matched runs
+      - Compute per-run signed effects
+      - Resample the effects and recompute means
+      - Report uncertainty together with seed results
+    explanation: Pairing must be established before resampling.
+  - id: b14-bootstrap-paired-study-effects-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def bootstrap_effects(effects,draws,seed):
+          from random import Random
+          if not effects or draws<=0:
+              raise ValueError("need effects and positive draws")
+          rng=Random(seed)
+          n=len(effects)
+          return [sum(effects[rng.randrange(n)] for _ in range(n))/n for _ in range(draws)]
+
+      print(bootstrap_effects([0], 3, 0))
+    answer: "[0.0, 0.0, 0.0]"
+    explanation: Repeatedly choosing the only observed effect gives zeros.

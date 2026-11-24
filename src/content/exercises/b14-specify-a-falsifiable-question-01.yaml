@@ -1,0 +1,27 @@
+id: b14-specify-a-falsifiable-question-01
+lesson: research/b14/specify-a-falsifiable-question
+title: Implement specify a falsifiable question
+prompt: "Implement question_gaps. Return incomplete field names in order: treatment, comparator, population, metric, direction. A field must be a nonblank string; direction must be exactly higher or lower."
+starter: |
+  def question_gaps(record):
+      raise NotImplementedError
+solution: |
+  def question_gaps(record):
+      fields=("treatment","comparator","population","metric","direction")
+      missing=[]
+      for field in fields:
+          value=record.get(field)
+          if not isinstance(value,str) or not value.strip():
+              missing.append(field)
+          elif field=="direction" and value not in ("higher","lower"):
+              missing.append(field)
+      return missing
+tests: |
+  record={"treatment":"time","comparator":"blind","population":"toy","metric":"MSE","direction":"lower"}
+  assert question_gaps(record)==[]
+  assert question_gaps({**record,"metric":" ","direction":"unclear"})==["metric","direction"]
+  assert question_gaps({})==["treatment","comparator","population","metric","direction"]
+  assert question_gaps({**record,"direction":"lower "})==["direction"], "direction must be exactly higher or lower"
+  assert question_gaps({**record,"metric":5})==["metric"], "a field must be a string"
+hints:
+  - Check completeness and direction separately.

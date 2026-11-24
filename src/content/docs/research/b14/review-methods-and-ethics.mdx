@@ -1,0 +1,45 @@
+---
+title: Write and review a responsible research report
+module: b14
+order: 4
+estMinutes: 8
+objectives:
+  - Trace claims to methods and reported evidence
+  - Check documentation, limitations and ethics before release
+goDeeper: neurips-paper-checklist
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A concise paper separates question, related work, method, results and limitations. Connect each headline claim to a baseline, protocol and evidence. In a review, describe the claim in your own words before criticizing it. Distinguish a correctness issue from missing documentation or a preference about presentation.
+
+A <Term id="review-methods-and-ethics" /> should cover data source and permissions, constraints on sharing private data, known exclusions, failure cases and intended use. Synthetic data can simplify privacy concerns while narrowing external validity. Document what the study cannot conclude, especially if examples look convincing but cover few modes or populations.
+
+The fixture accepts an explicit status per required reporting item. A missing, failed or unjustified item remains unresolved. N/A requires a written reason; actual domain review is separate from this status check.
+
+## Worked example
+
+The limits item has no status.
+
+```python
+def unresolved_review(required,items):
+    result=[]
+    for name in required:
+        status,reason=items.get(name,("missing",""))
+        if status!="done" and not (status=="na" and isinstance(reason,str) and reason.strip()):
+            result.append(name)
+    return result
+
+print(unresolved_review(["data","limits","consent"], {"data":("done",""),"consent":("na","synthetic data")}))
+```
+
+```text title="Output"
+['limits']
+```
+
+Write limitations and open questions explicitly, even when the main result is favorable.
+
+## Try it
+
+<CodeExercise id="b14-review-methods-and-ethics-01" />

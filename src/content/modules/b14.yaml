@@ -4,6 +4,9 @@ title: "Doing research"
 order: 15
 prereqs: ["b13"]
 objectives:
-  - "Explain the core ideas of doing research"
-  - "Derive or implement the key methods of doing research"
+  - Formulate a research question with a falsifiable primary comparison
+  - Isolate a treatment in a matched ablation
+  - Estimate paired effects at the correct experimental unit
+  - Write a scoped paper and audit reproducibility and research ethics
+
 capstone: research-capstone

@@ -1,0 +1,19 @@
+id: b14-design-a-matched-ablation-01
+lesson: research/b14/design-a-matched-ablation
+title: Implement design a matched ablation
+prompt: Implement broken_controls. Return control names in input order if absent, None, or different between the two runs. Preserve valid zero or false values.
+starter: |
+  def broken_controls(baseline,candidate,controls):
+      raise NotImplementedError
+solution: |
+  def broken_controls(baseline,candidate,controls):
+      return [field for field in controls
+              if baseline.get(field) is None or candidate.get(field) is None
+              or baseline[field]!=candidate[field]]
+tests: |
+  assert broken_controls({"a":0,"b":1},{"a":0,"b":2},["a","b","c"])==["b","c"]
+  assert broken_controls({"a":False},{"a":False},["a"])==[]
+  assert broken_controls({"a":None},{"a":None},["a"])==["a"]
+  assert broken_controls({}, {}, [])==[]
+hints:
+  - Missing metadata should fail the comparison.

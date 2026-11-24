@@ -1,0 +1,91 @@
+items:
+  - id: b14-design-a-matched-ablation-01
+    type: mcq
+    prompt: What should differ in a simple ablation?
+    explanation: This helps isolate its contribution.
+    options:
+      - text: Only the intended intervention among declared settings
+        why: This helps isolate its contribution.
+        correct: true
+      - text: Every important data and runtime choice
+        why: That introduces confounds.
+      - text: Only the experiment name
+        why: That does not alter the method.
+  - id: b14-design-a-matched-ablation-02
+    type: mcq
+    prompt: Why pair seeds and evaluation draws?
+    explanation: The comparison can focus on treatment differences.
+    options:
+      - text: They share sources of experimental variation
+        why: The comparison can focus on treatment differences.
+        correct: true
+      - text: They guarantee every outcome matches
+        why: The treatment can change the result.
+      - text: They remove the need for aggregation
+        why: Multiple pairs still need analysis.
+  - id: b14-design-a-matched-ablation-03
+    type: mcq
+    prompt: What if useful control metadata is missing?
+    explanation: Absence does not prove comparability.
+    options:
+      - text: Flag it as unresolved
+        why: Absence does not prove comparability.
+        correct: true
+      - text: Assume the two runs agree
+        why: Equality cannot be established.
+      - text: Treat it as a positive treatment effect
+        why: Metadata is not an outcome.
+  - id: b14-design-a-matched-ablation-04
+    type: mcq
+    prompt: What should happen when treatment changes compute cost?
+    explanation: It matters for interpreting improvement.
+    options:
+      - text: Report that cost and consider a budget-matched comparison
+        why: It matters for interpreting improvement.
+        correct: true
+      - text: Hide it as irrelevant always
+        why: Compute can explain observed differences.
+      - text: Set the quality metric to zero
+        why: That would not measure the tradeoff.
+  - id: b14-design-a-matched-ablation-05
+    type: multi
+    prompt: Which are common controls?
+    explanation: They define examples. It controls training exposure.
+    options:
+      - text: Optimizer step budget
+        why: It controls training exposure.
+        correct: true
+      - text: Data identity and split
+        why: They define examples.
+        correct: true
+      - text: An undisclosed change to the evaluation task
+        why: That defeats a matched comparison.
+  - id: b14-design-a-matched-ablation-06
+    type: cloze
+    prompt: Removing or changing one component to measure its contribution is an ______.
+    accept:
+      - ablation
+      - ablation study
+      - ablation experiment
+    explanation: It compares otherwise matched conditions.
+  - id: b14-design-a-matched-ablation-07
+    type: order
+    prompt: Order a matched comparison.
+    items:
+      - Define the intervention
+      - Declare controlled variables
+      - Run paired baseline and candidate
+      - Attribute conclusions within the verified scope
+    explanation: Controlled variation supports interpretation.
+  - id: b14-design-a-matched-ablation-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def broken_controls(baseline,candidate,controls):
+          return [field for field in controls
+                  if baseline.get(field) is None or candidate.get(field) is None
+                  or baseline[field]!=candidate[field]]
+
+      print(broken_controls({"seed": 0}, {"seed": 0}, ["seed"]))
+    answer: "[]"
+    explanation: A valid equal seed does not break the control.

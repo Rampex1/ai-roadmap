@@ -1,0 +1,4 @@
+term: "Paired effect"
+short: "A signed difference between matched candidate and baseline measurements."
+body: "Compute candidate minus baseline within each matched unit, such as a training seed, and resample those differences as whole units, never the two arms separately."
+related: ["paired-bootstrap","confidence-interval"]

@@ -1,0 +1,45 @@
+---
+title: Quantify uncertainty across paired runs
+module: b14
+order: 3
+estMinutes: 8
+objectives:
+  - Resample matched effect values by independent unit
+  - Interpret small-sample bootstrap ranges cautiously
+goDeeper: neurips-paper-checklist
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Calculate a <Term id="bootstrap-paired-study-effects" /> within each matched unit, then summarize the distribution across units. If the question concerns training randomness, the independent unit is usually a training seed or a larger independently sampled split. Hundreds of test examples from one trained model do not supply hundreds of independent training runs.
+
+A paired bootstrap draws complete paired effects with replacement and recomputes their mean. Do not sample baseline and candidate independently; that loses matching. Show every seed result when there are few pairs. A percentile interval with very few pairs can look deceptively precise if the observed effects are similar.
+
+This exercise returns a deterministic list of bootstrap means given a fixed seed. It assumes complete already-paired finite scalar effects and does not promote the interval to proof of causal or external validity.
+
+## Worked example
+
+All matched effects are the same, so every bootstrap mean is two.
+
+```python
+def bootstrap_effects(effects,draws,seed):
+    from random import Random
+    if not effects or draws<=0:
+        raise ValueError("need effects and positive draws")
+    rng=Random(seed)
+    n=len(effects)
+    return [sum(effects[rng.randrange(n)] for _ in range(n))/n for _ in range(draws)]
+
+print(bootstrap_effects([2,2],3,4))
+```
+
+```text title="Output"
+[2.0, 2.0, 2.0]
+```
+
+Report the actual experimental units and limits of the resampling estimate.
+
+## Try it
+
+<CodeExercise id="b14-bootstrap-paired-study-effects-01" />

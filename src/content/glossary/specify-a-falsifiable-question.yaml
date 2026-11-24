@@ -1,0 +1,4 @@
+term: "Falsifiable research question"
+short: "A question phrased so that observable outcomes could contradict the proposed claim."
+body: "Name the treatment, comparator, population, primary metric and direction, plus a smallest effect of interest, before collecting outcomes. Failing to reject is not equivalence."
+related: ["extract-paper-claims","evaluation-slice"]

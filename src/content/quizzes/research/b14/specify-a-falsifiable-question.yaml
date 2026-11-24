@@ -1,0 +1,97 @@
+items:
+  - id: b14-specify-a-falsifiable-question-01
+    type: mcq
+    prompt: What makes a claim falsifiable?
+    explanation: The study can supply evidence against the claim.
+    options:
+      - text: A stated observation could contradict it
+        why: The study can supply evidence against the claim.
+        correct: true
+      - text: Every result is interpreted as support
+        why: That prevents an empirical test.
+      - text: The paper uses a complicated model
+        why: Complexity does not set a testable claim.
+  - id: b14-specify-a-falsifiable-question-02
+    type: mcq
+    prompt: Why predefine a primary endpoint?
+    explanation: Choosing after observation inflates apparent evidence.
+    options:
+      - text: It limits outcome-dependent selection
+        why: Choosing after observation inflates apparent evidence.
+        correct: true
+      - text: It prevents exploratory analysis
+        why: Exploration is useful when named.
+      - text: It eliminates random variation
+        why: The experiment still has noise.
+  - id: b14-specify-a-falsifiable-question-03
+    type: mcq
+    prompt: What is a smallest effect of interest?
+    explanation: It distinguishes useful from negligible changes.
+    options:
+      - text: A difference large enough to matter under the study objective
+        why: It distinguishes useful from negligible changes.
+        correct: true
+      - text: The smallest number in a tensor
+        why: It describes a decision threshold for evidence.
+      - text: A guarantee of statistical significance
+        why: Significance depends on evidence and design.
+  - id: b14-specify-a-falsifiable-question-04
+    type: mcq
+    prompt: Does failing to detect an effect establish equivalence?
+    explanation: Equivalence needs an explicit standard.
+    options:
+      - text: No, uncertainty may still cover meaningful changes
+        why: Equivalence needs an explicit standard.
+        correct: true
+      - text: Yes, every nonsignificant result implies no difference
+        why: Insufficient precision can hide differences.
+      - text: Only when many metrics are tested
+        why: Multiple tests do not establish equivalence.
+  - id: b14-specify-a-falsifiable-question-05
+    type: multi
+    prompt: Which anchor the question?
+    explanation: They define how improvement is measured. They restrict the comparison.
+    options:
+      - text: Primary metric and direction
+        why: They define how improvement is measured.
+        correct: true
+      - text: Population and baseline
+        why: They restrict the comparison.
+        correct: true
+      - text: Results chosen after trying many outcomes
+        why: They would not be prospective evidence.
+  - id: b14-specify-a-falsifiable-question-06
+    type: cloze
+    prompt: A question an observation could contradict is ______.
+    accept:
+      - falsifiable
+      - testable
+      - refutable
+    explanation: Contradictory data are possible under its wording.
+  - id: b14-specify-a-falsifiable-question-07
+    type: order
+    prompt: Order study design.
+    items:
+      - State the research question
+      - Declare comparator population and primary metric
+      - Freeze the protocol and decision rule
+      - Collect and interpret outcomes
+    explanation: Outcome interpretation follows the declared design.
+  - id: b14-specify-a-falsifiable-question-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def question_gaps(record):
+          fields=("treatment","comparator","population","metric","direction")
+          missing=[]
+          for field in fields:
+              value=record.get(field)
+              if not isinstance(value,str) or not value.strip():
+                  missing.append(field)
+              elif field=="direction" and value not in ("higher","lower"):
+                  missing.append(field)
+          return missing
+
+      print(question_gaps({"direction": "higher"})[-1])
+    answer: metric
+    explanation: Direction is valid, leaving metric as the last gap.

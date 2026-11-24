@@ -1,0 +1,22 @@
+id: b14-research-design-lab
+module: b14
+kind: homework
+title: Design and audit a controlled experiment
+brief: |-
+  Turn a draft question into a small reproducible study with an explicit primary metric, matched settings, uncertainty and a reporting checklist.
+
+  1. Screen a proposed study record.
+  2. Detect confounds in a one-factor ablation.
+  3. Resample matched effects.
+  4. Check unresolved reporting and ethics items.
+  5. Gate a paired analysis on its research design.
+
+  Write a one-page abstract and methods plan for the capstone. Name a result that would change your conclusion and a limitation that would survive a positive result.
+notebook: /homework/b14-research-design-lab.ipynb
+rubric:
+  - The question identifies a falsifiable primary comparison.
+  - Only the intended treatment differs in matched runs.
+  - Uncertainty resamples the experimental unit.
+  - The reporting checklist records unresolved issues.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

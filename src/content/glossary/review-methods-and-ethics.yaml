@@ -1,0 +1,4 @@
+term: "Research reporting audit"
+short: "A structured check that a report makes experimental evidence and ethical limits inspectable."
+body: "Checks data provenance, consent and licensing, exclusions, failure cases, intended use and limits. N/A items need a stated reason."
+related: ["model-card","record-a-reproduction-protocol"]

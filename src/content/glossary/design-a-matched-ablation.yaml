@@ -1,0 +1,4 @@
+term: "Matched ablation"
+short: "A controlled comparison that changes one intended component while holding declared nuisance factors fixed."
+body: "Hold data, seeds, step budget and evaluator fixed so that only the named component differs. If cost changes, report it and add a budget-matched run."
+related: ["matched-seeds","check-reproduction-comparability"]

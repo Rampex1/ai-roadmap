@@ -1,0 +1,40 @@
+id: b14-bootstrap-paired-study-effects-01
+lesson: research/b14/bootstrap-paired-study-effects
+title: Implement bootstrap paired study effects
+prompt: Implement bootstrap_effects. Use a private Random(seed). For each positive draw count, resample len(effects) complete effect values with replacement using randrange and return mean. Reject empty effects or nonpositive draws.
+starter: |
+  def bootstrap_effects(effects,draws,seed):
+      raise NotImplementedError
+solution: |
+  def bootstrap_effects(effects,draws,seed):
+      from random import Random
+      if not effects or draws<=0:
+          raise ValueError("need effects and positive draws")
+      rng=Random(seed)
+      n=len(effects)
+      return [sum(effects[rng.randrange(n)] for _ in range(n))/n for _ in range(draws)]
+tests: |
+  from random import Random
+  assert bootstrap_effects([2,2],3,4)==[2,2,2]
+  assert bootstrap_effects([5],2,8)==[5,5]
+  out=bootstrap_effects([0,2],12,0)
+  assert out==bootstrap_effects([0,2],12,0) and set(out)=={0,1,2}
+  source=[-3,1,7,15]
+  for seed in [2,17]:
+      rng=Random(seed)
+      expected=[sum(source[rng.randrange(len(source))] for _ in source)/len(source) for _ in range(9)]
+      assert bootstrap_effects(source,9,seed)==expected
+  try:
+      bootstrap_effects([],2,0)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("need matched units")
+  try:
+      bootstrap_effects([1],0,0)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("reject nonpositive draws")
+hints:
+  - Resample differences, not the source measurements independently.

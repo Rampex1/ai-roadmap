@@ -1,0 +1,94 @@
+items:
+  - id: b14-review-methods-and-ethics-01
+    type: mcq
+    prompt: What should a paper’s results section preserve?
+    explanation: Readers need to inspect what was measured.
+    options:
+      - text: Evidence tied to scoped claims and comparisons
+        why: Readers need to inspect what was measured.
+        correct: true
+      - text: Only a high-level statement of motivation
+        why: Motivation is not result evidence.
+      - text: Only the most favorable seed
+        why: This can hide instability.
+  - id: b14-review-methods-and-ethics-02
+    type: mcq
+    prompt: Why document synthetic data limitations?
+    explanation: Results may not transfer to operational data.
+    options:
+      - text: The setting may omit real-world variation
+        why: Results may not transfer to operational data.
+        correct: true
+      - text: Synthetic data guarantees every conclusion generalizes
+        why: The data-generating assumptions restrict the study.
+      - text: It prevents training any model
+        why: Synthetic experiments can be useful.
+  - id: b14-review-methods-and-ethics-03
+    type: mcq
+    prompt: In the lesson's reporting checklist, when does an N/A status count as resolved?
+    explanation: Applicability should be justified.
+    options:
+      - text: Only if every other item failed
+        why: Other statuses do not govern this decision.
+      - text: Whenever the status string exists
+        why: The reason is required.
+      - text: When supported by a nonblank reason
+        why: Applicability should be justified.
+        correct: true
+  - id: b14-review-methods-and-ethics-04
+    type: mcq
+    prompt: What comes first in a constructive review?
+    explanation: Then the critique is grounded in the actual work.
+    options:
+      - text: Assume every disagreement is misconduct
+        why: Discrepancies have several causes.
+      - text: State the claim and its evidence accurately
+        why: Then the critique is grounded in the actual work.
+        correct: true
+      - text: Demand the same writing style in every paper
+        why: Style is separate from correctness.
+  - id: b14-review-methods-and-ethics-05
+    type: multi
+    prompt: Which are relevant reporting checks?
+    explanation: Source and use restrictions matter. They bound conclusions.
+    options:
+      - text: Failure cases and validity limits
+        why: They bound conclusions.
+        correct: true
+      - text: Data provenance and appropriate permissions
+        why: Source and use restrictions matter.
+        correct: true
+      - text: Only the font of the results table
+        why: Typography does not establish evidence.
+  - id: b14-review-methods-and-ethics-06
+    type: cloze
+    prompt: A statement that bounds what the findings support is a ______.
+    accept:
+      - limitation
+      - scope limitation
+      - caveat
+      - limitations
+    explanation: It helps readers avoid overinterpreting results.
+  - id: b14-review-methods-and-ethics-07
+    type: order
+    prompt: Order a reporting audit.
+    items:
+      - State the audit scope and the claims under review
+      - For those claims, check evidence traceability, ethics and limitations
+      - Record which audit findings are resolved and which remain open
+    explanation: A checklist should surface missing work.
+  - id: b14-review-methods-and-ethics-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def unresolved_review(required,items):
+          result=[]
+          for name in required:
+              status,reason=items.get(name,("missing",""))
+              if status!="done" and not (status=="na" and isinstance(reason,str) and reason.strip()):
+                  result.append(name)
+          return result
+
+      print(unresolved_review(["scope"], {"scope": ("na", "")}))
+    answer: "['scope']"
+    explanation: An empty reason does not justify the N/A status.

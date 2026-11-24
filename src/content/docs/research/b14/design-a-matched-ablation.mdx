@@ -1,0 +1,42 @@
+---
+title: Design a matched ablation
+module: b14
+order: 2
+estMinutes: 8
+objectives:
+  - Change one intended intervention at a time
+  - Separate a control mismatch from a treatment difference
+goDeeper: neurips-paper-checklist
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="design-a-matched-ablation" /> tests the contribution of a named component. Compare a time-conditioned denoiser with the same architecture receiving zeroed time features. Keep data, seeds, optimizer steps and evaluator inputs fixed. Record any consequences of the treatment, such as compute changes, rather than suppressing them.
+
+If the baseline also has fewer parameters or an easier evaluation distribution, the result cannot isolate timestep information. Some interventions naturally change cost. In that case report accuracy and cost together and consider an additional budget-matched comparison.
+
+The fixture checks a declared set of controlled fields. The treatment is recorded elsewhere and should not enter the equality check. A missing control does not establish a match, even if it is missing on both sides.
+
+## Worked example
+
+Seed matches, but steps differ and data identity is absent.
+
+```python
+def broken_controls(baseline,candidate,controls):
+    return [field for field in controls
+            if baseline.get(field) is None or candidate.get(field) is None
+            or baseline[field]!=candidate[field]]
+
+print(broken_controls({"seed":0,"steps":20},{"seed":0,"steps":10},["seed","steps","data"]))
+```
+
+```text title="Output"
+['steps', 'data']
+```
+
+List the intended treatment separately from the controls and report unavoidable deviations.
+
+## Try it
+
+<CodeExercise id="b14-design-a-matched-ablation-01" />

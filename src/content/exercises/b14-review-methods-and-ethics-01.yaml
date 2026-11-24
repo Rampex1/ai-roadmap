@@ -1,0 +1,22 @@
+id: b14-review-methods-and-ethics-01
+lesson: research/b14/review-methods-and-ethics
+title: Implement review methods and ethics
+prompt: Implement unresolved_review. Return required items in order unless status is done, or status is na with a nonblank reason string. Missing items and all other statuses are unresolved.
+starter: |
+  def unresolved_review(required,items):
+      raise NotImplementedError
+solution: |
+  def unresolved_review(required,items):
+      result=[]
+      for name in required:
+          status,reason=items.get(name,("missing",""))
+          if status!="done" and not (status=="na" and isinstance(reason,str) and reason.strip()):
+              result.append(name)
+      return result
+tests: |
+  assert unresolved_review(["a","b","c"],{"a":("done",""),"b":("na","synthetic")})==["c"]
+  assert unresolved_review(["a","b"],{"a":("na"," "),"b":("failure","x")})==["a","b"]
+  assert unresolved_review(["a"],{"a":("na",None)})==["a"]
+  assert unresolved_review([], {})==[]
+hints:
+  - An N/A decision must explain why the item does not apply.

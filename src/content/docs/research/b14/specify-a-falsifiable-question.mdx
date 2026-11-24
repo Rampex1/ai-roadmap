@@ -1,0 +1,48 @@
+---
+title: Form a falsifiable research question
+module: b14
+order: 1
+estMinutes: 8
+objectives:
+  - Name a treatment, comparator and population
+  - Set a primary metric and meaningful effect before running
+goDeeper: neurips-paper-checklist
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="specify-a-falsifiable-question" /> names the intervention, baseline, population and measurement. “Does timestep conditioning improve a denoiser?” becomes more useful when it specifies the toy distribution, training budget, matched seeds and held-out noise MSE. State a smallest effect of interest so a statistically detectable but immaterial change does not dominate the discussion.
+
+Freeze a primary endpoint before looking at results. Exploratory metrics are valuable when labelled as such. Repeatedly selecting the best endpoint retrospectively makes apparent evidence harder to interpret. Distinguish failure to find a clear effect from evidence for equivalence, which requires its own rule and adequate precision.
+
+This exercise checks whether the study record names the essential parts of the comparison and records either metric direction. It cannot establish whether the hypothesis is original or the data are representative.
+
+## Worked example
+
+The synthetic design records the intended metric direction.
+
+```python
+def question_gaps(record):
+    fields=("treatment","comparator","population","metric","direction")
+    missing=[]
+    for field in fields:
+        value=record.get(field)
+        if not isinstance(value,str) or not value.strip():
+            missing.append(field)
+        elif field=="direction" and value not in ("higher","lower"):
+            missing.append(field)
+    return missing
+
+print(question_gaps({"treatment":"time", "comparator":"blind", "population":"toy", "metric":"MSE", "direction":"lower"}))
+```
+
+```text title="Output"
+[]
+```
+
+Define what outcome would weaken the hypothesis before seeing data.
+
+## Try it
+
+<CodeExercise id="b14-specify-a-falsifiable-question-01" />
