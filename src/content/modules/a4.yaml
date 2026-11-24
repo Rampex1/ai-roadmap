@@ -4,5 +4,7 @@ title: "Experiment tracking and tuning"
 order: 4
 prereqs: ["a3"]
 objectives:
-  - "Explain the core ideas of experiment tracking and tuning"
-  - "Apply experiment tracking and tuning to a working ML project"
+  - Record dataset identity, parameters, metrics and artifacts for a run
+  - Sample reproducible tuning candidates and compare them under a fixed budget
+  - Stop weak trials using comparable intermediate evaluations
+  - Select from repeated validation results and reserve the final test set

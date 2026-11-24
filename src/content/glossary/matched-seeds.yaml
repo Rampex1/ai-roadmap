@@ -1,0 +1,4 @@
+term: "Matched seeds"
+short: "A shared set of random seeds used across candidate configurations to make repeated comparisons more comparable."
+body: "Running every candidate configuration under the same list of random-seed IDs, so that differences between candidates are compared within each seed. This reduces noise from initialisation and data order when comparing means and spread."
+related: ["experiment-run","held-out-set"]

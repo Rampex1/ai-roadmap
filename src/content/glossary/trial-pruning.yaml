@@ -1,0 +1,4 @@
+term: "Trial pruning"
+short: "Stopping a tuning run early when an intermediate measurement indicates it is unlikely to justify more resources."
+body: "Stopping a tuning trial before its full budget when its intermediate validation metric compares badly with other trials at the same resource step, for example by being worse than their median. Pruned trials are recorded as unfinished, not as finished with a poor score."
+related: ["checkpoint","experiment-run"]

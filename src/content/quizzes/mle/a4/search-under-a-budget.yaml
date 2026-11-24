@@ -1,0 +1,96 @@
+items:
+  - id: a4-search-under-a-budget-01
+    type: mcq
+    prompt: Why sample a learning rate on a log scale?
+    explanation: The logarithm converts ratios to differences.
+    options:
+      - text: Equal multiplicative intervals receive equal weight
+        why: The logarithm converts ratios to differences.
+        correct: true
+      - text: It forces every sample to be the geometric mean
+        why: Random log values produce varied rates.
+      - text: It removes the need to set bounds
+        why: The sampling interval still needs endpoints.
+  - id: a4-search-under-a-budget-02
+    type: mcq
+    prompt: Why store actual candidate values as well as a seed?
+    explanation: The realized settings identify the run.
+    options:
+      - text: Implementations or search spaces may change
+        why: The realized settings identify the run.
+        correct: true
+      - text: A seed directly stores the model weights
+        why: It supplies randomness only.
+      - text: Candidate values cannot be reproduced from an unchanged algorithm
+        why: A seed can reproduce the sequence under fixed conditions.
+  - id: a4-search-under-a-budget-03
+    type: mcq
+    prompt: What is a safe response to an invalid learning rate trial?
+    explanation: This keeps trial outcomes auditable.
+    options:
+      - text: Record the failure and follow the predefined policy
+        why: This keeps trial outcomes auditable.
+        correct: true
+      - text: Silently delete it and change the test data
+        why: That undermines comparison.
+      - text: Mark it as the best trial
+        why: There is no valid comparison result.
+  - id: a4-search-under-a-budget-04
+    type: mcq
+    prompt: Where should tuning choose the search winner?
+    explanation: The final test stays separate.
+    options:
+      - text: On development or validation measurements
+        why: The final test stays separate.
+        correct: true
+      - text: On repeatedly checked final holdout outcomes
+        why: This fits decisions to the test.
+      - text: Only from the seed number
+        why: A seed is not performance evidence.
+  - id: a4-search-under-a-budget-05
+    type: multi
+    prompt: Which should be fixed for a comparison?
+    explanation: It defines what the study optimizes. It controls resources and opportunities to find a winner.
+    options:
+      - text: The validation metric
+        why: It defines what the study optimizes.
+        correct: true
+      - text: The search budget
+        why: It controls resources and opportunities to find a winner.
+        correct: true
+      - text: Only the candidate’s final chart size
+        why: Display dimensions do not control training.
+  - id: a4-search-under-a-budget-06
+    type: cloze
+    prompt: Uniform sampling of the logarithm is called ______ sampling.
+    accept:
+      - log-uniform
+      - log uniform
+      - loguniform
+    explanation: Positive rates are sampled by exponentiating values uniform in log space.
+  - id: a4-search-under-a-budget-07
+    type: order
+    prompt: Order a bounded tuning study.
+    items:
+      - Define bounds, metric and budget
+      - Sample reproducible candidate settings
+      - Run and log trials on development splits
+      - Select before final held-out evaluation
+    explanation: The search uses development evidence.
+  - id: a4-search-under-a-budget-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def sample_rates(low, high, count, seed):
+          from math import exp, log
+          from random import Random
+          if not 0 < low <= high or count < 0:
+              raise ValueError("invalid interval or count")
+          if low == high:
+              return [low] * count
+          rng = Random(seed)
+          return [min(high, max(low, exp(rng.uniform(log(low), log(high))))) for _ in range(count)]
+
+      print(sample_rates(0.25, 0.25, 2, 9))
+    answer: "[0.25, 0.25]"
+    explanation: Identical bounds produce two copies of the constant.

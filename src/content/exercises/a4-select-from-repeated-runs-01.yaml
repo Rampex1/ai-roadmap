@@ -1,0 +1,30 @@
+id: a4-select-from-repeated-runs-01
+lesson: mle/a4/select-from-repeated-runs
+title: Select the lowest mean validation loss
+prompt: Implement select_config(results). Each configuration maps comparable integer seed IDs to finite validation losses. Return None for no configurations. Reject empty or differing seed sets. Sum over seeds in ascending order, choose smallest mean and break ties by name.
+starter: |
+  def select_config(results):
+      raise NotImplementedError
+solution: |
+  def select_config(results):
+      if not results:
+          return None
+      seed_sets = [set(scores) for scores in results.values()]
+      required = seed_sets[0]
+      if not required or any(seeds != required for seeds in seed_sets):
+          raise ValueError("need a shared nonempty seed set")
+      return min(results, key=lambda name: (sum(results[name][seed] for seed in sorted(required)) / len(required), name))
+tests: |
+  assert select_config({"z":{2:0.25,1:0.75},"a":{1:0.5,2:0.5}}) == "a"
+  assert select_config({"better":{1:0.1,2:0.4},"other":{1:0.1,2:0.5}}) == "better"
+  assert select_config({}) is None
+  assert select_config({"a":{1:0.1,2:0.9},"b":{1:0.45,2:0.45}}) == "b", "Rank by the mean loss over all seeds, not the best or first seed"
+  for rows in ({"a":{}},{"a":{1:0.4},"b":{2:0.4}}):
+      try:
+          select_config(rows)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError("Reject nonmatching or empty seed sets")
+hints:
+  - Verify all candidate seed keys before comparing means.

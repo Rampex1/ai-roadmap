@@ -1,0 +1,47 @@
+---
+title: Search the learning-rate range
+module: a4
+order: 2
+estMinutes: 8
+objectives:
+  - Sample positive hyperparameters across orders of magnitude
+  - Use a fixed random seed and predeclared search budget
+goDeeper: mlflow-experiment-tracking
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Tuning chooses settings using validation data, so a search is an outer training loop. Define the metric, resource budget and candidate space before running it. Grid search is easy to audit. Random search is practical when only a few dimensions matter, and it can cover more distinct values per dimension for the same trial budget.
+
+Use <Term id="log-uniform" /> for settings that act multiplicatively, such as a learning-rate search from 0.0001 to 0.1. Sample uniformly between the logarithms of the endpoints, then exponentiate. Equal multiplicative bands receive equal sampling mass. Uniform sampling on the raw range would concentrate most samples near the large end.
+
+Use a private random generator and record both the seed and the realized candidates. Reproduce the comparisons using matching data, training budgets and evaluation rules. If a trial produces invalid metrics, record the reason and apply a predefined failure policy rather than silently changing the space.
+
+## Worked example
+
+The seed fixes the candidate sequence without modifying global randomness.
+
+```python
+def sample_rates(low, high, count, seed):
+    from math import exp, log
+    from random import Random
+    if not 0 < low <= high or count < 0:
+        raise ValueError("invalid interval or count")
+    if low == high:
+        return [low] * count
+    rng = Random(seed)
+    return [min(high, max(low, exp(rng.uniform(log(low), log(high))))) for _ in range(count)]
+
+print([round(value, 5) for value in sample_rates(0.001, 0.1, 3, 7)])
+```
+
+```text title="Output"
+[0.00444, 0.002, 0.02004]
+```
+
+Log the realized search space and trial budget so the comparison can be repeated.
+
+## Try it
+
+<CodeExercise id="a4-search-under-a-budget-01" />

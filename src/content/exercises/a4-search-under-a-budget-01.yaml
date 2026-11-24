@@ -1,0 +1,41 @@
+id: a4-search-under-a-budget-01
+lesson: mle/a4/search-under-a-budget
+title: Sample learning rates on a log scale
+prompt: Implement sample_rates(low, high, count, seed) for finite positive bounds and integer counts. Reject invalid bounds or negative counts. Use random.Random(seed). Return count exponential transforms of uniform samples on natural log bounds, clamped to the original interval for floating-point rounding. Equal bounds return the constant.
+starter: |
+  def sample_rates(low, high, count, seed):
+      raise NotImplementedError
+solution: |
+  def sample_rates(low, high, count, seed):
+      from math import exp, log
+      from random import Random
+      if not 0 < low <= high or count < 0:
+          raise ValueError("invalid interval or count")
+      if low == high:
+          return [low] * count
+      rng = Random(seed)
+      return [min(high, max(low, exp(rng.uniform(log(low), log(high))))) for _ in range(count)]
+tests: |
+  from math import exp, log
+  from random import Random
+  out = sample_rates(0.001,0.1,5,3)
+  rng = Random(3)
+  assert all(abs(a-exp(rng.uniform(log(0.001),log(0.1)))) < 1e-12 for a in out)
+  assert all(0.001 <= value <= 0.1 for value in out) and out == sample_rates(0.001,0.1,5,3)
+  assert sample_rates(0.03,0.03,3,1) == [0.03]*3
+  assert sample_rates(0.01,1,0,1) == []
+  try:
+      sample_rates(0,1,1,1)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("Log scale requires positive bounds")
+  for args in ((0.1,0.01,1,1),(0.01,0.1,-1,1)):
+      try:
+          sample_rates(*args)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError("Reject low > high and negative counts")
+hints:
+  - Draw on the logarithmic interval before applying exp.

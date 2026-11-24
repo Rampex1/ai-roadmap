@@ -1,0 +1,41 @@
+---
+title: Record reproducible experiment runs
+module: a4
+order: 1
+estMinutes: 8
+objectives:
+  - Distinguish parameters, metrics and artifacts
+  - Keep code, data and split references with each run
+goDeeper: mlflow-experiment-tracking
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+An <Term id="experiment-run" /> needs enough information to reproduce a result. Record code revision, dataset manifest and split, environment, seed, input parameters and where the checkpoint lives. Parameters are chosen inputs, such as learning rate. Metrics are observed quantities, such as validation loss at step 100. Artifacts are persisted outputs, such as a checkpoint or confusion matrix image.
+
+Use immutable dataset and checkpoint references where possible. Record the step and metric definition along with values. Two runs can both log accuracy while one uses per-example accuracy and the other averages across groups. Track failure and interrupted trials as outcomes, rather than omitting them from a tuning report.
+
+Libraries such as MLflow organize these objects under a run ID, but the schema still needs a deliberate policy. This fixture builds an inspectable in-memory record. It copies parameter and metric dictionaries to avoid top-level changes after logging. Production code should serialize nested inputs or make them immutable where mutation could matter.
+
+## Worked example
+
+The logged dataset ID is independent of the metric and artifact values.
+
+```python
+def run_record(run_id, dataset, revision, seed, params, metrics, artifact):
+    return {"id": run_id, "dataset": dataset, "revision": revision, "seed": seed,
+            "params": dict(params), "metrics": dict(metrics), "artifact": artifact}
+
+print(run_record("r1","data-01","code-02",5,{"lr":0.01},{"loss":0.3},"weights-r1")["dataset"])
+```
+
+```text title="Output"
+data-01
+```
+
+A run record should let another engineer locate the exact data and artifact behind a reported result.
+
+## Try it
+
+<CodeExercise id="a4-record-experiment-runs-01" />

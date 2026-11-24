@@ -1,0 +1,93 @@
+items:
+  - id: a4-select-from-repeated-runs-01
+    type: mcq
+    prompt: Why match seeds across candidates?
+    explanation: Shared conditions improve interpretability.
+    options:
+      - text: To guarantee equal model outputs
+        why: Configuration changes can change outcomes.
+      - text: To remove the need for validation
+        why: The shared runs still require measurement.
+      - text: To compare under a common source of training variation
+        why: Shared conditions improve interpretability.
+        correct: true
+  - id: a4-select-from-repeated-runs-02
+    type: mcq
+    prompt: What if a candidate is missing one required seed?
+    explanation: Unmatched outcomes can bias the comparison.
+    options:
+      - text: Complete it or define a matched comparison before ranking
+        why: Unmatched outcomes can bias the comparison.
+        correct: true
+      - text: Replace its score with whatever wins
+        why: That misrepresents results.
+      - text: Ignore which seed is missing
+        why: The comparison may use different conditions.
+  - id: a4-select-from-repeated-runs-03
+    type: mcq
+    prompt: Why is the best validation score often optimistic?
+    explanation: Selection can favour a lucky estimate.
+    options:
+      - text: The final test is always smaller
+        why: Size alone does not explain selection.
+      - text: A mean across seeds is mathematically always too low
+        why: Selection, not averaging alone, produces this effect.
+      - text: Many settings compete on the same noisy estimate
+        why: Selection can favour a lucky estimate.
+        correct: true
+  - id: a4-select-from-repeated-runs-04
+    type: mcq
+    prompt: What should happen after selecting the final candidate?
+    explanation: Test feedback stays out of tuning.
+    options:
+      - text: Freeze it and evaluate once on the held-out test
+        why: Test feedback stays out of tuning.
+        correct: true
+      - text: Continue changing settings with test feedback
+        why: This makes the test a development set.
+      - text: Discard all seed-level results
+        why: They are useful for interpretation.
+  - id: a4-select-from-repeated-runs-05
+    type: multi
+    prompt: Which should accompany repeated validation means?
+    explanation: They show sensitivity to randomness. It makes selection consistent.
+    options:
+      - text: Per-seed results and variation
+        why: They show sensitivity to randomness.
+        correct: true
+      - text: A documented tie-breaker
+        why: It makes selection consistent.
+        correct: true
+      - text: The test score used as a tie-breaker
+        why: That compromises the final holdout.
+  - id: a4-select-from-repeated-runs-06
+    type: cloze
+    prompt: A common set of random identifiers across trials is a set of matched ______.
+    accept:
+      - seeds
+    explanation: Each candidate is evaluated under the same seed identifiers.
+  - id: a4-select-from-repeated-runs-07
+    type: order
+    prompt: Order the final tuning analysis.
+    items:
+      - Predefine seeds and selection metric
+      - Compare completed configurations on those validation runs
+      - Freeze the chosen settings and artifact
+      - Evaluate the final test set
+    explanation: A test stays unseen during selection.
+  - id: a4-select-from-repeated-runs-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def select_config(results):
+          if not results:
+              return None
+          seed_sets = [set(scores) for scores in results.values()]
+          required = seed_sets[0]
+          if not required or any(seeds != required for seeds in seed_sets):
+              raise ValueError("need a shared nonempty seed set")
+          return min(results, key=lambda name: (sum(results[name][seed] for seed in sorted(required)) / len(required), name))
+
+      print(select_config({"baseline":{1:0.4}, "candidate":{1:0.3}}))
+    answer: candidate
+    explanation: The candidate has lower validation loss.

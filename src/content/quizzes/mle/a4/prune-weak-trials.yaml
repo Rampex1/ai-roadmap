@@ -1,0 +1,90 @@
+items:
+  - id: a4-prune-weak-trials-01
+    type: mcq
+    prompt: What should align when comparing intermediate trial losses?
+    explanation: Otherwise the trials may have had different opportunities.
+    options:
+      - text: Resource step and evaluation definition
+        why: Otherwise the trials may have had different opportunities.
+        correct: true
+      - text: Only the run nickname
+        why: Names do not align resources.
+      - text: Only the end time of the process
+        why: Different start times and workloads can confound timing.
+  - id: a4-prune-weak-trials-02
+    type: mcq
+    prompt: Why use warm-up before pruning?
+    explanation: Training curves may cross later.
+    options:
+      - text: Warm-up replaces validation data
+        why: The rule still needs measurements.
+      - text: Early scores can penalize slow starters unfairly
+        why: Training curves may cross later.
+        correct: true
+      - text: It makes all candidates converge identically
+        why: It only delays the decision.
+  - id: a4-prune-weak-trials-03
+    type: mcq
+    prompt: In the lesson’s pruning rule, what happens when a loss ties the median?
+    explanation: The loss must be strictly worse.
+    options:
+      - text: Keep the trial
+        why: The loss must be strictly worse.
+        correct: true
+      - text: Always prune
+        why: A tie is not worse under this rule.
+      - text: Count it as failed
+        why: The trial remains active.
+  - id: a4-prune-weak-trials-04
+    type: mcq
+    prompt: Why report pruned trials separately?
+    explanation: The missing final metric has a specific cause.
+    options:
+      - text: They have better final metrics by definition
+        why: No final metric was observed.
+      - text: Their costs are always zero
+        why: They ran until pruning.
+      - text: They did not complete the same training budget
+        why: The missing final metric has a specific cause.
+        correct: true
+  - id: a4-prune-weak-trials-05
+    type: multi
+    prompt: What should guard a median pruning decision?
+    explanation: A median needs enough relevant observations. It avoids premature comparisons.
+    options:
+      - text: A minimum comparable peer count
+        why: A median needs enough relevant observations.
+        correct: true
+      - text: A declared warm-up milestone
+        why: It avoids premature comparisons.
+        correct: true
+      - text: A test-set look at every step
+        why: This would leak final evaluation data.
+  - id: a4-prune-weak-trials-06
+    type: cloze
+    prompt: Stopping a weak tuning run early is trial ______.
+    accept:
+      - pruning
+    explanation: Pruning frees resources for other trials.
+  - id: a4-prune-weak-trials-07
+    type: order
+    prompt: Order a pruning comparison.
+    items:
+      - Determine the common resource milestone
+      - Check warm-up and peers at that milestone
+      - Compare intermediate validation loss
+      - Continue or record the prune outcome
+    explanation: Only eligible observations should reach the rule.
+  - id: a4-prune-weak-trials-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def should_prune(step, loss, peers, warmup, min_peers):
+          from statistics import median
+          if step < warmup or not peers or len(peers) < min_peers:
+              return False
+          return loss > median(peers)
+
+      print(should_prune(4, 0.4, [0.2, 0.6], 4, 2))
+    answer: "False"
+    explanation: The loss equals the median and the trial continues.

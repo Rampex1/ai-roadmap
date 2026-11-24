@@ -1,0 +1,4 @@
+term: "Experiment run"
+short: "A tracked execution with its configuration, data and code identity, measurements and outputs."
+body: "One execution of a training or evaluation job, logged under a unique ID with its inputs (code revision, data snapshot, seed, parameters), its measured metrics with step and definition, its artifacts and a final status such as completed, failed or pruned."
+related: ["dataset-manifest","checkpoint"]

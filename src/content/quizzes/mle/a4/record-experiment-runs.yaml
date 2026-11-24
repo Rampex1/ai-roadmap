@@ -1,0 +1,89 @@
+items:
+  - id: a4-record-experiment-runs-01
+    type: mcq
+    prompt: Which field is a parameter?
+    explanation: It is chosen before training.
+    options:
+      - text: Learning rate
+        why: It is chosen before training.
+        correct: true
+      - text: Validation loss at step 100
+        why: It is observed during training.
+      - text: A saved confusion matrix image
+        why: It is a stored artifact.
+  - id: a4-record-experiment-runs-02
+    type: mcq
+    prompt: What identifies the data more reliably than current/train?
+    explanation: It identifies a particular snapshot and split.
+    options:
+      - text: A versioned manifest digest
+        why: It identifies a particular snapshot and split.
+        correct: true
+      - text: A shorter path
+        why: It can still be mutable.
+      - text: The training duration
+        why: Duration does not identify data.
+  - id: a4-record-experiment-runs-03
+    type: mcq
+    prompt: Why log the metric definition?
+    explanation: Comparison needs matching semantics.
+    options:
+      - text: Two runs can use different denominators under the same name
+        why: Comparison needs matching semantics.
+        correct: true
+      - text: A metric name always specifies its computation
+        why: Names are often reused.
+      - text: It makes the checkpoint train faster
+        why: Logging does not change optimization.
+  - id: a4-record-experiment-runs-04
+    type: mcq
+    prompt: What should happen to interrupted trials?
+    explanation: Failures affect cost and conclusions.
+    options:
+      - text: Record a perfect result
+        why: No evidence supports that outcome.
+      - text: Track their status and resource use
+        why: Failures affect cost and conclusions.
+        correct: true
+      - text: Delete them from the study
+        why: That can hide tuning bias.
+  - id: a4-record-experiment-runs-05
+    type: multi
+    prompt: Which are useful for reproducibility?
+    explanation: They capture implementation and randomness. These locate the inputs and outputs.
+    options:
+      - text: Only a display nickname
+        why: A nickname does not pin versions.
+      - text: Code revision and seed
+        why: They capture implementation and randomness.
+        correct: true
+      - text: Artifact and dataset identifiers
+        why: These locate the inputs and outputs.
+        correct: true
+  - id: a4-record-experiment-runs-06
+    type: cloze
+    prompt: A stored checkpoint is an experiment ______.
+    accept:
+      - artifact
+      - artefact
+    explanation: An artifact is a persisted run output.
+  - id: a4-record-experiment-runs-07
+    type: order
+    prompt: Order a run record workflow.
+    items:
+      - Pin inputs and configuration
+      - Execute a tracked trial
+      - Log measured outcomes and artifacts
+      - Compare with other reproducible runs
+    explanation: Recorded outputs follow execution.
+  - id: a4-record-experiment-runs-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def run_record(run_id, dataset, revision, seed, params, metrics, artifact):
+          return {"id": run_id, "dataset": dataset, "revision": revision, "seed": seed,
+                  "params": dict(params), "metrics": dict(metrics), "artifact": artifact}
+
+      print(run_record("a","d","c",8,{},{},"blob:2")["seed"])
+    answer: "8"
+    explanation: The stored seed is eight.

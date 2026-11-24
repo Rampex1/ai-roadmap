@@ -1,0 +1,4 @@
+term: "Log-uniform sampling"
+short: "Sampling a positive quantity uniformly on its logarithmic scale."
+body: "A value x in [a, b], with a > 0, is log-uniform when log x is uniform on [log a, log b]. Each multiplicative band, such as 0.001–0.01 and 0.01–0.1, gets equal probability, which suits scale parameters like learning rates."
+related: ["experiment-run","gradient-descent"]

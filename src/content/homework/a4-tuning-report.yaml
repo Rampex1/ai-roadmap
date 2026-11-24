@@ -1,0 +1,22 @@
+id: a4-tuning-report
+module: a4
+kind: homework
+title: Reproduce a small tuning study
+brief: |-
+  Build a local experiment report with synthetic metrics and artifacts represented by immutable references. Replay the candidate search and compare several configurations across the same seeds.
+
+  1. Build a run record with all required fields.
+  2. Sample reproducible learning rates on a log scale.
+  3. Stop weak trials only after warm-up.
+  4. Compare configurations using repeated aligned validation scores.
+  5. Produce a reproducible selection report from completed trials.
+
+  Write the experiment decision before looking at the final test set. Record how many runs each candidate received, how pruning affected the comparison and how the deployment team could reproduce the selected artifact.
+notebook: /homework/a4-tuning-report.ipynb
+rubric:
+  - Every run carries dataset, code and metric lineage.
+  - The search uses a private seed and correct log-scale bounds.
+  - Pruning includes warm-up and a minimum peer count.
+  - Final selection uses matched seeds and documented ties.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Python standard library only. Allow 60 to 90 minutes.

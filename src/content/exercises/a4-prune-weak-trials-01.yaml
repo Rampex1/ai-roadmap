@@ -1,0 +1,23 @@
+id: a4-prune-weak-trials-01
+lesson: mle/a4/prune-weak-trials
+title: Apply a warmed-up median rule
+prompt: Implement should_prune(step, loss, peers, warmup, min_peers). The peer values are comparable finite losses at the same step. Return false before warm-up, with no peers, or below the minimum count. Otherwise prune only when loss is strictly above the median.
+starter: |
+  def should_prune(step, loss, peers, warmup, min_peers):
+      raise NotImplementedError
+solution: |
+  def should_prune(step, loss, peers, warmup, min_peers):
+      from statistics import median
+      if step < warmup or not peers or len(peers) < min_peers:
+          return False
+      return loss > median(peers)
+tests: |
+  assert should_prune(5,0.6,[0.1,0.3,0.5],4,3)
+  assert not should_prune(3,0.6,[0.1,0.3,0.5],4,3)
+  assert not should_prune(5,0.6,[0.1],4,3)
+  assert not should_prune(5,0.3,[0.1,0.3,0.5],4,3)
+  assert not should_prune(5,0.6,[],4,0)
+  assert should_prune(4,0.6,[0.1,0.3,0.5],4,3), "Warm-up ends at step == warmup: compare from that step on"
+  assert should_prune(5,0.4,[0.1,0.3,0.9],4,3), "Compare with the median of the peers, not their mean"
+hints:
+  - Return early before calculating a median when the comparison is unavailable.

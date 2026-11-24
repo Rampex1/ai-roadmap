@@ -1,0 +1,48 @@
+---
+title: Select a candidate across matched seeds
+module: a4
+order: 4
+estMinutes: 8
+objectives:
+  - Compare configurations on the same validation seeds
+  - Explain selection bias and reserve the test split
+goDeeper: mlflow-experiment-tracking
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+One training run can benefit from initialization, sampling or augmentation by chance. Compare each candidate using the same set of seed identifiers and the same data and metric. <Term id="matched-seeds" /> can reduce variation attributable to nuisance randomness, although a change in architecture may change how random draws are consumed.
+
+Fix how to aggregate outcomes, such as mean validation loss with a dispersion measure and a deterministic tie-breaker. Look for repeated gains, especially across important slices. If one candidate had missing seeds, complete them or explicitly define a matched subset before comparing. A better average can hide a critical failure.
+
+Searching many settings makes the observed best validation result optimistic. Select using validation, then freeze the candidate and measure it once on a separate test split. With small datasets, nested cross-validation can separate tuning from estimating generalization.
+
+The fixture requires exactly matching seed keys and chooses the minimum mean metric. Production tracking should retain the individual results and uncertainty, not just the winning configuration name.
+
+## Worked example
+
+Both means tie under the stated ordering, so A wins.
+
+```python
+def select_config(results):
+    if not results:
+        return None
+    seed_sets = [set(scores) for scores in results.values()]
+    required = seed_sets[0]
+    if not required or any(seeds != required for seeds in seed_sets):
+        raise ValueError("need a shared nonempty seed set")
+    return min(results, key=lambda name: (sum(results[name][seed] for seed in sorted(required)) / len(required), name))
+
+print(select_config({"B":{1:0.3,2:0.4}, "A":{1:0.5,2:0.2}}))
+```
+
+```text title="Output"
+A
+```
+
+Freeze the candidate before final testing and report seed-level variation alongside the mean.
+
+## Try it
+
+<CodeExercise id="a4-select-from-repeated-runs-01" />

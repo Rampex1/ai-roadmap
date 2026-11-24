@@ -1,0 +1,43 @@
+---
+title: Prune weak trials at comparable checkpoints
+module: a4
+order: 3
+estMinutes: 8
+objectives:
+  - Compare validation losses at equal resource steps
+  - Use warm-up and a reference count before pruning
+goDeeper: mlflow-experiment-tracking
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+<Term id="trial-pruning" /> spends less compute on weak candidates. A pruning rule observes intermediate validation points, so compare trials at the same resource milestone. Epoch count can be misleading when batch size, data volume or compute per epoch differs. Choose a unit aligned with your resource constraint and log it.
+
+A median rule can stop a trial whose loss is worse than typical reference performance at that milestone. Give trials time to warm up and wait for enough comparable peers to make the rule meaningful. Slow starters can eventually win. Keep enough fully trained runs to check that the rule is not systematically eliminating a useful family.
+
+Distinguish pruned, failed and completed states in the experiment log. A trial without a final score should not be treated as though it finished poorly. The example considers validation losses at a common resource step and prunes only when strictly worse than the median after its conditions are met.
+
+## Worked example
+
+The trial has reached warm-up and is weaker than the comparable peers.
+
+```python
+def should_prune(step, loss, peers, warmup, min_peers):
+    from statistics import median
+    if step < warmup or not peers or len(peers) < min_peers:
+        return False
+    return loss > median(peers)
+
+print(should_prune(5, 0.6, [0.1,0.3,0.5], 4, 3))
+```
+
+```text title="Output"
+True
+```
+
+Report the pruning rule and preserve a distinction between an unfinished and a completed trial.
+
+## Try it
+
+<CodeExercise id="a4-prune-weak-trials-01" />
