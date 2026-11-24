@@ -11,7 +11,8 @@ const tipId = `term-tip-${id}-${n}`;
 // Glossary names are capitalised headings ("Entropy"); inline they read as normal words ("entropy").
 // Keep proper nouns and words with inner capitals or acronyms (Bayes, Adam, DataFrame, NumPy, ReLU).
 const PROPER = /^(Bayes|Adam|Jupyter|Gauss|Gaussian|Laplace|Markov|Python|Git|GitHub|Bernoulli|Poisson|Euclid|Euclidean|Fourier|Kullback|Shannon|Transformer)\b/;
-const inline = (s: string) => (PROPER.test(s) || /^\S*[A-Z]\S*[A-Z]|^[A-Z]{2}|^\S[A-Z]/.test(s) ? s : s.charAt(0).toLowerCase() + s.slice(1));
+// Judge the first word only (split on space or hyphen), so "Vector-Jacobian product" reads "vector-Jacobian product".
+const inline = (s: string) => (PROPER.test(s) || /^\S*[A-Z]\S*[A-Z]|^[A-Z]{2}|^\S[A-Z]/.test(s.split(/[\s-]/)[0]) ? s : s.charAt(0).toLowerCase() + s.slice(1));
 // `cap` keeps the capital for a term that starts a sentence, list item or heading.
 const label = text ?? (cap ? entry.data.term : inline(entry.data.term));
 ---
