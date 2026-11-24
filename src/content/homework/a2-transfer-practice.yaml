@@ -1,0 +1,22 @@
+id: a2-transfer-practice
+module: a2
+kind: homework
+title: Compare transfer learning training regimes
+brief: |-
+  Build five reproducible checks for a small classification training loop. The bonus Colab lab learns a shared feature representation on a source task and compares training a new head with fine-tuning the same representation on a shifted target.
+
+  1. Check feature and label shapes.
+  2. Aggregate validation loss correctly.
+  3. Choose the best checkpoint using validation only.
+  4. Compare frozen-head and fine-tuning parameter groups.
+  5. Select a usable checkpoint from batch summaries.
+
+  Describe an experiment that isolates whether transfer helps. Specify a common target validation split, a scratch baseline, and the evidence that would justify unfreezing the backbone.
+notebook: /homework/a2-transfer-practice.ipynb
+rubric:
+  - Invalid labels and widths are rejected before training.
+  - Loss is weighted by example count.
+  - Checkpoint ties resolve consistently.
+  - The comparison separates trainable head and backbone parameters.
+  - The integrated task passes its fixture checks.
+compute: Local Jupyter or Colab CPU. Standard library for required tasks. The optional lab uses PyTorch in Colab. Allow 60 to 90 minutes.

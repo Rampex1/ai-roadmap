@@ -1,0 +1,43 @@
+---
+title: Select checkpoints and test augmentation
+module: a2
+order: 3
+estMinutes: 8
+objectives:
+  - Choose checkpoints using validation performance
+  - Separate training augmentation from evaluation transforms
+goDeeper: pytorch-transfer-tutorial
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+A <Term id="checkpoint" /> records a model state at a specific training step. Save the best state according to a predefined validation metric and direction. For a loss, choose the minimum. The last epoch might overfit or simply score worse. If you need to resume training, save optimizer and scheduler state as well as parameter values and versioned configuration.
+
+Data augmentation changes training inputs while preserving the label or updating it appropriately. A horizontal flip may preserve many object labels but can reverse a direction sign. Use augmentations that match plausible variation. Split data first so two derived versions of one source cannot land in training and evaluation.
+
+Change augmentation in a controlled comparison using the same validation cases, seeds and metric. Keep an immutable test split for one final comparison. An ensemble of validation views can be a separately defined inference method, and should be measured consistently across candidates.
+
+The checkpoint fixture selects the lowest validation loss and breaks ties by earliest epoch. It assumes finite losses and numbered epochs.
+
+## Worked example
+
+The two smallest losses tie, so the earlier checkpoint is restored.
+
+```python
+def best_epoch(history):
+    best = min(history, key=lambda row: (row[1], row[0]), default=None)
+    return best[0] if best is not None else None
+
+print(best_epoch([(3,0.4),(1,0.7),(2,0.4)]))
+```
+
+```text title="Output"
+2
+```
+
+Use a stable selection rule on validation and report final test results after fixing the candidate.
+
+## Try it
+
+<CodeExercise id="a2-checkpoints-and-augmentation-01" />

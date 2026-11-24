@@ -1,0 +1,18 @@
+id: a2-checkpoints-and-augmentation-01
+lesson: mle/a2/checkpoints-and-augmentation
+title: Select a validation checkpoint
+prompt: Implement best_epoch(history) for (epoch, validation_loss) tuples. Return the lowest-loss epoch and choose the smallest epoch on ties. Return None for an empty history.
+starter: |
+  def best_epoch(history):
+      raise NotImplementedError
+solution: |
+  def best_epoch(history):
+      best = min(history, key=lambda row: (row[1], row[0]), default=None)
+      return best[0] if best is not None else None
+tests: |
+  assert best_epoch([(4,0.3),(2,0.3),(1,0.8)]) == 2
+  assert best_epoch([(1,0.5),(2,0.6)]) == 1
+  assert best_epoch([(9,0.1)]) == 9
+  assert best_epoch([]) is None
+hints:
+  - Order rows by the loss first, then by epoch.

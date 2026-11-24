@@ -1,0 +1,44 @@
+---
+title: Debug a training loop with a tiny batch
+module: a2
+order: 1
+estMinutes: 8
+objectives:
+  - Verify feature shapes and label ranges
+  - Use a fixed tiny batch to check the complete training path
+goDeeper: pytorch-transfer-tutorial
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+Before training a large model, inspect a few decoded inputs and labels. Check batch axes, tensor shape and the range of class IDs. For multiclass cross-entropy, the usual input is one row of raw logits per sample and one integer class index per sample. An accidental one-hot label, wrong axis or invalid index can change what the code trains.
+
+A <Term id="training-sanity-check" /> can try to fit a tiny fixed batch with augmentation and regularization reduced. If loss stalls on an easy problem, inspect whether gradients are nonzero, whether the optimizer owns the right parameters, and whether the labels match inputs. Success establishes that the model can fit those examples; the validation split still measures generalization.
+
+In a PyTorch-style loop, clear accumulated gradients, run the forward pass, compute loss, backpropagate and take the optimizer step. For validation also choose evaluation mode and disable gradient recording. Evaluation mode changes behaviour of modules such as dropout, while disabling gradient recording changes memory and autograd bookkeeping.
+
+This fixture validates a tabular batch without a tensor framework. It checks shape and labels, leaving feature values and dtype normalization to ingestion.
+
+## Worked example
+
+Label 2 lies outside the permitted two-class index range.
+
+```python
+def valid_batch(features, labels, width, n_classes):
+    return (bool(features) and len(features) == len(labels)
+            and all(len(row) == width for row in features)
+            and all(type(label) is int and 0 <= label < n_classes for label in labels))
+
+print(valid_batch([[1,2],[3,4]], [0,2], 2, 2))
+```
+
+```text title="Output"
+False
+```
+
+Use a tiny memorization run to debug mechanics before comparing generalization.
+
+## Try it
+
+<CodeExercise id="a2-training-loop-sanity-checks-01" />

@@ -1,0 +1,4 @@
+term: "Training sanity check"
+short: "A small, controlled run used to verify training mechanics before spending compute."
+body: "A short diagnostic run, such as overfitting one fixed tiny batch, that checks shapes, labels, gradient flow and optimizer wiring. Passing shows the code can fit, not that the model generalises."
+related: ["gradient-descent","overfitting"]

@@ -1,0 +1,4 @@
+term: "Transfer learning"
+short: "Reusing representations learned on one task or dataset to learn another task."
+body: "A model pretrained on a source task supplies a backbone. A new head is trained for the target labels. You can keep the backbone frozen as a feature extractor or fine-tune it, often with a smaller learning rate."
+related: ["gradient-descent","checkpoint"]

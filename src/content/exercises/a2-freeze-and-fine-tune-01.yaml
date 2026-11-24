@@ -1,0 +1,25 @@
+id: a2-freeze-and-fine-tune-01
+lesson: mle/a2/freeze-and-fine-tune
+title: Build a parameter-group plan
+prompt: Implement learning_rate_plan(groups, head_rate, backbone_rate). Groups maps names to head or backbone. Include only names with positive group rates. Reject unknown group labels, even if other rates are zero.
+starter: |
+  def learning_rate_plan(groups, head_rate, backbone_rate):
+      raise NotImplementedError
+solution: |
+  def learning_rate_plan(groups, head_rate, backbone_rate):
+      rates = {"head": head_rate, "backbone": backbone_rate}
+      if set(groups.values()) - rates.keys():
+          raise ValueError("unknown parameter group")
+      return {name: rates[group] for name, group in groups.items() if rates[group] > 0}
+tests: |
+  assert learning_rate_plan({"a":"head","b":"backbone"},0.1,0) == {"a":0.1}
+  assert learning_rate_plan({"a":"head","b":"backbone"},0.1,0.01) == {"a":0.1,"b":0.01}
+  assert learning_rate_plan({},0.1,0) == {}
+  try:
+      learning_rate_plan({"a":"other"},0,0)
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("Reject unknown groups")
+hints:
+  - Look up a rate by the declared group rather than by guessing from its name.

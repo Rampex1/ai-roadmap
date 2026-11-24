@@ -1,0 +1,45 @@
+---
+title: Freeze features or fine-tune the backbone
+module: a2
+order: 4
+estMinutes: 8
+objectives:
+  - Compare a fixed feature extractor with a tuned backbone
+  - Choose explicit parameter groups and mode policy
+goDeeper: pytorch-transfer-tutorial
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+In <Term id="transfer-learning" />, a pretrained backbone maps the input to features. Replace its output head to match the target labels. Training only the head is a useful first comparison when target data is small or compute is limited. If source and target differ substantially, the fixed representation may omit useful target information.
+
+To fine-tune, start with the trained head, then unfreeze an explicit backbone subset and reconfigure the optimizer with a smaller backbone learning rate. Verify which parameters receive gradients. Freezing parameters alone does not freeze stateful normalization statistics. If the backbone should behave as a fixed feature extractor, keep it in evaluation mode when training the head.
+
+Compare from-scratch training, a frozen head-only run and fine-tuning on the same split. Keep pretraining transformations compatible with the backbone and use validation to decide what to retain. Count training compute and note the risk of overwriting useful representations.
+
+The fixture produces a learning-rate plan for layer names. With a zero backbone rate it excludes those parameters from optimization. Applying module modes is a separate step.
+
+## Worked example
+
+The classifier is trainable and the zero-rate encoder is omitted.
+
+```python
+def learning_rate_plan(groups, head_rate, backbone_rate):
+    rates = {"head": head_rate, "backbone": backbone_rate}
+    if set(groups.values()) - rates.keys():
+        raise ValueError("unknown parameter group")
+    return {name: rates[group] for name, group in groups.items() if rates[group] > 0}
+
+print(learning_rate_plan({"encoder":"backbone","classifier":"head"}, 0.01, 0.0))
+```
+
+```text title="Output"
+{'classifier': 0.01}
+```
+
+Measure a fixed extractor before increasing trainable depth and keep the optimizer and module mode decisions explicit.
+
+## Try it
+
+<CodeExercise id="a2-freeze-and-fine-tune-01" />

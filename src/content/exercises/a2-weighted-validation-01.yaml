@@ -1,0 +1,22 @@
+id: a2-weighted-validation-01
+lesson: mle/a2/weighted-validation
+title: Aggregate uneven validation batches
+prompt: Implement mean_validation_loss(batches). Each tuple contains a nonnegative batch size and a finite per-example mean loss. Return the global mean, or None when there are no contributing examples.
+starter: |
+  def mean_validation_loss(batches):
+      raise NotImplementedError
+solution: |
+  def mean_validation_loss(batches):
+      weighted = 0.0
+      count = 0
+      for size, mean in batches:
+          weighted += size * mean
+          count += size
+      return weighted / count if count else None
+tests: |
+  assert abs(mean_validation_loss([(4,0.2),(1,1.0)]) - 0.36) < 1e-12
+  assert mean_validation_loss([(0,9),(2,0.5)]) == 0.5
+  assert mean_validation_loss([]) is None
+  assert mean_validation_loss([(0,1)]) is None
+hints:
+  - Accumulate a numerator and denominator, then divide once.

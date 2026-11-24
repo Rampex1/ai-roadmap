@@ -1,0 +1,4 @@
+term: "Validation"
+short: "Measuring a trained candidate on data reserved for development decisions."
+body: "Evaluating candidates on a held-out split used for development decisions such as checkpoint, hyperparameters and augmentation. It runs in evaluation mode with deterministic preprocessing, and the metric is aggregated over all examples."
+related: ["held-out-set","training-sanity-check"]

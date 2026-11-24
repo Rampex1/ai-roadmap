@@ -1,0 +1,4 @@
+term: "Checkpoint"
+short: "A saved training state that can be evaluated, restored or continued."
+body: "A checkpoint stores model parameters and, when training must resume, the optimizer state, scheduler state, step count, RNG state and configuration. Choose the checkpoint to promote with a fixed validation rule, not the test set."
+related: ["held-out-set","validation"]

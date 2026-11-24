@@ -1,0 +1,6 @@
+title: PyTorch transfer learning tutorial
+url: https://docs.pytorch.org/tutorials/beginner/transfer_learning_tutorial.html
+kind: tool
+free: true
+modules:
+  - a2

@@ -1,0 +1,47 @@
+---
+title: Validate across uneven batches
+module: a2
+order: 2
+estMinutes: 8
+objectives:
+  - Aggregate means by actual batch size
+  - Distinguish validation from training behaviour
+goDeeper: pytorch-transfer-tutorial
+---
+
+import Term from '@/components/Term.astro';
+import CodeExercise from '@/components/CodeExercise.astro';
+
+During <Term id="validation" />, the goal is to estimate performance under the planned inference path. Turn off stochastic training-only transforms and choose evaluation mode. If you compare candidates using different preprocessing or different splits, the result can mix a model effect with a measurement change.
+
+A batch mean weights each example in that batch equally. If the last batch is smaller, averaging batch means gives its examples disproportionate weight. Multiply each batch mean by its number of contributing examples, add the totals and divide by the total count. When masks or sample weights apply, use the actual denominator that produced each batch mean.
+
+For example, four examples with mean loss 0.2 and one with loss 1.0 together have mean loss 0.36. Averaging the two means gives 0.6 and overweights the singleton. For nonlinear metrics such as F1, accumulate sufficient counts or all predictions before calculating the global value.
+
+This exercise assumes equal weighting per example inside each batch and ignores empty batches. No observations means the metric is undefined.
+
+## Worked example
+
+The larger batch contributes four times as much as the singleton.
+
+```python
+def mean_validation_loss(batches):
+    weighted = 0.0
+    count = 0
+    for size, mean in batches:
+        weighted += size * mean
+        count += size
+    return weighted / count if count else None
+
+print(round(mean_validation_loss([(4,0.2),(1,1.0)]), 2))
+```
+
+```text title="Output"
+0.36
+```
+
+Log the denominator and keep preprocessing stable across validation runs.
+
+## Try it
+
+<CodeExercise id="a2-weighted-validation-01" />

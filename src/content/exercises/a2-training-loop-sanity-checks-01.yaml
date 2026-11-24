@@ -1,0 +1,22 @@
+id: a2-training-loop-sanity-checks-01
+lesson: mle/a2/training-loop-sanity-checks
+title: Check a classification batch
+prompt: Implement valid_batch(features, labels, width, n_classes). Require a nonempty batch, rectangular rows of the given width and one integer class ID per row in [0, n_classes). Reject boolean labels.
+starter: |
+  def valid_batch(features, labels, width, n_classes):
+      raise NotImplementedError
+solution: |
+  def valid_batch(features, labels, width, n_classes):
+      return (bool(features) and len(features) == len(labels)
+              and all(len(row) == width for row in features)
+              and all(type(label) is int and 0 <= label < n_classes for label in labels))
+tests: |
+  assert valid_batch([[1,2],[3,4]],[0,1],2,2)
+  assert not valid_batch([[1,2],[3]],[0,1],2,2)
+  assert not valid_batch([[1,2]],[True],2,2)
+  assert not valid_batch([[1,2]],[2],2,2)
+  assert not valid_batch([],[],2,2)
+  assert not valid_batch([[1,2],[3,4]],[0],2,2), "Reject a batch with fewer labels than rows"
+  assert not valid_batch([[1,2]],[-1],2,2), "Reject negative class IDs: valid IDs are 0 to n_classes - 1"
+hints:
+  - Check the row count and exact integer type separately.

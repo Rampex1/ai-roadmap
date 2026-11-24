@@ -1,0 +1,88 @@
+items:
+  - id: a2-checkpoints-and-augmentation-01
+    type: mcq
+    prompt: Which split should choose the checkpoint?
+    explanation: Checkpoint selection is a development decision.
+    options:
+      - text: Validation
+        why: Checkpoint selection is a development decision.
+        correct: true
+      - text: Final test
+        why: Repeated choices use holdout information.
+      - text: Only the training examples
+        why: Training score alone can reward overfitting.
+  - id: a2-checkpoints-and-augmentation-02
+    type: mcq
+    prompt: When should augmentation happen relative to splitting?
+    explanation: Derived examples should stay with their source.
+    options:
+      - text: After grouping and splitting original sources
+        why: Derived examples should stay with their source.
+        correct: true
+      - text: Before a random row split regardless of origin
+        why: This can place variants across splits.
+      - text: Only after final deployment
+        why: Augmentation is often a training input.
+  - id: a2-checkpoints-and-augmentation-03
+    type: mcq
+    prompt: Which augmentation can change a label?
+    explanation: The resulting arrow points right.
+    options:
+      - text: A harmless illumination change in this task
+        why: The direction may stay intact.
+      - text: Loading the original input unchanged
+        why: That preserves the original representation.
+      - text: Flipping an image with a left-arrow label
+        why: The resulting arrow points right.
+        correct: true
+  - id: a2-checkpoints-and-augmentation-04
+    type: mcq
+    prompt: What helps resume an interrupted run?
+    explanation: Training dynamics depend on these states.
+    options:
+      - text: Weights plus optimizer and scheduler state
+        why: Training dynamics depend on these states.
+        correct: true
+      - text: Only the best score
+        why: A number cannot restore parameters.
+      - text: Only the test-set path
+        why: That does not restore training state.
+  - id: a2-checkpoints-and-augmentation-05
+    type: multi
+    prompt: Which make an augmentation experiment interpretable?
+    explanation: It controls evaluation difficulty. It makes the manipulation reproducible.
+    options:
+      - text: Record transform configuration and seed
+        why: It makes the manipulation reproducible.
+        correct: true
+      - text: Swap both the split and metric silently
+        why: This confounds the comparison.
+      - text: Use the same validation cases
+        why: It controls evaluation difficulty.
+        correct: true
+  - id: a2-checkpoints-and-augmentation-06
+    type: cloze
+    prompt: A saved model state at a particular epoch is a ______.
+    accept:
+      - checkpoint
+    explanation: It can be restored for comparison or continuation.
+  - id: a2-checkpoints-and-augmentation-07
+    type: order
+    prompt: Order the checkpoint promotion process.
+    items:
+      - Fix split and validation selection rule
+      - Train and measure candidate states
+      - Restore the chosen checkpoint
+      - Run the final held-out comparison
+    explanation: The holdout is reserved until selection is fixed.
+  - id: a2-checkpoints-and-augmentation-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def best_epoch(history):
+          best = min(history, key=lambda row: (row[1], row[0]), default=None)
+          return best[0] if best is not None else None
+
+      print(best_epoch([(2, 0.1), (1, 0.3), (3, 0.2)]))
+    answer: "2"
+    explanation: Epoch two has the smallest validation loss.

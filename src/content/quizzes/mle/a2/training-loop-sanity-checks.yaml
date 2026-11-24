@@ -1,0 +1,92 @@
+items:
+  - id: a2-training-loop-sanity-checks-01
+    type: mcq
+    prompt: What should a tiny fixed-batch test establish?
+    explanation: It checks mechanics under controlled inputs.
+    options:
+      - text: The training path can fit simple examples
+        why: It checks mechanics under controlled inputs.
+        correct: true
+      - text: The model generalizes to new groups
+        why: That requires held-out data.
+      - text: The chosen model is optimal
+        why: One batch cannot establish that.
+  - id: a2-training-loop-sanity-checks-02
+    type: mcq
+    prompt: Which class IDs are valid targets for three-class cross-entropy?
+    explanation: Index 3 is outside the output width.
+    options:
+      - text: Three, numbered 0 through 2
+        why: Index 3 is outside the output width.
+        correct: true
+      - text: Four, numbered 0 through 3
+        why: This includes one invalid label.
+      - text: Only IDs 1 through 3 in this fixture
+        why: The contract uses zero-based indices.
+  - id: a2-training-loop-sanity-checks-03
+    type: mcq
+    prompt: Why inspect gradients before an optimizer step?
+    explanation: Missing gradients point to a wiring issue.
+    options:
+      - text: They reveal whether trainable parameters receive a signal
+        why: Missing gradients point to a wiring issue.
+        correct: true
+      - text: They are the validation metric
+        why: Gradients update parameters.
+      - text: They prove the test set is untouched
+        why: Split discipline is separate.
+  - id: a2-training-loop-sanity-checks-04
+    type: mcq
+    prompt: What changes with evaluation mode?
+    explanation: The mode is separate from autograd.
+    options:
+      - text: Module behaviour such as dropout
+        why: The mode is separate from autograd.
+        correct: true
+      - text: The dataset automatically changes
+        why: The caller still chooses the split.
+      - text: The optimizer deletes stored parameters
+        why: Mode does not delete parameters.
+  - id: a2-training-loop-sanity-checks-05
+    type: multi
+    prompt: Which can explain failure on a fixed tiny batch?
+    explanation: The target can be wrong for each input. The optimizer cannot update them.
+    options:
+      - text: A high held-out score in a separate run
+        why: That does not explain the local failure.
+      - text: Incorrect feature/label alignment
+        why: The target can be wrong for each input.
+        correct: true
+      - text: Frozen parameters in the intended trainable path
+        why: The optimizer cannot update them.
+        correct: true
+  - id: a2-training-loop-sanity-checks-06
+    type: cloze
+    prompt: A small diagnostic run before the full training job is a ______.
+    accept:
+      - sanity check
+      - training sanity check
+      - sanity-check
+      - sanity test
+    explanation: It tests mechanics on a controlled task.
+  - id: a2-training-loop-sanity-checks-07
+    type: order
+    prompt: Order a standard training step that clears gradients at the start of each iteration.
+    items:
+      - Clear previous gradients
+      - Compute predictions and loss
+      - Backpropagate the loss
+      - Take the optimizer step
+    explanation: The optimizer uses gradients from the current batch.
+  - id: a2-training-loop-sanity-checks-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def valid_batch(features, labels, width, n_classes):
+          return (bool(features) and len(features) == len(labels)
+                  and all(len(row) == width for row in features)
+                  and all(type(label) is int and 0 <= label < n_classes for label in labels))
+
+      print(valid_batch([[1],[2]], [0,1], 1, 2))
+    answer: "True"
+    explanation: The two rows and two labels satisfy the contract.

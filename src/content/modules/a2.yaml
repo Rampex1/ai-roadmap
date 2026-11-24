@@ -4,5 +4,7 @@ title: "Deep learning practice and transfer learning"
 order: 2
 prereqs: ["a1"]
 objectives:
-  - "Explain the core ideas of deep learning practice and transfer learning"
-  - "Apply deep learning practice and transfer learning to a working ML project"
+  - Debug a training pipeline with shape and loss checks
+  - Aggregate validation metrics and select a checkpoint without test leakage
+  - Compare a frozen feature extractor with gradual fine-tuning
+  - Apply training-only augmentation and evaluate it on a shared split

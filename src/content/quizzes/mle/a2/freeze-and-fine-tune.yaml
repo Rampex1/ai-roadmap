@@ -1,0 +1,90 @@
+items:
+  - id: a2-freeze-and-fine-tune-01
+    type: mcq
+    prompt: What changes in a head-only run?
+    explanation: The representation remains fixed by design.
+    options:
+      - text: The target head is trained and backbone parameters stay frozen
+        why: The representation remains fixed by design.
+        correct: true
+      - text: Every layer is trained at the same rate
+        why: That is full fine-tuning.
+      - text: The base targets are used unchanged
+        why: The new head matches the target labels.
+  - id: a2-freeze-and-fine-tune-02
+    type: mcq
+    prompt: Why choose a smaller backbone learning rate?
+    explanation: A cautious update may preserve useful representations.
+    options:
+      - text: It guarantees perfect target performance
+        why: Performance must be measured.
+      - text: The head is mathematically unable to use a smaller rate
+        why: Both rates are configuration choices.
+      - text: To limit large changes to transferred features
+        why: A cautious update may preserve useful representations.
+        correct: true
+  - id: a2-freeze-and-fine-tune-03
+    type: mcq
+    prompt: What can change even when parameters are frozen?
+    explanation: Those buffers can update without gradients.
+    options:
+      - text: The source label vocabulary automatically
+        why: Labels are data configuration.
+      - text: The optimizer state for an excluded parameter by this plan
+        why: Excluded parameters are not optimized.
+      - text: Stateful normalization statistics in training mode
+        why: Those buffers can update without gradients.
+        correct: true
+  - id: a2-freeze-and-fine-tune-04
+    type: mcq
+    prompt: What makes a transfer comparison fair?
+    explanation: The candidate regimes face comparable cases.
+    options:
+      - text: Choose each split after seeing the test results
+        why: That reuses holdout information.
+      - text: Use only train loss and ignore target validation
+        why: It does not estimate generalization.
+      - text: Use the same target splits and metric
+        why: The candidate regimes face comparable cases.
+        correct: true
+  - id: a2-freeze-and-fine-tune-05
+    type: multi
+    prompt: Which should be checked when a backbone is frozen?
+    explanation: Only intended variables should update. Evaluation mode can keep feature behaviour fixed.
+    options:
+      - text: Optimizer membership
+        why: Only intended variables should update.
+        correct: true
+      - text: Module mode and stateful buffers
+        why: Evaluation mode can keep feature behaviour fixed.
+        correct: true
+      - text: Only the parameter file extension
+        why: The extension does not establish configuration.
+  - id: a2-freeze-and-fine-tune-06
+    type: cloze
+    prompt: Reusing a pretrained representation on another task is ______ learning.
+    accept:
+      - transfer
+    explanation: It carries features learned from a source dataset into a target task.
+  - id: a2-freeze-and-fine-tune-07
+    type: order
+    prompt: Order one gradual fine-tuning comparison.
+    items:
+      - Initialize from the source model
+      - Fit the target head with the backbone frozen
+      - Unfreeze selected groups and set learning rates
+      - Compare both regimes on shared validation cases
+    explanation: The head first adapts to the target output space.
+  - id: a2-freeze-and-fine-tune-08
+    type: output
+    prompt: What does this print?
+    code: |
+      def learning_rate_plan(groups, head_rate, backbone_rate):
+          rates = {"head": head_rate, "backbone": backbone_rate}
+          if set(groups.values()) - rates.keys():
+              raise ValueError("unknown parameter group")
+          return {name: rates[group] for name, group in groups.items() if rates[group] > 0}
+
+      print(learning_rate_plan({"a":"head","b":"backbone"}, 0.02, 0.001))
+    answer: "{'a': 0.02, 'b': 0.001}"
+    explanation: Both groups have a positive rate.
