@@ -728,3 +728,5 @@ textarea.air-text { max-width: none; font-family: var(--sl-font-mono); font-size
 /* Headings wrap onto several lines in narrow columns; 1.2 is too tight there. */
 :root { --sl-line-height-headings: 1.3; }
 .air-ex-label { color: var(--air-brand); font-weight: 700; }
+/* Lesson tables often wrap long cells; give them body-text leading. */
+.sl-markdown-content :is(td, th) { line-height: 1.5; }
